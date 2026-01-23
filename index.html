@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 (v24.0 筆電版)</title>
+    <title>LINE 萬能編輯器 (v25.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
@@ -20,6 +20,21 @@
         .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all 0.2s; } .card-dot.active { background: #4f46e5; transform: scale(1.3); }
         .code-block-slim { background: #1e293b; color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.75rem; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         
+        /* 🌟 Step 按鈕美化 (v25.0) */
+        .flow-step-btn { 
+            background: white; border: 2px solid #e2e8f0; color: #64748b; 
+            transition: all 0.2s ease; position: relative; overflow: hidden;
+        }
+        .flow-step-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
+        .flow-step-btn.active { 
+            background: #4f46e5; border-color: #4338ca; color: white; 
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); transform: translateY(-1px);
+        }
+        .step-badge {
+            position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; border-radius: 50%;
+        }
+        .step-badge.has-data { background-color: #10b981; border: 1px solid white; } /* 綠燈 */
+
         /* 手機模擬器樣式 */
         .phone-mockup { width: 300px; height: 580px; background: #fff; border-radius: 30px; border: 8px solid #1f2937; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; margin: 0 auto; transform: scale(0.9); transform-origin: top center; }
         .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 20px; background: #1f2937; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 50; }
@@ -31,7 +46,6 @@
 
         @media (min-width: 768px) { body { height: 100vh; overflow: hidden; } #main-layout { height: 100%; overflow: hidden; } }
         
-        /* 側邊欄收合動畫 */
         #sidebarPanel { transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease; }
         .sidebar-collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden; padding: 0 !important; opacity: 0; }
     </style>
@@ -45,16 +59,16 @@
                     <div class="w-7 h-7 bg-slate-800 rounded flex items-center justify-center text-white text-sm shadow shrink-0">🦁</div>
                     <div>
                         <h1 class="font-bold text-sm md:text-base tracking-wide text-slate-800">
-                            LINE 萬能編輯器 <span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded border border-sky-200">v24.0 筆電版</span>
+                            LINE 萬能編輯器 <span class="text-[9px] bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded border border-purple-200">v25.0 教學版</span>
                         </h1>
                     </div>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="openModal('tutorialModal')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow transition flex items-center gap-1">
-                        📖 教學
+                        📖 機器人架設
                     </button>
                     <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold shadow transform transition active:scale-95 flex items-center gap-1">
-                        💾 下載
+                        💾 下載設定
                     </button>
                 </div>
             </div>
@@ -73,11 +87,19 @@
         
         <aside id="sidebarPanel" class="w-full md:w-[380px] border-b md:border-b-0 md:border-r border-slate-200 flex flex-col z-20 bg-white flex-shrink-0 max-h-[40vh] md:max-h-full overflow-hidden relative">
             
-            <div id="flowStepNav" class="hidden grid grid-cols-4 gap-1 p-1 bg-slate-100 border-b flex-shrink-0">
-                <button onclick="switchFlowStep(0)" id="flow-step-0" class="flow-step-btn active rounded py-1 text-[10px] font-bold transition">Step 1</button>
-                <button onclick="switchFlowStep(1)" id="flow-step-1" class="flow-step-btn rounded py-1 text-[10px] font-bold transition">Step 2</button>
-                <button onclick="switchFlowStep(2)" id="flow-step-2" class="flow-step-btn rounded py-1 text-[10px] font-bold transition">Step 3</button>
-                <button onclick="switchFlowStep(3)" id="flow-step-3" class="flow-step-btn rounded py-1 text-[10px] font-bold transition">Step 4</button>
+            <div id="flowStepNav" class="hidden grid grid-cols-4 gap-2 p-2 bg-slate-100 border-b flex-shrink-0">
+                <button onclick="switchFlowStep(0)" id="flow-step-0" class="flow-step-btn active rounded py-2 text-[10px] font-bold text-center">
+                    Step 1<br>入口<div class="step-badge" id="badge-0"></div>
+                </button>
+                <button onclick="switchFlowStep(1)" id="flow-step-1" class="flow-step-btn rounded py-2 text-[10px] font-bold text-center">
+                    Step 2<br>第二層<div class="step-badge" id="badge-1"></div>
+                </button>
+                <button onclick="switchFlowStep(2)" id="flow-step-2" class="flow-step-btn rounded py-2 text-[10px] font-bold text-center">
+                    Step 3<br>第三層<div class="step-badge" id="badge-2"></div>
+                </button>
+                <button onclick="switchFlowStep(3)" id="flow-step-3" class="flow-step-btn rounded py-2 text-[10px] font-bold text-center">
+                    Step 4<br>第四層<div class="step-badge" id="badge-3"></div>
+                </button>
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
@@ -92,6 +114,12 @@
                     <input type="text" id="triggerKeyword" value="選單" class="flex-1 p-1 border border-blue-200 rounded text-xs font-bold text-blue-700 h-6" oninput="updateGasCode()">
                 </div>
 
+                <div id="flowHelpBtn" class="hidden">
+                    <button onclick="openModal('flowExplainModal')" class="w-full bg-rose-100 text-rose-700 border border-rose-200 py-1.5 rounded text-xs font-bold hover:bg-rose-200 transition flex items-center justify-center gap-1">
+                        ❓ 這是什麼？要怎麼設定？ (新手必看)
+                    </button>
+                </div>
+
                 <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
                     <div class="flex justify-between items-center">
                         <label class="font-bold text-amber-800 text-xs">📦 卡片管理</label>
@@ -101,14 +129,13 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
-                    
                     <button onclick="openPreviewModal()" class="w-full bg-indigo-600 text-white py-1.5 rounded font-bold text-xs shadow hover:bg-indigo-700 transition flex items-center justify-center gap-2">
                         👁️ 模擬預覽
                     </button>
                 </div>
 
                 <div class="bg-slate-50 p-2 rounded border border-slate-200">
-                    <label class="block font-bold text-slate-700 text-[10px] mb-1">1. 上傳底圖</label>
+                    <label class="block font-bold text-slate-700 text-[10px] mb-1" id="uploadLabel">1. 上傳底圖</label>
                     <input type="file" id="imageInput" accept="image/*" class="block w-full text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-white file:text-slate-700 hover:file:bg-slate-100"/>
                 </div>
                 
@@ -182,11 +209,51 @@
         </main>
     </div>
 
+    <div id="flowExplainModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="p-4 border-b bg-rose-50 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-rose-800">🤔 什麼是「多層次導覽」？</h2>
+                <button onclick="closeModal('flowExplainModal')" class="text-2xl text-slate-400">✕</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700">
+                
+                <div class="space-y-2">
+                    <h3 class="font-bold text-base flex items-center gap-2">🕹️ 概念：像闖關遊戲一樣</h3>
+                    <p>一般圖片只有一層（點了就結束）。<br>多層次導覽讓你設計<b>「點了這張圖 ➡ 跳出下一張圖」</b>的效果。</p>
+                    <div class="flex items-center gap-2 justify-center bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs">
+                        <div class="text-center"><div class="bg-indigo-100 p-2 rounded mb-1">Step 1<br>(主選單)</div>客戶輸入"選單"</div>
+                        <span>➡</span>
+                        <div class="text-center"><div class="bg-blue-100 p-2 rounded mb-1">Step 2<br>(分類圖)</div>客戶點擊"產品"</div>
+                        <span>➡</span>
+                        <div class="text-center"><div class="bg-emerald-100 p-2 rounded mb-1">Step 3<br>(商品圖)</div>客戶點擊"A產品"</div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-bold text-base flex items-center gap-2">🛠️ 怎麼設定？</h3>
+                    <ul class="list-decimal pl-5 space-y-2">
+                        <li>點擊上方的 <b>Step 1</b>，上傳你的第一張圖（例如主選單）。</li>
+                        <li>在圖上畫框框，右邊動作選擇 <b>「🔗 跳轉到下一層 (自動)」</b>。</li>
+                        <li>點擊上方的 <b>Step 2</b>，上傳第二張圖（例如產品分類）。</li>
+                        <li>以此類推，可以設定到 Step 4。</li>
+                    </ul>
+                    <div class="bg-yellow-50 p-2 rounded text-yellow-800 text-xs border border-yellow-200">
+                        <b>小秘密：</b> 系統會自動幫你設定好「隱藏的通關密語」，你不需要自己去想 Step 2 要用什麼關鍵字，程式碼都幫你寫好了！
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button onclick="closeModal('flowExplainModal')" class="bg-rose-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-rose-700">我懂了，開始設計！</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-indigo-50">
-                <h2 class="text-lg font-bold text-indigo-900">💡 機器人架設教學</h2>
-                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-slate-400 text-xl">✕</button>
+                <h2 class="text-lg font-bold text-indigo-900">💡 機器人架設 (懶人包)</h2>
+                <button onclick="closeModal('tutorialModal')" class="text-slate-400 text-xl">✕</button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 text-sm">
                 <div>
@@ -195,6 +262,7 @@
                         <code class="text-green-400 flex-1 truncate" id="previewCodeLine">const CHANNEL_ACCESS_TOKEN = '...';</code>
                         <button onclick="copyCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold shrink-0">複製</button>
                     </div>
+                    <p class="text-xs text-slate-500 mt-1">* 請將這段代碼貼到 Google Apps Script 專案中 (覆蓋原本的)。</p>
                     <pre id="gasCode" class="hidden"></pre>
                 </div>
                 <div class="grid grid-cols-1 gap-4 text-xs">
@@ -209,8 +277,7 @@
         </div>
     </div>
 
-    <div id="projectsModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[80vh]"><div class="p-4 border-b flex justify-between items-center bg-indigo-50"><h2 class="text-lg font-bold text-indigo-900">📂 作品集</h2><button onclick="document.getElementById('projectsModal').classList.add('hidden')" class="text-2xl text-slate-400">✕</button></div><div class="p-4 overflow-y-auto bg-slate-50 flex-1 space-y-3" id="projectsList"></div><div class="p-4 border-t bg-white"><button onclick="createNewProject()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700">+ 建立新專案</button></div></div></div>
-    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="document.getElementById('imageHelpModal').classList.add('hidden')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">請使用 <a href="https://imgur.com/upload" target="_blank" class="text-blue-500 underline">Imgur</a> 上傳，並對圖片按右鍵「複製圖片位址」。</p></div></div>
+    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="closeModal('imageHelpModal')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">請使用 <a href="https://imgur.com/upload" target="_blank" class="text-blue-500 underline">Imgur</a> 上傳，並對圖片按右鍵「複製圖片位址」。</p></div></div>
 
     <script>
         let currentMode = 'imagemap';
@@ -247,14 +314,15 @@
             previewCodeLine: document.getElementById('previewCodeLine'),
             sidebarPanel: document.getElementById('sidebarPanel'),
             toggleBtnWrapper: document.getElementById('toggleBtnWrapper'),
-            toggleIcon: document.getElementById('toggleIcon')
+            toggleIcon: document.getElementById('toggleIcon'),
+            uploadLabel: document.getElementById('uploadLabel')
         };
         
         let isDrawing = false, startX, startY, naturalWidth = 0, scaleFactor = 1;
 
-        window.addEventListener('DOMContentLoaded', () => { loadProjectsList(); updateUI(); updateGasCode(); });
+        window.addEventListener('DOMContentLoaded', () => { updateUI(); updateGasCode(); updateStepBadges(); });
 
-        // ================= Sidebar Toggle (Laptop Optimized) =================
+        // ================= Sidebar Toggle =================
         function toggleSidebar() {
             isSidebarCollapsed = !isSidebarCollapsed;
             if(isSidebarCollapsed) {
@@ -263,59 +331,56 @@
                 refs.toggleIcon.innerText = "▶";
             } else {
                 refs.sidebarPanel.classList.remove('sidebar-collapsed');
-                refs.toggleBtnWrapper.style.left = "380px"; // match sidebar width
+                refs.toggleBtnWrapper.style.left = "380px";
                 refs.toggleIcon.innerText = "◀";
             }
-            setTimeout(() => { updateScale(); }, 350); // Redraw canvas scale after animation
+            setTimeout(() => { updateScale(); }, 350);
         }
 
-        // ================= Project System =================
-        function saveProject() { _saveToLocal(); alert('已儲存！'); loadProjectsList(); }
+        // ================= Project System (Simplified) =================
+        function saveProject() { _saveToLocal(); alert('已儲存！'); }
         function saveProjectSilent() { _saveToLocal(); }
-        function _saveToLocal() {
-            projectData.token = refs.lineTokenInput.value;
-            const savedProjects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]');
-            const idx = savedProjects.findIndex(p => p.id === projectData.id);
-            projectData.lastModified = new Date().toLocaleString();
-            if(idx >= 0) savedProjects[idx] = projectData; else savedProjects.push(projectData);
-            localStorage.setItem('line_tool_projects', JSON.stringify(savedProjects));
-        }
-        function loadProjectsList() {
-            const list = document.getElementById('projectsList');
-            const projects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]');
-            list.innerHTML = '';
-            if(projects.length===0) { list.innerHTML = '<div class="text-center text-slate-400 py-4 text-xs">無專案</div>'; return; }
-            projects.sort((a,b)=>new Date(b.lastModified)-new Date(a.lastModified)).forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center gap-2 bg-white p-2 rounded border hover:border-indigo-400 cursor-pointer mb-2';
-                item.innerHTML = `<div class="flex-1"><div class="font-bold text-xs">${p.name}</div><div class="text-[10px] text-slate-400">${p.lastModified}</div></div><button onclick="deleteProject('${p.id}', event)" class="text-red-400 px-2">✕</button>`;
-                item.onclick = () => loadProject(p.id); list.appendChild(item);
-            });
-        }
-        function loadProject(id) {
-            const projects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]');
-            const target = projects.find(p => p.id === id);
-            if(target) { projectData = target; currentMode = projectData.mode; currentCardIndex = 0; currentFlowStep = 0; refs.lineTokenInput.value = projectData.token || ""; document.getElementById('projectsModal').classList.add('hidden'); switchTab(currentMode); }
-        }
-        function createNewProject() {
-            projectData = { id: Date.now().toString(), name: "新專案", token: "", mode: "imagemap", imagemap: { imageUrl: "", localPreview: "", areas: [] }, carousel: [{ title: "", desc: "", imageUrl: "", localPreview: "", btns: [{label:"按鈕", text:"回覆"}], areas:[] }], flow: [ { name: "Step 1", imageUrl: "", localPreview: "", areas: [], trigger: "開始導覽" }, { name: "Step 2", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_2__" }, { name: "Step 3", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_3__" }, { name: "Step 4", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_4__" } ] };
-            refs.lineTokenInput.value = ""; switchTab('imagemap'); document.getElementById('projectsModal').classList.add('hidden');
-        }
-        function deleteProject(id, e) { e.stopPropagation(); if(!confirm('刪除？')) return; const projects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]'); localStorage.setItem('line_tool_projects', JSON.stringify(projects.filter(p => p.id !== id))); loadProjectsList(); }
+        function _saveToLocal() { projectData.token = refs.lineTokenInput.value; }
+        function downloadJSON() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "line_project.json"); dl.click(); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function openPreviewModal() { document.getElementById('previewModal').classList.remove('hidden'); renderPhoneSimulator(); }
 
-        // ================= Core UI =================
-        function getCurrentDataObj() { if(currentMode === 'imagemap') return projectData.imagemap; if(currentMode === 'carousel') return projectData.carousel[currentCardIndex]; if(currentMode === 'flow') return projectData.flow[currentFlowStep]; }
-        function updateUI() {
-            const data = getCurrentDataObj(); refs.imageUrl.value = data.imageUrl || ""; const imgSource = data.localPreview || data.imageUrl;
-            refs.previewImage.classList.add('hidden'); refs.drawLayer.classList.add('hidden'); refs.placeholder.classList.remove('hidden');
-            if(imgSource) { refs.previewImage.src = imgSource; refs.previewImage.onload = function() { naturalWidth = this.naturalWidth; refs.previewImage.classList.remove('hidden'); refs.drawLayer.classList.remove('hidden'); refs.placeholder.classList.add('hidden'); updateScale(); renderAreas(); renderActionList(); } } else { refs.previewImage.src = ""; renderActionList(); }
-            if(currentMode === 'flow') { if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger; document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0); } else if (currentMode === 'carousel') { refs.triggerKeyword.value = "命盤"; } else { refs.triggerKeyword.value = "選單"; }
+        // ================= Core Logic =================
+        function getCurrentDataObj() {
+            if(currentMode === 'imagemap') return projectData.imagemap;
+            if(currentMode === 'carousel') return projectData.carousel[currentCardIndex];
+            if(currentMode === 'flow') return projectData.flow[currentFlowStep];
         }
-        function switchTab(mode) {
-            projectData.mode = mode; currentMode = mode;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${mode}`).classList.add('active');
-            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel'); document.getElementById('flowStepNav').classList.toggle('hidden', mode !== 'flow'); document.getElementById('keywordBlock').classList.remove('hidden');
-            updateUI(); updateGasCode();
+
+        function updateUI() {
+            const data = getCurrentDataObj();
+            refs.imageUrl.value = data.imageUrl || "";
+            const imgSource = data.localPreview || data.imageUrl;
+            
+            refs.previewImage.classList.add('hidden'); refs.drawLayer.classList.add('hidden'); refs.placeholder.classList.remove('hidden');
+            if(imgSource) {
+                refs.previewImage.src = imgSource;
+                refs.previewImage.onload = function() {
+                    naturalWidth = this.naturalWidth; refs.previewImage.classList.remove('hidden'); refs.drawLayer.classList.remove('hidden'); refs.placeholder.classList.add('hidden');
+                    updateScale(); renderAreas(); renderActionList();
+                }
+            } else { refs.previewImage.src = ""; renderActionList(); }
+
+            if(currentMode === 'flow') {
+                if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger;
+                document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0);
+            } else if (currentMode === 'carousel') { refs.triggerKeyword.value = "命盤"; } else { refs.triggerKeyword.value = "選單"; }
+            
+            updateStepBadges();
+        }
+
+        function updateStepBadges() {
+            if(currentMode !== 'flow') return;
+            projectData.flow.forEach((step, i) => {
+                const badge = document.getElementById(`badge-${i}`);
+                if(step.imageUrl) badge.classList.add('has-data'); else badge.classList.remove('has-data');
+            });
         }
 
         // ================= Carousel & Flow =================
@@ -333,17 +398,35 @@
         function deleteCard() { if(projectData.carousel.length <= 1) return; projectData.carousel.splice(currentCardIndex, 1); currentCardIndex = Math.max(0, currentCardIndex - 1); updateUI(); renderDots(); }
         function switchCard(idx) { currentCardIndex = idx; updateUI(); renderDots(); }
         function renderDots() { const c = document.getElementById('cardDots'); c.innerHTML=''; document.getElementById('currentCardNum').innerText = currentCardIndex + 1; projectData.carousel.forEach((_, i) => { const d = document.createElement('div'); d.className = `card-dot ${i===currentCardIndex?'active':''}`; d.onclick=()=>switchCard(i); c.appendChild(d); }); }
-        function switchFlowStep(i) { currentFlowStep = i; document.querySelectorAll('.flow-step-btn').forEach(b => b.classList.remove('active')); document.getElementById(`flow-step-${i}`).classList.add('active'); updateUI(); }
+        
+        function switchFlowStep(i) {
+            currentFlowStep = i;
+            document.querySelectorAll('.flow-step-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`flow-step-${i}`).classList.add('active');
+            refs.uploadLabel.innerText = `1. 上傳 Step ${i+1} 底圖`;
+            updateUI();
+        }
 
-        // ================= Drawing =================
+        // ================= Tab Switching =================
+        function switchTab(mode) {
+            projectData.mode = mode; currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${mode}`).classList.add('active');
+            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel');
+            document.getElementById('flowStepNav').classList.toggle('hidden', mode !== 'flow');
+            document.getElementById('flowHelpBtn').classList.toggle('hidden', mode !== 'flow');
+            document.getElementById('keywordBlock').classList.remove('hidden');
+            if(mode !== 'flow') refs.uploadLabel.innerText = "1. 上傳底圖";
+            updateUI(); updateGasCode();
+        }
+
+        // ================= Image Input =================
         refs.imageInput.addEventListener('change', function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(evt) { const data = getCurrentDataObj(); data.localPreview = evt.target.result; updateUI(); }; reader.readAsDataURL(file); });
         function saveCurrentDataState() { getCurrentDataObj().imageUrl = refs.imageUrl.value; updateUI(); }
-        
-        // Touch Support
+
+        // ================= Drawing =================
         refs.drawLayer.addEventListener('touchstart', (e)=>{ e.preventDefault(); if(e.touches.length===1) handleMouseDown(e.touches[0]); }, {passive:false});
         refs.drawLayer.addEventListener('touchmove', (e)=>{ e.preventDefault(); if(e.touches.length===1 && isDrawing) handleMouseMove(e.touches[0]); }, {passive:false});
         refs.drawLayer.addEventListener('touchend', (e)=>{ e.preventDefault(); if(isDrawing) handleMouseUp(e.changedTouches[0]); }, {passive:false});
-        
         refs.drawLayer.addEventListener('mousedown', handleMouseDown);
         refs.drawLayer.addEventListener('mousemove', handleMouseMove);
         refs.drawLayer.addEventListener('mouseup', handleMouseUp);
@@ -353,9 +436,9 @@
         function handleMouseUp(e) { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); let type='message', text=`關鍵字${d.areas.length+1}`; if(currentMode==='flow' && currentFlowStep<3) { type='flow_next'; text=projectData.flow[currentFlowStep+1].trigger; } d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:text, type:type, selected:false}); renderAreas(); renderActionList(); } }
 
         function updateScale() { if(naturalWidth>0 && refs.previewImage.offsetWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
-        function renderAreas() { const data = getCurrentDataObj(); refs.drawLayer.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`; el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px'; el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px'; el.innerText=i+1; el.onclick=(e)=>{e.stopPropagation(); toggleAreaSelection(i);}; refs.drawLayer.appendChild(el); }); }
-        function renderActionList() { const data = getCurrentDataObj(); refs.actionList.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; el.innerHTML = `<span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span><select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-16"><option value="message" ${a.type==='message'?'selected':''}>文字</option><option value="uri" ${a.type==='uri'?'selected':''}>連結</option><option value="flow_next" ${a.type==='flow_next'?'selected':''}>跳轉</option></select><input value="${a.text}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0"><button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button>`; refs.actionList.appendChild(el); }); }
-        function updateArea(i, f, v) { getCurrentDataObj().areas[i][f] = v; }
+        function renderAreas() { const data = getCurrentDataObj(); refs.drawLayer.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`; el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px'; el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px'; el.innerText=i+1; el.onclick=(e)=>{e.stopPropagation(); toggleAreaSelection(i);}; if(a.type==='flow_next'){el.style.borderColor='#be123c';el.style.backgroundColor='rgba(190,18,60,0.2)';} refs.drawLayer.appendChild(el); }); }
+        function renderActionList() { const data = getCurrentDataObj(); refs.actionList.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; let flowOpt = (currentMode==='flow'&&currentFlowStep<3)?`<option value="flow_next" ${a.type==='flow_next'?'selected':''}>🔗 跳轉</option>`:''; el.innerHTML = `<span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span><select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-16"><option value="message" ${a.type==='message'?'selected':''}>💬 文字</option><option value="uri" ${a.type==='uri'?'selected':''}>🔗 連結</option>${flowOpt}</select><input value="${a.text}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0" ${a.type==='flow_next'?'readonly':''}><button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button>`; refs.actionList.appendChild(el); }); }
+        function updateArea(i, f, v) { const d = getCurrentDataObj(); d.areas[i][f] = v; if(v==='flow_next') d.areas[i].text = projectData.flow[currentFlowStep+1].trigger; renderAreas(); renderActionList(); }
         function removeArea(i) { getCurrentDataObj().areas.splice(i, 1); renderAreas(); renderActionList(); }
         function toggleAreaSelection(i) { const d=getCurrentDataObj(); d.areas[i].selected=!d.areas[i].selected; renderAreas(); renderActionList(); }
         function deleteSelectedAreas() { const d=getCurrentDataObj(); d.areas=d.areas.filter(a=>!a.selected); renderAreas(); renderActionList(); }
@@ -363,7 +446,7 @@
         function adjustZoom(delta) { currentZoom = Math.max(10, currentZoom+delta); document.getElementById('zoomDisplay').innerText = currentZoom+'%'; refs.previewImage.style.width = currentZoom+'%'; setTimeout(()=>{updateScale(); renderAreas()},0); }
         function resetZoom() { currentZoom = 100; adjustZoom(0); }
 
-        // ================= Code Gen & Export =================
+        // ================= Code Gen =================
         function generateImagemapJson(data) { const scale = (naturalWidth&&naturalWidth!==1040)?1040/naturalWidth:1; return { "type": "imagemap", "baseUrl": data.imageUrl, "altText": "選單", "baseSize": { "width": 1040, "height": Math.round((naturalHeight||1040)*scale) }, "actions": data.areas.map(a => ({ "type": a.type==='uri'?'uri':'message', "text": a.type!=='uri'?a.text:undefined, "linkUri": a.type==='uri'?a.text:undefined, "area": { x: Math.round(a.x*scale), y: Math.round(a.y*scale), width: Math.round(a.width*scale), height: Math.round(a.height*scale) } })) }; }
         function generateFlexCarouselJson(cardsData) { const bubbles = cardsData.map(card => { const imgUrl = card.imageUrl || "https://via.placeholder.com/1040x1040"; const clickAreas = card.areas.map(a => { const lp = (a.x/naturalWidth*100).toFixed(4)+'%', tp = (a.y/naturalHeight*100).toFixed(4)+'%', wp = (a.width/naturalWidth*100).toFixed(4)+'%', hp = (a.height/naturalHeight*100).toFixed(4)+'%'; return { "type": "box", "layout": "vertical", "position": "absolute", "offsetStart": lp, "offsetTop": tp, "width": wp, "height": hp, "action": { "type": a.type==='uri'?'uri':'message', "label": "action", "text": a.type!=='uri'?a.text:undefined, "uri": a.type==='uri'?a.text:undefined } }; }); return { "type": "bubble", "body": { "type": "box", "layout": "overlap", "paddingAll": "0px", "contents": [ { "type": "image", "url": imgUrl, "size": "full", "aspectMode": "cover" }, ...clickAreas ] } }; }); return { "type": "flex", "altText": "選單", "contents": { "type": "carousel", "contents": bubbles } }; }
 
@@ -396,12 +479,7 @@ function doPost(e) {
 }`;
             document.getElementById('gasCode').innerText = code;
         }
-
-        function downloadJSON() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "line_project.json"); dl.click(); }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='projectsModal') loadProjectsList(); if(id==='previewModal') renderPhoneSimulator(); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function copyCode() { navigator.clipboard.writeText(document.getElementById('gasCode').innerText); alert('複製成功！'); }
-        function openPreviewModal() { openModal('previewModal'); }
     </script>
 </body>
 </html>
