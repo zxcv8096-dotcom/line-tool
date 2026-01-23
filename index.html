@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE 萬能編輯器 (v11.0)</title>
+    <title>LINE 萬能編輯器 (v12.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
@@ -27,16 +27,12 @@
         .tab-btn { opacity: 0.6; border-bottom: 4px solid transparent; }
         .tab-btn.active { opacity: 1; border-bottom: 4px solid #4f46e5; color: #4f46e5; background: #eef2ff; }
         
-        /* 卡片預覽 */
-        .card-preview { width: 240px; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; flex-shrink: 0; display: flex; flex-direction: column; }
-        .card-img { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; }
-        .card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; }
-        .card-title { font-weight: bold; font-size: 16px; margin-bottom: 4px; color: #1e293b; }
-        .card-desc { font-size: 12px; color: #64748b; margin-bottom: 8px; line-height: 1.4; flex: 1; }
-        .card-btn { display: block; width: 100%; padding: 6px; text-align: center; background: #eff6ff; color: #3b82f6; font-size: 13px; font-weight: bold; border-radius: 6px; margin-top: 4px; border: 1px solid #dbeafe; }
-        
         /* 程式碼區塊 */
         .code-block { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre; position: relative; }
+        
+        /* 卡片切換器 */
+        .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all 0.2s; }
+        .card-dot.active { background: #4f46e5; transform: scale(1.3); }
     </style>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
@@ -48,14 +44,14 @@
                 <div>
                     <h1 class="font-bold text-xl tracking-wide text-slate-800 flex items-center gap-2">
                         LINE 萬能編輯器 
-                        <span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full border border-red-200">v11.0 自由版</span>
+                        <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">v12.0 座標神手</span>
                     </h1>
-                    <p class="text-xs text-slate-400">大心家族系統 | 座標圖 + 滑動卡片</p>
+                    <p class="text-xs text-slate-400">大心家族系統 | 支援 Flex 任意座標點擊</p>
                 </div>
             </div>
             <div class="flex gap-2">
                 <button onclick="openModal('tutorialModal')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md transition flex items-center gap-2">
-                    📚 點我看教學 (含程式碼)
+                    📚 程式碼與教學
                 </button>
                 <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-2 text-sm">
                     💾 下載 JSON
@@ -67,86 +63,74 @@
     <div class="bg-white border-b border-slate-200">
         <div class="max-w-7xl mx-auto flex">
             <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-4 font-bold text-lg transition flex items-center justify-center gap-2">
-                🗺️ 座標引流圖 <span class="text-xs font-normal text-slate-400">(大圖多點擊)</span>
+                🗺️ 座標引流圖 <span class="text-xs font-normal text-slate-400">(單張大圖)</span>
             </button>
             <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-4 font-bold text-lg transition flex items-center justify-center gap-2">
-                🎠 滑動卡片 <span class="text-xs font-normal text-slate-400">(左右滑動選單)</span>
+                🎠 座標滑動卡片 <span class="text-xs font-normal text-slate-400">(多張圖+座標點擊)</span>
             </button>
         </div>
     </div>
 
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full bg-white relative">
         
-        <div id="content-imagemap" class="flex flex-1 w-full h-full">
-            <aside class="w-[400px] border-r border-slate-200 flex flex-col z-20 bg-white">
-                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-                    <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-2">
-                        <label class="font-bold text-blue-800 text-sm">LINE 觸發關鍵字 (必填)</label>
-                        <input type="text" id="triggerKeyword" value="選單" placeholder="例如: 選單, 產品" class="w-full p-2 border border-blue-200 rounded text-sm focus:ring-2 focus:ring-blue-500 font-bold text-blue-700" oninput="updateGasCode()">
-                    </div>
+        <aside class="w-[420px] border-r border-slate-200 flex flex-col z-20 bg-white">
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                
+                <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-2">
+                    <label class="font-bold text-blue-800 text-sm">LINE 觸發關鍵字 (必填)</label>
+                    <input type="text" id="triggerKeyword" value="選單" placeholder="例如: 選單, 產品" class="w-full p-2 border border-blue-200 rounded text-sm focus:ring-2 focus:ring-blue-500 font-bold text-blue-700" oninput="updateGasCode()">
+                </div>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block font-bold text-slate-700 text-sm mb-1">1. 上傳底圖</label>
-                            <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"/>
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <label class="block font-bold text-slate-700 text-sm">2. 圖片網址 (必填)</label>
-                                <button onclick="openModal('imageHelpModal')" class="text-xs text-blue-600 hover:underline">❓ 如何取得?</button>
-                            </div>
-                            <input type="text" id="imageUrl" placeholder="https://..." class="w-full p-2 border border-slate-300 rounded text-sm font-mono" oninput="saveState()">
+                <div id="carouselControls" class="hidden space-y-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
+                    <div class="flex justify-between items-center">
+                        <label class="font-bold text-amber-800 text-sm">📦 卡片管理 (Card Manager)</label>
+                        <div class="flex gap-2">
+                            <button onclick="addCard()" class="bg-amber-500 text-white px-2 py-1 rounded text-xs hover:bg-amber-600 font-bold">+ 加卡片</button>
+                            <button onclick="deleteCard()" class="text-red-500 text-xs hover:underline">刪除目前</button>
                         </div>
                     </div>
+                    <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots">
+                        </div>
+                    <p class="text-center text-xs text-amber-700 font-bold">目前編輯：第 <span id="currentCardNum">1</span> 張卡片</p>
+                </div>
 
-                    <div class="flex-1">
-                        <div class="flex justify-between items-end mb-2 border-b pb-1">
-                            <label class="font-bold text-slate-700 text-sm">3. 點擊區域設定</label>
-                            <span class="text-xs text-slate-400">數量: <span id="areaCount">0</span></span>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 text-sm mb-1">1. 上傳底圖 (預覽用)</label>
+                        <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"/>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block font-bold text-slate-700 text-sm">2. 圖片網址 (必填)</label>
+                            <button onclick="openModal('imageHelpModal')" class="text-xs text-blue-600 hover:underline">❓ 如何取得?</button>
                         </div>
-                        <div id="actionList" class="space-y-2 pb-10">
-                            <div class="text-center text-slate-400 text-sm py-8 border-2 border-dashed rounded-lg">請在右側圖片畫框框 ↗️</div>
-                        </div>
+                        <input type="text" id="imageUrl" placeholder="https://... 結尾是 .jpg/.png" class="w-full p-2 border border-slate-300 rounded text-sm font-mono" oninput="saveCurrentCardState()">
                     </div>
                 </div>
-            </aside>
-            <main class="flex-1 bg-slate-50 p-8 overflow-auto flex justify-center items-start">
-                <div id="canvasWrapper" class="relative shadow-2xl">
-                    <div id="canvasContainer" class="canvas-container">
-                        <div id="placeholder" class="flex flex-col items-center justify-center h-96 w-96 text-slate-300">
-                            <span class="text-lg font-bold">請先上傳圖片</span>
-                        </div>
-                        <img id="previewImage" class="hidden max-w-full block select-none" style="max-height: 85vh;" />
-                        <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
+
+                <div class="flex-1">
+                    <div class="flex justify-between items-end mb-2 border-b pb-1">
+                        <label class="font-bold text-slate-700 text-sm">3. 點擊區域設定</label>
+                        <span class="text-xs text-slate-400">數量: <span id="areaCount">0</span></span>
+                    </div>
+                    <div id="actionList" class="space-y-2 pb-10">
+                        <div class="text-center text-slate-400 text-sm py-8 border-2 border-dashed rounded-lg">請在右側圖片畫框框 ↗️</div>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </aside>
 
-        <div id="content-carousel" class="hidden flex flex-1 w-full h-full">
-            <aside class="w-[450px] border-r border-slate-200 flex flex-col z-20 bg-white">
-                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-                    <div class="bg-purple-50 rounded-xl p-4 border border-purple-100 space-y-2">
-                        <label class="font-bold text-purple-800 text-sm">LINE 觸發關鍵字 (必填)</label>
-                        <input type="text" id="carouselTrigger" value="命盤" class="w-full p-2 border border-purple-200 rounded text-sm focus:ring-2 focus:ring-purple-500 font-bold text-purple-700" oninput="updateGasCode()">
-                        <p class="text-xs text-purple-600">⚠️ 注意：滑動卡片的圖片本身<b>不能</b>像左邊那樣畫格子，一張圖只能設一個動作。</p>
+        <main class="flex-1 bg-slate-50 p-8 overflow-auto flex justify-center items-start">
+            <div id="canvasWrapper" class="relative shadow-2xl transition-all duration-300">
+                <div id="canvasContainer" class="canvas-container">
+                    <div id="placeholder" class="flex flex-col items-center justify-center h-96 w-96 text-slate-300">
+                        <span class="text-lg font-bold">請先上傳圖片</span>
                     </div>
-
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h3 class="font-bold text-slate-700">卡片內容編輯</h3>
-                        <button onclick="addCard()" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-purple-700 font-bold shadow">+ 新增一張卡片</button>
-                    </div>
-
-                    <div id="cardEditorList" class="space-y-4 pb-20">
-                        </div>
+                    <img id="previewImage" class="hidden max-w-full block select-none" style="max-height: 85vh;" />
+                    <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
                 </div>
-            </aside>
-            <main class="flex-1 bg-slate-100 p-8 flex flex-col items-center justify-center">
-                <div class="mb-4 text-slate-500 text-sm font-bold">📱 手機預覽效果 (可左右滑動)</div>
-                <div class="w-full max-w-3xl overflow-x-auto flex gap-4 p-6 items-start custom-scrollbar bg-slate-200/50 rounded-2xl border border-slate-300" id="carouselPreview">
-                    </div>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
 
     <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -210,9 +194,17 @@
     </div>
 
     <script>
-        let currentMode = 'imagemap';
+        let currentMode = 'imagemap'; // 'imagemap' or 'carousel'
+        let currentCardIndex = 0;
         
-        // Imagemap Vars
+        // Data Models
+        // Imagemap data: Single object { imageUrl, areas: [] }
+        let imagemapData = { imageUrl: "", areas: [] };
+        
+        // Carousel data: Array of objects [{ imageUrl, areas: [] }, ...]
+        let carouselCards = [{ imageUrl: "", areas: [] }];
+
+        // UI Refs
         const imageInput = document.getElementById('imageInput');
         const imageUrlInput = document.getElementById('imageUrl');
         const previewImage = document.getElementById('previewImage');
@@ -221,61 +213,149 @@
         const placeholder = document.getElementById('placeholder');
         const areaCountSpan = document.getElementById('areaCount');
         const triggerKeywordInput = document.getElementById('triggerKeyword');
-        let areas = [];
+        
         let isDrawing = false;
         let startX, startY;
         let currentBox = null;
         let naturalWidth = 0; 
+        let naturalHeight = 0;
         let scaleFactor = 1;
 
-        // Carousel Vars (初始一張卡片)
-        let cards = [{
-            title: "第一張卡片",
-            desc: "這是說明文字，請在左側修改",
-            imageUrl: "https://via.placeholder.com/1040x676?text=Image1",
-            imgAction: "",
-            btns: [{label: "按鈕1", text: "點擊了按鈕1"}, {label: "按鈕2", text: "點擊了按鈕2"}]
-        }];
-
+        // Init
         window.addEventListener('DOMContentLoaded', () => {
-            const savedUrl = localStorage.getItem('line_tool_url');
-            if(savedUrl) imageUrlInput.value = savedUrl;
-            renderCardEditors();
-            renderCarouselPreview();
             updateGasCode();
+            renderDots();
         });
 
+        // ================= Mode Switcher =================
         function switchTab(mode) {
             currentMode = mode;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tab-${mode}`).classList.add('active');
-            document.getElementById('content-imagemap').classList.add('hidden');
-            document.getElementById('content-carousel').classList.add('hidden');
-            document.getElementById(`content-${mode}`).classList.remove('hidden');
+            
+            // Toggle Controls
+            if(mode === 'carousel') {
+                document.getElementById('carouselControls').classList.remove('hidden');
+                triggerKeywordInput.value = "命盤";
+            } else {
+                document.getElementById('carouselControls').classList.add('hidden');
+                triggerKeywordInput.value = "選單";
+            }
+            
+            // Load Data for current mode
+            loadCurrentData();
             updateGasCode();
         }
 
-        // ================= Imagemap 核心 =================
+        // ================= Card Management (Carousel Only) =================
+        function addCard() {
+            if(carouselCards.length >= 10) { alert("最多 10 張卡片！"); return; }
+            carouselCards.push({ imageUrl: "", areas: [] });
+            currentCardIndex = carouselCards.length - 1;
+            loadCurrentData();
+            renderDots();
+        }
+
+        function deleteCard() {
+            if(carouselCards.length <= 1) { alert("至少要留一張卡片！"); return; }
+            if(!confirm("確定刪除這張卡片？")) return;
+            carouselCards.splice(currentCardIndex, 1);
+            if(currentCardIndex >= carouselCards.length) currentCardIndex = carouselCards.length - 1;
+            loadCurrentData();
+            renderDots();
+        }
+
+        function switchCard(index) {
+            saveCurrentCardState(); // Save current before switching
+            currentCardIndex = index;
+            loadCurrentData();
+            renderDots();
+        }
+
+        function renderDots() {
+            const container = document.getElementById('cardDots');
+            container.innerHTML = '';
+            document.getElementById('currentCardNum').innerText = currentCardIndex + 1;
+            
+            carouselCards.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = `card-dot ${i === currentCardIndex ? 'active' : ''}`;
+                dot.onclick = () => switchCard(i);
+                container.appendChild(dot);
+            });
+        }
+
+        // ================= Core Logic (Data Loading/Saving) =================
+        function getCurrentDataObj() {
+            return currentMode === 'imagemap' ? imagemapData : carouselCards[currentCardIndex];
+        }
+
+        function loadCurrentData() {
+            const data = getCurrentDataObj();
+            imageUrlInput.value = data.imageUrl || "";
+            // Clear Image Preview first
+            previewImage.src = "";
+            previewImage.classList.add('hidden');
+            drawLayer.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            
+            // If has URL, try to load
+            if(data.imageUrl) {
+                previewImage.src = data.imageUrl;
+                previewImage.onload = function() {
+                    naturalWidth = this.naturalWidth;
+                    naturalHeight = this.naturalHeight;
+                    previewImage.classList.remove('hidden');
+                    drawLayer.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    updateScale();
+                    renderAreas(); 
+                    renderActionList();
+                }
+            } else {
+                renderAreas(); // clear
+                renderActionList();
+            }
+        }
+
+        function saveCurrentCardState() {
+            const data = getCurrentDataObj();
+            data.imageUrl = imageUrlInput.value;
+            // areas are updated in real-time
+        }
+
+        // ================= Image Handling =================
         imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
+                const data = getCurrentDataObj();
+                // This is a local blob for preview, not the final URL. 
+                // We don't save local blob to JSON logic, but we show it.
                 previewImage.src = evt.target.result;
                 previewImage.onload = function() {
                     naturalWidth = this.naturalWidth;
+                    naturalHeight = this.naturalHeight;
                     placeholder.classList.add('hidden');
                     previewImage.classList.remove('hidden');
                     drawLayer.classList.remove('hidden');
                     updateScale();
+                    
+                    // Reset areas for new image usually
+                    // data.areas = []; 
+                    // renderAreas(); renderActionList();
                 }
             }
             reader.readAsDataURL(file);
         });
 
         window.addEventListener('resize', updateScale);
-        function updateScale() { if(naturalWidth>0) scaleFactor = previewImage.width / naturalWidth; }
+        function updateScale() { 
+            if(naturalWidth>0) scaleFactor = previewImage.width / naturalWidth; 
+        }
 
+        // ================= Drawing Logic =================
         drawLayer.addEventListener('mousedown', (e) => {
             if(!previewImage.src) return;
             isDrawing = true;
@@ -303,20 +383,23 @@
         });
 
         drawLayer.addEventListener('mouseup', (e) => {
+            if(!isDrawing) return;
             isDrawing = false;
             const rect = drawLayer.getBoundingClientRect();
             const endX = (e.clientX - rect.left) / scaleFactor;
             const endY = (e.clientY - rect.top) / scaleFactor;
             if(currentBox) currentBox.remove();
+            
             const w = Math.abs(endX - startX);
             const h = Math.abs(endY - startY);
             if(w > 20 && h > 20) {
-                areas.push({ 
+                const data = getCurrentDataObj();
+                data.areas.push({ 
                     x: Math.round(Math.min(startX, endX)), 
                     y: Math.round(Math.min(startY, endY)), 
                     width: Math.round(w), 
                     height: Math.round(h), 
-                    text: `關鍵字${areas.length+1}`,
+                    text: `關鍵字${data.areas.length+1}`,
                     type: 'message'
                 });
                 renderAreas(); renderActionList();
@@ -324,8 +407,9 @@
         });
 
         function renderAreas() {
+            const data = getCurrentDataObj();
             drawLayer.innerHTML = '';
-            areas.forEach((area, i) => {
+            data.areas.forEach((area, i) => {
                 const el = document.createElement('div');
                 el.className = 'area-box';
                 el.style.left = (area.x * scaleFactor) + 'px';
@@ -337,7 +421,7 @@
                 if(area.type === 'uri') { el.style.borderColor='#2563eb'; el.style.backgroundColor='rgba(37,99,235,0.2)'; }
                 drawLayer.appendChild(el);
             });
-            areaCountSpan.innerText = areas.length;
+            areaCountSpan.innerText = data.areas.length;
         }
 
         function highlightArea(index) {
@@ -347,133 +431,51 @@
         }
 
         function renderActionList() {
+            const data = getCurrentDataObj();
             actionList.innerHTML = '';
-            if(areas.length === 0) actionList.innerHTML = '<div class="text-center text-slate-400 text-sm py-8 border-2 border-dashed rounded-lg">請在右側圖片畫框框 ↗️</div>';
+            if(data.areas.length === 0) {
+                actionList.innerHTML = '<div class="text-center text-slate-400 text-sm py-8 border-2 border-dashed rounded-lg">請在右側圖片畫框框 ↗️</div>';
+                return;
+            }
             
-            areas.forEach((area, i) => {
+            data.areas.forEach((area, i) => {
                 const row = document.createElement('div');
                 row.className = 'bg-white p-3 rounded-lg border border-slate-200 text-sm space-y-2 shadow-sm';
                 row.innerHTML = `
                     <div class="flex items-center gap-2">
                         <span class="bg-slate-800 text-white w-5 h-5 flex items-center justify-center rounded text-xs font-bold shrink-0">${i+1}</span>
-                        <select onchange="areas[${i}].type=this.value; renderAreas(); renderActionList();" class="text-xs border p-1 rounded bg-slate-50 font-bold text-slate-600">
+                        <select onchange="updateAreaType(${i}, this.value)" class="text-xs border p-1 rounded bg-slate-50 font-bold text-slate-600">
                             <option value="message" ${area.type==='message'?'selected':''}>💬 傳文字</option>
                             <option value="uri" ${area.type==='uri'?'selected':''}>🔗 開連結</option>
                         </select>
                         <div class="flex-1"></div>
-                        <button onclick="areas.splice(${i},1);renderAreas();renderActionList()" class="text-red-400 hover:text-red-600 font-bold px-2">🗑️</button>
+                        <button onclick="removeArea(${i})" class="text-red-400 hover:text-red-600 font-bold px-2">🗑️</button>
                     </div>
-                    <input type="text" value="${area.text}" onchange="areas[${i}].text=this.value" class="w-full border p-2 rounded text-xs" placeholder="${area.type==='uri'?'https://...':'輸入關鍵字'}">
+                    <input type="text" value="${area.text}" onchange="updateAreaText(${i}, this.value)" class="w-full border p-2 rounded text-xs" placeholder="${area.type==='uri'?'https://...':'輸入關鍵字'}">
                 `;
                 row.onclick = () => highlightArea(i);
                 actionList.appendChild(row);
             });
         }
 
-        // ================= Carousel 核心 (升級版) =================
-        function addCard() {
-            cards.push({ title: "新卡片", desc: "說明...", imageUrl: "", imgAction:"", btns: [{label:"按鈕", text:"回覆"}] });
-            renderCardEditors(); renderCarouselPreview();
+        function updateAreaType(i, val) {
+            const data = getCurrentDataObj();
+            data.areas[i].type = val;
+            renderAreas(); renderActionList();
         }
-        function removeCard(i) {
-            if(confirm("確定刪除這張卡片？")) { cards.splice(i,1); renderCardEditors(); renderCarouselPreview(); }
+        function updateAreaText(i, val) {
+            const data = getCurrentDataObj();
+            data.areas[i].text = val;
         }
-        function moveCard(i, direction) {
-            if((i===0 && direction===-1) || (i===cards.length-1 && direction===1)) return;
-            const temp = cards[i];
-            cards[i] = cards[i+direction];
-            cards[i+direction] = temp;
-            renderCardEditors(); renderCarouselPreview();
-        }
-        function addBtn(cardIdx) {
-            if(cards[cardIdx].btns.length < 3) {
-                cards[cardIdx].btns.push({label:"新按鈕", text:"回覆內容"});
-                renderCardEditors(); renderCarouselPreview();
-            } else { alert("最多 3 個按鈕"); }
-        }
-        function removeBtn(cardIdx, btnIdx) {
-            cards[cardIdx].btns.splice(btnIdx, 1);
-            renderCardEditors(); renderCarouselPreview();
+        function removeArea(i) {
+            const data = getCurrentDataObj();
+            data.areas.splice(i, 1);
+            renderAreas(); renderActionList();
         }
 
-        function renderCardEditors() {
-            const container = document.getElementById('cardEditorList');
-            container.innerHTML = '';
-            cards.forEach((card, i) => {
-                const el = document.createElement('div');
-                el.className = 'bg-white p-4 rounded-xl border border-slate-300 shadow-sm space-y-3 relative';
-                el.innerHTML = `
-                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-100 -mx-2 -mt-2 mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-700 bg-white px-2 rounded border">Card ${i+1}</span>
-                            <button onclick="moveCard(${i}, -1)" class="text-slate-400 hover:text-blue-600 ${i===0?'opacity-30':''}">⬅️</button>
-                            <button onclick="moveCard(${i}, 1)" class="text-slate-400 hover:text-blue-600 ${i===cards.length-1?'opacity-30':''}">➡️</button>
-                        </div>
-                        <button onclick="removeCard(${i})" class="text-red-500 text-xs font-bold hover:underline">刪除卡片</button>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <label class="block text-slate-500">1. 圖片網址 (圖片點擊無反應請留空)</label>
-                        <input type="text" placeholder="https://..." value="${card.imageUrl}" oninput="cards[${i}].imageUrl=this.value;renderCarouselPreview()" class="w-full p-2 border rounded font-mono">
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-slate-500">2. 標題</label><input type="text" value="${card.title}" oninput="cards[${i}].title=this.value;renderCarouselPreview()" class="w-full p-2 border rounded font-bold"></div>
-                            <div><label class="text-slate-500">3. 描述</label><input type="text" value="${card.desc}" oninput="cards[${i}].desc=this.value;renderCarouselPreview()" class="w-full p-2 border rounded"></div>
-                        </div>
-
-                        <div class="border-t pt-2 mt-2">
-                            <div class="flex justify-between mb-2">
-                                <label class="text-slate-500 font-bold">4. 按鈕設定</label>
-                                <button onclick="addBtn(${i})" class="text-blue-600 hover:underline">+ 增加按鈕</button>
-                            </div>
-                            <div id="btn-list-${i}" class="space-y-2"></div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(el);
-
-                // Render Buttons
-                const btnContainer = el.querySelector(`#btn-list-${i}`);
-                card.btns.forEach((btn, btnIdx) => {
-                    const btnRow = document.createElement('div');
-                    btnRow.className = 'flex gap-2 items-center';
-                    btnRow.innerHTML = `
-                        <span class="text-slate-400">${btnIdx+1}.</span>
-                        <input type="text" value="${btn.label}" placeholder="按鈕文字" oninput="cards[${i}].btns[${btnIdx}].label=this.value;renderCarouselPreview()" class="w-1/3 p-2 border rounded bg-blue-50 text-center">
-                        <input type="text" value="${btn.text}" placeholder="回傳文字/網址" oninput="cards[${i}].btns[${btnIdx}].text=this.value;renderCarouselPreview()" class="flex-1 p-2 border rounded bg-blue-50">
-                        <button onclick="removeBtn(${i}, ${btnIdx})" class="text-red-400">✕</button>
-                    `;
-                    btnContainer.appendChild(btnRow);
-                });
-            });
-        }
-
-        function renderCarouselPreview() {
-            const container = document.getElementById('carouselPreview');
-            container.innerHTML = '';
-            cards.forEach(card => {
-                const el = document.createElement('div');
-                el.className = 'card-preview';
-                
-                let btnsHtml = '';
-                card.btns.forEach(b => {
-                    btnsHtml += `<div class="card-btn">${b.label || '按鈕'}</div>`;
-                });
-
-                el.innerHTML = `
-                    <img src="${card.imageUrl || 'https://via.placeholder.com/1040x676?text=No+Image'}" class="card-img">
-                    <div class="card-body">
-                        <div class="card-title">${card.title || '標題'}</div>
-                        <div class="card-desc">${card.desc || '描述內容...'}</div>
-                        ${btnsHtml}
-                    </div>
-                `;
-                container.appendChild(el);
-            });
-        }
-
-        // ================= 共用功能 =================
+        // ================= JSON Generation & Code =================
         function updateGasCode() {
-            const keyword = currentMode === 'imagemap' ? (triggerKeywordInput.value || '選單') : (document.getElementById('carouselTrigger').value || '命盤');
+            const keyword = triggerKeywordInput.value || '選單';
             const code = `const CHANNEL_ACCESS_TOKEN = '請換成你的LINE_TOKEN'; 
 
 function doPost(e) {
@@ -503,15 +505,16 @@ function doPost(e) {
 
         function downloadJSON() {
             let output = {};
+            
             if (currentMode === 'imagemap') {
-                if (!imageUrlInput.value) { alert("請填圖片網址"); return; }
+                if (!imagemapData.imageUrl) { alert("請填寫圖片網址"); return; }
                 const scale = (naturalWidth && naturalWidth !== 1040) ? 1040/naturalWidth : 1;
                 output = {
                     "type": "imagemap",
-                    "baseUrl": imageUrlInput.value,
+                    "baseUrl": imagemapData.imageUrl,
                     "altText": "請選擇功能",
                     "baseSize": { "width": 1040, "height": Math.round((naturalHeight || 1040) * scale) },
-                    "actions": areas.map(a => ({
+                    "actions": imagemapData.areas.map(a => ({
                         "type": a.type,
                         "text": a.type==='message'?a.text:undefined,
                         "linkUri": a.type==='uri'?a.text:undefined,
@@ -519,36 +522,75 @@ function doPost(e) {
                     }))
                 };
             } else {
-                // 生成 Flex Carousel
-                const bubbles = cards.map(c => {
-                    const buttons = c.btns.map(b => {
-                        const isLink = b.text.startsWith('http');
+                // Generate Advanced Flex Carousel with Overlap Layout (Coordinate Click)
+                const bubbles = carouselCards.map(card => {
+                    const imgUrl = card.imageUrl || "https://via.placeholder.com/1040x1040?text=No+Image";
+                    // Note: In Flex, aspect ratio logic is tricky. We assume user uploads consistent size or use 1:1 / 20:13
+                    // Here we use a simpler approach: fixed aspect ratio or relative percentage positioning
+                    
+                    const clickAreas = card.areas.map(a => {
+                        // Calculate percentage position relative to image size
+                        // Since we don't know the final render size in Flex, % is best.
+                        // But Flex 'action' box must be inside an absolute layout.
+                        
+                        // Percentage math based on naturalWidth/Height when user drew it
+                        const leftP = (a.x / naturalWidth * 100).toFixed(1) + '%';
+                        const topP = (a.y / naturalHeight * 100).toFixed(1) + '%';
+                        const widthP = (a.width / naturalWidth * 100).toFixed(1) + '%';
+                        const heightP = (a.height / naturalHeight * 100).toFixed(1) + '%';
+
                         return {
-                            "type": "button",
-                            "style": "secondary",
-                            "action": { 
-                                "type": isLink ? "uri" : "message", 
-                                "label": b.label, 
-                                "text": isLink ? undefined : b.text,
-                                "uri": isLink ? b.text : undefined
+                            "type": "box",
+                            "layout": "vertical",
+                            "position": "absolute",
+                            "offsetStart": leftP,
+                            "offsetTop": topP,
+                            "width": widthP,
+                            "height": heightP,
+                            "action": {
+                                "type": a.type,
+                                "label": "action",
+                                "text": a.type==='message' ? a.text : undefined,
+                                "uri": a.type==='uri' ? a.text : undefined
                             }
                         };
                     });
 
+                    // Aspect ratio string (e.g., "1:1" or "20:13")
+                    // If we have natural dimensions, try to approximate, otherwise default
+                    let ratio = "1:1";
+                    if(naturalWidth > 0 && naturalHeight > 0) {
+                        ratio = `${naturalWidth}:${naturalHeight}`; 
+                        // Flex only supports specific ratios roughly, but custom string works in some viewers. 
+                        // Safest is to stick to image intrinsic size or common ratios.
+                        // Let's use fitting for cover.
+                    }
+
                     return {
                         "type": "bubble",
-                        "hero": { "type": "image", "url": c.imageUrl || "https://via.placeholder.com/1040", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" },
                         "body": {
-                            "type": "box", "layout": "vertical",
+                            "type": "box",
+                            "layout": "overlap",
+                            "paddingAll": "0px",
                             "contents": [
-                                { "type": "text", "text": c.title || " ", "weight": "bold", "size": "xl" },
-                                { "type": "text", "text": c.desc || " ", "size": "sm", "color": "#aaaaaa", "wrap": true }
+                                {
+                                    "type": "image",
+                                    "url": imgUrl,
+                                    "size": "full",
+                                    "aspectRatio": ratio,
+                                    "aspectMode": "cover"
+                                },
+                                ...clickAreas // Spread the invisible click boxes on top
                             ]
-                        },
-                        "footer": { "type": "box", "layout": "vertical", "spacing": "sm", "contents": buttons }
+                        }
                     };
                 });
-                output = { "type": "flex", "altText": "請選擇項目", "contents": { "type": "carousel", "contents": bubbles } };
+
+                output = {
+                    "type": "flex",
+                    "altText": "請選擇項目",
+                    "contents": { "type": "carousel", "contents": bubbles }
+                };
             }
 
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(output, null, 2));
@@ -558,9 +600,8 @@ function doPost(e) {
             dl.click();
         }
 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='tutorialModal') updateGasCode(); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function copyCode() { navigator.clipboard.writeText(document.getElementById('gasCode').innerText); alert('複製成功！'); }
-        function saveState() { localStorage.setItem('line_tool_url', imageUrlInput.value); }
     </script>
 </body>
 </html>
