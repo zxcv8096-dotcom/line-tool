@@ -3,63 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE 引流圖片座標產生器 (v9.0)</title>
+    <title>LINE 萬能編輯器 (v10.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
-        
-        /* 畫布背景 */
         .canvas-container { 
-            position: relative; 
-            overflow: hidden; 
+            position: relative; overflow: hidden; 
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-            border: 2px dashed #cbd5e1; 
-            background-color: white;
-            transition: all 0.3s;
-            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 20px 20px;
+            border: 2px dashed #cbd5e1; background-color: white;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px;
         }
-        .canvas-container:hover { border-color: #3b82f6; }
-        
-        /* 紅框樣式 */
         .area-box { 
-            position: absolute; 
-            border: 2px solid rgba(239, 68, 68, 0.9); 
-            background: rgba(239, 68, 68, 0.2); 
-            cursor: move; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            color: white; 
-            font-weight: bold; 
-            font-size: 16px; 
-            text-shadow: 1px 1px 2px black; 
-            z-index: 10;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            user-select: none;
+            position: absolute; border: 2px solid rgba(239, 68, 68, 0.9); background: rgba(239, 68, 68, 0.2); 
+            cursor: move; display: flex; align-items: center; justify-content: center; 
+            color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px black; user-select: none;
         }
-        .area-box:hover { background: rgba(239, 68, 68, 0.4); border-color: #ef4444; }
-        .area-box.selected { 
-            border-color: #f59e0b; 
-            background: rgba(245, 158, 11, 0.3); 
-            z-index: 20; 
-            box-shadow: 0 0 0 2px white, 0 0 0 4px #f59e0b;
-        }
-
-        /* 捲軸美化 */
+        .area-box.selected { border-color: #f59e0b; background: rgba(245, 158, 11, 0.3); z-index: 20; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* 程式碼區塊 */
-        .code-block { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre; position: relative; }
-        .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
-        .copy-btn:hover { background: rgba(255,255,255,0.2); }
-
-        /* 連結按鈕 */
-        .external-link { display: inline-flex; align-items: center; gap: 4px; color: #2563eb; text-decoration: none; font-weight: bold; padding: 4px 8px; background: #eff6ff; border-radius: 4px; border: 1px solid #bfdbfe; transition: all 0.2s; }
-        .external-link:hover { background: #dbeafe; transform: translateY(-1px); }
+        .tab-btn.active { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+        
+        /* 卡片預覽樣式 */
+        .card-preview { width: 240px; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; flex-shrink: 0; }
+        .card-img { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; }
+        .card-body { padding: 12px; }
+        .card-title { font-weight: bold; font-size: 16px; margin-bottom: 4px; color: #1e293b; }
+        .card-desc { font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.4; }
+        .card-btn { display: block; width: 100%; padding: 8px; text-align: center; background: #eff6ff; color: #3b82f6; font-size: 13px; font-weight: bold; border-radius: 6px; margin-top: 6px; }
     </style>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
@@ -67,19 +38,17 @@
     <header class="bg-white border-b border-slate-200 shadow-sm flex-shrink-0 z-30">
         <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">🦁</div>
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">🦁</div>
                 <div>
                     <h1 class="font-bold text-xl tracking-wide text-slate-800 flex items-center gap-2">
-                        LINE 座標產生器 
-                        <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">v9.0 智慧連動</span>
+                        LINE 萬能編輯器 
+                        <span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full border border-purple-200">v10.0 雙模式版</span>
                     </h1>
-                    <p class="text-xs text-slate-400">大心家族系統 | 關鍵字自動同步</p>
+                    <p class="text-xs text-slate-400">大心家族系統 | 座標圖 + 滑動卡片</p>
                 </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="openTutorial()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm border border-indigo-200 ring-2 ring-transparent hover:ring-indigo-100">
-                    📚 完整架設教學
-                </button>
+            <div class="flex gap-2">
+                <button onclick="openModal('tutorialModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-medium text-sm transition">📚 架設教學</button>
                 <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-2 text-sm">
                     💾 下載 JSON
                 </button>
@@ -87,364 +56,181 @@
         </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
-        <aside class="w-[420px] bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                
-                <div class="space-y-4">
-                     <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-100 space-y-2">
-                        <h3 class="font-bold text-indigo-800 flex items-center gap-2 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                            LINE 觸發關鍵字設定
-                        </h3>
+    <div class="max-w-7xl mx-auto w-full px-4 mt-4 flex gap-2">
+        <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-3 rounded-t-xl border-t border-x border-slate-200 bg-white font-bold text-slate-500 text-center transition hover:bg-indigo-50">
+            🗺️ 座標引流圖 (Imagemap)
+        </button>
+        <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-3 rounded-t-xl border-t border-x border-slate-200 bg-slate-100 font-bold text-slate-500 text-center transition hover:bg-indigo-50">
+            🎠 滑動卡片 (Carousel)
+        </button>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full border-x border-b border-slate-200 bg-white mb-4 rounded-b-xl shadow-sm relative">
+        
+        <div id="content-imagemap" class="flex flex-1 w-full h-full">
+            <aside class="w-[400px] border-r border-slate-200 flex flex-col z-20 bg-white">
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                    <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-100 space-y-2">
+                        <label class="font-bold text-indigo-800 text-sm">LINE 觸發關鍵字</label>
+                        <input type="text" id="triggerKeyword" value="選單" class="w-full p-2 border border-indigo-200 rounded text-sm focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-700">
+                    </div>
+
+                    <div class="space-y-4">
                         <div>
-                            <input type="text" id="triggerKeyword" placeholder="例如：選單、Menu、健康" value="選單" class="w-full p-2 border border-indigo-200 rounded text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-indigo-700" oninput="updateGasCodePreview()">
-                            <p class="text-[10px] text-indigo-400 mt-1">💡 設定後，教學裡的程式碼會自動變更！</p>
+                            <label class="block font-bold text-slate-700 text-sm mb-1">1. 上傳底圖</label>
+                            <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"/>
                         </div>
-                    </div>
-
-                    <div class="bg-orange-50 rounded-xl p-4 border border-orange-100 space-y-2">
-                        <div class="flex items-start gap-3">
-                            <div class="flex items-center h-5">
-                                <input id="autoScale" type="checkbox" checked class="focus:ring-orange-500 h-4 w-4 text-orange-600 border-gray-300 rounded cursor-pointer">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block font-bold text-slate-700 text-sm">2. 圖片網址 (必填)</label>
+                                <a href="https://imgur.com/upload" target="_blank" class="text-xs text-blue-500 underline">去 Imgur 上傳</a>
                             </div>
-                            <div class="text-xs">
-                                <label for="autoScale" class="font-medium text-gray-700 cursor-pointer">強制輸出為 1040px 標準寬度</label>
-                                <p class="text-gray-500 mt-1">自動將圖片修正為 LINE 官方標準大小。</p>
-                            </div>
+                            <input type="text" id="imageUrl" placeholder="https://..." class="w-full p-2 border border-slate-300 rounded text-sm font-mono">
                         </div>
                     </div>
-                </div>
 
-                <div class="space-y-4">
-                    <div class="space-y-2">
-                        <label class="block font-bold text-slate-700 text-sm">1. 上傳底圖 (預覽用)</label>
-                        <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition cursor-pointer border border-slate-200 rounded-lg p-1"/>
-                        <div id="statusMsg" class="hidden rounded-lg p-3 text-xs flex items-center gap-2"></div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center">
-                            <label class="block font-bold text-slate-700 text-sm">2. 圖片公開網址 (必填)</label>
-                            <button onclick="openModal('imageHelpModal')" class="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded transition border border-blue-200 font-bold">
-                                ❓ 如何取得網址？
-                            </button>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-end mb-2 border-b pb-1">
+                            <label class="font-bold text-slate-700 text-sm">3. 動作設定</label>
+                            <span class="text-xs text-slate-400">數量: <span id="areaCount">0</span></span>
                         </div>
-                        <input type="text" id="imageUrl" placeholder="請貼上 https://... 結尾是 .jpg/.png 的網址" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm shadow-sm transition font-mono text-slate-600" oninput="saveState()">
+                        <div id="actionList" class="space-y-2"></div>
                     </div>
                 </div>
-
-                <div class="flex-1 flex flex-col min-h-[300px]">
-                    <div class="flex justify-between items-end mb-3 pb-2 border-b border-slate-100">
-                        <label class="block font-bold text-slate-700 text-sm">3. 動作指令設定</label>
-                        <span class="text-xs text-slate-400">目前設定: <span id="areaCount" class="font-bold text-blue-600">0</span> 組</span>
-                    </div>
-                    <div id="actionList" class="flex-1 space-y-2 overflow-y-auto pr-1">
-                        <div class="text-center text-slate-400 text-sm py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-                            👆 請在右側圖片上<br>拖曳滑鼠畫出框框
+            </aside>
+            <main class="flex-1 bg-slate-50 p-8 overflow-auto flex justify-center items-start">
+                <div id="canvasWrapper" class="relative shadow-2xl">
+                    <div id="canvasContainer" class="canvas-container">
+                        <div id="placeholder" class="flex flex-col items-center justify-center h-96 w-96 text-slate-300">
+                            <span class="text-lg">請上傳圖片</span>
                         </div>
+                        <img id="previewImage" class="hidden max-w-full block select-none" style="max-height: 85vh;" />
+                        <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="p-4 bg-slate-50 border-t border-slate-200 text-center text-xs text-slate-400">
-                系統將自動儲存您的編輯進度 💾
-            </div>
-        </aside>
+            </main>
+        </div>
 
-        <main class="flex-1 bg-slate-100/50 p-8 overflow-auto flex justify-center items-start relative select-none" id="mainArea">
-            <div id="canvasWrapper" class="relative shadow-2xl rounded-sm transition-all duration-300">
-                <div id="canvasContainer" class="canvas-container">
-                    <div id="placeholder" class="flex flex-col items-center justify-center h-96 w-96 text-slate-300">
-                        <svg class="w-20 h-20 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        <span class="text-lg font-medium">請先在左側上傳底圖</span>
+        <div id="content-carousel" class="hidden flex flex-1 w-full h-full">
+            <aside class="w-[400px] border-r border-slate-200 flex flex-col z-20 bg-white">
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                    <div class="bg-purple-50 rounded-xl p-4 border border-purple-100 space-y-2">
+                        <label class="font-bold text-purple-800 text-sm">LINE 觸發關鍵字</label>
+                        <input type="text" id="carouselTrigger" value="命盤" class="w-full p-2 border border-purple-200 rounded text-sm focus:ring-2 focus:ring-purple-500 font-bold text-purple-700">
                     </div>
-                    <img id="previewImage" class="hidden max-w-full block pointer-events-none select-none" style="max-height: 85vh;" />
-                    <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
-                </div>
-                <div id="dimLabel" class="absolute -top-10 left-0 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 transition shadow-lg flex items-center gap-2">
-                    <span id="dimDot" class="w-2 h-2 rounded-full bg-green-400"></span>
-                    <span id="dimText">0 x 0</span>
-                </div>
-            </div>
-        </main>
-    </div>
 
-    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">📷 如何取得圖片公開網址？</h2>
-                <button onclick="closeModal('imageHelpModal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full text-lg">✕</button>
-            </div>
-            <div class="p-6 space-y-6 text-sm">
-                <div class="space-y-2">
-                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                        <span class="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs">1</span>
-                        推薦使用 Imgur (免費/免註冊)
-                    </h3>
-                    <p class="text-slate-600 ml-8">最簡單的方法，不用登入也能用。</p>
-                    <div class="ml-8 bg-slate-50 p-3 rounded border border-slate-200 space-y-2">
-                        <a href="https://imgur.com/upload" target="_blank" class="external-link w-full justify-center">👉 開啟 Imgur 上傳頁面</a>
-                        <ol class="list-disc pl-4 text-slate-600 space-y-1">
-                            <li>拖拉圖片上傳。</li>
-                            <li>上傳後，對圖片按<b>右鍵</b>。</li>
-                            <li>選<b>「複製圖片位址」</b>(Copy Image Link)。</li>
-                        </ol>
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700">卡片內容設定</h3>
+                        <button onclick="addCard()" class="bg-purple-600 text-white px-3 py-1 rounded text-xs hover:bg-purple-700">+ 新增卡片</button>
                     </div>
+
+                    <div id="cardEditorList" class="space-y-4 pb-10">
+                        </div>
                 </div>
-                <button onclick="closeModal('imageHelpModal')" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition">我學會了！</button>
-            </div>
+            </aside>
+            <main class="flex-1 bg-slate-100 p-8 flex flex-col items-center justify-center">
+                <div class="mb-4 text-slate-400 text-sm">手機預覽效果 (可左右滑動)</div>
+                <div class="w-full max-w-2xl overflow-x-auto flex gap-4 p-4 pb-8 items-start custom-scrollbar" id="carouselPreview">
+                    </div>
+            </main>
         </div>
     </div>
 
-    <div id="tokenHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">🔑 如何取得 LINE_TOKEN？</h2>
-                <button onclick="closeModal('tokenHelpModal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full text-lg">✕</button>
-            </div>
-            <div class="p-6 space-y-4 text-sm">
-                <div class="bg-yellow-50 text-yellow-800 p-3 rounded-lg border border-yellow-200">
-                    <p>這串密碼叫做 <b>Channel Access Token</b>，是機器人的「身分證」。</p>
-                </div>
-                <ol class="list-decimal pl-5 space-y-3 text-slate-700 leading-relaxed">
-                    <li>前往 <a href="https://developers.line.biz/console/" target="_blank" class="text-blue-600 font-bold underline">LINE Developers Console</a> 並登入。</li>
-                    <li>點選你的 <b>Provider</b> > 選擇你的 <b>Channel</b>。</li>
-                    <li>點選上方的 <b>Messaging API</b> 分頁。</li>
-                    <li>滑到最最最下面，找到 <b>Channel access token (long-lived)</b>。</li>
-                    <li>如果是空的，請點擊黑色的 <b>Issue</b> 按鈕。</li>
-                    <li>複製那串超長的亂碼，貼到程式碼中。</li>
-                </ol>
-                <button onclick="closeModal('tokenHelpModal')" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition mt-2">好的，我去找找看！</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">🦁 機器人架設全攻略</h2>
-                <button onclick="closeModal('tutorialModal')" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition text-xl">✕</button>
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold">🤖 機器人架設全攻略</h2>
+                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-xl text-slate-400">✕</button>
             </div>
-            
-            <div class="flex-1 overflow-y-auto bg-slate-50 p-8 space-y-10">
-                <section class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <span class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</span>
-                        <h3 class="text-xl font-bold text-slate-800">建立大腦 (Google Apps Script)</h3>
-                    </div>
-                    <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-4">
-                        <p class="text-slate-700">1. 點擊按鈕開啟 <a href="https://script.google.com/home" target="_blank" class="external-link">Google Apps Script</a>，建立新專案。</p>
-                        <p class="text-slate-700">2. 清空內容，貼上以下<b>萬用程式碼</b> (已依據您的設定自動產生)：</p>
-                        
-                        <div class="code-block">
-                            <button class="copy-btn" onclick="copyCode()">複製程式碼</button>
-                            <code id="gasCode"></code>
-                        </div>
-
-                        <div class="flex justify-end">
-                            <button onclick="openModal('tokenHelpModal')" class="text-xs bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-full font-bold border border-yellow-200 hover:bg-yellow-100 transition flex items-center gap-1">
-                                🔑 不知道 LINE_TOKEN 去哪找？點我教學
-                            </button>
-                        </div>
-
-                        <p class="text-slate-700">3. 部署 > 新增部署 > <b>誰可以存取：所有人 (Anyone)</b>。</p>
-                        <p class="text-slate-700">4. 複製結尾是 <b>/exec</b> 的網址。</p>
-                    </div>
-                </section>
-
-                <section class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <span class="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-lg">2</span>
-                        <h3 class="text-xl font-bold text-slate-800">連結身體 (LINE 後台)</h3>
-                    </div>
-                    <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-3">
-                        <p class="text-slate-700">1. 開啟 <a href="https://manager.line.biz/" target="_blank" class="external-link">LINE 官方帳號後台</a>。</p>
-                        <p class="text-slate-700">2. 設定 > Messaging API > 貼上 Webhook URL > 更新。</p>
-                        <p class="text-slate-700 bg-emerald-50 p-2 rounded text-emerald-800 border border-emerald-100"><b>✨ 必做：</b> 開啟「使用 Webhook」開關。</p>
-                    </div>
-                </section>
-
-                <section class="space-y-4 pb-4">
-                    <div class="flex items-center gap-3">
-                        <span class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-lg">3</span>
-                        <h3 class="text-xl font-bold text-slate-800">產生與套用</h3>
-                    </div>
-                    <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-3">
-                        <p class="text-slate-700">
-                            在本工具畫好框框 > 點擊 <span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold">💾 下載 JSON</span> > 貼回 Google Apps Script 中 <code>if (userMessage === "...")</code> 的區塊內。
-                        </p>
-                    </div>
-                </section>
-            </div>
-            
-            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
-                <button onclick="closeModal('tutorialModal')" class="bg-slate-800 text-white px-8 py-3 rounded-xl hover:bg-slate-700 transition font-bold shadow-lg transform active:scale-95">
-                    太棒了，我學會了！🚀
-                </button>
+            <div class="p-8 overflow-y-auto space-y-6">
+                <div class="bg-slate-800 text-slate-200 p-4 rounded-xl font-mono text-sm overflow-x-auto relative">
+                    <button onclick="copyCode()" class="absolute top-2 right-2 bg-white/20 px-2 py-1 rounded text-xs hover:bg-white/30">複製</button>
+                    <pre id="gasCode"></pre>
+                </div>
+                <div class="text-slate-600 text-sm">
+                    <p>1. 去 <a href="https://script.google.com/" target="_blank" class="text-blue-500 underline">Google Apps Script</a> 貼上這段程式碼。</p>
+                    <p>2. 記得把 `CHANNEL_ACCESS_TOKEN` 換成你的。</p>
+                    <p>3. 部署 > 所有人 > 複製網址到 LINE 後台。</p>
+                    <p>4. <b>最後一步：</b>在本工具做好 JSON，貼回程式碼中對應的位置！</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // 共用變數
+        let currentMode = 'imagemap';
+        
+        // Imagemap 變數
         const imageInput = document.getElementById('imageInput');
         const imageUrlInput = document.getElementById('imageUrl');
         const previewImage = document.getElementById('previewImage');
         const drawLayer = document.getElementById('drawLayer');
         const actionList = document.getElementById('actionList');
-        const statusMsg = document.getElementById('statusMsg');
         const placeholder = document.getElementById('placeholder');
         const areaCountSpan = document.getElementById('areaCount');
-        const dimLabel = document.getElementById('dimLabel');
-        const dimText = document.getElementById('dimText');
-        const dimDot = document.getElementById('dimDot');
-        const autoScaleCheckbox = document.getElementById('autoScale');
         const triggerKeywordInput = document.getElementById('triggerKeyword');
-        
         let areas = [];
         let isDrawing = false;
         let startX, startY;
         let currentBox = null;
-        let naturalWidth = 0;
-        let naturalHeight = 0;
-        let scaleFactor = 1; 
+        let naturalWidth = 0; 
+        let scaleFactor = 1;
 
+        // Carousel 變數
+        let cards = [{
+            title: "天生特質大數據",
+            desc: "點選國曆生日算出特質",
+            imageUrl: "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png",
+            btn1: "輸入生日",
+            btn2: "八字命盤"
+        }];
+
+        // 初始化
         window.addEventListener('DOMContentLoaded', () => {
-            const savedUrl = localStorage.getItem('line_tool_url');
-            if(savedUrl) imageUrlInput.value = savedUrl;
-            updateGasCodePreview();
+            renderCardEditors();
+            renderCarouselPreview();
+            updateGasCode();
         });
 
-        function saveState() {
-            localStorage.setItem('line_tool_url', imageUrlInput.value);
+        // 切換模式
+        function switchTab(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${mode}`).classList.add('active');
+            
+            document.getElementById('content-imagemap').classList.add('hidden');
+            document.getElementById('content-carousel').classList.add('hidden');
+            document.getElementById(`content-${mode}`).classList.remove('hidden');
+            updateGasCode();
         }
 
-        function openModal(id) {
-            if(id === 'tutorialModal') updateGasCodePreview();
-            document.getElementById(id).classList.remove('hidden');
-        }
-
-        function openTutorial() {
-            openModal('tutorialModal');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-        function copyCode() {
-            const code = document.getElementById('gasCode').innerText;
-            navigator.clipboard.writeText(code).then(() => {
-                alert('程式碼已複製！');
-            });
-        }
-
-        function updateGasCodePreview() {
-            const keyword = triggerKeywordInput.value || '選單';
-            const code = `const CHANNEL_ACCESS_TOKEN = '請換成你的LINE_TOKEN'; 
-
-function doPost(e) {
-  let replyToken = "";
-  let userMessage = "";
-  
-  try {
-    const msg = JSON.parse(e.postData.contents);
-    replyToken = msg.events[0].replyToken;
-    userMessage = msg.events[0].message.text;
-  } catch (error) {
-    return ContentService.createTextOutput(""); 
-  }
-
-  // 關鍵字完全吻合才觸發
-  if (userMessage === "${keyword}") { 
-    sendImagemap(replyToken);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
-}
-
-function sendImagemap(replyToken) {
-  // 請將下載的 JSON 內容，貼在下方變數中 (取代現有內容)
-  const myJson = { /* 這裡貼上下載的 JSON */ };
-  
-  const url = 'https://api.line.me/v2/bot/message/reply';
-  UrlFetchApp.fetch(url, {
-      'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
-      'method': 'post',
-      'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [myJson] }),
-  });
-}`;
-            document.getElementById('gasCode').innerText = code;
-        }
-
+        // ================= Imagemap 邏輯 (精簡版) =================
         imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
-            if (!file) return;
-
+            if(!file) return;
             const reader = new FileReader();
-            reader.onload = function(event) {
-                previewImage.src = event.target.result;
+            reader.onload = function(evt) {
+                previewImage.src = evt.target.result;
                 previewImage.onload = function() {
                     naturalWidth = this.naturalWidth;
-                    naturalHeight = this.naturalHeight;
-                    
                     placeholder.classList.add('hidden');
                     previewImage.classList.remove('hidden');
                     drawLayer.classList.remove('hidden');
-                    dimText.innerText = `${naturalWidth} x ${naturalHeight} px`;
-                    dimLabel.classList.remove('opacity-0');
-
-                    updateStatusMsg();
-
-                    areas = [];
-                    renderAreas();
-                    renderList();
                     updateScale();
                 }
             }
             reader.readAsDataURL(file);
         });
 
-        autoScaleCheckbox.addEventListener('change', updateStatusMsg);
-
-        function updateStatusMsg() {
-            if(!naturalWidth) return;
-            const isAuto = autoScaleCheckbox.checked;
-
-            statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-emerald-50', 'text-emerald-700', 'bg-blue-50', 'text-blue-700');
-            
-            if (naturalWidth !== 1040) {
-                if (isAuto) {
-                    statusMsg.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-100');
-                    statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg><span><b>已啟用自動修正</b><br>原圖 ${naturalWidth}px 將在下載時自動轉為 1040px 標準</span>`;
-                    dimDot.className = 'w-2 h-2 rounded-full bg-blue-400';
-                } else {
-                    statusMsg.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-100');
-                    statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg><span><b>尺寸不符！</b><br>建議勾選上方「強制輸出」功能</span>`;
-                    dimDot.className = 'w-2 h-2 rounded-full bg-red-400';
-                }
-            } else {
-                statusMsg.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-100');
-                statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span><b>完美！</b> 原圖即為 1040px</span>`;
-                dimDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-            }
-        }
-
         window.addEventListener('resize', updateScale);
-        function updateScale() {
-            if(naturalWidth > 0) {
-                scaleFactor = previewImage.width / naturalWidth;
-            }
-        }
+        function updateScale() { if(naturalWidth>0) scaleFactor = previewImage.width / naturalWidth; }
 
         drawLayer.addEventListener('mousedown', (e) => {
-            if(!previewImage.src) return;
-            updateScale();
             isDrawing = true;
             const rect = drawLayer.getBoundingClientRect();
             startX = (e.clientX - rect.left) / scaleFactor;
             startY = (e.clientY - rect.top) / scaleFactor;
-            
             currentBox = document.createElement('div');
             currentBox.className = 'area-box border-dashed opacity-50';
             currentBox.style.left = (startX * scaleFactor) + 'px';
@@ -455,183 +241,205 @@ function sendImagemap(replyToken) {
         drawLayer.addEventListener('mousemove', (e) => {
             if (!isDrawing) return;
             const rect = drawLayer.getBoundingClientRect();
-            const currentX = (e.clientX - rect.left) / scaleFactor;
-            const currentY = (e.clientY - rect.top) / scaleFactor;
-
-            const width = Math.abs(currentX - startX);
-            const height = Math.abs(currentY - startY);
-            const left = Math.min(startX, currentX);
-            const top = Math.min(startY, currentY);
-
-            currentBox.style.width = (width * scaleFactor) + 'px';
-            currentBox.style.height = (height * scaleFactor) + 'px';
-            currentBox.style.left = (left * scaleFactor) + 'px';
-            currentBox.style.top = (top * scaleFactor) + 'px';
+            const w = Math.abs((e.clientX - rect.left)/scaleFactor - startX);
+            const h = Math.abs((e.clientY - rect.top)/scaleFactor - startY);
+            currentBox.style.width = (w * scaleFactor) + 'px';
+            currentBox.style.height = (h * scaleFactor) + 'px';
         });
 
         drawLayer.addEventListener('mouseup', (e) => {
-            if (!isDrawing) return;
             isDrawing = false;
-            
             const rect = drawLayer.getBoundingClientRect();
             const endX = (e.clientX - rect.left) / scaleFactor;
             const endY = (e.clientY - rect.top) / scaleFactor;
-            
-            const x = Math.round(Math.min(startX, endX));
-            const y = Math.round(Math.min(startY, endY));
-            const w = Math.round(Math.abs(endX - startX));
-            const h = Math.round(Math.abs(endY - startY));
-
             if(currentBox) currentBox.remove();
-            if (w > 20 && h > 20) {
-                areas.push({ x, y, width: w, height: h, type: 'message', text: `關鍵字${areas.length + 1}` });
-                renderAreas();
-                renderList();
-                saveState();
+            
+            const w = Math.abs(endX - startX);
+            const h = Math.abs(endY - startY);
+            if(w > 20 && h > 20) {
+                areas.push({ x: Math.min(startX, endX), y: Math.min(startY, endY), width: w, height: h, text: `關鍵字${areas.length+1}` });
+                renderAreas(); renderActionList();
             }
         });
 
         function renderAreas() {
             drawLayer.innerHTML = '';
-            areas.forEach((area, index) => {
-                const box = document.createElement('div');
-                box.className = 'area-box';
-                box.style.left = (area.x * scaleFactor) + 'px';
-                box.style.top = (area.y * scaleFactor) + 'px';
-                box.style.width = (area.width * scaleFactor) + 'px';
-                box.style.height = (area.height * scaleFactor) + 'px';
-                box.innerText = index + 1;
-                if(area.type === 'uri') {
-                    box.style.borderColor = '#2563eb';
-                    box.style.backgroundColor = 'rgba(37, 99, 235, 0.2)';
-                }
-                box.onclick = (e) => { e.stopPropagation(); highlightArea(index); };
-                drawLayer.appendChild(box);
+            areas.forEach((area, i) => {
+                const el = document.createElement('div');
+                el.className = 'area-box';
+                el.style.left = (area.x * scaleFactor) + 'px';
+                el.style.top = (area.y * scaleFactor) + 'px';
+                el.style.width = (area.width * scaleFactor) + 'px';
+                el.style.height = (area.height * scaleFactor) + 'px';
+                el.innerText = i + 1;
+                drawLayer.appendChild(el);
             });
             areaCountSpan.innerText = areas.length;
         }
 
-        function renderList() {
+        function renderActionList() {
             actionList.innerHTML = '';
-            if(areas.length === 0) {
-                actionList.innerHTML = '<div class="text-center text-slate-400 text-sm py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">👆 請在右側圖片上<br>拖曳滑鼠畫出框框</div>';
-                return;
-            }
+            areas.forEach((area, i) => {
+                const row = document.createElement('div');
+                row.className = 'flex gap-2 items-center bg-slate-50 p-2 rounded border';
+                row.innerHTML = `<span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs shrink-0">${i+1}</span>
+                <input type="text" value="${area.text}" onchange="areas[${i}].text=this.value" class="flex-1 text-xs border p-1 rounded" placeholder="觸發字或網址">
+                <button onclick="areas.splice(${i},1);renderAreas();renderActionList()" class="text-red-500">✕</button>`;
+                actionList.appendChild(row);
+            });
+        }
 
-            areas.forEach((area, index) => {
-                const item = document.createElement('div');
-                item.className = 'bg-white p-3 rounded-xl border border-slate-200 text-sm flex flex-col gap-2 shadow-sm hover:shadow-md transition group animate-fade-in';
-                
-                const header = document.createElement('div');
-                header.className = 'flex items-center gap-2';
-                header.innerHTML = `
-                    <span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded-md text-xs font-bold shrink-0 shadow-sm">${index + 1}</span>
-                    <select onchange="updateType(${index}, this.value)" class="bg-slate-50 border border-slate-200 text-xs rounded px-2 py-1 font-bold text-slate-600 focus:outline-none focus:border-indigo-500">
-                        <option value="message" ${area.type === 'message' ? 'selected' : ''}>💬 傳送文字</option>
-                        <option value="uri" ${area.type === 'uri' ? 'selected' : ''}>🔗 開啟連結</option>
-                    </select>
-                    <div class="flex-1"></div>
-                    <button onclick="deleteArea(${index})" class="text-slate-300 hover:text-red-500 p-1 rounded transition hover:bg-red-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
+        // ================= Carousel 邏輯 =================
+        function addCard() {
+            cards.push({ title: "新卡片", desc: "描述內容", imageUrl: "", btn1: "按鈕1", btn2: "按鈕2" });
+            renderCardEditors();
+            renderCarouselPreview();
+        }
+
+        function deleteCard(index) {
+            cards.splice(index, 1);
+            renderCardEditors();
+            renderCarouselPreview();
+        }
+
+        function updateCard(index, field, value) {
+            cards[index][field] = value;
+            renderCarouselPreview();
+        }
+
+        function renderCardEditors() {
+            const container = document.getElementById('cardEditorList');
+            container.innerHTML = '';
+            cards.forEach((card, i) => {
+                const el = document.createElement('div');
+                el.className = 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3';
+                el.innerHTML = `
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <span class="font-bold text-slate-600">Card ${i+1}</span>
+                        <button onclick="deleteCard(${i})" class="text-red-500 text-xs hover:underline">刪除</button>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <input type="text" placeholder="圖片網址" value="${card.imageUrl}" oninput="updateCard(${i}, 'imageUrl', this.value)" class="w-full p-2 border rounded">
+                        <input type="text" placeholder="標題" value="${card.title}" oninput="updateCard(${i}, 'title', this.value)" class="w-full p-2 border rounded font-bold">
+                        <input type="text" placeholder="描述" value="${card.desc}" oninput="updateCard(${i}, 'desc', this.value)" class="w-full p-2 border rounded">
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="按鈕1" value="${card.btn1}" oninput="updateCard(${i}, 'btn1', this.value)" class="w-full p-2 border rounded bg-blue-50">
+                            <input type="text" placeholder="按鈕2" value="${card.btn2}" oninput="updateCard(${i}, 'btn2', this.value)" class="w-full p-2 border rounded bg-blue-50">
+                        </div>
+                    </div>
                 `;
-                
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = area.text;
-                input.onchange = (e) => updateText(index, e.target.value);
-                input.className = 'w-full border border-slate-200 p-2 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-slate-50 text-slate-700 font-medium text-xs';
-                input.placeholder = area.type === 'uri' ? '請輸入 https://... 網址' : '請輸入觸發關鍵字';
-
-                item.appendChild(header);
-                item.appendChild(input);
-                item.onclick = () => highlightArea(index);
-                actionList.appendChild(item);
+                container.appendChild(el);
             });
         }
 
-        function updateType(index, type) {
-            areas[index].type = type;
-            areas[index].text = type === 'uri' ? '' : `關鍵字${index + 1}`;
-            renderAreas();
-            renderList();
-            saveState();
-        }
-
-        function updateText(index, val) {
-            areas[index].text = val;
-            saveState();
-        }
-
-        function deleteArea(index) {
-            areas.splice(index, 1);
-            renderAreas();
-            renderList();
-            saveState();
-        }
-
-        function highlightArea(index) {
-            document.querySelectorAll('.area-box').forEach((el, i) => {
-                if (i === index) el.classList.add('selected');
-                else el.classList.remove('selected');
+        function renderCarouselPreview() {
+            const container = document.getElementById('carouselPreview');
+            container.innerHTML = '';
+            cards.forEach(card => {
+                const el = document.createElement('div');
+                el.className = 'card-preview';
+                el.innerHTML = `
+                    <img src="${card.imageUrl || 'https://via.placeholder.com/240x160?text=Image'}" class="card-img">
+                    <div class="card-body">
+                        <div class="card-title">${card.title}</div>
+                        <div class="card-desc">${card.desc}</div>
+                        ${card.btn1 ? `<div class="card-btn">${card.btn1}</div>` : ''}
+                        ${card.btn2 ? `<div class="card-btn">${card.btn2}</div>` : ''}
+                    </div>
+                `;
+                container.appendChild(el);
             });
-            const listItems = actionList.children;
-            if(listItems[index]) listItems[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // ================= 共用工具 =================
+        function updateGasCode() {
+            const keyword = currentMode === 'imagemap' ? (triggerKeywordInput.value || '選單') : (document.getElementById('carouselTrigger').value || '命盤');
+            const code = `const CHANNEL_ACCESS_TOKEN = '你的_TOKEN'; 
+
+function doPost(e) {
+  try {
+    const msg = JSON.parse(e.postData.contents);
+    const replyToken = msg.events[0].replyToken;
+    const userMessage = msg.events[0].message.text;
+
+    // 關鍵字判斷
+    if (userMessage === "${keyword}") {
+        replyMessage(replyToken, getMyJson());
+    }
+
+  } catch (error) {}
+  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function replyMessage(replyToken, myJson) {
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
+      'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
+      'method': 'post',
+      'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [myJson] }),
+  });
+}
+
+function getMyJson() {
+  // 請將本工具下載的 JSON 完整內容，取代下面這行：
+  return {}; 
+}`;
+            document.getElementById('gasCode').innerText = code;
         }
 
         function downloadJSON() {
-            const url = imageUrlInput.value;
-            const isAuto = autoScaleCheckbox.checked;
-
-            if (!url) { alert("⚠️ 請先在步驟 2 填寫「圖片網址」！"); document.getElementById('imageUrl').focus(); return; }
-            if (areas.length === 0) { alert("⚠️ 這裡空空的！請先畫幾個框框。"); return; }
-
-            let outputWidth = naturalWidth;
-            let outputHeight = naturalHeight;
-            let outputScale = 1;
-
-            if (isAuto && naturalWidth !== 1040) {
-                outputWidth = 1040;
-                outputScale = 1040 / naturalWidth;
-                outputHeight = Math.round(naturalHeight * outputScale);
+            let output = {};
+            
+            if (currentMode === 'imagemap') {
+                if (!imageUrlInput.value) { alert("請填圖片網址"); return; }
+                const scale = (naturalWidth && naturalWidth !== 1040) ? 1040/naturalWidth : 1;
+                output = {
+                    "type": "imagemap",
+                    "baseUrl": imageUrlInput.value,
+                    "altText": "請選擇功能",
+                    "baseSize": { "width": 1040, "height": Math.round((naturalHeight || 1040) * scale) },
+                    "actions": areas.map(a => ({
+                        "type": "message", "text": a.text,
+                        "area": { x: Math.round(a.x*scale), y: Math.round(a.y*scale), width: Math.round(a.width*scale), height: Math.round(a.height*scale) }
+                    }))
+                };
+            } else {
+                // 生成 Flex Message JSON
+                const bubbles = cards.map(c => ({
+                    "type": "bubble",
+                    "hero": { "type": "image", "url": c.imageUrl || "https://via.placeholder.com/1040", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" },
+                    "body": {
+                        "type": "box", "layout": "vertical",
+                        "contents": [
+                            { "type": "text", "text": c.title || "標題", "weight": "bold", "size": "xl" },
+                            { "type": "text", "text": c.desc || "描述", "size": "sm", "color": "#aaaaaa", "wrap": true }
+                        ]
+                    },
+                    "footer": {
+                        "type": "box", "layout": "vertical", "spacing": "sm",
+                        "contents": [
+                            c.btn1 ? { "type": "button", "style": "primary", "action": { "type": "message", "label": c.btn1, "text": c.btn1 } } : null,
+                            c.btn2 ? { "type": "button", "style": "secondary", "action": { "type": "message", "label": c.btn2, "text": c.btn2 } } : null
+                        ].filter(Boolean)
+                    }
+                }));
+                
+                output = {
+                    "type": "flex",
+                    "altText": "請選擇項目",
+                    "contents": { "type": "carousel", "contents": bubbles }
+                };
             }
 
-            const output = {
-                "type": "imagemap",
-                "baseUrl": url,
-                "altText": "請選擇功能",
-                "baseSize": {
-                    "width": outputWidth,
-                    "height": outputHeight
-                },
-                "actions": areas.map(area => {
-                    const action = {
-                        "area": {
-                            "x": Math.round(area.x * outputScale),
-                            "y": Math.round(area.y * outputScale),
-                            "width": Math.round(area.width * outputScale),
-                            "height": Math.round(area.height * outputScale)
-                        }
-                    };
-                    
-                    if (area.type === 'uri') {
-                        action.type = 'uri';
-                        action.linkUri = area.text;
-                    } else {
-                        action.type = 'message';
-                        action.text = area.text;
-                    }
-                    return action;
-                })
-            };
-
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(output, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "imagemap_settings.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `${currentMode}_settings.json`);
+            dl.click();
+        }
+
+        function copyCode() {
+            navigator.clipboard.writeText(document.getElementById('gasCode').innerText);
+            alert('複製成功！');
         }
     </script>
 </body>
