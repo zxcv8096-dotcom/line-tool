@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE 引流圖片座標產生器 (v7.0)</title>
+    <title>LINE 引流圖片座標產生器 (v9.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
@@ -71,13 +71,13 @@
                 <div>
                     <h1 class="font-bold text-xl tracking-wide text-slate-800 flex items-center gap-2">
                         LINE 座標產生器 
-                        <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">v7.0 防呆版</span>
+                        <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">v9.0 智慧連動</span>
                     </h1>
-                    <p class="text-xs text-slate-400">大心家族系統 | 內建圖床教學</p>
+                    <p class="text-xs text-slate-400">大心家族系統 | 關鍵字自動同步</p>
                 </div>
             </div>
             <div class="flex gap-3">
-                <button onclick="openModal('tutorialModal')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm border border-indigo-200 ring-2 ring-transparent hover:ring-indigo-100">
+                <button onclick="openTutorial()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm border border-indigo-200 ring-2 ring-transparent hover:ring-indigo-100">
                     📚 完整架設教學
                 </button>
                 <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-2 text-sm">
@@ -90,18 +90,28 @@
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
         <aside class="w-[420px] bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
             <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                <div class="bg-orange-50 rounded-xl p-4 border border-orange-100 space-y-2">
-                    <h3 class="font-bold text-orange-800 flex items-center gap-2 text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd" /></svg>
-                        智慧輸出設定
-                    </h3>
-                    <div class="flex items-start gap-3">
-                        <div class="flex items-center h-5">
-                            <input id="autoScale" type="checkbox" checked class="focus:ring-orange-500 h-4 w-4 text-orange-600 border-gray-300 rounded cursor-pointer">
+                
+                <div class="space-y-4">
+                     <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-100 space-y-2">
+                        <h3 class="font-bold text-indigo-800 flex items-center gap-2 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            LINE 觸發關鍵字設定
+                        </h3>
+                        <div>
+                            <input type="text" id="triggerKeyword" placeholder="例如：選單、Menu、健康" value="選單" class="w-full p-2 border border-indigo-200 rounded text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-indigo-700" oninput="updateGasCodePreview()">
+                            <p class="text-[10px] text-indigo-400 mt-1">💡 設定後，教學裡的程式碼會自動變更！</p>
                         </div>
-                        <div class="text-xs">
-                            <label for="autoScale" class="font-medium text-gray-700 cursor-pointer">強制輸出為 1040px 標準寬度</label>
-                            <p class="text-gray-500 mt-1">開啟後，系統會自動將任意尺寸的圖片修正為 LINE 官方標準。</p>
+                    </div>
+
+                    <div class="bg-orange-50 rounded-xl p-4 border border-orange-100 space-y-2">
+                        <div class="flex items-start gap-3">
+                            <div class="flex items-center h-5">
+                                <input id="autoScale" type="checkbox" checked class="focus:ring-orange-500 h-4 w-4 text-orange-600 border-gray-300 rounded cursor-pointer">
+                            </div>
+                            <div class="text-xs">
+                                <label for="autoScale" class="font-medium text-gray-700 cursor-pointer">強制輸出為 1040px 標準寬度</label>
+                                <p class="text-gray-500 mt-1">自動將圖片修正為 LINE 官方標準大小。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -167,42 +177,45 @@
                 <button onclick="closeModal('imageHelpModal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full text-lg">✕</button>
             </div>
             <div class="p-6 space-y-6 text-sm">
-                
                 <div class="space-y-2">
                     <h3 class="font-bold text-slate-800 flex items-center gap-2">
                         <span class="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs">1</span>
                         推薦使用 Imgur (免費/免註冊)
                     </h3>
-                    <p class="text-slate-600 ml-8">這是最簡單的方法，不用登入也能用。</p>
+                    <p class="text-slate-600 ml-8">最簡單的方法，不用登入也能用。</p>
                     <div class="ml-8 bg-slate-50 p-3 rounded border border-slate-200 space-y-2">
                         <a href="https://imgur.com/upload" target="_blank" class="external-link w-full justify-center">👉 開啟 Imgur 上傳頁面</a>
                         <ol class="list-disc pl-4 text-slate-600 space-y-1">
-                            <li>將圖片拖拉進去上傳。</li>
-                            <li>上傳後，對著圖片按<b>右鍵</b>。</li>
-                            <li>選擇<b>「複製圖片位址」</b>(Copy Image Link)。</li>
+                            <li>拖拉圖片上傳。</li>
+                            <li>上傳後，對圖片按<b>右鍵</b>。</li>
+                            <li>選<b>「複製圖片位址」</b>(Copy Image Link)。</li>
                         </ol>
                     </div>
                 </div>
-
-                <div class="space-y-2">
-                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                        <span class="w-6 h-6 bg-red-100 text-red-700 rounded-full flex items-center justify-center text-xs">!</span>
-                        檢查網址是否正確
-                    </h3>
-                    <div class="ml-8 text-slate-600">
-                        <p>LINE 只看得懂「圖檔」，看不懂「網頁」。請檢查你的網址結尾：</p>
-                        <div class="flex gap-2 mt-2">
-                            <div class="flex-1 p-2 bg-green-50 border border-green-200 rounded text-green-800 font-bold text-center">
-                                ✅ 正確<br><span class="text-xs font-normal">...image.jpg</span>
-                            </div>
-                            <div class="flex-1 p-2 bg-red-50 border border-red-200 rounded text-red-800 font-bold text-center">
-                                ❌ 錯誤<br><span class="text-xs font-normal">.../gallery/abc</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <button onclick="closeModal('imageHelpModal')" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition">我學會了！</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tokenHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">🔑 如何取得 LINE_TOKEN？</h2>
+                <button onclick="closeModal('tokenHelpModal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full text-lg">✕</button>
+            </div>
+            <div class="p-6 space-y-4 text-sm">
+                <div class="bg-yellow-50 text-yellow-800 p-3 rounded-lg border border-yellow-200">
+                    <p>這串密碼叫做 <b>Channel Access Token</b>，是機器人的「身分證」。</p>
+                </div>
+                <ol class="list-decimal pl-5 space-y-3 text-slate-700 leading-relaxed">
+                    <li>前往 <a href="https://developers.line.biz/console/" target="_blank" class="text-blue-600 font-bold underline">LINE Developers Console</a> 並登入。</li>
+                    <li>點選你的 <b>Provider</b> > 選擇你的 <b>Channel</b>。</li>
+                    <li>點選上方的 <b>Messaging API</b> 分頁。</li>
+                    <li>滑到最最最下面，找到 <b>Channel access token (long-lived)</b>。</li>
+                    <li>如果是空的，請點擊黑色的 <b>Issue</b> 按鈕。</li>
+                    <li>複製那串超長的亂碼，貼到程式碼中。</li>
+                </ol>
+                <button onclick="closeModal('tokenHelpModal')" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold hover:bg-slate-700 transition mt-2">好的，我去找找看！</button>
             </div>
         </div>
     </div>
@@ -210,54 +223,33 @@
     <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    🦁 機器人架設全攻略
-                </h2>
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">🦁 機器人架設全攻略</h2>
                 <button onclick="closeModal('tutorialModal')" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition text-xl">✕</button>
             </div>
             
             <div class="flex-1 overflow-y-auto bg-slate-50 p-8 space-y-10">
-                
                 <section class="space-y-4">
                     <div class="flex items-center gap-3">
                         <span class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</span>
                         <h3 class="text-xl font-bold text-slate-800">建立大腦 (Google Apps Script)</h3>
                     </div>
                     <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-4">
-                        <p class="text-slate-700 flex flex-wrap gap-2 items-center">
-                            1. 點擊按鈕開啟：
-                            <a href="https://script.google.com/home" target="_blank" class="external-link">🚀 Google Apps Script 首頁</a>
-                        </p>
-                        <p class="text-slate-700">2. 點擊左上角「新專案」，清空內容，貼上以下<b>萬用程式碼</b>：</p>
+                        <p class="text-slate-700">1. 點擊按鈕開啟 <a href="https://script.google.com/home" target="_blank" class="external-link">Google Apps Script</a>，建立新專案。</p>
+                        <p class="text-slate-700">2. 清空內容，貼上以下<b>萬用程式碼</b> (已依據您的設定自動產生)：</p>
                         
                         <div class="code-block">
                             <button class="copy-btn" onclick="copyCode()">複製程式碼</button>
-<code id="gasCode">const CHANNEL_ACCESS_TOKEN = '請換成你的LINE_TOKEN'; 
-
-function doPost(e) {
-  let replyToken = "";
-  let userMessage = "";
-  
-  try {
-    const msg = JSON.parse(e.postData.contents);
-    replyToken = msg.events[0].replyToken;
-    userMessage = msg.events[0].message.text;
-  } catch (error) {
-    return ContentService.createTextOutput(""); 
-  }
-
-  // 自動回傳相應的 Imagemap (請將本工具下載的 JSON 貼在下面取代)
-  if (userMessage === "選單") { 
-    // 這裡貼上 sendImagemap(replyToken) 的程式碼
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
-}</code>
+                            <code id="gasCode"></code>
                         </div>
 
-                        <p class="text-slate-700">3. 點擊右上角 <span class="font-bold bg-slate-100 px-1 rounded">部署</span> > <span class="font-bold bg-slate-100 px-1 rounded">新增部署</span>。</p>
-                        <p class="text-red-600 font-bold bg-red-50 p-2 rounded inline-block">⚠️ 關鍵：誰可以存取 (Who has access) 務必選「所有人 (Anyone)」！</p>
-                        <p class="text-slate-700">4. 部署後，複製那串結尾是 <b>/exec</b> 的網址。</p>
+                        <div class="flex justify-end">
+                            <button onclick="openModal('tokenHelpModal')" class="text-xs bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-full font-bold border border-yellow-200 hover:bg-yellow-100 transition flex items-center gap-1">
+                                🔑 不知道 LINE_TOKEN 去哪找？點我教學
+                            </button>
+                        </div>
+
+                        <p class="text-slate-700">3. 部署 > 新增部署 > <b>誰可以存取：所有人 (Anyone)</b>。</p>
+                        <p class="text-slate-700">4. 複製結尾是 <b>/exec</b> 的網址。</p>
                     </div>
                 </section>
 
@@ -267,13 +259,9 @@ function doPost(e) {
                         <h3 class="text-xl font-bold text-slate-800">連結身體 (LINE 後台)</h3>
                     </div>
                     <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-3">
-                        <p class="text-slate-700 flex flex-wrap gap-2 items-center">
-                            1. 點擊按鈕開啟：
-                            <a href="https://manager.line.biz/" target="_blank" class="external-link">💬 LINE 官方帳號管理後台</a>
-                        </p>
-                        <p class="text-slate-700">2. 進入 <b>設定</b> > <b>Messaging API</b>。</p>
-                        <p class="text-slate-700">3. 在 <b>Webhook URL</b> 貼上剛剛的 Google 網址，按更新。</p>
-                        <p class="text-slate-700 bg-emerald-50 p-2 rounded text-emerald-800 border border-emerald-100"><b>✨ 必做：</b> 開啟下方的「使用 Webhook (Use Webhook)」開關。</p>
+                        <p class="text-slate-700">1. 開啟 <a href="https://manager.line.biz/" target="_blank" class="external-link">LINE 官方帳號後台</a>。</p>
+                        <p class="text-slate-700">2. 設定 > Messaging API > 貼上 Webhook URL > 更新。</p>
+                        <p class="text-slate-700 bg-emerald-50 p-2 rounded text-emerald-800 border border-emerald-100"><b>✨ 必做：</b> 開啟「使用 Webhook」開關。</p>
                     </div>
                 </section>
 
@@ -284,8 +272,7 @@ function doPost(e) {
                     </div>
                     <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-3">
                         <p class="text-slate-700">
-                            在本工具畫好框框後，點擊右上角 <span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold">💾 下載 JSON</span>。<br>
-                            將下載的內容，貼回 Google Apps Script 中，就能讓機器人動起來了！
+                            在本工具畫好框框 > 點擊 <span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold">💾 下載 JSON</span> > 貼回 Google Apps Script 中 <code>if (userMessage === "...")</code> 的區塊內。
                         </p>
                     </div>
                 </section>
@@ -312,6 +299,7 @@ function doPost(e) {
         const dimText = document.getElementById('dimText');
         const dimDot = document.getElementById('dimDot');
         const autoScaleCheckbox = document.getElementById('autoScale');
+        const triggerKeywordInput = document.getElementById('triggerKeyword');
         
         let areas = [];
         let isDrawing = false;
@@ -324,6 +312,7 @@ function doPost(e) {
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem('line_tool_url');
             if(savedUrl) imageUrlInput.value = savedUrl;
+            updateGasCodePreview();
         });
 
         function saveState() {
@@ -331,7 +320,12 @@ function doPost(e) {
         }
 
         function openModal(id) {
+            if(id === 'tutorialModal') updateGasCodePreview();
             document.getElementById(id).classList.remove('hidden');
+        }
+
+        function openTutorial() {
+            openModal('tutorialModal');
         }
 
         function closeModal(id) {
@@ -343,6 +337,44 @@ function doPost(e) {
             navigator.clipboard.writeText(code).then(() => {
                 alert('程式碼已複製！');
             });
+        }
+
+        function updateGasCodePreview() {
+            const keyword = triggerKeywordInput.value || '選單';
+            const code = `const CHANNEL_ACCESS_TOKEN = '請換成你的LINE_TOKEN'; 
+
+function doPost(e) {
+  let replyToken = "";
+  let userMessage = "";
+  
+  try {
+    const msg = JSON.parse(e.postData.contents);
+    replyToken = msg.events[0].replyToken;
+    userMessage = msg.events[0].message.text;
+  } catch (error) {
+    return ContentService.createTextOutput(""); 
+  }
+
+  // 關鍵字完全吻合才觸發
+  if (userMessage === "${keyword}") { 
+    sendImagemap(replyToken);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function sendImagemap(replyToken) {
+  // 請將下載的 JSON 內容，貼在下方變數中 (取代現有內容)
+  const myJson = { /* 這裡貼上下載的 JSON */ };
+  
+  const url = 'https://api.line.me/v2/bot/message/reply';
+  UrlFetchApp.fetch(url, {
+      'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
+      'method': 'post',
+      'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [myJson] }),
+  });
+}`;
+            document.getElementById('gasCode').innerText = code;
         }
 
         imageInput.addEventListener('change', function(e) {
