@@ -7,11 +7,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-color: #4A90E2; /* 舒適的藍色 */
-            --accent-color: #FF6B6B; /* 亮眼的粉紅/紅色，呼應大心 */
+            --primary-color: #4A90E2; /* 專業藍 */
+            --accent-color: #FF6B6B; /* 大心粉紅 */
             --bg-color: #F7F9FC;
             --card-bg: #FFFFFF;
             --text-color: #333333;
+            --success-color: #4CAF50;
         }
 
         body {
@@ -26,6 +27,7 @@
         .container {
             max-width: 900px;
             margin: 0 auto;
+            padding-bottom: 50px;
         }
 
         header {
@@ -36,11 +38,27 @@
         h1 {
             color: var(--primary-color);
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .subtitle {
             color: #666;
             font-size: 0.9em;
+        }
+
+        /* 隱私聲明標籤 */
+        .privacy-badge {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-top: 10px;
+            border: 1px solid #c8e6c9;
         }
 
         .card {
@@ -49,6 +67,7 @@
             padding: 25px;
             margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
         }
 
         h2 {
@@ -79,7 +98,7 @@
 
         input, select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1em;
@@ -91,17 +110,24 @@
             border-color: var(--primary-color);
             outline: none;
             background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
 
         .unit-tag {
             font-size: 0.8em;
             color: #888;
             text-align: right;
-            margin-top: -30px;
+            margin-top: -35px;
             margin-right: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             pointer-events: none;
             position: relative;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
         }
 
         button.calculate-btn {
@@ -112,46 +138,75 @@
             font-size: 1.1em;
             border-radius: 50px;
             cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            flex: 2;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+            transition: all 0.3s;
         }
 
-        button.calculate-btn:hover {
-            background-color: #357ABD;
+        button.save-btn {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 1em;
+            border-radius: 50px;
+            cursor: pointer;
+            flex: 1;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s;
+        }
+
+        button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+            opacity: 0.9;
         }
 
         .result-section {
-            display: none; /* Hidden by default */
-            animation: fadeIn 0.5s;
+            display: none;
+            animation: fadeIn 0.6s ease-out;
         }
 
-        .highlight-box {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        /* 鼓勵小語區塊 */
+        .encouragement-box {
+            background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+            border: 2px dashed var(--accent-color);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 15px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            position: relative;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
+        .encouragement-text {
+            font-size: 1.1em;
+            color: #555;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .progress-bar-container {
+            background-color: #eee;
             border-radius: 20px;
-            color: white;
-            font-weight: bold;
-            margin-bottom: 10px;
+            height: 25px;
+            width: 100%;
+            margin: 15px 0;
+            overflow: hidden;
+            position: relative;
         }
 
-        .status-freedom { background-color: #4CAF50; }
-        .status-working { background-color: #FF9800; }
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            height: 100%;
+            width: 0%;
+            border-radius: 20px;
+            transition: width 1s ease-in-out;
+        }
 
         .amway-chart-container {
             margin-top: 20px;
             position: relative;
-            height: 300px;
+            height: 350px;
         }
 
         .footer {
@@ -159,10 +214,11 @@
             margin-top: 40px;
             color: #999;
             font-size: 0.8em;
+            padding-bottom: 20px;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -177,13 +233,14 @@
         .level-card {
             background: #fff;
             border: 1px solid #eee;
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
             text-align: center;
-            font-size: 0.9em;
+            font-size: 0.85em;
             flex: 1 0 21%;
+            color: #666;
         }
-        .level-card strong { display: block; color: var(--accent-color); }
+        .level-card strong { display: block; color: var(--accent-color); font-size: 1.1em; }
     </style>
 </head>
 <body>
@@ -192,71 +249,70 @@
     <header>
         <h1>💖 大心財富領航系統</h1>
         <div class="subtitle">為你量身打造的財富自由藍圖</div>
+        <div class="privacy-badge">🔒 隱私安全：您的資料僅儲存在此裝置，他人無法查看</div>
     </header>
 
     <div class="card">
-        <h2>1. 設定夢想目標 (單位：萬元)</h2>
+        <h2>1. 個人現況與夢想 (單位：萬元)</h2>
         <div class="input-group">
             <div class="form-control">
-                <label>目前的年齡</label>
-                <input type="number" id="currentAge" value="30">
+                <label>👤 目前年齡</label>
+                <input type="number" id="currentAge" placeholder="輸入您的年齡">
             </div>
             <div class="form-control">
-                <label>夢想總資產目標</label>
-                <input type="number" id="dreamGoal" value="3000" placeholder="例如：3000">
+                <label>🎯 夢想總資產目標</label>
+                <input type="number" id="dreamGoal" placeholder="例如：3000">
                 <div class="unit-tag">萬元</div>
             </div>
             <div class="form-control">
-                <label>目前已累積淨資產</label>
-                <input type="number" id="currentAssets" value="200">
+                <label>💰 目前已累積淨資產</label>
+                <input type="number" id="currentAssets" placeholder="目前存款+投資">
                 <div class="unit-tag">萬元</div>
             </div>
         </div>
-        <div class="input-group">
-            <div class="form-control">
-                <label>預估通貨膨脹率 (%)</label>
-                <input type="number" id="inflationRate" value="2.5" step="0.1">
-            </div>
+        <div class="form-control">
+            <label>📉 預估通貨膨脹率 (%)</label>
+            <input type="number" id="inflationRate" value="2.5" step="0.1">
         </div>
     </div>
 
     <div class="card">
         <h2>2. 收入結構 (年收入/單位：萬元)</h2>
-        <h3>💼 主動收入 (需課稅)</h3>
+        <h3>💼 主動收入 (本金來源)</h3>
         <div class="input-group">
             <div class="form-control">
                 <label>本業薪資</label>
-                <input type="number" id="salary" value="100">
+                <input type="number" id="salary" placeholder="0">
                 <div class="unit-tag">萬元</div>
             </div>
             <div class="form-control">
                 <label>副業/其他主動</label>
-                <input type="number" id="sideHustle" value="0">
+                <input type="number" id="sideHustle" placeholder="0">
                 <div class="unit-tag">萬元</div>
             </div>
         </div>
 
-        <h3>📈 被動收入</h3>
+        <h3>📈 被動收入 (自由之鑰)</h3>
         <div class="input-group">
             <div class="form-control">
                 <label>股票/基金配息 (海外)</label>
-                <input type="number" id="stockDiv" value="20" placeholder="美股ETF等">
+                <input type="number" id="stockDiv" placeholder="美股ETF等">
                 <div class="unit-tag">萬元</div>
-                <small style="color:#888; font-size:0.8em;">*海外所得750萬內免稅</small>
+                <small style="color:#aaa; font-size:0.75em;">*海外所得750萬內免稅</small>
             </div>
             <div class="form-control">
                 <label>房租收入</label>
-                <input type="number" id="rentIncome" value="0">
+                <input type="number" id="rentIncome" placeholder="0">
                 <div class="unit-tag">萬元</div>
             </div>
             <div class="form-control">
-                <label>目前安麗收入 (年)</label>
-                <input type="number" id="currentAmway" value="0">
+                <label>目前安麗被動收入 (年)</label>
+                <input type="number" id="currentAmway" placeholder="0">
                 <div class="unit-tag">萬元</div>
             </div>
             <div class="form-control">
                 <label>其他被動收入</label>
-                <input type="number" id="otherPassive" value="0">
+                <input type="number" id="otherPassive" placeholder="0">
                 <div class="unit-tag">萬元</div>
             </div>
         </div>
@@ -267,32 +323,32 @@
         <div class="input-group">
             <div class="form-control">
                 <label>房貸/房租</label>
-                <input type="number" id="expHousing" value="3">
+                <input type="number" id="expHousing" placeholder="0">
                 <div class="unit-tag">萬元/月</div>
             </div>
             <div class="form-control">
                 <label>車貸/交通</label>
-                <input type="number" id="expCar" value="1.5">
+                <input type="number" id="expCar" placeholder="0">
                 <div class="unit-tag">萬元/月</div>
             </div>
             <div class="form-control">
                 <label>保險費</label>
-                <input type="number" id="expIns" value="0.5">
+                <input type="number" id="expIns" placeholder="0">
                 <div class="unit-tag">萬元/月</div>
             </div>
             <div class="form-control">
                 <label>生活/其他</label>
-                <input type="number" id="expLife" value="2">
+                <input type="number" id="expLife" placeholder="0">
                 <div class="unit-tag">萬元/月</div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h2>4. 安麗事業規劃</h2>
-        <label>選擇您想挑戰的目標聘位，看看能快幾年退休：</label>
+        <h2>4. 安麗事業加速器</h2>
+        <label>選擇目標聘位，看見未來的可能性：</label>
         <select id="targetAmwayLevel" style="margin-top:10px; font-weight:bold; color:var(--primary-color);">
-            <option value="0">-- 請選擇目標聘位 --</option>
+            <option value="0">-- 選擇目標聘位 --</option>
             <option value="100">白金 (年收約 100萬)</option>
             <option value="180">藍寶石 (年收約 180萬)</option>
             <option value="250">翡翠 (年收約 250萬)</option>
@@ -310,33 +366,46 @@
         </div>
     </div>
 
-    <button class="calculate-btn" onclick="calculateFreedom()">🚀 開始計算財富自由路徑</button>
+    <div class="action-buttons">
+        <button class="calculate-btn" onclick="calculateFreedom()">🚀 開始評估</button>
+        <button class="save-btn" onclick="saveData()">💾 暫存資料</button>
+    </div>
+    <div style="text-align:center; margin-top:10px; font-size:0.8em; color:#888;">
+        *點擊「暫存資料」可將輸入數值保存在此瀏覽器，方便下次使用。
+    </div>
 
-    <div id="resultSection" class="result-section card" style="margin-top: 20px;">
-        <h2 style="border-color: #4CAF50;">📊 分析結果</h2>
+    <div id="resultSection" class="result-section card" style="margin-top: 30px;">
+        <h2 style="border-color: #4CAF50;">📊 您的財富自由報告</h2>
         
-        <div class="highlight-box">
-            <div id="freedomStatus" class="status-badge status-working">尚未自由</div>
-            <div style="font-size: 1.2em; margin-bottom: 10px;">
-                目前被動收入涵蓋率：<span id="coverageRatio" style="font-weight:bold; font-size:1.4em;">0%</span>
+        <div class="encouragement-box">
+            <h3 id="freedomTitle" style="margin:0; color:var(--primary-color);">分析中...</h3>
+            
+            <div class="progress-bar-container">
+                <div id="freedomProgress" class="progress-bar"></div>
             </div>
-            <div>
-                年總支出：<span id="totalAnnualExp">0</span> 萬 | 年總被動收入：<span id="totalPassive">0</span> 萬
+            <div style="font-size:0.9em; color:#666;">
+                目前被動收入涵蓋率：<span id="coverageRatio" style="font-weight:bold; font-size:1.2em; color:#333;">0%</span>
             </div>
+            
+            <hr style="border:0; border-top:1px dashed #ddd; margin:15px 0;">
+            
+            <div id="encouragementText" class="encouragement-text">
+                </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <div>
-                <h3>🐢 維持現狀</h3>
-                <p>若不改變，預計達成夢想年齡：</p>
-                <div id="ageCurrent" style="font-size:2em; font-weight:bold; color:#666;">-- 歲</div>
-                <p style="font-size:0.8em; color:#888;">(考量通膨與現有儲蓄率)</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+            <div style="background:#f9f9f9; padding:15px; border-radius:10px;">
+                <h3 style="margin-top:0; font-size:1em;">🐢 維持現狀預估</h3>
+                <p>達成夢想年齡：</p>
+                <div id="ageCurrent" style="font-size:1.8em; font-weight:bold; color:#666;">-- 歲</div>
             </div>
-            <div>
-                <h3>🐰 加上安麗目標 (<span id="targetLevelName">--</span>)</h3>
-                <p>達成夢想年齡縮短至：</p>
-                <div id="ageAmway" style="font-size:2.5em; font-weight:bold; color:var(--accent-color);">-- 歲</div>
-                <p style="font-size:0.9em; color:#4CAF50; font-weight:bold;">提早 <span id="yearsSaved">0</span> 年實現夢想！</p>
+            <div style="background:#fff0f0; padding:15px; border-radius:10px; border:1px solid #ffdcdc;">
+                <h3 style="margin-top:0; font-size:1em; color:var(--accent-color);">🐰 加上安麗目標 (<span id="targetLevelName">--</span>)</h3>
+                <p>達成夢想年齡：</p>
+                <div id="ageAmway" style="font-size:2.2em; font-weight:bold; color:var(--accent-color);">-- 歲</div>
+                <div style="font-size:0.9em; color:#4CAF50; font-weight:bold; margin-top:5px;">
+                    ✨ 提早 <span id="yearsSaved">0</span> 年退休！
+                </div>
             </div>
         </div>
 
@@ -346,152 +415,154 @@
     </div>
 
     <div class="footer">
-        Made with ❤️ by 李嘉哲 Gavin | 大心團隊
+        Made with ❤️ by 李嘉哲 Gavin | 大心團隊<br>
+        <span style="font-size:0.9em">此工具僅供規劃參考，不代表投資收益保證</span>
     </div>
 </div>
 
 <script>
-    let myChart = null;
+    // 頁面載入時讀取資料
+    window.onload = function() {
+        loadData();
+    };
+
+    function getValue(id) {
+        return parseFloat(document.getElementById(id).value) || 0;
+    }
 
     function calculateFreedom() {
-        // 1. 獲取數值 (單位：萬)
-        const currentAge = parseFloat(document.getElementById('currentAge').value) || 0;
-        const dreamGoal = parseFloat(document.getElementById('dreamGoal').value) || 0;
-        const currentAssets = parseFloat(document.getElementById('currentAssets').value) || 0;
-        const inflationRate = (parseFloat(document.getElementById('inflationRate').value) || 0) / 100;
+        // 1. 獲取數值
+        const currentAge = getValue('currentAge') || 30; // 預設30歲以免圖表壞掉
+        const dreamGoal = getValue('dreamGoal');
+        const currentAssets = getValue('currentAssets');
+        const inflationRate = getValue('inflationRate') / 100;
 
         // 收入
-        const salary = parseFloat(document.getElementById('salary').value) || 0;
-        const sideHustle = parseFloat(document.getElementById('sideHustle').value) || 0;
-        const stockDiv = parseFloat(document.getElementById('stockDiv').value) || 0; // 海外
-        const rentIncome = parseFloat(document.getElementById('rentIncome').value) || 0;
-        const currentAmway = parseFloat(document.getElementById('currentAmway').value) || 0;
-        const otherPassive = parseFloat(document.getElementById('otherPassive').value) || 0;
+        const salary = getValue('salary');
+        const sideHustle = getValue('sideHustle');
+        const stockDiv = getValue('stockDiv'); // 海外
+        const rentIncome = getValue('rentIncome');
+        const currentAmway = getValue('currentAmway');
+        const otherPassive = getValue('otherPassive');
 
         // 支出 (月轉年)
         const monthlyExp = (
-            parseFloat(document.getElementById('expHousing').value) || 0 +
-            parseFloat(document.getElementById('expCar').value) || 0 +
-            parseFloat(document.getElementById('expIns').value) || 0 +
-            parseFloat(document.getElementById('expLife').value) || 0
+            getValue('expHousing') +
+            getValue('expCar') +
+            getValue('expIns') +
+            getValue('expLife')
         );
         const annualExp = monthlyExp * 12;
 
-        // 目標安麗收入
+        // 目標安麗
         const targetAmwaySelect = document.getElementById('targetAmwayLevel');
         const targetAmwayIncome = parseFloat(targetAmwaySelect.value) || 0;
         const targetLevelName = targetAmwaySelect.options[targetAmwaySelect.selectedIndex].text.split(' ')[0];
 
-        // 2. 稅務計算 (簡易版邏輯)
-        // 假設境內所得稅率平均為 12% (綜合所得稅概算)，海外所得 < 750萬免稅
+        // 2. 稅務計算 (簡易版)
         const domesticIncome = salary + sideHustle + rentIncome + otherPassive + currentAmway;
-        const taxDomestic = domesticIncome * 0.12; // 簡易扣除
+        const taxDomestic = domesticIncome * 0.12; 
         
         let taxOverseas = 0;
         if (stockDiv > 100 && (stockDiv + domesticIncome) > 750) {
-            taxOverseas = (stockDiv - 670) * 0.2; // 基本稅額簡易邏輯，僅供參考
+            taxOverseas = (stockDiv - 670) * 0.2; 
             if(taxOverseas < 0) taxOverseas = 0;
         }
 
         const totalTax = taxDomestic + taxOverseas;
 
-        // 3. 淨現金流計算
+        // 3. 現金流
         const totalPassive = stockDiv + rentIncome + currentAmway + otherPassive;
         const netAnnualIncomeCurrent = (domesticIncome + stockDiv) - totalTax - annualExp;
         
-        // 加上安麗目標後的收入 (假設安麗收入增加部分)
-        // 增加的被動收入 = 目標安麗收入 - 目前安麗收入 (若目標 < 目前，則不增加)
+        // 加上安麗目標後的收入
         let addedAmwayIncome = targetAmwayIncome - currentAmway;
         if (addedAmwayIncome < 0) addedAmwayIncome = 0;
         
-        // 安麗增加收入的稅 (假設併入綜所稅，邊際稅率估20%)
         const amwayTax = addedAmwayIncome * 0.2; 
         const netAnnualIncomeWithAmway = netAnnualIncomeCurrent + addedAmwayIncome - amwayTax;
 
-        // 4. 財富自由判定 (被動 > 支出)
-        const coverageRatio = (totalPassive / annualExp * 100).toFixed(1);
-        const statusBadge = document.getElementById('freedomStatus');
+        // 4. 財富自由進度與鼓勵機制
+        const coverageRatio = annualExp > 0 ? (totalPassive / annualExp * 100) : 0;
+        const ratioFixed = coverageRatio.toFixed(1);
         
-        if (totalPassive >= annualExp) {
-            statusBadge.textContent = "恭喜！已財富自由";
-            statusBadge.className = "status-badge status-freedom";
+        // 更新進度條
+        const progressBar = document.getElementById('freedomProgress');
+        progressBar.style.width = Math.min(coverageRatio, 100) + "%";
+
+        // 設定鼓勵話語
+        const titleEl = document.getElementById('freedomTitle');
+        const textEl = document.getElementById('encouragementText');
+        
+        if (coverageRatio >= 100) {
+            titleEl.textContent = "🎉 恭喜達成財富自由！";
+            titleEl.style.color = "#4CAF50";
+            textEl.textContent = "太棒了！您的被動收入已經大於總支出。您已經打造了屬於自己的現金流系統，接下來可以思考如何擴大影響力，幫助更多人！🌟";
+        } else if (coverageRatio >= 70) {
+            titleEl.textContent = "🚀 衝刺階段，即將起飛！";
+            titleEl.style.color = "#FF9800";
+            textEl.textContent = "您已經做得非常好了！距離自由只差最後一哩路。堅持您的系統建設，複利的威力即將爆發。相信自己，您一定做得到！💪";
+        } else if (coverageRatio >= 30) {
+            titleEl.textContent = "🌱 基礎穩固，持續累積！";
+            titleEl.style.color = "#2196F3";
+            textEl.textContent = "您已經建立了初步的被動收入管道，這是很棒的開始！只要持續優化資產配置並發展安麗事業，這條水管會越來越粗。保持耐心，時間是您的朋友！💧";
         } else {
-            statusBadge.textContent = "努力中";
-            statusBadge.className = "status-badge status-working";
+            titleEl.textContent = "🌟 萬丈高樓平地起！";
+            titleEl.style.color = "#666";
+            textEl.textContent = "每一個偉大的成就都始於第一步。現在是盤點資源、設定目標的最佳時機。運用大心團隊的資源與安麗的機會，您絕對有能力改變現狀。讓我們一起加油！🌱";
         }
 
-        // 5. 達成目標年數計算 (含複利/通膨簡易模擬)
-        function calculateYears(startAssets, annualSaving, goal, infl) {
-            let assets = startAssets;
+        // 5. 計算年數
+        function calculateYearsToGoal(current, annualSaving, goal) {
+            if (annualSaving <= 0) return 999; 
+            let assets = current;
             let years = 0;
-            // 設定上限避免無窮迴圈
-            while (assets < goal && years < 80) {
-                assets = assets * (1.05) + annualSaving; // 假設資產本身有5%投資回報
-                // 通膨導致目標實質購買力需求增加，這裡簡化為目標金額不變，但儲蓄力相對被通膨侵蝕
-                // 或是更簡單：資產增長 vs 固定目標
+            while (assets < goal && years < 100) {
+                assets = assets * 1.05 + annualSaving; // 假設5%投報
                 years++;
             }
             return years;
         }
-        
-        // 這裡採用「需要累積到的金額」會隨通膨增加的邏輯會比較準確
-        // 但為了直觀，我們計算：(目標 - 現有) / 年儲蓄，並對儲蓄做投資回報加成
-        
+
         const yearsCurrent = calculateYearsToGoal(currentAssets, netAnnualIncomeCurrent, dreamGoal);
         const yearsWithAmway = calculateYearsToGoal(currentAssets, netAnnualIncomeWithAmway, dreamGoal);
 
         // 6. 更新UI
         document.getElementById('resultSection').style.display = 'block';
-        document.getElementById('coverageRatio').textContent = coverageRatio + "%";
-        document.getElementById('totalAnnualExp').textContent = annualExp.toFixed(1);
-        document.getElementById('totalPassive').textContent = totalPassive.toFixed(1);
+        document.getElementById('coverageRatio').textContent = ratioFixed + "%";
         
         document.getElementById('ageCurrent').textContent = (yearsCurrent > 90) ? "> 100 歲" : (currentAge + yearsCurrent) + " 歲";
-        
         document.getElementById('targetLevelName').textContent = targetLevelName == "--" ? "未選擇" : targetLevelName;
         
-        if (targetAmwayIncome > 0) {
+        if (targetAmwayIncome > 0 && yearsWithAmway < 100) {
             document.getElementById('ageAmway').textContent = (currentAge + yearsWithAmway) + " 歲";
-            document.getElementById('yearsSaved').textContent = (yearsCurrent - yearsWithAmway > 0) ? (yearsCurrent - yearsWithAmway) : 0;
+            const saved = (yearsCurrent > 90 ? 100 : yearsCurrent) - yearsWithAmway;
+            document.getElementById('yearsSaved').textContent = saved > 0 ? saved : 0;
         } else {
-            document.getElementById('ageAmway').textContent = "-- 歲";
+            document.getElementById('ageAmway').textContent = "--";
             document.getElementById('yearsSaved').textContent = "0";
         }
 
-        // 7. 繪製圖表
         drawChart(currentAge, yearsCurrent, yearsWithAmway, dreamGoal);
         
         // 滾動到結果
         document.getElementById('resultSection').scrollIntoView({behavior: 'smooth'});
     }
 
-    function calculateYearsToGoal(current, annualSaving, goal) {
-        if (annualSaving <= 0) return 999; // 永遠達不到
-        let assets = current;
-        let years = 0;
-        while (assets < goal && years < 100) {
-            assets = assets * 1.06 + annualSaving; // 假設資產年化報酬率 6%
-            years++;
-        }
-        return years;
-    }
-
+    let myChart = null;
     function drawChart(startAge, yearsA, yearsB, goal) {
         const ctx = document.getElementById('wealthChart').getContext('2d');
-        
         if (myChart) myChart.destroy();
 
-        // 限制顯示長度
-        const maxYears = Math.min(Math.max(yearsA, yearsB) + 5, 50);
+        const maxYears = Math.min(Math.max(yearsA < 90 ? yearsA : 50, yearsB < 90 ? yearsB : 50) + 5, 60);
         const labels = [];
         const dataA = [];
         const dataB = [];
         
         for (let i = 0; i <= maxYears; i++) {
             labels.push(startAge + i + "歲");
-            // 簡單模擬曲線供視覺參考
-            dataA.push(Math.min(goal, (i / yearsA) * goal)); 
-            dataB.push(Math.min(goal, (i / yearsB) * goal));
+            dataA.push(yearsA > 90 ? 0 : Math.min(goal, (i / yearsA) * goal)); 
+            dataB.push(yearsB > 90 ? 0 : Math.min(goal, (i / yearsB) * goal));
         }
 
         myChart = new Chart(ctx, {
@@ -499,38 +570,53 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: '維持現狀 資產累積',
+                    label: '維持現狀',
                     data: dataA,
                     borderColor: '#ccc',
                     borderWidth: 2,
                     fill: false,
                     pointRadius: 0
                 }, {
-                    label: '加上安麗事業 資產累積',
+                    label: '加上安麗事業',
                     data: dataB,
-                    borderColor: '#FF6B6B', // 大心 accent color
+                    borderColor: '#FF6B6B',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
                     borderWidth: 3,
-                    fill: false,
+                    fill: true,
                     pointRadius: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
                 plugins: {
-                    title: {
-                        display: true,
-                        text: '資產累積速度比較圖'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: '累積資產 (萬元)' }
-                    }
+                    title: { display: true, text: '資產累積速度預測' }
                 }
             }
         });
+    }
+
+    // --- 儲存與讀取功能 (Local Storage) ---
+    function saveData() {
+        const inputs = document.querySelectorAll('input, select');
+        const data = {};
+        inputs.forEach(input => {
+            data[input.id] = input.value;
+        });
+        localStorage.setItem('wealthNavigatorData', JSON.stringify(data));
+        alert('✅ 資料已暫存！\n您的隱私絕對安全，資料僅保留在您目前的裝置與瀏覽器中。');
+    }
+
+    function loadData() {
+        const savedData = localStorage.getItem('wealthNavigatorData');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            for (const key in data) {
+                const el = document.getElementById(key);
+                if (el) el.value = data[key];
+            }
+        }
     }
 </script>
 
