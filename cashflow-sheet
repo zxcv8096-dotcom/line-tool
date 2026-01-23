@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人財務資產負債表 🚀</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: "Microsoft JhengHei", sans-serif;
+        }
+        .card-header {
+            font-weight: bold;
+            color: white;
+        }
+        .bg-income { background-color: #28a745; } /* 綠色代表收入 */
+        .bg-expense { background-color: #dc3545; } /* 紅色代表支出 */
+        .bg-asset { background-color: #007bff; }   /* 藍色代表資產 */
+        .bg-liability { background-color: #fd7e14; } /* 橘色代表負債 */
+        
+        .total-box {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .input-group-text {
+            background-color: #e9ecef;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            text-align: right;
+        }
+        h5 { font-weight: 700; }
+        
+        /* 手機版優化：總結區塊固定在底部或顯眼處 */
+        .summary-highlight {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d63384;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h2>💰 個人資產負債表</h2>
+        <p class="text-muted">輸入您的財務數據，系統將自動計算現金流與淨資產</p>
+    </div>
+
+    <div class="row mb-4 text-center">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body">
+                    <h6 class="text-success">總收入</h6>
+                    <span id="display-total-income" class="fw-bold">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body">
+                    <h6 class="text-danger">總支出</h6>
+                    <span id="display-total-expense" class="fw-bold">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mt-2 mt-md-0">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body">
+                    <h6 class="text-primary">總資產</h6>
+                    <span id="display-total-asset" class="fw-bold">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mt-2 mt-md-0">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body">
+                    <h6 class="text-warning">總負債</h6>
+                    <span id="display-total-liability" class="fw-bold">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row text-center mb-4">
+        <div class="col-12">
+            <div class="alert alert-info fw-bold">
+                🌊 每月淨現金流： <span id="net-cashflow">0</span>
+            </div>
+        </div>
+    </div>
+
+    <form id="finance-form">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-income">📥 月收入 (Income)</div>
+                    <div class="card-body">
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">工資收入</span>
+                            <input type="number" class="form-control income-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">安麗/業務獎金</span>
+                            <input type="number" class="form-control income-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">被動收入(股息/房租)</span>
+                            <input type="number" class="form-control income-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">其他收入</span>
+                            <input type="number" class="form-control income-item" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-expense">📤 月支出 (Expenses)</div>
+                    <div class="card-body">
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">生活費/紐崔萊</span>
+                            <input type="number" class="form-control expense-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">保險費(全球/安達)</span>
+                            <input type="number" class="form-control expense-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">房租/房貸</span>
+                            <input type="number" class="form-control expense-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">車貸/交通費</span>
+                            <input type="number" class="form-control expense-item" placeholder="0">
+                        </div>
+                         <div class="mb-2 input-group">
+                            <span class="input-group-text">信貸月付金</span>
+                            <input type="number" class="form-control expense-item" placeholder="0">
+                        </div>
+                         <div class="mb-2 input-group">
+                            <span class="input-group-text">稅金/其他</span>
+                            <input type="number" class="form-control expense-item" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-asset">💎 資產 (Assets)</div>
+                    <div class="card-body">
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">銀行儲蓄</span>
+                            <input type="number" class="form-control asset-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">股票/美股/ETF</span>
+                            <input type="number" class="form-control asset-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">保單現價(新光/安達)</span>
+                            <input type="number" class="form-control asset-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">房地產市值</span>
+                            <input type="number" class="form-control asset-item" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-liability">💸 負債 (Liabilities)</div>
+                    <div class="card-body">
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">房屋貸款</span>
+                            <input type="number" class="form-control liability-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">汽車貸款</span>
+                            <input type="number" class="form-control liability-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">信用貸款(信貸)</span>
+                            <input type="number" class="form-control liability-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">保單借款</span>
+                            <input type="number" class="form-control liability-item" placeholder="0">
+                        </div>
+                        <div class="mb-2 input-group">
+                            <span class="input-group-text">信用卡未繳餘額</span>
+                            <input type="number" class="form-control liability-item" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    <div class="text-center mt-5 text-muted" style="font-size: 0.8rem;">
+        <p>此工具僅供財務整理參考，Designed for Cashflow Builders.</p>
+    </div>
+</div>
+
+<script>
+    // 格式化數字為貨幣格式 (例如: 1,000)
+    function formatCurrency(num) {
+        return "NT$ " + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    // 計算總和的函式
+    function calculate() {
+        let totalIncome = 0;
+        let totalExpense = 0;
+        let totalAsset = 0;
+        let totalLiability = 0;
+
+        // 加總 Income
+        document.querySelectorAll('.income-item').forEach(item => {
+            totalIncome += Number(item.value) || 0;
+        });
+
+        // 加總 Expense
+        document.querySelectorAll('.expense-item').forEach(item => {
+            totalExpense += Number(item.value) || 0;
+        });
+
+        // 加總 Asset
+        document.querySelectorAll('.asset-item').forEach(item => {
+            totalAsset += Number(item.value) || 0;
+        });
+
+        // 加總 Liability
+        document.querySelectorAll('.liability-item').forEach(item => {
+            totalLiability += Number(item.value) || 0;
+        });
+
+        // 更新 UI 顯示
+        document.getElementById('display-total-income').textContent = formatCurrency(totalIncome);
+        document.getElementById('display-total-expense').textContent = formatCurrency(totalExpense);
+        document.getElementById('display-total-asset').textContent = formatCurrency(totalAsset);
+        document.getElementById('display-total-liability').textContent = formatCurrency(totalLiability);
+
+        // 計算淨現金流 (收入 - 支出)
+        let netCashflow = totalIncome - totalExpense;
+        let cashflowElement = document.getElementById('net-cashflow');
+        cashflowElement.textContent = formatCurrency(netCashflow);
+        
+        // 根據正負值改變顏色
+        if (netCashflow > 0) {
+            cashflowElement.className = "text-success fw-bold";
+        } else {
+            cashflowElement.className = "text-danger fw-bold";
+        }
+    }
+
+    // 監聽所有輸入框的變動
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', calculate);
+    });
+</script>
+
+</body>
+</html>
