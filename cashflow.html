@@ -2,271 +2,377 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人財務資產負債表 🚀</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>財富自由規劃表 🚀</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #f4f7f6;
-            font-family: "Microsoft JhengHei", sans-serif;
-        }
-        .card-header {
-            font-weight: bold;
-            color: white;
-        }
-        .bg-income { background-color: #28a745; } /* 綠色代表收入 */
-        .bg-expense { background-color: #dc3545; } /* 紅色代表支出 */
-        .bg-asset { background-color: #007bff; }   /* 藍色代表資產 */
-        .bg-liability { background-color: #fd7e14; } /* 橘色代表負債 */
+        body { background-color: #f0f2f5; font-family: "Microsoft JhengHei", sans-serif; padding-bottom: 80px; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .card-header { font-weight: bold; border-radius: 12px 12px 0 0 !important; color: white; }
         
-        .total-box {
-            background: white;
-            border-radius: 10px;
+        /* 色彩定義 */
+        .bg-income { background: linear-gradient(45deg, #11998e, #38ef7d); }
+        .bg-expense { background: linear-gradient(45deg, #ff5f6d, #ffc371); }
+        .bg-asset { background: linear-gradient(45deg, #2193b0, #6dd5ed); }
+        .bg-liability { background: linear-gradient(45deg, #f2994a, #f2c94c); }
+        .bg-amway { background: linear-gradient(45deg, #4b6cb7, #182848); }
+
+        .progress { height: 25px; border-radius: 15px; background-color: #e9ecef; }
+        .stat-value { font-size: 1.2rem; font-weight: 800; }
+        .stat-label { font-size: 0.8rem; color: #666; }
+        
+        /* 切換開關樣式 */
+        .mode-switch { position: fixed; top: 15px; right: 15px; z-index: 1000; }
+        
+        .result-box {
+            background: #fff;
+            border-left: 5px solid #0d6efd;
             padding: 15px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 10px;
+            border-radius: 5px;
         }
-        .input-group-text {
-            background-color: #e9ecef;
-            font-size: 0.9rem;
-        }
-        .form-control {
-            text-align: right;
-        }
-        h5 { font-weight: 700; }
         
-        /* 手機版優化：總結區塊固定在底部或顯眼處 */
-        .summary-highlight {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #d63384;
-        }
+        /* 重點強調文字 */
+        .highlight-red { color: #dc3545; font-weight: bold; }
+        .highlight-green { color: #198754; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container py-4">
-    <div class="text-center mb-4">
-        <h2>💰 個人資產負債表</h2>
-        <p class="text-muted">輸入您的財務數據，系統將自動計算現金流與淨資產</p>
-    </div>
-
-    <div class="row mb-4 text-center">
-        <div class="col-6 col-md-3">
-            <div class="card shadow-sm border-success">
-                <div class="card-body">
-                    <h6 class="text-success">總收入</h6>
-                    <span id="display-total-income" class="fw-bold">0</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card shadow-sm border-danger">
-                <div class="card-body">
-                    <h6 class="text-danger">總支出</h6>
-                    <span id="display-total-expense" class="fw-bold">0</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3 mt-2 mt-md-0">
-            <div class="card shadow-sm border-primary">
-                <div class="card-body">
-                    <h6 class="text-primary">總資產</h6>
-                    <span id="display-total-asset" class="fw-bold">0</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3 mt-2 mt-md-0">
-            <div class="card shadow-sm border-warning">
-                <div class="card-body">
-                    <h6 class="text-warning">總負債</h6>
-                    <span id="display-total-liability" class="fw-bold">0</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row text-center mb-4">
-        <div class="col-12">
-            <div class="alert alert-info fw-bold">
-                🌊 每月淨現金流： <span id="net-cashflow">0</span>
-            </div>
-        </div>
-    </div>
-
-    <form id="finance-form">
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-income">📥 月收入 (Income)</div>
-                    <div class="card-body">
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">工資收入</span>
-                            <input type="number" class="form-control income-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">安麗/業務獎金</span>
-                            <input type="number" class="form-control income-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">被動收入(股息/房租)</span>
-                            <input type="number" class="form-control income-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">其他收入</span>
-                            <input type="number" class="form-control income-item" placeholder="0">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-expense">📤 月支出 (Expenses)</div>
-                    <div class="card-body">
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">生活費/紐崔萊</span>
-                            <input type="number" class="form-control expense-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">保險費(全球/安達)</span>
-                            <input type="number" class="form-control expense-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">房租/房貸</span>
-                            <input type="number" class="form-control expense-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">車貸/交通費</span>
-                            <input type="number" class="form-control expense-item" placeholder="0">
-                        </div>
-                         <div class="mb-2 input-group">
-                            <span class="input-group-text">信貸月付金</span>
-                            <input type="number" class="form-control expense-item" placeholder="0">
-                        </div>
-                         <div class="mb-2 input-group">
-                            <span class="input-group-text">稅金/其他</span>
-                            <input type="number" class="form-control expense-item" placeholder="0">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-asset">💎 資產 (Assets)</div>
-                    <div class="card-body">
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">銀行儲蓄</span>
-                            <input type="number" class="form-control asset-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">股票/美股/ETF</span>
-                            <input type="number" class="form-control asset-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">保單現價(新光/安達)</span>
-                            <input type="number" class="form-control asset-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">房地產市值</span>
-                            <input type="number" class="form-control asset-item" placeholder="0">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-liability">💸 負債 (Liabilities)</div>
-                    <div class="card-body">
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">房屋貸款</span>
-                            <input type="number" class="form-control liability-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">汽車貸款</span>
-                            <input type="number" class="form-control liability-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">信用貸款(信貸)</span>
-                            <input type="number" class="form-control liability-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">保單借款</span>
-                            <input type="number" class="form-control liability-item" placeholder="0">
-                        </div>
-                        <div class="mb-2 input-group">
-                            <span class="input-group-text">信用卡未繳餘額</span>
-                            <input type="number" class="form-control liability-item" placeholder="0">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-    
-    <div class="text-center mt-5 text-muted" style="font-size: 0.8rem;">
-        <p>此工具僅供財務整理參考，Designed for Cashflow Builders.</p>
+<div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm sticky-top">
+    <h5 class="m-0 fw-bold">💎 財富自由規劃</h5>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="yearModeToggle">
+        <label class="form-check-label fw-bold" for="yearModeToggle">切換年視角</label>
     </div>
 </div>
 
+<div class="container py-3">
+
+    <div class="card">
+        <div class="card-body text-center">
+            <h6 class="text-muted mb-3">您的財務健康報告</h6>
+            
+            <label class="d-flex justify-content-between fw-bold mb-1">
+                <span>財富自由度 (被動收入/總支出)</span>
+                <span id="freedom-rate">0%</span>
+            </label>
+            <div class="progress mb-3">
+                <div id="freedom-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+            </div>
+
+            <label class="d-flex justify-content-between fw-bold mb-1">
+                <span>資產負債比 (總負債/總資產)</span>
+                <span id="debt-ratio">0%</span>
+            </label>
+            <div class="progress">
+                <div id="debt-bar" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+            </div>
+            <small class="text-muted d-block mt-1">*建議資產負債比低於 50%</small>
+        </div>
+    </div>
+
+    <div class="card border-primary border-2">
+        <div class="card-header bg-amway text-white">
+            🏆 安麗聘位目標模擬
+        </div>
+        <div class="card-body">
+            <p class="small text-muted mb-2">選擇一個目標聘位，看看能否讓你達成財富自由？</p>
+            <select class="form-select mb-3 fw-bold text-primary" id="pin-selector">
+                <option value="0" selected>-- 請選擇目前或目標聘位 --</option>
+                <option value="1000000">白金 (年薪約 100萬)</option>
+                <option value="1800000">藍寶石 (年薪約 180萬)</option>
+                <option value="2500000">翡翠 (年薪約 250萬)</option>
+                <option value="5000000">鑽石 (年薪約 500萬)</option>
+                <option value="7000000">EDC (年薪約 700萬)</option>
+                <option value="10000000">皇冠 (年薪約 1000萬)</option>
+                <option value="30000000">皇冠大使 (年薪約 3000萬)</option>
+            </select>
+            
+            <div id="simulation-result" class="result-box d-none">
+                </div>
+        </div>
+    </div>
+
+    <div class="accordion" id="financeAccordion">
+        
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button bg-light fw-bold text-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIncome">
+                    💰 收入來源 (每月)
+                </button>
+            </h2>
+            <div id="collapseIncome" class="accordion-collapse collapse show" data-bs-parent="#financeAccordion">
+                <div class="accordion-body">
+                    <div class="mb-3">
+                        <label class="form-label badge bg-secondary">主動收入</label>
+                        <div class="input-group">
+                            <span class="input-group-text">本業薪資</span>
+                            <input type="number" class="form-control save-input" id="active-salary" placeholder="0">
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label badge bg-success">被動收入 (關鍵)</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">安麗月收入</span>
+                            <input type="number" class="form-control save-input passive-source" id="passive-amway" placeholder="0">
+                        </div>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">股票/基金配息</span>
+                            <input type="number" class="form-control save-input passive-source" id="passive-stock" placeholder="0">
+                        </div>
+                         <div class="input-group">
+                            <span class="input-group-text">房租/其他</span>
+                            <input type="number" class="form-control save-input passive-source" id="passive-other" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-light fw-bold text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExpense">
+                    💸 總支出 (每月)
+                </button>
+            </h2>
+            <div id="collapseExpense" class="accordion-collapse collapse" data-bs-parent="#financeAccordion">
+                <div class="accordion-body">
+                    <p class="small text-muted">包含生活費、保險、貸款月付金等所有流出</p>
+                    <div class="input-group">
+                        <span class="input-group-text">每月總支出</span>
+                        <input type="number" class="form-control save-input" id="total-expense" placeholder="輸入總額即可">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-light fw-bold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAsset">
+                    💎 總資產 (現值)
+                </button>
+            </h2>
+            <div id="collapseAsset" class="accordion-collapse collapse" data-bs-parent="#financeAccordion">
+                <div class="accordion-body">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">現金/存款</span>
+                        <input type="number" class="form-control save-input asset-item" id="asset-cash" placeholder="0">
+                    </div>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">股票/保單現價</span>
+                        <input type="number" class="form-control save-input asset-item" id="asset-stock" placeholder="0">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text">房產市值</span>
+                        <input type="number" class="form-control save-input asset-item" id="asset-house" placeholder="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-light fw-bold text-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLiab">
+                    💣 總負債 (餘額)
+                </button>
+            </h2>
+            <div id="collapseLiab" class="accordion-collapse collapse" data-bs-parent="#financeAccordion">
+                <div class="accordion-body">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">房貸餘額</span>
+                        <input type="number" class="form-control save-input liab-item" id="liab-house" placeholder="0">
+                    </div>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">車貸/信貸</span>
+                        <input type="number" class="form-control save-input liab-item" id="liab-loan" placeholder="0">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text">其他負債</span>
+                        <input type="number" class="form-control save-input liab-item" id="liab-other" placeholder="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-4">
+        <button class="btn btn-outline-secondary btn-sm" onclick="clearData()">🗑️ 清除所有紀錄</button>
+        <p class="text-muted mt-2" style="font-size: 0.8rem;">數據僅儲存於您的此台裝置，保障隱私。</p>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // 格式化數字為貨幣格式 (例如: 1,000)
-    function formatCurrency(num) {
-        return "NT$ " + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        calculateAll();
+    });
+
+    const inputs = document.querySelectorAll('.save-input');
+    const pinSelector = document.getElementById('pin-selector');
+    const toggleYearMode = document.getElementById('yearModeToggle');
+    let isYearMode = false;
+
+    // 監聽所有輸入框變動 -> 計算 + 存檔
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            saveData();
+            calculateAll();
+        });
+    });
+
+    // 監聽聘位選擇
+    pinSelector.addEventListener('change', calculateAll);
+
+    // 監聽年模式切換
+    toggleYearMode.addEventListener('change', function() {
+        isYearMode = this.checked;
+        updateDisplayMode();
+    });
+
+    function updateDisplayMode() {
+        // 更新顯示文字
+        const multiplier = isYearMode ? 12 : 1;
+        
+        // 這裡我們不改變輸入框的值，只改變計算邏輯的顯示 (或者你可以選擇把輸入框的值也x12，但比較複雜)
+        // 為了簡單直覺，我們約定「輸入框永遠輸入月額」，但「顯示結果」可以切換年/月
+        calculateAll(); 
     }
 
-    // 計算總和的函式
-    function calculate() {
-        let totalIncome = 0;
-        let totalExpense = 0;
+    function calculateAll() {
+        // 1. 取得數值 (預設從輸入框拿到的都是「月」)
+        let activeSalary = Number(document.getElementById('active-salary').value) || 0;
+        let passiveAmway = Number(document.getElementById('passive-amway').value) || 0;
+        let passiveStock = Number(document.getElementById('passive-stock').value) || 0;
+        let passiveOther = Number(document.getElementById('passive-other').value) || 0;
+        let totalExpense = Number(document.getElementById('total-expense').value) || 0;
+
+        // 資產與負債 (存量，不分年月)
         let totalAsset = 0;
-        let totalLiability = 0;
-
-        // 加總 Income
-        document.querySelectorAll('.income-item').forEach(item => {
-            totalIncome += Number(item.value) || 0;
-        });
-
-        // 加總 Expense
-        document.querySelectorAll('.expense-item').forEach(item => {
-            totalExpense += Number(item.value) || 0;
-        });
-
-        // 加總 Asset
-        document.querySelectorAll('.asset-item').forEach(item => {
-            totalAsset += Number(item.value) || 0;
-        });
-
-        // 加總 Liability
-        document.querySelectorAll('.liability-item').forEach(item => {
-            totalLiability += Number(item.value) || 0;
-        });
-
-        // 更新 UI 顯示
-        document.getElementById('display-total-income').textContent = formatCurrency(totalIncome);
-        document.getElementById('display-total-expense').textContent = formatCurrency(totalExpense);
-        document.getElementById('display-total-asset').textContent = formatCurrency(totalAsset);
-        document.getElementById('display-total-liability').textContent = formatCurrency(totalLiability);
-
-        // 計算淨現金流 (收入 - 支出)
-        let netCashflow = totalIncome - totalExpense;
-        let cashflowElement = document.getElementById('net-cashflow');
-        cashflowElement.textContent = formatCurrency(netCashflow);
+        document.querySelectorAll('.asset-item').forEach(i => totalAsset += Number(i.value) || 0);
         
-        // 根據正負值改變顏色
-        if (netCashflow > 0) {
-            cashflowElement.className = "text-success fw-bold";
+        let totalLiability = 0;
+        document.querySelectorAll('.liab-item').forEach(i => totalLiability += Number(i.value) || 0);
+
+        // 模擬的聘位收入 (年薪)
+        let targetPinAnnualIncome = Number(pinSelector.value) || 0;
+
+        // --- 計算邏輯 ---
+        
+        // 如果是年模式，流動資金 x12
+        let displayMultiplier = isYearMode ? 12 : 1;
+        
+        let currentPassiveMonthly = passiveAmway + passiveStock + passiveOther;
+        let currentPassiveDisplay = currentPassiveMonthly * displayMultiplier;
+        let expenseDisplay = totalExpense * displayMultiplier;
+
+        // A. 財富自由度 = 被動收入 / 總支出
+        let freedomRate = 0;
+        if (totalExpense > 0) {
+            freedomRate = (currentPassiveMonthly / totalExpense) * 100;
+        }
+        
+        // 更新 UI - 自由度
+        document.getElementById('freedom-rate').textContent = freedomRate.toFixed(1) + "%";
+        let freedomBar = document.getElementById('freedom-bar');
+        freedomBar.style.width = Math.min(freedomRate, 100) + "%";
+        if(freedomRate >= 100) {
+            freedomBar.classList.remove('bg-success');
+            freedomBar.classList.add('bg-warning'); // 金色狀態
         } else {
-            cashflowElement.className = "text-danger fw-bold";
+            freedomBar.classList.remove('bg-warning');
+            freedomBar.classList.add('bg-success');
+        }
+
+        // B. 資產負債比 = 總負債 / 總資產
+        let debtRate = 0;
+        if (totalAsset > 0) {
+            debtRate = (totalLiability / totalAsset) * 100;
+        }
+        document.getElementById('debt-ratio').textContent = debtRate.toFixed(1) + "%";
+        let debtBar = document.getElementById('debt-bar');
+        debtBar.style.width = Math.min(debtRate, 100) + "%";
+        // 警示色
+        if(debtRate > 50) debtBar.className = "progress-bar bg-danger";
+        else debtBar.className = "progress-bar bg-info";
+
+
+        // C. 安麗聘位模擬
+        let simBox = document.getElementById('simulation-result');
+        if (targetPinAnnualIncome > 0) {
+            simBox.classList.remove('d-none');
+            
+            // 目標聘位的月收入
+            let targetPinMonthly = targetPinAnnualIncome / 12;
+            
+            // 加上原本的非安麗被動收入
+            let nonAmwayPassive = passiveStock + passiveOther;
+            let projectedTotalPassive = targetPinMonthly + nonAmwayPassive;
+            
+            let projectedFreedomRate = 0;
+            if (totalExpense > 0) {
+                projectedFreedomRate = (projectedTotalPassive / totalExpense) * 100;
+            }
+
+            let statusIcon = projectedFreedomRate >= 100 ? "🎉" : "💪";
+            let statusText = projectedFreedomRate >= 100 ? "恭喜！達成財富自由！" : "還差一點，繼續加油！";
+            let statusClass = projectedFreedomRate >= 100 ? "text-success" : "text-warning";
+
+            // 顯示文字
+            let periodText = isYearMode ? "年" : "月";
+            let showIncome = isYearMode ? targetPinAnnualIncome : targetPinMonthly;
+            let showProjectedPassive = isYearMode ? projectedTotalPassive * 12 : projectedTotalPassive;
+
+            simBox.innerHTML = `
+                <h5 class="${statusClass}">${statusIcon} ${statusText}</h5>
+                <p class="mb-1">若達成此聘位，您的總被動收入將提升至：</p>
+                <h3 class="fw-bold text-dark">NT$ ${formatNumber(showProjectedPassive)} / ${periodText}</h3>
+                <p class="mb-0 text-muted">預估財富自由度：<strong>${projectedFreedomRate.toFixed(1)}%</strong></p>
+            `;
+        } else {
+            simBox.classList.add('d-none');
         }
     }
 
-    // 監聽所有輸入框的變動
-    document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', calculate);
-    });
+    // 格式化數字 (千分位)
+    function formatNumber(num) {
+        return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    // --- 儲存與讀取 (LocalStorage) ---
+    function saveData() {
+        let data = {};
+        inputs.forEach(input => {
+            data[input.id] = input.value;
+        });
+        // 也要存選中的聘位
+        data['pin-selector'] = pinSelector.value;
+        
+        localStorage.setItem('myFinanceData', JSON.stringify(data));
+    }
+
+    function loadData() {
+        let stored = localStorage.getItem('myFinanceData');
+        if (stored) {
+            let data = JSON.parse(stored);
+            for (let id in data) {
+                let el = document.getElementById(id);
+                if (el) el.value = data[id];
+            }
+        }
+    }
+
+    function clearData() {
+        if(confirm('確定要清除所有紀錄嗎？(無法復原)')) {
+            localStorage.removeItem('myFinanceData');
+            location.reload();
+        }
+    }
 </script>
 
 </body>
