@@ -3,16 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE 萬能編輯器 (v12.0)</title>
+    <title>LINE 萬能編輯器 (v13.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
-        .canvas-container { 
-            position: relative; overflow: hidden; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-            border: 2px dashed #cbd5e1; background-color: white;
-            background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px;
+        
+        /* 畫布背景與容器優化 */
+        .canvas-scroll-container {
+            /* 限制最大高度，超過出現捲軸 */
+            max-height: 65vh; 
+            overflow: auto;
+            border: 2px dashed #cbd5e1;
+            background-color: white;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
         }
+        /* 確保內容物 wrapper 可以撐開捲軸 */
+        .canvas-content-wrapper {
+            position: relative;
+            display: inline-block; /* 讓 wrapper 貼合圖片實際大小 */
+            min-width: 100%;
+            min-height: 100%;
+        }
+
         .area-box { 
             position: absolute; border: 2px solid rgba(239, 68, 68, 0.9); background: rgba(239, 68, 68, 0.2); 
             cursor: move; display: flex; align-items: center; justify-content: center; 
@@ -33,6 +47,9 @@
         /* 卡片切換器 */
         .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all 0.2s; }
         .card-dot.active { background: #4f46e5; transform: scale(1.3); }
+        
+        /* Checkbox 優化 */
+        .custom-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #4f46e5; }
     </style>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
@@ -44,9 +61,9 @@
                 <div>
                     <h1 class="font-bold text-xl tracking-wide text-slate-800 flex items-center gap-2">
                         LINE 萬能編輯器 
-                        <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">v12.0 座標神手</span>
+                        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">v13.0 效率版</span>
                     </h1>
-                    <p class="text-xs text-slate-400">大心家族系統 | 支援 Flex 任意座標點擊</p>
+                    <p class="text-xs text-slate-400">大心家族系統 | 緊湊版面 + 批次刪除</p>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -60,12 +77,12 @@
         </div>
     </header>
 
-    <div class="bg-white border-b border-slate-200">
+    <div class="bg-white border-b border-slate-200 flex-shrink-0">
         <div class="max-w-7xl mx-auto flex">
-            <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-4 font-bold text-lg transition flex items-center justify-center gap-2">
+            <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-3 font-bold text-lg transition flex items-center justify-center gap-2">
                 🗺️ 座標引流圖 <span class="text-xs font-normal text-slate-400">(單張大圖)</span>
             </button>
-            <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-4 font-bold text-lg transition flex items-center justify-center gap-2">
+            <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-3 font-bold text-lg transition flex items-center justify-center gap-2">
                 🎠 座標滑動卡片 <span class="text-xs font-normal text-slate-400">(多張圖+座標點擊)</span>
             </button>
         </div>
@@ -73,7 +90,7 @@
 
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full bg-white relative">
         
-        <aside class="w-[420px] border-r border-slate-200 flex flex-col z-20 bg-white">
+        <aside class="w-[420px] border-r border-slate-200 flex flex-col z-20 bg-white h-full overflow-hidden">
             <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
                 
                 <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-2">
@@ -89,8 +106,7 @@
                             <button onclick="deleteCard()" class="text-red-500 text-xs hover:underline">刪除目前</button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots">
-                        </div>
+                    <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
                     <p class="text-center text-xs text-amber-700 font-bold">目前編輯：第 <span id="currentCardNum">1</span> 張卡片</p>
                 </div>
 
@@ -108,28 +124,40 @@
                     </div>
                 </div>
 
-                <div class="flex-1">
-                    <div class="flex justify-between items-end mb-2 border-b pb-1">
-                        <label class="font-bold text-slate-700 text-sm">3. 點擊區域設定</label>
-                        <span class="text-xs text-slate-400">數量: <span id="areaCount">0</span></span>
+                <div class="flex-1 flex flex-col min-h-0">
+                    <div class="flex justify-between items-center mb-2 border-b pb-2 sticky top-0 bg-white z-10">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="selectAllBtn" class="custom-checkbox" onchange="toggleSelectAll(this.checked)">
+                            <label for="selectAllBtn" class="font-bold text-slate-700 text-sm cursor-pointer select-none">全選</label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                             <span class="text-xs text-slate-400">共 <span id="areaCount">0</span> 組</span>
+                             <button onclick="deleteSelectedAreas()" id="deleteSelectedBtn" class="bg-red-50 text-red-500 px-3 py-1 rounded text-xs font-bold hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                🗑️ 刪除選取
+                            </button>
+                        </div>
                     </div>
-                    <div id="actionList" class="space-y-2 pb-10">
+                    <div id="actionList" class="space-y-2 pb-4 overflow-y-auto custom-scrollbar flex-1">
                         <div class="text-center text-slate-400 text-sm py-8 border-2 border-dashed rounded-lg">請在右側圖片畫框框 ↗️</div>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 bg-slate-50 p-8 overflow-auto flex justify-center items-start">
-            <div id="canvasWrapper" class="relative shadow-2xl transition-all duration-300">
-                <div id="canvasContainer" class="canvas-container">
-                    <div id="placeholder" class="flex flex-col items-center justify-center h-96 w-96 text-slate-300">
-                        <span class="text-lg font-bold">請先上傳圖片</span>
+        <main class="flex-1 bg-slate-100 p-6 overflow-hidden flex flex-col">
+            <div id="canvasWrapper" class="relative shadow-xl bg-white rounded-lg overflow-hidden flex-shrink-1">
+                <div id="canvasContainer" class="canvas-scroll-container custom-scrollbar">
+                    <div class="canvas-content-wrapper">
+                        <div id="placeholder" class="flex flex-col items-center justify-center h-96 text-slate-300 absolute inset-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <span class="text-lg font-bold">請先在左側上傳底圖</span>
+                        </div>
+                        <img id="previewImage" class="hidden block select-none pointer-events-none" style="max-width: none;" />
+                        <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden z-10"></div>
                     </div>
-                    <img id="previewImage" class="hidden max-w-full block select-none" style="max-height: 85vh;" />
-                    <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
                 </div>
             </div>
+            <p class="text-center text-xs text-slate-400 mt-2 flex-shrink-0">💡 如果圖片過高，可在畫布區內上下捲動</p>
         </main>
     </div>
 
@@ -140,7 +168,6 @@
                 <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-2xl text-slate-400 hover:text-red-500">✕</button>
             </div>
             <div class="p-8 overflow-y-auto space-y-8 bg-white">
-                
                 <div class="space-y-2">
                     <h3 class="font-bold text-lg flex items-center gap-2"><span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span> Google Apps Script 萬用程式碼</h3>
                     <p class="text-sm text-slate-600">請複製下方代碼，貼到 Google Apps Script 專案中 (清空原本的)。<br><span class="text-red-500 font-bold">記得將第一行的 TOKEN 換成你自己的！</span></p>
@@ -149,27 +176,6 @@
                         <pre id="gasCode"></pre>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                        <h4 class="font-bold text-blue-800 mb-2">步驟 A: Google 部署</h4>
-                        <ol class="list-decimal pl-4 space-y-1 text-slate-700">
-                            <li>貼上程式碼後，按右上角 <b>「部署」</b> > <b>「新增部署」</b>。</li>
-                            <li>點齒輪選「網頁應用程式」。</li>
-                            <li class="text-red-600 font-bold">誰可以存取：一定要選「所有人 (Anyone)」。</li>
-                            <li>部署後，複製那串 <b>/exec</b> 結尾的網址。</li>
-                        </ol>
-                    </div>
-                    <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                        <h4 class="font-bold text-green-800 mb-2">步驟 B: LINE 後台設定</h4>
-                        <ol class="list-decimal pl-4 space-y-1 text-slate-700">
-                            <li>進入 LINE Official Account Manager > 設定 > Messaging API。</li>
-                            <li>貼上剛剛的 Google 網址到 <b>Webhook URL</b>。</li>
-                            <li class="text-green-700 font-bold">務必開啟「使用 Webhook」開關。</li>
-                        </ol>
-                    </div>
-                </div>
-
                 <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-center">
                     <p class="text-slate-700 font-bold">最後一步：</p>
                     <p class="text-slate-600 text-sm">在本工具做好設定，點擊右上角 <span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs">💾 下載 JSON</span>，然後貼回程式碼中 <code>const myJson = { ... }</code> 的位置即可！</p>
@@ -194,14 +200,11 @@
     </div>
 
     <script>
-        let currentMode = 'imagemap'; // 'imagemap' or 'carousel'
+        let currentMode = 'imagemap';
         let currentCardIndex = 0;
         
-        // Data Models
-        // Imagemap data: Single object { imageUrl, areas: [] }
-        let imagemapData = { imageUrl: "", areas: [] };
-        
-        // Carousel data: Array of objects [{ imageUrl, areas: [] }, ...]
+        // Data Structure: added 'selected' property for checkboxes
+        let imagemapData = { imageUrl: "", areas: [] }; // areas: [{x,y,w,h,text,type, selected:false}, ...]
         let carouselCards = [{ imageUrl: "", areas: [] }];
 
         // UI Refs
@@ -213,6 +216,8 @@
         const placeholder = document.getElementById('placeholder');
         const areaCountSpan = document.getElementById('areaCount');
         const triggerKeywordInput = document.getElementById('triggerKeyword');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
         
         let isDrawing = false;
         let startX, startY;
@@ -221,10 +226,10 @@
         let naturalHeight = 0;
         let scaleFactor = 1;
 
-        // Init
         window.addEventListener('DOMContentLoaded', () => {
             updateGasCode();
             renderDots();
+            updateBatchControls(); // Init batch controls state
         });
 
         // ================= Mode Switcher =================
@@ -233,7 +238,6 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tab-${mode}`).classList.add('active');
             
-            // Toggle Controls
             if(mode === 'carousel') {
                 document.getElementById('carouselControls').classList.remove('hidden');
                 triggerKeywordInput.value = "命盤";
@@ -241,13 +245,12 @@
                 document.getElementById('carouselControls').classList.add('hidden');
                 triggerKeywordInput.value = "選單";
             }
-            
-            // Load Data for current mode
             loadCurrentData();
             updateGasCode();
+            updateBatchControls(); // Reset checkboxes on tab switch
         }
 
-        // ================= Card Management (Carousel Only) =================
+        // ================= Card Management =================
         function addCard() {
             if(carouselCards.length >= 10) { alert("最多 10 張卡片！"); return; }
             carouselCards.push({ imageUrl: "", areas: [] });
@@ -266,17 +269,17 @@
         }
 
         function switchCard(index) {
-            saveCurrentCardState(); // Save current before switching
+            saveCurrentCardState();
             currentCardIndex = index;
             loadCurrentData();
             renderDots();
+            updateBatchControls(); // Reset checkboxes on card switch
         }
 
         function renderDots() {
             const container = document.getElementById('cardDots');
             container.innerHTML = '';
             document.getElementById('currentCardNum').innerText = currentCardIndex + 1;
-            
             carouselCards.forEach((_, i) => {
                 const dot = document.createElement('div');
                 dot.className = `card-dot ${i === currentCardIndex ? 'active' : ''}`;
@@ -285,7 +288,7 @@
             });
         }
 
-        // ================= Core Logic (Data Loading/Saving) =================
+        // ================= Data Loading/Saving =================
         function getCurrentDataObj() {
             return currentMode === 'imagemap' ? imagemapData : carouselCards[currentCardIndex];
         }
@@ -293,13 +296,14 @@
         function loadCurrentData() {
             const data = getCurrentDataObj();
             imageUrlInput.value = data.imageUrl || "";
-            // Clear Image Preview first
             previewImage.src = "";
             previewImage.classList.add('hidden');
             drawLayer.classList.add('hidden');
             placeholder.classList.remove('hidden');
             
-            // If has URL, try to load
+            // Reset selections when loading data
+            data.areas.forEach(a => a.selected = false);
+
             if(data.imageUrl) {
                 previewImage.src = data.imageUrl;
                 previewImage.onload = function() {
@@ -313,7 +317,7 @@
                     renderActionList();
                 }
             } else {
-                renderAreas(); // clear
+                renderAreas();
                 renderActionList();
             }
         }
@@ -321,7 +325,6 @@
         function saveCurrentCardState() {
             const data = getCurrentDataObj();
             data.imageUrl = imageUrlInput.value;
-            // areas are updated in real-time
         }
 
         // ================= Image Handling =================
@@ -330,9 +333,6 @@
             if(!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
-                const data = getCurrentDataObj();
-                // This is a local blob for preview, not the final URL. 
-                // We don't save local blob to JSON logic, but we show it.
                 previewImage.src = evt.target.result;
                 previewImage.onload = function() {
                     naturalWidth = this.naturalWidth;
@@ -341,10 +341,10 @@
                     previewImage.classList.remove('hidden');
                     drawLayer.classList.remove('hidden');
                     updateScale();
-                    
-                    // Reset areas for new image usually
-                    // data.areas = []; 
-                    // renderAreas(); renderActionList();
+                    // New image uploaded, clear areas for this image/card
+                    getCurrentDataObj().areas = [];
+                    renderAreas();
+                    renderActionList();
                 }
             }
             reader.readAsDataURL(file);
@@ -352,13 +352,18 @@
 
         window.addEventListener('resize', updateScale);
         function updateScale() { 
-            if(naturalWidth>0) scaleFactor = previewImage.width / naturalWidth; 
+            // Use previewImage.offsetWidth instead of width to get rendered size
+            if(naturalWidth>0 && previewImage.offsetWidth > 0) {
+                 scaleFactor = previewImage.offsetWidth / naturalWidth; 
+            }
         }
 
         // ================= Drawing Logic =================
         drawLayer.addEventListener('mousedown', (e) => {
             if(!previewImage.src) return;
             isDrawing = true;
+            // Need to recalculate scale factor on mousedown in case of resize/scroll issues
+            updateScale(); 
             const rect = drawLayer.getBoundingClientRect();
             startX = (e.clientX - rect.left) / scaleFactor;
             startY = (e.clientY - rect.top) / scaleFactor;
@@ -400,7 +405,8 @@
                     width: Math.round(w), 
                     height: Math.round(h), 
                     text: `關鍵字${data.areas.length+1}`,
-                    type: 'message'
+                    type: 'message',
+                    selected: false // Initialize as not selected
                 });
                 renderAreas(); renderActionList();
             }
@@ -411,65 +417,103 @@
             drawLayer.innerHTML = '';
             data.areas.forEach((area, i) => {
                 const el = document.createElement('div');
-                el.className = 'area-box';
+                el.className = `area-box ${area.selected ? 'selected' : ''}`; // Highlight if selected
                 el.style.left = (area.x * scaleFactor) + 'px';
                 el.style.top = (area.y * scaleFactor) + 'px';
                 el.style.width = (area.width * scaleFactor) + 'px';
                 el.style.height = (area.height * scaleFactor) + 'px';
                 el.innerText = i + 1;
-                el.onclick = (e) => { e.stopPropagation(); highlightArea(i); };
+                // Clicking box toggles selection in list
+                el.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    toggleAreaSelection(i);
+                };
                 if(area.type === 'uri') { el.style.borderColor='#2563eb'; el.style.backgroundColor='rgba(37,99,235,0.2)'; }
                 drawLayer.appendChild(el);
             });
             areaCountSpan.innerText = data.areas.length;
         }
 
-        function highlightArea(index) {
-            document.querySelectorAll('.area-box').forEach((el, i) => {
-                if (i === index) el.classList.add('selected'); else el.classList.remove('selected');
-            });
-        }
-
+        // ================= List & Batch Operations (New) =================
         function renderActionList() {
             const data = getCurrentDataObj();
             actionList.innerHTML = '';
             if(data.areas.length === 0) {
                 actionList.innerHTML = '<div class="text-center text-slate-400 text-sm py-8 border-2 border-dashed rounded-lg">請在右側圖片畫框框 ↗️</div>';
+                updateBatchControls();
                 return;
             }
             
             data.areas.forEach((area, i) => {
                 const row = document.createElement('div');
-                row.className = 'bg-white p-3 rounded-lg border border-slate-200 text-sm space-y-2 shadow-sm';
+                // Highlight row if selected
+                row.className = `bg-white p-3 rounded-lg border ${area.selected ? 'border-blue-500 bg-blue-50' : 'border-slate-200'} text-sm space-y-2 shadow-sm transition-colors`;
                 row.innerHTML = `
                     <div class="flex items-center gap-2">
+                        <input type="checkbox" class="custom-checkbox shrink-0" ${area.selected ? 'checked' : ''} onchange="toggleAreaSelection(${i})">
                         <span class="bg-slate-800 text-white w-5 h-5 flex items-center justify-center rounded text-xs font-bold shrink-0">${i+1}</span>
                         <select onchange="updateAreaType(${i}, this.value)" class="text-xs border p-1 rounded bg-slate-50 font-bold text-slate-600">
                             <option value="message" ${area.type==='message'?'selected':''}>💬 傳文字</option>
                             <option value="uri" ${area.type==='uri'?'selected':''}>🔗 開連結</option>
                         </select>
                         <div class="flex-1"></div>
-                        <button onclick="removeArea(${i})" class="text-red-400 hover:text-red-600 font-bold px-2">🗑️</button>
+                        <button onclick="removeArea(${i})" class="text-red-300 hover:text-red-500 px-2">✕</button>
                     </div>
                     <input type="text" value="${area.text}" onchange="updateAreaText(${i}, this.value)" class="w-full border p-2 rounded text-xs" placeholder="${area.type==='uri'?'https://...':'輸入關鍵字'}">
                 `;
-                row.onclick = () => highlightArea(i);
                 actionList.appendChild(row);
             });
+            updateBatchControls();
         }
 
-        function updateAreaType(i, val) {
+        function toggleAreaSelection(i) {
             const data = getCurrentDataObj();
-            data.areas[i].type = val;
+            data.areas[i].selected = !data.areas[i].selected;
+            renderAreas();
+            renderActionList();
+        }
+
+        function toggleSelectAll(checked) {
+            const data = getCurrentDataObj();
+            data.areas.forEach(a => a.selected = checked);
+            renderAreas();
+            renderActionList();
+        }
+
+        function deleteSelectedAreas() {
+            const data = getCurrentDataObj();
+            if(confirm(`確定刪除選取的 ${data.areas.filter(a => a.selected).length} 個區域嗎？`)) {
+                data.areas = data.areas.filter(a => !a.selected);
+                renderAreas();
+                renderActionList();
+            }
+        }
+
+        function updateBatchControls() {
+            const data = getCurrentDataObj();
+            const total = data.areas.length;
+            const selectedCount = data.areas.filter(a => a.selected).length;
+            
+            // Update Select All Checkbox state
+            selectAllBtn.checked = total > 0 && total === selectedCount;
+            selectAllBtn.indeterminate = selectedCount > 0 && selectedCount < total;
+            selectAllBtn.disabled = total === 0;
+
+            // Update Delete Button state
+            deleteSelectedBtn.disabled = selectedCount === 0;
+            deleteSelectedBtn.innerHTML = `🗑️ 刪除選取 (${selectedCount})`;
+        }
+
+        // ================= Individual Area Updates =================
+        function updateAreaType(i, val) {
+            getCurrentDataObj().areas[i].type = val;
             renderAreas(); renderActionList();
         }
         function updateAreaText(i, val) {
-            const data = getCurrentDataObj();
-            data.areas[i].text = val;
+            getCurrentDataObj().areas[i].text = val;
         }
         function removeArea(i) {
-            const data = getCurrentDataObj();
-            data.areas.splice(i, 1);
+            getCurrentDataObj().areas.splice(i, 1);
             renderAreas(); renderActionList();
         }
 
@@ -505,7 +549,6 @@ function doPost(e) {
 
         function downloadJSON() {
             let output = {};
-            
             if (currentMode === 'imagemap') {
                 if (!imagemapData.imageUrl) { alert("請填寫圖片網址"); return; }
                 const scale = (naturalWidth && naturalWidth !== 1040) ? 1040/naturalWidth : 1;
@@ -522,77 +565,40 @@ function doPost(e) {
                     }))
                 };
             } else {
-                // Generate Advanced Flex Carousel with Overlap Layout (Coordinate Click)
                 const bubbles = carouselCards.map(card => {
                     const imgUrl = card.imageUrl || "https://via.placeholder.com/1040x1040?text=No+Image";
-                    // Note: In Flex, aspect ratio logic is tricky. We assume user uploads consistent size or use 1:1 / 20:13
-                    // Here we use a simpler approach: fixed aspect ratio or relative percentage positioning
-                    
                     const clickAreas = card.areas.map(a => {
-                        // Calculate percentage position relative to image size
-                        // Since we don't know the final render size in Flex, % is best.
-                        // But Flex 'action' box must be inside an absolute layout.
-                        
-                        // Percentage math based on naturalWidth/Height when user drew it
-                        const leftP = (a.x / naturalWidth * 100).toFixed(1) + '%';
-                        const topP = (a.y / naturalHeight * 100).toFixed(1) + '%';
-                        const widthP = (a.width / naturalWidth * 100).toFixed(1) + '%';
-                        const heightP = (a.height / naturalHeight * 100).toFixed(1) + '%';
+                        // Use 4 decimal places for precision percentage percentages
+                        const leftP = (a.x / naturalWidth * 100).toFixed(4) + '%';
+                        const topP = (a.y / naturalHeight * 100).toFixed(4) + '%';
+                        const widthP = (a.width / naturalWidth * 100).toFixed(4) + '%';
+                        const heightP = (a.height / naturalHeight * 100).toFixed(4) + '%';
 
                         return {
-                            "type": "box",
-                            "layout": "vertical",
-                            "position": "absolute",
-                            "offsetStart": leftP,
-                            "offsetTop": topP,
-                            "width": widthP,
-                            "height": heightP,
+                            "type": "box", "layout": "vertical", "position": "absolute",
+                            "offsetStart": leftP, "offsetTop": topP, "width": widthP, "height": heightP,
                             "action": {
-                                "type": a.type,
-                                "label": "action",
+                                "type": a.type, "label": "action",
                                 "text": a.type==='message' ? a.text : undefined,
                                 "uri": a.type==='uri' ? a.text : undefined
                             }
                         };
                     });
-
-                    // Aspect ratio string (e.g., "1:1" or "20:13")
-                    // If we have natural dimensions, try to approximate, otherwise default
                     let ratio = "1:1";
-                    if(naturalWidth > 0 && naturalHeight > 0) {
-                        ratio = `${naturalWidth}:${naturalHeight}`; 
-                        // Flex only supports specific ratios roughly, but custom string works in some viewers. 
-                        // Safest is to stick to image intrinsic size or common ratios.
-                        // Let's use fitting for cover.
-                    }
-
+                    if(naturalWidth > 0 && naturalHeight > 0) ratio = `${naturalWidth}:${naturalHeight}`;
                     return {
                         "type": "bubble",
                         "body": {
-                            "type": "box",
-                            "layout": "overlap",
-                            "paddingAll": "0px",
+                            "type": "box", "layout": "overlap", "paddingAll": "0px",
                             "contents": [
-                                {
-                                    "type": "image",
-                                    "url": imgUrl,
-                                    "size": "full",
-                                    "aspectRatio": ratio,
-                                    "aspectMode": "cover"
-                                },
-                                ...clickAreas // Spread the invisible click boxes on top
+                                { "type": "image", "url": imgUrl, "size": "full", "aspectRatio": ratio, "aspectMode": "cover" },
+                                ...clickAreas
                             ]
                         }
                     };
                 });
-
-                output = {
-                    "type": "flex",
-                    "altText": "請選擇項目",
-                    "contents": { "type": "carousel", "contents": bubbles }
-                };
+                output = { "type": "flex", "altText": "請選擇項目", "contents": { "type": "carousel", "contents": bubbles } };
             }
-
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(output, null, 2));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
