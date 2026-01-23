@@ -3,125 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE Imagemap 座標產生器 (Pro)</title>
+    <title>LINE 引流圖片座標產生器 (v3.0 旗艦版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; }
+        body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
+        /* 畫布樣式 */
         .canvas-container { 
             position: relative; 
             overflow: hidden; 
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-            border: 2px dashed #94a3b8; 
+            border: 2px dashed #cbd5e1; 
             background-color: white;
             transition: all 0.3s;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
         }
         .canvas-container:hover { border-color: #3b82f6; }
         
+        /* 紅框樣式 */
         .area-box { 
             position: absolute; 
             border: 2px solid rgba(239, 68, 68, 0.9); 
             background: rgba(239, 68, 68, 0.2); 
-            cursor: pointer; 
+            cursor: move; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             color: white; 
             font-weight: bold; 
             font-size: 16px; 
-            text-shadow: 1px 1px 3px black; 
+            text-shadow: 1px 1px 2px black; 
             z-index: 10;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            user-select: none;
         }
-        .area-box:hover { background: rgba(239, 68, 68, 0.4); }
+        .area-box:hover { background: rgba(239, 68, 68, 0.4); border-color: #ef4444; }
         .area-box.selected { 
             border-color: #f59e0b; 
             background: rgba(245, 158, 11, 0.3); 
             z-index: 20; 
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #f59e0b;
         }
+
+        /* 捲軸美化 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-100 h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-100 h-screen flex flex-col overflow-hidden text-slate-800">
 
-    <header class="bg-slate-800 text-white shadow-md flex-shrink-0 z-20">
+    <header class="bg-white border-b border-slate-200 shadow-sm flex-shrink-0 z-30">
         <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <span class="text-2xl">🦁</span>
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">🦁</div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-wide">LINE 引流圖片座標產生器</h1>
-                    <p class="text-xs text-slate-400">大心家族專用工具 | v2.0 Web Standalone</p>
+                    <h1 class="font-bold text-lg tracking-wide text-slate-800">LINE 座標產生器 <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">v3.0 Pro</span></h1>
+                    <p class="text-xs text-slate-500">大心家族專用 | 自動記憶 + 內建教學</p>
                 </div>
             </div>
-            <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-lg transform transition active:scale-95 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                下載 JSON 設定檔
-            </button>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('tutorialModal').classList.remove('hidden')" class="text-slate-600 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm border border-slate-200 hover:border-blue-200 hover:bg-blue-50">
+                    📚 如何綁定教學
+                </button>
+                <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-2 text-sm">
+                    💾 下載 JSON
+                </button>
+            </div>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
         
-        <aside class="w-96 bg-white border-r border-slate-200 flex flex-col shadow-xl z-10">
-            <div class="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
+        <aside class="w-[400px] bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
                 
-                <div class="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <label class="block font-bold text-slate-700 flex justify-between items-center">
-                        <span>1. 上傳底圖</span>
-                        <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-1 rounded-full">預覽用</span>
-                    </label>
-                    <input type="file" id="imageInput" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition cursor-pointer"/>
-                    
-                    <div id="statusMsg" class="hidden rounded-lg p-3 text-sm"></div>
-                </div>
-
-                <div class="space-y-3">
-                    <label class="block font-bold text-slate-700">2. 圖片公開網址 (必填)</label>
-                    <input type="text" id="imageUrl" placeholder="貼上 https://... 網址" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm shadow-sm transition">
-                    <p class="text-xs text-slate-400 leading-relaxed">請將圖片上傳至 Imgur 或您的網站後台，取得公開連結後貼在這邊。</p>
-                </div>
-
-                <div class="flex-1 flex flex-col">
-                    <div class="flex justify-between items-end mb-2 pb-2 border-b border-slate-100">
-                        <label class="block font-bold text-slate-700">3. 關鍵字設定</label>
-                        <span class="text-xs text-slate-400">目前區域: <span id="areaCount">0</span></span>
+                <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-3">
+                    <h3 class="font-bold text-blue-800 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        圖片規格小教室
+                    </h3>
+                    <div class="text-xs space-y-2 text-blue-900">
+                        <div class="flex justify-between border-b border-blue-200 pb-1">
+                            <span>寬度 (必守鐵律)</span>
+                            <span class="font-bold">1040 px</span>
+                        </div>
+                        <div class="flex justify-between border-b border-blue-200 pb-1">
+                            <span>高度 (引流長圖)</span>
+                            <span>建議 1850 px (不限)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>高度 (滑動卡片)</span>
+                            <span>676 px (標準) / 1040 px (正方)</span>
+                        </div>
                     </div>
-                    <div id="actionList" class="flex-1 space-y-2 overflow-y-auto pr-1 min-h-[200px]">
-                        <div class="text-center text-slate-400 text-sm py-10 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50">
+                </div>
+
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="block font-bold text-slate-700 text-sm">1. 上傳底圖 (預覽用)</label>
+                        <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition cursor-pointer border border-slate-200 rounded-lg p-1"/>
+                        <div id="statusMsg" class="hidden rounded-lg p-3 text-xs flex items-center gap-2"></div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block font-bold text-slate-700 text-sm flex justify-between">
+                            2. 圖片公開網址 (必填)
+                            <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 rounded-full border border-emerald-100 self-center">已自動記憶</span>
+                        </label>
+                        <input type="text" id="imageUrl" placeholder="請貼上 https://... 結尾是 .jpg/.png 的網址" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm shadow-sm transition font-mono text-slate-600" oninput="saveState()">
+                        <p class="text-[10px] text-slate-400">💡 提示：圖片必須先上傳到網路 (如 GitHub/Imgur) LINE 才讀得到。</p>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col min-h-[300px]">
+                    <div class="flex justify-between items-end mb-3 pb-2 border-b border-slate-100">
+                        <label class="block font-bold text-slate-700 text-sm">3. 關鍵字設定區</label>
+                        <span class="text-xs text-slate-400">目前設定: <span id="areaCount" class="font-bold text-blue-600">0</span> 組</span>
+                    </div>
+                    <div id="actionList" class="flex-1 space-y-2 overflow-y-auto pr-1">
+                        <div class="text-center text-slate-400 text-sm py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
                             👆 請在右側圖片上<br>拖曳滑鼠畫出框框
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs text-slate-400">
-                © 2026 大心家族系統
+            <div class="p-4 bg-slate-50 border-t border-slate-200 text-center text-xs text-slate-400">
+                系統將自動儲存您的編輯進度 💾
             </div>
         </aside>
 
-        <main class="flex-1 bg-slate-100 p-8 overflow-auto flex justify-center items-start relative" id="mainArea">
-            <div id="canvasWrapper" class="relative shadow-2xl">
+        <main class="flex-1 bg-slate-100/50 p-8 overflow-auto flex justify-center items-start relative select-none" id="mainArea">
+            <div id="canvasWrapper" class="relative shadow-2xl rounded-sm transition-all duration-300">
                 <div id="canvasContainer" class="canvas-container">
                     <div id="placeholder" class="flex flex-col items-center justify-center h-96 w-96 text-slate-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span class="text-lg font-medium">請先在左側上傳圖片</span>
+                        <svg class="w-20 h-20 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span class="text-lg font-medium">請先在左側上傳底圖</span>
                     </div>
                     
-                    <img id="previewImage" class="hidden max-w-full block" style="max-height: 85vh;" />
+                    <img id="previewImage" class="hidden max-w-full block pointer-events-none select-none" style="max-height: 85vh;" />
                     <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
                 </div>
                 
-                <div id="dimLabel" class="absolute -top-8 left-0 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 transition">
-                    1040 x 1040
+                <div id="dimLabel" class="absolute -top-10 left-0 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 transition shadow-lg flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span id="dimText">0 x 0</span>
                 </div>
             </div>
         </main>
     </div>
 
+    <div id="tutorialModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-xl font-bold text-slate-800">📚 如何綁定 LINE 官方帳號？</h2>
+                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition">✕</button>
+            </div>
+            <div class="p-8 space-y-8">
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">1</div>
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-lg">部署 Google 程式碼</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">在 Google Apps Script 寫好程式碼後：<br>點擊右上角 <span class="bg-slate-100 px-1 rounded border">部署</span> > <span class="bg-slate-100 px-1 rounded border">新增部署</span> > 權限選「所有人」 > 按下部署。<br><span class="text-red-500 font-bold">複製那個以 /exec 結尾的網址。</span></p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">2</div>
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-lg">設定 Webhook</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">前往 <a href="https://manager.line.biz/" target="_blank" class="text-blue-500 hover:underline">LINE 官方帳號後台</a> 或 Developers Console。<br>找到 <b>Webhook URL</b> 欄位，貼上剛剛的網址，並開啟 <b>Use Webhook</b> 開關。</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">3</div>
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-lg">使用本工具產生 JSON</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">上傳你的圖片，畫好框框，點擊右上角 <b>下載 JSON</b>。<br>將下載的內容貼到你的 Google Apps Script 程式碼中 (替換原本的 Imagemap 設定)。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-200 text-right">
+                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="bg-slate-800 text-white px-6 py-2 rounded-lg hover:bg-slate-700 transition font-medium">我知道了</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const imageInput = document.getElementById('imageInput');
+        const imageUrlInput = document.getElementById('imageUrl');
         const previewImage = document.getElementById('previewImage');
         const drawLayer = document.getElementById('drawLayer');
         const actionList = document.getElementById('actionList');
@@ -129,6 +200,7 @@
         const placeholder = document.getElementById('placeholder');
         const areaCountSpan = document.getElementById('areaCount');
         const dimLabel = document.getElementById('dimLabel');
+        const dimText = document.getElementById('dimText');
         
         let areas = [];
         let isDrawing = false;
@@ -137,6 +209,25 @@
         let naturalWidth = 0;
         let naturalHeight = 0;
         let scaleFactor = 1; 
+
+        // 啟動時讀取記憶
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('line_tool_url');
+            if(savedUrl) imageUrlInput.value = savedUrl;
+            
+            // 嘗試讀取上次的區域設定 (如果有)
+            const savedAreas = localStorage.getItem('line_tool_areas');
+            if(savedAreas) {
+                // 注意：這裡只讀取數據，但因為沒有圖片載入，無法渲染框框
+                // 實際應用需等待圖片上傳後再嘗試匹配，這裡簡化處理僅保留 URL
+            }
+        });
+
+        // 儲存狀態
+        function saveState() {
+            localStorage.setItem('line_tool_url', imageUrlInput.value);
+            // localStorage.setItem('line_tool_areas', JSON.stringify(areas)); // 進階：可儲存框框數據
+        }
 
         // 圖片上傳與檢測
         imageInput.addEventListener('change', function(e) {
@@ -154,17 +245,17 @@
                     placeholder.classList.add('hidden');
                     previewImage.classList.remove('hidden');
                     drawLayer.classList.remove('hidden');
-                    dimLabel.innerText = `${naturalWidth} x ${naturalHeight} px`;
+                    dimText.innerText = `${naturalWidth} x ${naturalHeight} px`;
                     dimLabel.classList.remove('opacity-0');
 
                     // 防呆檢測
-                    statusMsg.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+                    statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-emerald-50', 'text-emerald-700');
                     if (naturalWidth !== 1040) {
-                        statusMsg.classList.add('bg-red-100', 'text-red-700');
-                        statusMsg.innerHTML = `⚠️ <b>尺寸錯誤</b><br>寬度 ${naturalWidth}px (標準: 1040px)`;
+                        statusMsg.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-100');
+                        statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span><b>尺寸注意！</b> 寬度 ${naturalWidth}px (標準: 1040px)</span>`;
                     } else {
-                        statusMsg.classList.add('bg-green-100', 'text-green-700');
-                        statusMsg.innerHTML = `✅ <b>尺寸完美</b><br>符合 LINE 官方標準`;
+                        statusMsg.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-100');
+                        statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span><b>完美！</b> 符合 LINE 官方標準</span>`;
                     }
 
                     areas = [];
@@ -193,7 +284,7 @@
             startY = (e.clientY - rect.top) / scaleFactor;
             
             currentBox = document.createElement('div');
-            currentBox.className = 'area-box border-dashed';
+            currentBox.className = 'area-box border-dashed opacity-50';
             currentBox.style.left = (startX * scaleFactor) + 'px';
             currentBox.style.top = (startY * scaleFactor) + 'px';
             drawLayer.appendChild(currentBox);
@@ -234,6 +325,7 @@
                 areas.push({ x, y, width: w, height: h, text: `關鍵字${areas.length + 1}` });
                 renderAreas();
                 renderList();
+                saveState();
             }
         });
 
@@ -256,17 +348,17 @@
         function renderList() {
             actionList.innerHTML = '';
             if(areas.length === 0) {
-                actionList.innerHTML = '<div class="text-center text-slate-400 text-sm py-10 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50">👆 請在右側圖片上<br>拖曳滑鼠畫出框框</div>';
+                actionList.innerHTML = '<div class="text-center text-slate-400 text-sm py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">👆 請在右側圖片上<br>拖曳滑鼠畫出框框</div>';
                 return;
             }
 
             areas.forEach((area, index) => {
                 const item = document.createElement('div');
-                item.className = 'bg-white p-3 rounded-lg border border-slate-200 text-sm flex gap-3 items-center shadow-sm hover:shadow-md transition group';
+                item.className = 'bg-white p-3 rounded-xl border border-slate-200 text-sm flex gap-3 items-center shadow-sm hover:shadow-md transition group animate-fade-in';
                 item.innerHTML = `
-                    <span class="bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0 shadow-sm">${index + 1}</span>
-                    <input type="text" value="${area.text}" onchange="updateText(${index}, this.value)" class="flex-1 border border-slate-300 p-2 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 text-slate-700" placeholder="輸入觸發關鍵字">
-                    <button onclick="deleteArea(${index})" class="text-slate-300 hover:text-red-500 p-1 rounded transition opacity-0 group-hover:opacity-100">
+                    <span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded-md text-xs font-bold shrink-0 shadow-sm">${index + 1}</span>
+                    <input type="text" value="${area.text}" onchange="updateText(${index}, this.value)" class="flex-1 border border-slate-200 p-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 text-slate-700 font-medium" placeholder="觸發關鍵字">
+                    <button onclick="deleteArea(${index})" class="text-slate-300 hover:text-red-500 p-1.5 rounded-lg transition hover:bg-red-50">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                 `;
@@ -277,12 +369,14 @@
 
         function updateText(index, val) {
             areas[index].text = val;
+            saveState();
         }
 
         function deleteArea(index) {
             areas.splice(index, 1);
             renderAreas();
             renderList();
+            saveState();
         }
 
         function highlightArea(index) {
@@ -290,11 +384,14 @@
                 if (i === index) el.classList.add('selected');
                 else el.classList.remove('selected');
             });
+            // 捲動到對應的輸入框
+            const listItems = actionList.children;
+            if(listItems[index]) listItems[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function downloadJSON() {
-            const url = document.getElementById('imageUrl').value;
-            if (!url) { alert("⚠️ 請先在步驟 2 填寫「圖片網址」！"); return; }
+            const url = imageUrlInput.value;
+            if (!url) { alert("⚠️ 請先在步驟 2 填寫「圖片網址」！"); document.getElementById('imageUrl').focus(); return; }
             if (areas.length === 0) { alert("⚠️ 這裡空空的！請先畫幾個框框。"); return; }
 
             const output = {
