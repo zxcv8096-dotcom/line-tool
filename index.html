@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 (v22.0 白話版)</title>
+    <title>LINE 萬能編輯器 (v23.0 預覽修復)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
@@ -11,7 +11,6 @@
         /* 畫布容器 */
         .canvas-scroll-container { border: 2px dashed #cbd5e1; background: #f8fafc radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; position: relative; display: flex; align-items: center; justify-content: center; overflow: auto; height: 100%; }
         .canvas-content-wrapper { position: relative; transform-origin: center top; transition: width 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        /* 紅框樣式 */
         .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px black; user-select: none; touch-action: none; }
         .area-box.selected { border-color: #f59e0b; background: rgba(245,158,11,0.3); z-index: 20; }
         
@@ -28,9 +27,7 @@
         .bubble-container { overflow-x: auto; display: flex; gap: 10px; padding-bottom: 5px; scroll-snap-type: x mandatory; padding-right: 20px; }
         .line-bubble { min-width: 240px; max-width: 240px; background: white; border-radius: 12px; overflow: hidden; scroll-snap-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
         .bubble-hero { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; }
-        /* 模擬紅框預覽 */
-        .sim-hotspot { position: absolute; border: 1px dashed rgba(255, 0, 0, 0.5); background: rgba(255, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; color: red; font-size: 10px; font-weight: bold; }
-
+        
         @media (min-width: 768px) { body { height: 100vh; overflow: hidden; } #main-layout { height: 100%; overflow: hidden; } }
     </style>
 </head>
@@ -43,7 +40,7 @@
                     <div class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white text-lg shadow-lg shrink-0">🦁</div>
                     <div>
                         <h1 class="font-bold text-base md:text-lg tracking-wide text-slate-800">
-                            LINE 萬能編輯器 <span class="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full border border-rose-200">v22.0 白話版</span>
+                            LINE 萬能編輯器 <span class="text-[10px] bg-red-100 text-red-800 px-2 py-0.5 rounded-full border border-red-200">v23.0 預覽修復</span>
                         </h1>
                     </div>
                 </div>
@@ -102,8 +99,8 @@
                     <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
                     <div class="text-center text-xs text-amber-700">正在編輯第 <span id="currentCardNum" class="font-bold text-lg">1</span> 張卡片</div>
                     
-                    <button onclick="openPreviewModal()" class="w-full bg-indigo-600 text-white py-2 rounded font-bold text-xs shadow hover:bg-indigo-700 transition">
-                        👁️ 開啟手機模擬預覽
+                    <button onclick="openPreviewModal()" class="w-full bg-indigo-600 text-white py-2 rounded font-bold text-xs shadow hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                        👁️ 點我看預覽 (模擬手機)
                     </button>
                 </div>
 
@@ -154,9 +151,9 @@
                 </div>
             </div>
 
-            <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                <div class="relative w-full max-w-xs">
-                    <button onclick="document.getElementById('previewModal').classList.add('hidden')" class="absolute -right-4 -top-8 text-white text-2xl font-bold">✕</button>
+            <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/90 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeModal('previewModal')">
+                
+                <div class="relative w-full max-w-xs shrink-0">
                     <div class="phone-mockup">
                         <div class="phone-notch"></div>
                         <div class="bg-gray-800 text-white text-xs text-center py-2 pt-6">LINE 預覽模式</div>
@@ -173,6 +170,13 @@
                         <div class="bg-gray-100 p-2 text-xs text-center text-gray-500">此為模擬畫面，實際以 LINE 為準</div>
                     </div>
                 </div>
+
+                <button onclick="closeModal('previewModal')" class="mt-6 bg-white/10 text-white border border-white/20 px-8 py-3 rounded-full font-bold hover:bg-white/20 transition flex items-center gap-2 backdrop-blur-md">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    關閉預覽 (回到編輯)
+                </button>
+                <p class="text-white/50 text-xs mt-2">或是點擊背景空白處關閉</p>
+
             </div>
 
         </main>
@@ -206,7 +210,7 @@
                         <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center">2</span> 
                         取得身分證 (Token)
                     </h3>
-                    <p class="text-slate-600 mb-2">你要給機器人一個身分證，他才能控制 LINE。去 LINE 開發者後台，找到 <b>Messaging API</b> 分頁，滑到最下面有個 <b>Token</b>，按發行並複製。</p>
+                    <p class="text-slate-600 mb-2">去 LINE 開發者後台，找到 <b>Messaging API</b> 分頁，滑到最下面 <b>Token</b>，按發行並複製。</p>
                     <a href="https://developers.line.biz/console/" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-bold">🔑 前往 LINE Developers</a>
                     <p class="text-xs text-orange-600 mt-1">* 複製後，請貼到本網頁左上角的黃色框框裡，程式碼會自動更新喔！</p>
                 </div>
@@ -216,11 +220,11 @@
                         <span class="bg-purple-600 text-white w-6 h-6 rounded-full flex items-center justify-center">3</span> 
                         公開上線 (部署)
                     </h3>
-                    <p class="text-slate-600">回到 Google Apps Script，按右上角 <b>部署</b> > <b>新增部署</b>。</p>
+                    <p class="text-slate-600">在 Google Apps Script 按右上角 <b>部署</b> > <b>新增部署</b>。</p>
                     <ul class="list-disc pl-5 mt-1 space-y-1 text-slate-700">
                         <li>點擊齒輪選 <b>網頁應用程式</b>。</li>
                         <li class="text-red-600 font-bold bg-red-50 inline-block px-1">誰可以存取：一定要選「所有人 (Anyone)」！</li>
-                        <li>部署後，你會得到一個網址 (結尾是 /exec)，請複製它。</li>
+                        <li>部署後，複製那串 <code>/exec</code> 結尾的網址。</li>
                     </ul>
                 </div>
 
@@ -229,7 +233,7 @@
                         <span class="bg-emerald-600 text-white w-6 h-6 rounded-full flex items-center justify-center">4</span> 
                         接上耳朵 (Webhook)
                     </h3>
-                    <p class="text-slate-600 mb-2">去 LINE 官方帳號後台，把剛剛的網址貼上去，這樣機器人才聽得到客戶說話。</p>
+                    <p class="text-slate-600 mb-2">去 LINE 官方帳號後台，把剛剛的網址貼上去。</p>
                     <a href="https://manager.line.biz/" target="_blank" class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-xs font-bold">💬 前往 LINE OA 後台</a>
                     <ul class="list-disc pl-5 mt-1 space-y-1 text-slate-700">
                         <li>設定 > Messaging API > Webhook URL。</li>
@@ -239,7 +243,7 @@
                 </div>
 
                 <div class="bg-gray-100 p-4 rounded text-center text-sm font-bold text-gray-600">
-                    🎉 恭喜！現在只要你在這裡畫圖，程式碼都已經包含了設定，<br>你只需要重新部署 Google Apps Script，機器人就會更新！
+                    🎉 恭喜！現在只要重新部署 Google Apps Script，機器人就會更新！
                 </div>
             </div>
         </div>
@@ -304,8 +308,9 @@
             if(idx >= 0) savedProjects[idx] = projectData; else savedProjects.push(projectData);
             localStorage.setItem('line_tool_projects', JSON.stringify(savedProjects));
         }
-        function loadProjectsList() {} // Simplified for brevity in this version
+        function loadProjectsList() {} 
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function openPreviewModal() { 
             document.getElementById('previewModal').classList.remove('hidden'); 
             renderPhoneSimulator(); 
@@ -361,13 +366,9 @@
             projectData.carousel.forEach((card, idx) => {
                 const img = card.localPreview || card.imageUrl || 'https://via.placeholder.com/240x160?text=No+Image';
                 
-                // Visualize Hotspots on Preview
                 let hotspotsHtml = '';
                 if(card.areas && card.areas.length > 0) {
-                    // We need original dimensions to calc percentage for preview
-                    // Simplified: just show a count or overlay if possible. 
-                    // Since we don't have naturalW/H of the specific card image here easily without loading it,
-                    // we will just show the count in text for now to be safe.
+                    hotspotsHtml = `<div class="sim-hotspot" style="top:5px; right:5px; padding:2px 5px; border-radius:4px; border:none; background:rgba(0,0,0,0.6); color:white;">👆 ${card.areas.length}個點擊區</div>`;
                 }
 
                 const bubble = document.createElement('div');
@@ -377,10 +378,11 @@
                 bubble.innerHTML = `
                     <div style="position:relative;">
                         <img src="${img}" class="bubble-hero">
-                        ${card.areas.length > 0 ? '<div style="position:absolute; bottom:5px; right:5px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:2px 5px; rounded:4px;">👆 含 '+card.areas.length+' 個點擊區</div>' : ''}
+                        ${hotspotsHtml}
                     </div>
                     <div class="bubble-body">
-                        <div class="bubble-text">Card ${idx+1}</div>
+                        <div class="bubble-title">${card.title || '無標題'}</div>
+                        <div class="bubble-text">${card.desc || '...'}</div>
                     </div>
                 `;
                 bubble.onclick = () => switchCard(idx);
@@ -411,7 +413,7 @@
         // ================= Drawing =================
         refs.drawLayer.addEventListener('mousedown', (e) => { isDrawing=true; updateScale(); const r=refs.drawLayer.getBoundingClientRect(); startX=(e.clientX-r.left)/scaleFactor; startY=(e.clientY-r.top)/scaleFactor; currentBox=document.createElement('div'); currentBox.className='area-box'; currentBox.style.left=(startX*scaleFactor)+'px'; currentBox.style.top=(startY*scaleFactor)+'px'; refs.drawLayer.appendChild(currentBox); });
         refs.drawLayer.addEventListener('mousemove', (e) => { if(!isDrawing)return; const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); currentBox.style.width=(w*scaleFactor)+'px'; currentBox.style.height=(h*scaleFactor)+'px'; });
-        refs.drawLayer.addEventListener('mouseup', (e) => { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:'關鍵字', type:'message'}); renderAreas(); renderActionList(); } });
+        refs.drawLayer.addEventListener('mouseup', (e) => { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:'文字', type:'message'}); renderAreas(); renderActionList(); } });
         
         function updateScale() { if(naturalWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
         
@@ -427,13 +429,12 @@
 
         function renderActionList() {
             const data = getCurrentDataObj(); refs.actionList.innerHTML = '';
-            if(data.areas.length === 0) { refs.actionList.innerHTML = '<div class="text-center text-slate-400 py-4">請在圖片上畫框框</div>'; return; }
             data.areas.forEach((a, i) => {
                 const el = document.createElement('div');
                 el.className = 'bg-white p-2 rounded border border-slate-200 text-xs flex gap-2 items-center';
                 el.innerHTML = `
                     <span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded">${i+1}</span>
-                    <select onchange="updateArea(${i}, 'type', this.value)" class="border rounded"><option value="message" ${a.type==='message'?'selected':''}>💬 文字</option><option value="uri" ${a.type==='uri'?'selected':''}>🔗 連結</option><option value="flow_next" ${a.type==='flow_next'?'selected':''}>⏩ 跳轉</option></select>
+                    <select onchange="updateArea(${i}, 'type', this.value)" class="border rounded"><option value="message">文字</option><option value="uri">連結</option><option value="flow_next" ${a.type==='flow_next'?'selected':''}>跳轉</option></select>
                     <input value="${a.text}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1">
                     <button onclick="removeArea(${i})" class="text-red-500">×</button>
                 `;
@@ -520,7 +521,6 @@ function doPost(e) {
     userMessage = msg.events[0].message.text;
   } catch (error) { return ContentService.createTextOutput(""); }
 
-  // 核心邏輯
   if (flowMap[userMessage]) {
     replyMessage(replyToken, flowMap[userMessage]);
   }
