@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 (v23.0 預覽修復)</title>
+    <title>LINE 萬能編輯器 (v24.0 筆電版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
@@ -16,39 +16,44 @@
         
         /* UI 元件 */
         ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .tab-btn { opacity: 0.6; border-bottom: 4px solid transparent; } .tab-btn.active { opacity: 1; border-bottom: 4px solid #4f46e5; color: #4f46e5; background: #eef2ff; }
+        .tab-btn { opacity: 0.6; border-bottom: 3px solid transparent; } .tab-btn.active { opacity: 1; border-bottom: 3px solid #4f46e5; color: #4f46e5; background: #eef2ff; }
         .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all 0.2s; } .card-dot.active { background: #4f46e5; transform: scale(1.3); }
         .code-block-slim { background: #1e293b; color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.75rem; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         
         /* 手機模擬器樣式 */
-        .phone-mockup { width: 300px; height: 580px; background: #fff; border-radius: 30px; border: 8px solid #1f2937; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; margin: 0 auto; }
+        .phone-mockup { width: 300px; height: 580px; background: #fff; border-radius: 30px; border: 8px solid #1f2937; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; margin: 0 auto; transform: scale(0.9); transform-origin: top center; }
         .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 20px; background: #1f2937; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 50; }
         .chat-bg { background-color: #849ebf; flex: 1; overflow-y: auto; padding: 30px 10px 10px; display: flex; flex-direction: column; gap: 10px; }
         .bubble-container { overflow-x: auto; display: flex; gap: 10px; padding-bottom: 5px; scroll-snap-type: x mandatory; padding-right: 20px; }
         .line-bubble { min-width: 240px; max-width: 240px; background: white; border-radius: 12px; overflow: hidden; scroll-snap-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
         .bubble-hero { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; }
-        
+        .sim-hotspot { position: absolute; border: 1px dashed rgba(255, 0, 0, 0.5); background: rgba(255, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; color: red; font-size: 10px; font-weight: bold; }
+
         @media (min-width: 768px) { body { height: 100vh; overflow: hidden; } #main-layout { height: 100%; overflow: hidden; } }
+        
+        /* 側邊欄收合動畫 */
+        #sidebarPanel { transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease; }
+        .sidebar-collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden; padding: 0 !important; opacity: 0; }
     </style>
 </head>
 <body class="bg-slate-50 flex flex-col text-slate-800">
 
     <div id="topSection" class="flex-shrink-0 bg-white shadow-sm z-30">
         <header class="border-b border-slate-200">
-            <div class="max-w-7xl mx-auto px-3 md:px-4 h-14 flex justify-between items-center">
+            <div class="max-w-full mx-auto px-3 h-12 flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white text-lg shadow-lg shrink-0">🦁</div>
+                    <div class="w-7 h-7 bg-slate-800 rounded flex items-center justify-center text-white text-sm shadow shrink-0">🦁</div>
                     <div>
-                        <h1 class="font-bold text-base md:text-lg tracking-wide text-slate-800">
-                            LINE 萬能編輯器 <span class="text-[10px] bg-red-100 text-red-800 px-2 py-0.5 rounded-full border border-red-200">v23.0 預覽修復</span>
+                        <h1 class="font-bold text-sm md:text-base tracking-wide text-slate-800">
+                            LINE 萬能編輯器 <span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded border border-sky-200">v24.0 筆電版</span>
                         </h1>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openModal('tutorialModal')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 animate-pulse">
-                        💡 新手教學
+                    <button onclick="openModal('tutorialModal')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-bold shadow transition flex items-center gap-1">
+                        📖 教學
                     </button>
-                    <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-1 text-xs">
+                    <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold shadow transform transition active:scale-95 flex items-center gap-1">
                         💾 下載
                     </button>
                 </div>
@@ -56,88 +61,89 @@
         </header>
 
         <div class="border-b border-slate-200 bg-slate-50">
-            <div class="max-w-7xl mx-auto flex overflow-x-auto">
-                <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 whitespace-nowrap">🗺️ 引流圖 (單張)</button>
-                <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 whitespace-nowrap">🎠 滑動卡片 (多張)</button>
-                <button onclick="switchTab('flow')" id="tab-flow" class="tab-btn flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 bg-rose-50 text-rose-700 whitespace-nowrap">🔗 導覽流程</button>
+            <div class="max-w-full mx-auto flex overflow-x-auto">
+                <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-1.5 font-bold text-xs md:text-sm transition whitespace-nowrap">🗺️ 引流圖</button>
+                <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-1.5 font-bold text-xs md:text-sm transition whitespace-nowrap">🎠 滑動卡片</button>
+                <button onclick="switchTab('flow')" id="tab-flow" class="tab-btn flex-1 py-1.5 font-bold text-xs md:text-sm transition bg-rose-50 text-rose-700 whitespace-nowrap">🔗 導覽流程</button>
             </div>
         </div>
     </div>
 
-    <div id="main-layout" class="flex flex-col md:flex-row flex-1 max-w-7xl mx-auto w-full bg-white relative">
+    <div id="main-layout" class="flex flex-col md:flex-row flex-1 w-full bg-white relative">
         
-        <aside class="w-full md:w-[400px] border-b md:border-b-0 md:border-r border-slate-200 flex flex-col z-20 bg-white flex-shrink-0 max-h-[45vh] md:max-h-full overflow-hidden">
+        <aside id="sidebarPanel" class="w-full md:w-[380px] border-b md:border-b-0 md:border-r border-slate-200 flex flex-col z-20 bg-white flex-shrink-0 max-h-[40vh] md:max-h-full overflow-hidden relative">
             
-            <div id="flowStepNav" class="hidden grid grid-cols-4 gap-1 p-1 md:p-2 bg-slate-100 border-b flex-shrink-0">
-                <button onclick="switchFlowStep(0)" id="flow-step-0" class="flow-step-btn active rounded py-1 md:py-2 text-[10px] md:text-xs font-bold transition">Step 1</button>
-                <button onclick="switchFlowStep(1)" id="flow-step-1" class="flow-step-btn rounded py-1 md:py-2 text-[10px] md:text-xs font-bold transition">Step 2</button>
-                <button onclick="switchFlowStep(2)" id="flow-step-2" class="flow-step-btn rounded py-1 md:py-2 text-[10px] md:text-xs font-bold transition">Step 3</button>
-                <button onclick="switchFlowStep(3)" id="flow-step-3" class="flow-step-btn rounded py-1 md:py-2 text-[10px] md:text-xs font-bold transition">Step 4</button>
+            <div id="flowStepNav" class="hidden grid grid-cols-4 gap-1 p-1 bg-slate-100 border-b flex-shrink-0">
+                <button onclick="switchFlowStep(0)" id="flow-step-0" class="flow-step-btn active rounded py-1 text-[10px] font-bold transition">Step 1</button>
+                <button onclick="switchFlowStep(1)" id="flow-step-1" class="flow-step-btn rounded py-1 text-[10px] font-bold transition">Step 2</button>
+                <button onclick="switchFlowStep(2)" id="flow-step-2" class="flow-step-btn rounded py-1 text-[10px] font-bold transition">Step 3</button>
+                <button onclick="switchFlowStep(3)" id="flow-step-3" class="flow-step-btn rounded py-1 text-[10px] font-bold transition">Step 4</button>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-4 space-y-4">
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
                 
-                <div class="bg-yellow-50 p-3 rounded border border-yellow-200 shadow-sm">
-                    <label class="text-xs font-bold text-yellow-800 block mb-1">🔑 機器人身分證 (Token)</label>
-                    <input type="text" id="lineTokenInput" placeholder="請貼上 Channel Access Token..." class="w-full text-xs p-2 border border-yellow-300 rounded focus:outline-none focus:border-yellow-500 bg-white" oninput="updateGasCode(); saveProjectSilent();">
-                    <p class="text-[10px] text-yellow-600 mt-1">貼上後，教學裡的程式碼會自動更新！</p>
+                <div class="bg-yellow-50 p-2 rounded border border-yellow-200 shadow-sm">
+                    <label class="text-[10px] font-bold text-yellow-800 block mb-1">🔑 LINE Token (貼上自動帶入)</label>
+                    <input type="text" id="lineTokenInput" placeholder="請貼上 Channel Access Token..." class="w-full text-[10px] p-1.5 border border-yellow-300 rounded focus:outline-none focus:border-yellow-500 bg-white" oninput="updateGasCode(); saveProjectSilent();">
                 </div>
 
-                <div id="keywordBlock" class="bg-blue-50 rounded-xl p-3 border border-blue-100 space-y-1">
-                    <label class="font-bold text-blue-800 text-xs">LINE 觸發關鍵字 (客戶輸入什麼字會跑出來?)</label>
-                    <input type="text" id="triggerKeyword" value="選單" class="w-full p-2 border border-blue-200 rounded text-sm focus:outline-none focus:border-blue-500 font-bold text-blue-700" oninput="updateGasCode()">
+                <div id="keywordBlock" class="bg-blue-50 rounded p-2 border border-blue-100 flex items-center gap-2">
+                    <label class="font-bold text-blue-800 text-xs whitespace-nowrap">關鍵字:</label>
+                    <input type="text" id="triggerKeyword" value="選單" class="flex-1 p-1 border border-blue-200 rounded text-xs font-bold text-blue-700 h-6" oninput="updateGasCode()">
                 </div>
 
-                <div id="carouselControls" class="hidden space-y-3 p-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
+                <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
                     <div class="flex justify-between items-center">
-                        <label class="font-bold text-amber-800 text-sm">📦 卡片管理</label>
-                        <div class="flex gap-2">
-                            <button onclick="addCard()" class="bg-amber-500 text-white px-2 py-1 rounded text-xs hover:bg-amber-600 font-bold shadow">+ 新增一張</button>
-                            <button onclick="deleteCard()" class="text-red-500 text-xs hover:underline">刪除目前</button>
+                        <label class="font-bold text-amber-800 text-xs">📦 卡片管理</label>
+                        <div class="flex gap-1">
+                            <button onclick="addCard()" class="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] hover:bg-amber-600 shadow">+新增</button>
+                            <button onclick="deleteCard()" class="text-red-500 text-[10px] hover:underline">刪除</button>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
-                    <div class="text-center text-xs text-amber-700">正在編輯第 <span id="currentCardNum" class="font-bold text-lg">1</span> 張卡片</div>
                     
-                    <button onclick="openPreviewModal()" class="w-full bg-indigo-600 text-white py-2 rounded font-bold text-xs shadow hover:bg-indigo-700 transition flex items-center justify-center gap-2">
-                        👁️ 點我看預覽 (模擬手機)
+                    <button onclick="openPreviewModal()" class="w-full bg-indigo-600 text-white py-1.5 rounded font-bold text-xs shadow hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                        👁️ 模擬預覽
                     </button>
                 </div>
 
-                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <label class="block font-bold text-slate-700 text-xs mb-2">1. 上傳圖片 (電腦版才能畫框框喔)</label>
-                    <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:bg-white file:text-slate-700 hover:file:bg-slate-100"/>
+                <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                    <label class="block font-bold text-slate-700 text-[10px] mb-1">1. 上傳底圖</label>
+                    <input type="file" id="imageInput" accept="image/*" class="block w-full text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-white file:text-slate-700 hover:file:bg-slate-100"/>
                 </div>
                 
-                <div>
-                    <label class="block font-bold text-slate-700 text-xs mb-1">2. 圖片網址 (必填，LINE 才讀得到)</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="imageUrl" placeholder="https://... 結尾是 .jpg/.png" class="flex-1 p-2 border border-slate-300 rounded text-sm font-mono" oninput="saveCurrentDataState()">
-                        <button onclick="openModal('imageHelpModal')" class="bg-gray-200 px-2 rounded text-xs hover:bg-gray-300">教學</button>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="imageUrl" placeholder="2. 貼上 https://...圖片網址 (必填)" class="flex-1 p-1.5 border border-slate-300 rounded text-[10px] font-mono" oninput="saveCurrentDataState()">
+                    <button onclick="openModal('imageHelpModal')" class="bg-gray-200 px-2 py-1 rounded text-[10px] hover:bg-gray-300 whitespace-nowrap">圖床?</button>
                 </div>
 
                 <div class="flex-1">
-                    <div class="flex justify-between items-center mb-2 border-b pb-1">
-                        <label class="font-bold text-slate-700 text-xs">3. 點擊區域 (在右側圖片畫框框)</label>
-                        <button onclick="deleteSelectedAreas()" class="text-xs text-red-500 hover:underline">刪除選取</button>
+                    <div class="flex justify-between items-center mb-1 border-b pb-1">
+                        <label class="font-bold text-slate-700 text-[10px]">3. 點擊區域</label>
+                        <button onclick="deleteSelectedAreas()" class="text-[10px] text-red-500 hover:underline">刪除選取</button>
                     </div>
-                    <div id="actionList" class="space-y-2 pb-4 text-xs text-slate-500 text-center">
-                        (請在右側圖片上拖曳滑鼠畫出點擊範圍)
+                    <div id="actionList" class="space-y-1 pb-4 text-[10px] text-slate-500 text-center">
+                        (請在右側畫布拖曳畫框)
                     </div>
                 </div>
             </div>
         </aside>
 
+        <div class="absolute left-0 md:left-[380px] top-1/2 transform -translate-y-1/2 z-50 hidden md:block transition-all duration-300" id="toggleBtnWrapper">
+            <button onclick="toggleSidebar()" class="bg-white border border-slate-300 shadow-md rounded-r px-1 py-3 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 flex items-center justify-center">
+                <span id="toggleIcon">◀</span>
+            </button>
+        </div>
+
         <main class="flex-1 bg-slate-100 p-2 md:p-4 flex flex-col w-full md:w-auto overflow-hidden items-center justify-center">
             
-            <div id="canvasWrapper" class="relative shadow-xl bg-white rounded-lg overflow-hidden border border-slate-300 w-full h-full max-w-3xl flex flex-col">
-                <div class="bg-white border-b p-2 flex justify-between items-center flex-shrink-0">
-                    <span class="text-xs font-bold text-slate-500">🔍 畫布</span>
+            <div id="canvasWrapper" class="relative shadow-xl bg-white rounded-lg overflow-hidden border border-slate-300 w-full h-full max-w-4xl flex flex-col">
+                <div class="bg-white border-b p-1.5 flex justify-between items-center flex-shrink-0">
+                    <span class="text-xs font-bold text-slate-500 pl-1">🔍 畫布</span>
                     <div class="flex gap-1">
-                        <button onclick="adjustZoom(-10)" class="px-2 bg-slate-100 rounded">-</button>
+                        <button onclick="adjustZoom(-10)" class="px-2 bg-slate-100 rounded text-xs">-</button>
                         <span id="zoomDisplay" class="text-xs px-1">100%</span>
-                        <button onclick="adjustZoom(10)" class="px-2 bg-slate-100 rounded">+</button>
+                        <button onclick="adjustZoom(10)" class="px-2 bg-slate-100 rounded text-xs">+</button>
                     </div>
                 </div>
                 <div id="canvasContainer" class="canvas-scroll-container custom-scrollbar">
@@ -152,7 +158,6 @@
             </div>
 
             <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/90 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeModal('previewModal')">
-                
                 <div class="relative w-full max-w-xs shrink-0">
                     <div class="phone-mockup">
                         <div class="phone-notch"></div>
@@ -162,21 +167,16 @@
                                 <div class="w-8 h-8 rounded-full bg-slate-300 flex-shrink-0"></div>
                                 <div class="flex-1 overflow-hidden">
                                     <div class="text-xs text-slate-600 mb-1">官方帳號</div>
-                                    <div id="simBubbleContainer" class="bubble-container custom-scrollbar">
-                                        </div>
+                                    <div id="simBubbleContainer" class="bubble-container custom-scrollbar"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-gray-100 p-2 text-xs text-center text-gray-500">此為模擬畫面，實際以 LINE 為準</div>
+                        <div class="bg-gray-100 p-2 text-xs text-center text-gray-500">此為模擬畫面</div>
                     </div>
                 </div>
-
-                <button onclick="closeModal('previewModal')" class="mt-6 bg-white/10 text-white border border-white/20 px-8 py-3 rounded-full font-bold hover:bg-white/20 transition flex items-center gap-2 backdrop-blur-md">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    關閉預覽 (回到編輯)
+                <button onclick="closeModal('previewModal')" class="mt-4 bg-white/10 text-white border border-white/20 px-6 py-2 rounded-full font-bold hover:bg-white/20 transition backdrop-blur-md text-sm">
+                    🚫 關閉預覽
                 </button>
-                <p class="text-white/50 text-xs mt-2">或是點擊背景空白處關閉</p>
-
             </div>
 
         </main>
@@ -185,71 +185,32 @@
     <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div class="p-4 border-b flex justify-between items-center bg-indigo-50">
-                <h2 class="text-lg font-bold text-indigo-900">💡 機器人架設 (寶寶級教學)</h2>
+                <h2 class="text-lg font-bold text-indigo-900">💡 機器人架設教學</h2>
                 <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-slate-400 text-xl">✕</button>
             </div>
-            <div class="p-6 overflow-y-auto space-y-8 text-sm">
-                
+            <div class="p-6 overflow-y-auto space-y-6 text-sm">
                 <div>
-                    <h3 class="font-bold text-slate-800 mb-2 text-base flex items-center gap-2">
-                        <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center">1</span> 
-                        大腦設定 (Google Apps Script)
-                    </h3>
-                    <p class="text-slate-600 mb-2">這是機器人的大腦。請點擊按鈕去 Google，建立一個新專案，把原本的內容刪光光，然後貼上這段程式碼。</p>
-                    <a href="https://script.google.com/home" target="_blank" class="inline-block bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-xs font-bold mb-2">🚀 前往 Google Apps Script</a>
-                    
+                    <h3 class="font-bold text-slate-800 mb-2">1. 複製程式碼 (Google Apps Script)</h3>
                     <div class="code-block-slim">
-                        <code class="text-green-400 flex-1 truncate" id="previewCodeLine">const CHANNEL_ACCESS_TOKEN = '...'; // 會自動帶入你填的 Token</code>
-                        <button onclick="copyCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold shrink-0">複製全部程式碼</button>
+                        <code class="text-green-400 flex-1 truncate" id="previewCodeLine">const CHANNEL_ACCESS_TOKEN = '...';</code>
+                        <button onclick="copyCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold shrink-0">複製</button>
                     </div>
                     <pre id="gasCode" class="hidden"></pre>
                 </div>
-
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-2 text-base flex items-center gap-2">
-                        <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center">2</span> 
-                        取得身分證 (Token)
-                    </h3>
-                    <p class="text-slate-600 mb-2">去 LINE 開發者後台，找到 <b>Messaging API</b> 分頁，滑到最下面 <b>Token</b>，按發行並複製。</p>
-                    <a href="https://developers.line.biz/console/" target="_blank" class="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-bold">🔑 前往 LINE Developers</a>
-                    <p class="text-xs text-orange-600 mt-1">* 複製後，請貼到本網頁左上角的黃色框框裡，程式碼會自動更新喔！</p>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-2 text-base flex items-center gap-2">
-                        <span class="bg-purple-600 text-white w-6 h-6 rounded-full flex items-center justify-center">3</span> 
-                        公開上線 (部署)
-                    </h3>
-                    <p class="text-slate-600">在 Google Apps Script 按右上角 <b>部署</b> > <b>新增部署</b>。</p>
-                    <ul class="list-disc pl-5 mt-1 space-y-1 text-slate-700">
-                        <li>點擊齒輪選 <b>網頁應用程式</b>。</li>
-                        <li class="text-red-600 font-bold bg-red-50 inline-block px-1">誰可以存取：一定要選「所有人 (Anyone)」！</li>
-                        <li>部署後，複製那串 <code>/exec</code> 結尾的網址。</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-2 text-base flex items-center gap-2">
-                        <span class="bg-emerald-600 text-white w-6 h-6 rounded-full flex items-center justify-center">4</span> 
-                        接上耳朵 (Webhook)
-                    </h3>
-                    <p class="text-slate-600 mb-2">去 LINE 官方帳號後台，把剛剛的網址貼上去。</p>
-                    <a href="https://manager.line.biz/" target="_blank" class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-xs font-bold">💬 前往 LINE OA 後台</a>
-                    <ul class="list-disc pl-5 mt-1 space-y-1 text-slate-700">
-                        <li>設定 > Messaging API > Webhook URL。</li>
-                        <li>貼上網址，按更新。</li>
-                        <li class="font-bold text-emerald-600">最下面的「使用 Webhook」開關一定要打開！</li>
-                    </ul>
-                </div>
-
-                <div class="bg-gray-100 p-4 rounded text-center text-sm font-bold text-gray-600">
-                    🎉 恭喜！現在只要重新部署 Google Apps Script，機器人就會更新！
+                <div class="grid grid-cols-1 gap-4 text-xs">
+                    <div class="bg-blue-50 p-2 rounded">
+                        <b>取得 Token：</b> LINE Developers > Messaging API > 下方 Issue Token > 貼回左側欄位。
+                    </div>
+                    <div class="bg-red-50 p-2 rounded text-red-700 font-bold">
+                        ⚠️ 部署設定：誰可以存取 (Who has access) 務必選「所有人 (Anyone)」！
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="document.getElementById('imageHelpModal').classList.add('hidden')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">LINE 需要圖片在網路上才能讀取。推薦使用 <a href="https://imgur.com/upload" target="_blank" class="text-blue-500 underline">Imgur (免註冊)</a> 上傳，並對圖片按右鍵「複製圖片位址」。</p></div></div>
+    <div id="projectsModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[80vh]"><div class="p-4 border-b flex justify-between items-center bg-indigo-50"><h2 class="text-lg font-bold text-indigo-900">📂 作品集</h2><button onclick="document.getElementById('projectsModal').classList.add('hidden')" class="text-2xl text-slate-400">✕</button></div><div class="p-4 overflow-y-auto bg-slate-50 flex-1 space-y-3" id="projectsList"></div><div class="p-4 border-t bg-white"><button onclick="createNewProject()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700">+ 建立新專案</button></div></div></div>
+    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="document.getElementById('imageHelpModal').classList.add('hidden')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">請使用 <a href="https://imgur.com/upload" target="_blank" class="text-blue-500 underline">Imgur</a> 上傳，並對圖片按右鍵「複製圖片位址」。</p></div></div>
 
     <script>
         let currentMode = 'imagemap';
@@ -257,15 +218,13 @@
         let currentFlowStep = 0;
         let currentZoom = 100;
         let projectId = Date.now().toString();
+        let isSidebarCollapsed = false;
 
         // Data Models
         let projectData = {
-            id: projectId,
-            name: "未命名專案",
-            token: "",
-            mode: "imagemap",
+            id: projectId, name: "未命名專案", token: "", mode: "imagemap",
             imagemap: { imageUrl: "", localPreview: "", areas: [] },
-            carousel: [{ title: "標題", desc: "說明", imageUrl: "", localPreview: "", btns: [{label:"按鈕", text:"回覆"}], areas:[] }],
+            carousel: [{ title: "", desc: "", imageUrl: "", localPreview: "", btns: [{label:"按鈕", text:"回覆"}], areas:[] }],
             flow: [
                 { name: "Step 1", imageUrl: "", localPreview: "", areas: [], trigger: "開始導覽" },
                 { name: "Step 2", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_2__" },
@@ -284,265 +243,165 @@
             placeholder: document.getElementById('placeholder'),
             triggerKeyword: document.getElementById('triggerKeyword'),
             canvasWrapper: document.getElementById('canvasWrapper'),
-            phoneSimulator: document.getElementById('phoneSimulator'),
             lineTokenInput: document.getElementById('lineTokenInput'),
-            previewCodeLine: document.getElementById('previewCodeLine')
+            previewCodeLine: document.getElementById('previewCodeLine'),
+            sidebarPanel: document.getElementById('sidebarPanel'),
+            toggleBtnWrapper: document.getElementById('toggleBtnWrapper'),
+            toggleIcon: document.getElementById('toggleIcon')
         };
         
         let isDrawing = false, startX, startY, naturalWidth = 0, scaleFactor = 1;
 
-        // Init
-        window.addEventListener('DOMContentLoaded', () => {
-            loadProjectsList();
-            updateUI();
-            updateGasCode();
-        });
+        window.addEventListener('DOMContentLoaded', () => { loadProjectsList(); updateUI(); updateGasCode(); });
+
+        // ================= Sidebar Toggle (Laptop Optimized) =================
+        function toggleSidebar() {
+            isSidebarCollapsed = !isSidebarCollapsed;
+            if(isSidebarCollapsed) {
+                refs.sidebarPanel.classList.add('sidebar-collapsed');
+                refs.toggleBtnWrapper.style.left = "0px";
+                refs.toggleIcon.innerText = "▶";
+            } else {
+                refs.sidebarPanel.classList.remove('sidebar-collapsed');
+                refs.toggleBtnWrapper.style.left = "380px"; // match sidebar width
+                refs.toggleIcon.innerText = "◀";
+            }
+            setTimeout(() => { updateScale(); }, 350); // Redraw canvas scale after animation
+        }
 
         // ================= Project System =================
-        function saveProject() { _saveToLocal(); alert('專案已儲存！'); loadProjectsList(); }
+        function saveProject() { _saveToLocal(); alert('已儲存！'); loadProjectsList(); }
         function saveProjectSilent() { _saveToLocal(); }
         function _saveToLocal() {
             projectData.token = refs.lineTokenInput.value;
             const savedProjects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]');
             const idx = savedProjects.findIndex(p => p.id === projectData.id);
+            projectData.lastModified = new Date().toLocaleString();
             if(idx >= 0) savedProjects[idx] = projectData; else savedProjects.push(projectData);
             localStorage.setItem('line_tool_projects', JSON.stringify(savedProjects));
         }
-        function loadProjectsList() {} 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function openPreviewModal() { 
-            document.getElementById('previewModal').classList.remove('hidden'); 
-            renderPhoneSimulator(); 
-        }
-
-        // ================= Core Logic =================
-        function getCurrentDataObj() {
-            if(currentMode === 'imagemap') return projectData.imagemap;
-            if(currentMode === 'carousel') return projectData.carousel[currentCardIndex];
-            if(currentMode === 'flow') return projectData.flow[currentFlowStep];
-        }
-
-        function updateUI() {
-            const data = getCurrentDataObj();
-            refs.imageUrl.value = data.imageUrl || "";
-            const imgSource = data.localPreview || data.imageUrl;
-            
-            // Canvas Reset
-            refs.previewImage.classList.add('hidden');
-            refs.drawLayer.classList.add('hidden');
-            refs.placeholder.classList.remove('hidden');
-
-            if(imgSource) {
-                refs.previewImage.src = imgSource;
-                refs.previewImage.onload = function() {
-                    naturalWidth = this.naturalWidth;
-                    refs.previewImage.classList.remove('hidden');
-                    refs.drawLayer.classList.remove('hidden');
-                    refs.placeholder.classList.add('hidden');
-                    updateScale();
-                    renderAreas();
-                    renderActionList();
-                }
-            } else {
-                refs.previewImage.src = "";
-                renderActionList();
-            }
-
-            if(currentMode === 'flow') {
-                if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger;
-                document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0);
-            } else if (currentMode === 'carousel') {
-                refs.triggerKeyword.value = "命盤"; 
-            } else {
-                refs.triggerKeyword.value = "選單";
-            }
-        }
-
-        // ================= Carousel Logic =================
-        function renderPhoneSimulator() {
-            const container = document.getElementById('simBubbleContainer');
-            container.innerHTML = '';
-            projectData.carousel.forEach((card, idx) => {
-                const img = card.localPreview || card.imageUrl || 'https://via.placeholder.com/240x160?text=No+Image';
-                
-                let hotspotsHtml = '';
-                if(card.areas && card.areas.length > 0) {
-                    hotspotsHtml = `<div class="sim-hotspot" style="top:5px; right:5px; padding:2px 5px; border-radius:4px; border:none; background:rgba(0,0,0,0.6); color:white;">👆 ${card.areas.length}個點擊區</div>`;
-                }
-
-                const bubble = document.createElement('div');
-                bubble.className = 'line-bubble';
-                if(idx === currentCardIndex) bubble.style.border = '2px solid #4f46e5';
-                
-                bubble.innerHTML = `
-                    <div style="position:relative;">
-                        <img src="${img}" class="bubble-hero">
-                        ${hotspotsHtml}
-                    </div>
-                    <div class="bubble-body">
-                        <div class="bubble-title">${card.title || '無標題'}</div>
-                        <div class="bubble-text">${card.desc || '...'}</div>
-                    </div>
-                `;
-                bubble.onclick = () => switchCard(idx);
-                container.appendChild(bubble);
+        function loadProjectsList() {
+            const list = document.getElementById('projectsList');
+            const projects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]');
+            list.innerHTML = '';
+            if(projects.length===0) { list.innerHTML = '<div class="text-center text-slate-400 py-4 text-xs">無專案</div>'; return; }
+            projects.sort((a,b)=>new Date(b.lastModified)-new Date(a.lastModified)).forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center gap-2 bg-white p-2 rounded border hover:border-indigo-400 cursor-pointer mb-2';
+                item.innerHTML = `<div class="flex-1"><div class="font-bold text-xs">${p.name}</div><div class="text-[10px] text-slate-400">${p.lastModified}</div></div><button onclick="deleteProject('${p.id}', event)" class="text-red-400 px-2">✕</button>`;
+                item.onclick = () => loadProject(p.id); list.appendChild(item);
             });
         }
+        function loadProject(id) {
+            const projects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]');
+            const target = projects.find(p => p.id === id);
+            if(target) { projectData = target; currentMode = projectData.mode; currentCardIndex = 0; currentFlowStep = 0; refs.lineTokenInput.value = projectData.token || ""; document.getElementById('projectsModal').classList.add('hidden'); switchTab(currentMode); }
+        }
+        function createNewProject() {
+            projectData = { id: Date.now().toString(), name: "新專案", token: "", mode: "imagemap", imagemap: { imageUrl: "", localPreview: "", areas: [] }, carousel: [{ title: "", desc: "", imageUrl: "", localPreview: "", btns: [{label:"按鈕", text:"回覆"}], areas:[] }], flow: [ { name: "Step 1", imageUrl: "", localPreview: "", areas: [], trigger: "開始導覽" }, { name: "Step 2", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_2__" }, { name: "Step 3", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_3__" }, { name: "Step 4", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_4__" } ] };
+            refs.lineTokenInput.value = ""; switchTab('imagemap'); document.getElementById('projectsModal').classList.add('hidden');
+        }
+        function deleteProject(id, e) { e.stopPropagation(); if(!confirm('刪除？')) return; const projects = JSON.parse(localStorage.getItem('line_tool_projects') || '[]'); localStorage.setItem('line_tool_projects', JSON.stringify(projects.filter(p => p.id !== id))); loadProjectsList(); }
 
-        // ================= Tab Switching =================
+        // ================= Core UI =================
+        function getCurrentDataObj() { if(currentMode === 'imagemap') return projectData.imagemap; if(currentMode === 'carousel') return projectData.carousel[currentCardIndex]; if(currentMode === 'flow') return projectData.flow[currentFlowStep]; }
+        function updateUI() {
+            const data = getCurrentDataObj(); refs.imageUrl.value = data.imageUrl || ""; const imgSource = data.localPreview || data.imageUrl;
+            refs.previewImage.classList.add('hidden'); refs.drawLayer.classList.add('hidden'); refs.placeholder.classList.remove('hidden');
+            if(imgSource) { refs.previewImage.src = imgSource; refs.previewImage.onload = function() { naturalWidth = this.naturalWidth; refs.previewImage.classList.remove('hidden'); refs.drawLayer.classList.remove('hidden'); refs.placeholder.classList.add('hidden'); updateScale(); renderAreas(); renderActionList(); } } else { refs.previewImage.src = ""; renderActionList(); }
+            if(currentMode === 'flow') { if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger; document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0); } else if (currentMode === 'carousel') { refs.triggerKeyword.value = "命盤"; } else { refs.triggerKeyword.value = "選單"; }
+        }
         function switchTab(mode) {
             projectData.mode = mode; currentMode = mode;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${mode}`).classList.add('active');
-            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel');
-            document.getElementById('flowStepNav').classList.toggle('hidden', mode !== 'flow');
-            document.getElementById('keywordBlock').classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${mode}`).classList.add('active');
+            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel'); document.getElementById('flowStepNav').classList.toggle('hidden', mode !== 'flow'); document.getElementById('keywordBlock').classList.remove('hidden');
             updateUI(); updateGasCode();
         }
 
-        // ================= Image Input =================
-        refs.imageInput.addEventListener('change', function(e) {
-            const file = e.target.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) { const data = getCurrentDataObj(); data.localPreview = evt.target.result; updateUI(); }
-            reader.readAsDataURL(file);
-        });
-        function saveCurrentDataState() { getCurrentDataObj().imageUrl = refs.imageUrl.value; updateUI(); }
-
-        // ================= Drawing =================
-        refs.drawLayer.addEventListener('mousedown', (e) => { isDrawing=true; updateScale(); const r=refs.drawLayer.getBoundingClientRect(); startX=(e.clientX-r.left)/scaleFactor; startY=(e.clientY-r.top)/scaleFactor; currentBox=document.createElement('div'); currentBox.className='area-box'; currentBox.style.left=(startX*scaleFactor)+'px'; currentBox.style.top=(startY*scaleFactor)+'px'; refs.drawLayer.appendChild(currentBox); });
-        refs.drawLayer.addEventListener('mousemove', (e) => { if(!isDrawing)return; const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); currentBox.style.width=(w*scaleFactor)+'px'; currentBox.style.height=(h*scaleFactor)+'px'; });
-        refs.drawLayer.addEventListener('mouseup', (e) => { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:'文字', type:'message'}); renderAreas(); renderActionList(); } });
-        
-        function updateScale() { if(naturalWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
-        
-        function renderAreas() {
-            const data = getCurrentDataObj(); refs.drawLayer.innerHTML = '';
-            data.areas.forEach((a, i) => {
-                const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`;
-                el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px';
-                el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px';
-                el.innerText=i+1; refs.drawLayer.appendChild(el);
+        // ================= Carousel & Flow =================
+        function renderPhoneSimulator() {
+            const container = document.getElementById('simBubbleContainer'); container.innerHTML = '';
+            projectData.carousel.forEach((card, idx) => {
+                const img = card.localPreview || card.imageUrl || 'https://via.placeholder.com/240x160?text=No+Image';
+                let hotspots = card.areas.length > 0 ? `<div class="sim-hotspot" style="top:5px;right:5px;padding:2px 4px;border-radius:4px;background:rgba(0,0,0,0.6);color:white;">👆${card.areas.length}區</div>` : '';
+                const bubble = document.createElement('div'); bubble.className = 'line-bubble'; if(idx === currentCardIndex) bubble.style.border = '2px solid #4f46e5';
+                bubble.innerHTML = `<div style="position:relative;"><img src="${img}" class="bubble-hero">${hotspots}</div><div class="bubble-body"><div class="bubble-title">Card ${idx+1}</div></div>`;
+                bubble.onclick = () => switchCard(idx); container.appendChild(bubble);
             });
         }
-
-        function renderActionList() {
-            const data = getCurrentDataObj(); refs.actionList.innerHTML = '';
-            data.areas.forEach((a, i) => {
-                const el = document.createElement('div');
-                el.className = 'bg-white p-2 rounded border border-slate-200 text-xs flex gap-2 items-center';
-                el.innerHTML = `
-                    <span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded">${i+1}</span>
-                    <select onchange="updateArea(${i}, 'type', this.value)" class="border rounded"><option value="message">文字</option><option value="uri">連結</option><option value="flow_next" ${a.type==='flow_next'?'selected':''}>跳轉</option></select>
-                    <input value="${a.text}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1">
-                    <button onclick="removeArea(${i})" class="text-red-500">×</button>
-                `;
-                refs.actionList.appendChild(el);
-            });
-        }
-
-        function updateArea(i, f, v) { getCurrentDataObj().areas[i][f] = v; }
-        function removeArea(i) { getCurrentDataObj().areas.splice(i, 1); renderAreas(); renderActionList(); }
-
-        // ================= Helper Functions =================
-        function addCard() { if(projectData.carousel.length >= 10) return; projectData.carousel.push({ title: "新卡片", desc: "說明", imageUrl: "", localPreview: "", btns: [{label:"按鈕", text:"回覆"}], areas:[] }); currentCardIndex = projectData.carousel.length - 1; updateUI(); renderDots(); }
+        function addCard() { if(projectData.carousel.length >= 10) return; projectData.carousel.push({ title:"", desc:"", imageUrl:"", localPreview:"", btns:[], areas:[] }); currentCardIndex = projectData.carousel.length - 1; updateUI(); renderDots(); }
         function deleteCard() { if(projectData.carousel.length <= 1) return; projectData.carousel.splice(currentCardIndex, 1); currentCardIndex = Math.max(0, currentCardIndex - 1); updateUI(); renderDots(); }
         function switchCard(idx) { currentCardIndex = idx; updateUI(); renderDots(); }
         function renderDots() { const c = document.getElementById('cardDots'); c.innerHTML=''; document.getElementById('currentCardNum').innerText = currentCardIndex + 1; projectData.carousel.forEach((_, i) => { const d = document.createElement('div'); d.className = `card-dot ${i===currentCardIndex?'active':''}`; d.onclick=()=>switchCard(i); c.appendChild(d); }); }
         function switchFlowStep(i) { currentFlowStep = i; document.querySelectorAll('.flow-step-btn').forEach(b => b.classList.remove('active')); document.getElementById(`flow-step-${i}`).classList.add('active'); updateUI(); }
-        function adjustZoom(delta) { currentZoom = Math.max(10, currentZoom+delta); document.getElementById('zoomDisplay').innerText = currentZoom + '%'; refs.previewImage.style.width = currentZoom + '%'; setTimeout(() => {updateScale(); renderAreas()}, 0); }
+
+        // ================= Drawing =================
+        refs.imageInput.addEventListener('change', function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(evt) { const data = getCurrentDataObj(); data.localPreview = evt.target.result; updateUI(); }; reader.readAsDataURL(file); });
+        function saveCurrentDataState() { getCurrentDataObj().imageUrl = refs.imageUrl.value; updateUI(); }
+        
+        // Touch Support
+        refs.drawLayer.addEventListener('touchstart', (e)=>{ e.preventDefault(); if(e.touches.length===1) handleMouseDown(e.touches[0]); }, {passive:false});
+        refs.drawLayer.addEventListener('touchmove', (e)=>{ e.preventDefault(); if(e.touches.length===1 && isDrawing) handleMouseMove(e.touches[0]); }, {passive:false});
+        refs.drawLayer.addEventListener('touchend', (e)=>{ e.preventDefault(); if(isDrawing) handleMouseUp(e.changedTouches[0]); }, {passive:false});
+        
+        refs.drawLayer.addEventListener('mousedown', handleMouseDown);
+        refs.drawLayer.addEventListener('mousemove', handleMouseMove);
+        refs.drawLayer.addEventListener('mouseup', handleMouseUp);
+
+        function handleMouseDown(e) { if(!refs.previewImage.src) return; isDrawing=true; updateScale(); const r=refs.drawLayer.getBoundingClientRect(); startX=(e.clientX-r.left)/scaleFactor; startY=(e.clientY-r.top)/scaleFactor; currentBox=document.createElement('div'); currentBox.className='area-box'; currentBox.style.left=(startX*scaleFactor)+'px'; currentBox.style.top=(startY*scaleFactor)+'px'; refs.drawLayer.appendChild(currentBox); }
+        function handleMouseMove(e) { if(!isDrawing)return; const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); currentBox.style.width=(w*scaleFactor)+'px'; currentBox.style.height=(h*scaleFactor)+'px'; currentBox.style.left=(Math.min(startX,(e.clientX-r.left)/scaleFactor)*scaleFactor)+'px'; currentBox.style.top=(Math.min(startY,(e.clientY-r.top)/scaleFactor)*scaleFactor)+'px'; }
+        function handleMouseUp(e) { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); let type='message', text=`關鍵字${d.areas.length+1}`; if(currentMode==='flow' && currentFlowStep<3) { type='flow_next'; text=projectData.flow[currentFlowStep+1].trigger; } d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:text, type:type, selected:false}); renderAreas(); renderActionList(); } }
+
+        function updateScale() { if(naturalWidth>0 && refs.previewImage.offsetWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
+        function renderAreas() { const data = getCurrentDataObj(); refs.drawLayer.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`; el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px'; el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px'; el.innerText=i+1; el.onclick=(e)=>{e.stopPropagation(); toggleAreaSelection(i);}; refs.drawLayer.appendChild(el); }); }
+        function renderActionList() { const data = getCurrentDataObj(); refs.actionList.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; el.innerHTML = `<span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span><select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-16"><option value="message" ${a.type==='message'?'selected':''}>文字</option><option value="uri" ${a.type==='uri'?'selected':''}>連結</option><option value="flow_next" ${a.type==='flow_next'?'selected':''}>跳轉</option></select><input value="${a.text}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0"><button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button>`; refs.actionList.appendChild(el); }); }
+        function updateArea(i, f, v) { getCurrentDataObj().areas[i][f] = v; }
+        function removeArea(i) { getCurrentDataObj().areas.splice(i, 1); renderAreas(); renderActionList(); }
+        function toggleAreaSelection(i) { const d=getCurrentDataObj(); d.areas[i].selected=!d.areas[i].selected; renderAreas(); renderActionList(); }
+        function deleteSelectedAreas() { const d=getCurrentDataObj(); d.areas=d.areas.filter(a=>!a.selected); renderAreas(); renderActionList(); }
+        function toggleSelectAll(checked) { const d=getCurrentDataObj(); d.areas.forEach(a=>a.selected=checked); renderAreas(); renderActionList(); }
+        function adjustZoom(delta) { currentZoom = Math.max(10, currentZoom+delta); document.getElementById('zoomDisplay').innerText = currentZoom+'%'; refs.previewImage.style.width = currentZoom+'%'; setTimeout(()=>{updateScale(); renderAreas()},0); }
         function resetZoom() { currentZoom = 100; adjustZoom(0); }
-        function deleteSelectedAreas() { const data = getCurrentDataObj(); data.areas = data.areas.filter(a => !a.selected); renderAreas(); renderActionList(); }
-        function toggleSelectAll(checked) { getCurrentDataObj().areas.forEach(a => a.selected = checked); renderAreas(); renderActionList(); }
 
-        // ================= Code Gen =================
-        function generateImagemapJson(data) {
-            const scale = (naturalWidth && naturalWidth !== 1040) ? 1040/naturalWidth : 1;
-            return {
-                "type": "imagemap", "baseUrl": data.imageUrl, "altText": "請選擇功能",
-                "baseSize": { "width": 1040, "height": Math.round((naturalHeight || 1040) * scale) },
-                "actions": data.areas.map(a => ({
-                    "type": a.type === 'uri' ? 'uri' : 'message',
-                    "text": a.type !== 'uri' ? a.text : undefined,
-                    "linkUri": a.type === 'uri' ? a.text : undefined,
-                    "area": { x: Math.round(a.x*scale), y: Math.round(a.y*scale), width: Math.round(a.width*scale), height: Math.round(a.height*scale) }
-                }))
-            };
-        }
-
-        function generateFlexCarouselJson(cardsData) {
-            const bubbles = cardsData.map(card => {
-                const imgUrl = card.imageUrl || "https://via.placeholder.com/1040x1040?text=No+Image";
-                const clickAreas = card.areas.map(a => {
-                    const leftP = (a.x / naturalWidth * 100).toFixed(4) + '%'; const topP = (a.y / naturalHeight * 100).toFixed(4) + '%';
-                    const widthP = (a.width / naturalWidth * 100).toFixed(4) + '%'; const heightP = (a.height / naturalHeight * 100).toFixed(4) + '%';
-                    return {
-                        "type": "box", "layout": "vertical", "position": "absolute", "offsetStart": leftP, "offsetTop": topP, "width": widthP, "height": heightP,
-                        "action": { "type": a.type === 'uri' ? 'uri' : 'message', "label": "action", "text": a.type !== 'uri' ? a.text : undefined, "uri": a.type === 'uri' ? a.text : undefined }
-                    };
-                });
-                return { "type": "bubble", "body": { "type": "box", "layout": "overlap", "paddingAll": "0px", "contents": [ { "type": "image", "url": imgUrl, "size": "full", "aspectMode": "cover" }, ...clickAreas ] } };
-            });
-            return { "type": "flex", "altText": "請選擇項目", "contents": { "type": "carousel", "contents": bubbles } };
-        }
+        // ================= Code Gen & Export =================
+        function generateImagemapJson(data) { const scale = (naturalWidth&&naturalWidth!==1040)?1040/naturalWidth:1; return { "type": "imagemap", "baseUrl": data.imageUrl, "altText": "選單", "baseSize": { "width": 1040, "height": Math.round((naturalHeight||1040)*scale) }, "actions": data.areas.map(a => ({ "type": a.type==='uri'?'uri':'message', "text": a.type!=='uri'?a.text:undefined, "linkUri": a.type==='uri'?a.text:undefined, "area": { x: Math.round(a.x*scale), y: Math.round(a.y*scale), width: Math.round(a.width*scale), height: Math.round(a.height*scale) } })) }; }
+        function generateFlexCarouselJson(cardsData) { const bubbles = cardsData.map(card => { const imgUrl = card.imageUrl || "https://via.placeholder.com/1040x1040"; const clickAreas = card.areas.map(a => { const lp = (a.x/naturalWidth*100).toFixed(4)+'%', tp = (a.y/naturalHeight*100).toFixed(4)+'%', wp = (a.width/naturalWidth*100).toFixed(4)+'%', hp = (a.height/naturalHeight*100).toFixed(4)+'%'; return { "type": "box", "layout": "vertical", "position": "absolute", "offsetStart": lp, "offsetTop": tp, "width": wp, "height": hp, "action": { "type": a.type==='uri'?'uri':'message', "label": "action", "text": a.type!=='uri'?a.text:undefined, "uri": a.type==='uri'?a.text:undefined } }; }); return { "type": "bubble", "body": { "type": "box", "layout": "overlap", "paddingAll": "0px", "contents": [ { "type": "image", "url": imgUrl, "size": "full", "aspectMode": "cover" }, ...clickAreas ] } }; }); return { "type": "flex", "altText": "選單", "contents": { "type": "carousel", "contents": bubbles } }; }
 
         function updateGasCode() {
             const token = refs.lineTokenInput.value || '請換成你的LINE_TOKEN';
             refs.previewCodeLine.innerText = `const CHANNEL_ACCESS_TOKEN = '${token}'; ...`;
-            
             let flowMapStr = "";
-            if(currentMode === 'flow') {
-                projectData.flow.forEach(step => {
-                    if(!step.imageUrl) return;
-                    const json = generateImagemapJson(step);
-                    flowMapStr += `  "${step.trigger}": ${JSON.stringify(json, null, 2)},\n`;
-                });
-            } else if (currentMode === 'imagemap' && projectData.imagemap.imageUrl) {
-                const json = generateImagemapJson(projectData.imagemap);
-                flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(json, null, 2)}`;
-            } else if (currentMode === 'carousel' && projectData.carousel[0].imageUrl) {
-                const json = generateFlexCarouselJson(projectData.carousel);
-                flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(json, null, 2)}`;
-            }
-
+            if(currentMode === 'flow') { projectData.flow.forEach(step => { if(!step.imageUrl) return; flowMapStr += `  "${step.trigger}": ${JSON.stringify(generateImagemapJson(step), null, 2)},\n`; }); } 
+            else if (currentMode === 'imagemap' && projectData.imagemap.imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateImagemapJson(projectData.imagemap), null, 2)}`; }
+            else if (currentMode === 'carousel' && projectData.carousel[0].imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateFlexCarouselJson(projectData.carousel), null, 2)}`; }
+            
             const code = `const CHANNEL_ACCESS_TOKEN = '${token}'; 
-
-// 自動生成的流程地圖 (包含您設定的所有圖片與關鍵字)
 const flowMap = {
 ${flowMapStr}
 };
-
 function doPost(e) {
-  let replyToken = "", userMessage = "";
   try {
     const msg = JSON.parse(e.postData.contents);
-    replyToken = msg.events[0].replyToken;
-    userMessage = msg.events[0].message.text;
-  } catch (error) { return ContentService.createTextOutput(""); }
-
-  if (flowMap[userMessage]) {
-    replyMessage(replyToken, flowMap[userMessage]);
-  }
-  
+    const replyToken = msg.events[0].replyToken;
+    const userMessage = msg.events[0].message.text;
+    if (flowMap[userMessage]) {
+      UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
+        'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
+        'method': 'post',
+        'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [flowMap[userMessage]] }),
+      });
+    }
+  } catch (error) {}
   return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
-}
-
-function replyMessage(replyToken, messageJson) {
-  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
-    'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
-    'method': 'post',
-    'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [messageJson] }),
-  });
 }`;
             document.getElementById('gasCode').innerText = code;
         }
 
-        function downloadJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
-            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "line_project.json"); dl.click();
-        }
+        function downloadJSON() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "line_project.json"); dl.click(); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='projectsModal') loadProjectsList(); if(id==='previewModal') renderPhoneSimulator(); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function copyCode() { navigator.clipboard.writeText(document.getElementById('gasCode').innerText); alert('複製成功！'); }
+        function openPreviewModal() { openModal('previewModal'); }
     </script>
 </body>
 </html>
