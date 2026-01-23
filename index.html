@@ -3,37 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 (v18.0)</title>
+    <title>LINE 萬能編輯器 (v19.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
+        body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
         
-        /* 畫布容器：高度自適應 */
-        .canvas-scroll-container { height: 100%; overflow: auto; border: 2px dashed #cbd5e1; background: #f8fafc radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; position: relative; display: flex; align-items: center; justify-content: center; -webkit-overflow-scrolling: touch; }
+        /* 畫布容器 */
+        .canvas-scroll-container {
+            border: 2px dashed #cbd5e1;
+            background: #f8fafc radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            /* 手機版給定一個高度，電腦版自動填滿 */
+            height: 500px; 
+        }
+        @media (min-width: 768px) {
+            .canvas-scroll-container { height: 100%; }
+        }
+
         .canvas-content-wrapper { position: relative; transform-origin: center top; transition: width 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px black; user-select: none; touch-action: none; }
         .area-box.selected { border-color: #f59e0b; background: rgba(245,158,11,0.3); z-index: 20; }
         
-        /* 介面元件 */
+        /* 捲軸美化 */
         ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
         .tab-btn { opacity: 0.6; border-bottom: 4px solid transparent; } .tab-btn.active { opacity: 1; border-bottom: 4px solid #4f46e5; color: #4f46e5; background: #eef2ff; }
         .flow-step-btn { opacity: 0.7; background: #f1f5f9; } .flow-step-btn.active { opacity: 1; background: #4f46e5; color: white; }
         .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all 0.2s; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); } .card-dot.active { background: #4f46e5; transform: scale(1.3); border-color: #eef2ff; }
         .custom-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #4f46e5; }
         
-        /* 程式碼區塊 & 連結按鈕 */
-        .code-block { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre; position: relative; border: 1px solid #334155; }
+        /* 程式碼區塊優化 (瘦身版) */
+        .code-block-slim { background: #1e293b; color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.75rem; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .external-link-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: bold; transition: all 0.2s; text-decoration: none; }
-        .external-link-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
-        /* 收合動畫 */
-        #topSection { transition: all 0.3s ease-in-out; overflow: hidden; }
-        .collapsed { height: 0 !important; padding: 0 !important; border: none !important; }
+        /* 電腦版才鎖定高度，手機版自由滑動 */
+        @media (min-width: 768px) {
+            body { height: 100vh; overflow: hidden; }
+            #main-layout { height: 100%; overflow: hidden; }
+            #sidebar { height: 100%; overflow: hidden; }
+        }
     </style>
 </head>
-<body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
+<body class="bg-slate-50 flex flex-col text-slate-800">
 
-    <div id="topSection" class="flex-shrink-0 bg-white shadow-sm z-30 transition-all duration-300">
+    <div id="topSection" class="flex-shrink-0 bg-white shadow-sm z-30">
         <header class="border-b border-slate-200">
             <div class="max-w-7xl mx-auto px-3 md:px-4 h-14 flex justify-between items-center">
                 <div class="flex items-center gap-2 md:gap-3">
@@ -41,7 +59,7 @@
                     <div>
                         <h1 class="font-bold text-base md:text-lg tracking-wide text-slate-800 flex items-center gap-1 md:gap-2">
                             LINE 萬能編輯器 
-                            <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200 whitespace-nowrap">v18.0 兼容版</span>
+                            <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200 whitespace-nowrap">v19.0 自由版</span>
                         </h1>
                     </div>
                 </div>
@@ -58,26 +76,16 @@
 
         <div class="border-b border-slate-200 bg-slate-50">
             <div class="max-w-7xl mx-auto flex overflow-x-auto">
-                <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap shrink-0">
-                    🗺️ <span class="hidden md:inline">座標</span>引流圖
-                </button>
-                <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap shrink-0">
-                    🎠 <span class="hidden md:inline">座標</span>滑動卡片
-                </button>
-                <button onclick="switchTab('flow')" id="tab-flow" class="tab-btn flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 md:gap-2 bg-rose-50 text-rose-700 whitespace-nowrap shrink-0">
-                    🔗 多層次<span class="hidden md:inline">導覽</span>流程
-                </button>
+                <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap shrink-0">🗺️ <span class="hidden md:inline">座標</span>引流圖</button>
+                <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap shrink-0">🎠 <span class="hidden md:inline">座標</span>滑動卡片</button>
+                <button onclick="switchTab('flow')" id="tab-flow" class="tab-btn flex-1 py-2 font-bold text-sm transition flex items-center justify-center gap-1 md:gap-2 bg-rose-50 text-rose-700 whitespace-nowrap shrink-0">🔗 多層次<span class="hidden md:inline">導覽</span></button>
             </div>
         </div>
     </div>
 
-    <div class="bg-white border-b border-slate-200 flex justify-center hover:bg-slate-50 cursor-pointer py-1 flex-shrink-0" onclick="toggleHeader()" title="點擊收合/展開選單，擴大畫布空間">
-        <div id="collapseIcon" class="text-slate-400 text-xs">▲ 收起選單 (專注模式)</div>
-    </div>
-
-    <div class="flex flex-col md:flex-row flex-1 overflow-hidden max-w-7xl mx-auto w-full bg-white relative">
+    <div id="main-layout" class="flex flex-col md:flex-row flex-1 max-w-7xl mx-auto w-full bg-white relative">
         
-        <aside class="w-full md:w-[400px] border-b md:border-b-0 md:border-r border-slate-200 flex flex-col z-20 bg-white max-h-[45vh] md:max-h-full md:h-full overflow-hidden flex-shrink-0">
+        <aside id="sidebar" class="w-full md:w-[400px] border-b md:border-b-0 md:border-r border-slate-200 flex flex-col z-20 bg-white flex-shrink-0">
             
             <div id="flowStepNav" class="hidden grid grid-cols-4 gap-1 p-1 md:p-2 bg-slate-100 border-b flex-shrink-0">
                 <button onclick="switchFlowStep(0)" id="flow-step-0" class="flow-step-btn active rounded py-1 md:py-2 text-[10px] md:text-xs font-bold text-center transition">Step 1<br>入口圖</button>
@@ -86,7 +94,7 @@
                 <button onclick="switchFlowStep(3)" id="flow-step-3" class="flow-step-btn rounded py-1 md:py-2 text-[10px] md:text-xs font-bold text-center transition">Step 4<br>詳情圖</button>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-4 space-y-4 md:space-y-6">
+            <div class="flex-1 p-3 md:p-4 space-y-4 md:space-y-6 md:overflow-y-auto md:custom-scrollbar">
                 
                 <div id="keywordBlock" class="bg-blue-50 rounded-xl p-3 border border-blue-100 space-y-1">
                     <label class="font-bold text-blue-800 text-xs">LINE 觸發關鍵字</label>
@@ -95,11 +103,7 @@
 
                 <div id="flowHelpBlock" class="hidden bg-rose-50 rounded-xl p-3 border border-rose-100 space-y-1 text-xs text-rose-800">
                     <p class="font-bold">💡 流程模式：</p>
-                    <ul class="list-disc pl-4">
-                        <li>依序設定 Step 1~4 的圖片。</li>
-                        <li>畫框時動作選 <b>「🔗 跳轉到下一層」</b>。</li>
-                        <li>最後只需複製一次程式碼即可。</li>
-                    </ul>
+                    <ul class="list-disc pl-4"><li>依序設定 Step 1~4。</li><li>動作選 <b>「🔗 跳轉到下一層」</b>。</li><li>最後複製一次程式碼。</li></ul>
                 </div>
 
                 <div id="carouselControls" class="hidden space-y-3 p-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
@@ -129,7 +133,7 @@
                     </div>
                 </div>
 
-                <div class="flex-1 flex flex-col min-h-0">
+                <div class="flex-1 flex flex-col min-h-[150px] md:min-h-0">
                     <div class="flex justify-between items-center mb-2 border-b pb-2 sticky top-0 bg-white z-10 pt-2">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="selectAllBtn" class="custom-checkbox" onchange="toggleSelectAll(this.checked)">
@@ -140,12 +144,12 @@
                              <button onclick="deleteSelectedAreas()" id="deleteSelectedBtn" class="bg-red-50 text-red-500 px-2 py-1 rounded text-xs font-bold hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>🗑️ 刪除</button>
                         </div>
                     </div>
-                    <div id="actionList" class="space-y-2 pb-4 overflow-y-auto custom-scrollbar flex-1"></div>
+                    <div id="actionList" class="space-y-2 pb-4 md:overflow-y-auto md:custom-scrollbar flex-1"></div>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 bg-slate-100 p-2 md:p-4 overflow-hidden flex flex-col w-full md:w-auto">
+        <main class="flex-1 bg-slate-100 p-2 md:p-4 flex flex-col w-full md:w-auto overflow-hidden">
             <div class="flex justify-between items-center mb-2 bg-white p-1 md:p-2 rounded-lg shadow-sm border border-slate-200 flex-shrink-0">
                 <div class="flex items-center gap-1 md:gap-2">
                     <span class="text-xs font-bold text-slate-500 pl-1 md:pl-2">🔍 縮放：</span>
@@ -160,7 +164,6 @@
                 <div id="canvasContainer" class="canvas-scroll-container custom-scrollbar">
                     <div id="canvasContent" class="canvas-content-wrapper bg-white shadow-sm">
                         <div id="placeholder" class="flex flex-col items-center justify-center h-full w-full text-slate-300 absolute inset-0 m-auto p-4 text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             <span class="text-sm md:text-lg font-bold">請先在控制台<br>上傳底圖</span>
                         </div>
                         <img id="previewImage" class="hidden block select-none pointer-events-none" style="width: 100%; display: block;" />
@@ -172,111 +175,63 @@
     </div>
 
     <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col">
-            <div class="p-4 md:p-5 border-b flex justify-between items-center bg-indigo-50">
-                <h2 class="text-xl md:text-2xl font-bold text-indigo-900 flex items-center gap-2">🤖 機器人架設・新手保母教學</h2>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-indigo-50">
+                <h2 class="text-lg font-bold text-indigo-900 flex items-center gap-2">🤖 機器人架設・五部曲</h2>
                 <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-2xl text-slate-400 hover:text-red-500 transition">✕</button>
             </div>
-            <div class="p-6 md:p-8 overflow-y-auto space-y-8 md:space-y-10 bg-white">
+            <div class="p-6 overflow-y-auto space-y-6 bg-white text-sm">
                 
-                <section class="flex gap-4">
-                    <div class="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl">1</div>
-                    <div class="space-y-3 flex-1">
-                        <h3 class="text-lg md:text-xl font-bold text-slate-800">建立大腦 (Google Apps Script)</h3>
-                        <p class="text-sm text-slate-600">这是机器人的大脑，我们要把程式码贴进去。</p>
-                        <a href="https://script.google.com/home" target="_blank" class="external-link-btn bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm">
-                            🚀 點我開啟 Google Apps Script
-                        </a>
-                        <ul class="list-disc pl-5 text-sm text-slate-700 space-y-1">
-                            <li>點擊左上角 <b>「新專案」</b>。</li>
-                            <li>將裡面的程式碼清空。</li>
-                            <li><b>複製下方這段代碼</b>，貼進去：</li>
-                        </ul>
-                        
-                        <div class="code-block mt-2">
-                            <button onclick="copyCode()" class="absolute top-2 right-2 bg-white/10 border border-white/20 px-2 py-1 rounded hover:bg-white/20 transition text-white text-xs">複製代碼</button>
-                            <pre id="gasCode" class="text-xs"></pre>
-                        </div>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="bg-indigo-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">1</span> 程式碼 (大腦)</h3>
+                    <p class="text-slate-600">到 <a href="https://script.google.com/home" target="_blank" class="text-indigo-600 font-bold underline">Google Apps Script</a> 建立新專案，清空內容，貼上這段程式：</p>
+                    
+                    <div class="code-block-slim">
+                        <code class="text-green-400 flex-1 truncate">const CHANNEL_ACCESS_TOKEN = '請換成你的LINE_TOKEN'; ...</code>
+                        <button onclick="copyCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0 transition">複製完整程式碼</button>
                     </div>
-                </section>
+                    <p class="text-xs text-slate-400 text-center">👆 點擊按鈕會自動複製幾十行完整的程式碼，不用擔心！</p>
+                </div>
 
                 <hr class="border-slate-100">
 
-                <section class="flex gap-4">
-                    <div class="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl">2</div>
-                    <div class="space-y-3 flex-1">
-                        <h3 class="text-lg md:text-xl font-bold text-slate-800">取得鑰匙 (LINE Token)</h3>
-                        <p class="text-sm text-slate-600">机器人需要一把钥匙才能控制 LINE。</p>
-                        <a href="https://developers.line.biz/console/" target="_blank" class="external-link-btn bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm">
-                            🔑 點我開啟 LINE Developers Console
-                        </a>
-                        <ul class="list-disc pl-5 text-sm text-slate-700 space-y-1">
-                            <li>登入後，點選你的 Provider > Channel。</li>
-                            <li>點選上方分頁 <b>Messaging API</b>。</li>
-                            <li>滑到最下面找到 <b>Channel access token</b>，點擊 <b>Issue</b>。</li>
-                            <li>複製那串長長的亂碼，<b>回來這裡，把程式碼第一行的 <code>'請換成你的LINE_TOKEN'</code> 換掉！</b></li>
-                        </ul>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">2</span> 取得 Token (鑰匙)</h3>
+                    <p class="text-slate-600">到 <a href="https://developers.line.biz/console/" target="_blank" class="text-blue-600 font-bold underline">LINE Developers</a> > Messaging API > 最下方 <b>Channel access token</b>。</p>
+                    <div class="bg-blue-50 p-2 rounded text-blue-800 text-xs border border-blue-100">
+                        <b>任務：</b> 複製那串亂碼，回來把程式碼第一行的 <code>'請換成你的LINE_TOKEN'</code> 換掉。
                     </div>
-                </section>
+                </div>
 
                 <hr class="border-slate-100">
 
-                <section class="flex gap-4">
-                    <div class="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl">3</div>
-                    <div class="space-y-3 flex-1">
-                        <h3 class="text-lg md:text-xl font-bold text-slate-800">公開部署 (關鍵步驟)</h3>
-                        <div class="bg-red-50 border-l-4 border-red-500 p-3 text-sm text-red-700">
-                            <p class="font-bold">⚠️ 這裡做錯，機器人就不會動！</p>
-                        </div>
-                        <ul class="list-decimal pl-5 text-sm text-slate-700 space-y-2">
-                            <li>在 Google Apps Script 點擊右上角 <b>「部署」</b> > <b>「新增部署」</b>。</li>
-                            <li>點擊齒輪圖示 ⚙️，選擇 <b>「網頁應用程式」</b>。</li>
-                            <li>輸入說明 (隨便打，例如 v1)。</li>
-                            <li>執行身分：選 <b>「我 (Me)」</b>。</li>
-                            <li class="font-bold text-red-600">誰可以存取：一定要選「所有人 (Anyone)」！</li>
-                            <li>點擊「部署」，然後<b>複製那串以 <code>/exec</code> 結尾的網址</b>。</li>
-                        </ul>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="bg-purple-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">3</span> 部署 (上線)</h3>
+                    <p class="text-slate-600">在 Google Apps Script 按右上角 <b>部署</b> > <b>新增部署</b>。</p>
+                    <div class="bg-red-50 p-2 rounded text-red-700 text-xs border border-red-100 font-bold">
+                        ⚠️ 關鍵設定：誰可以存取 (Who has access) 一定要選「所有人 (Anyone)」！
                     </div>
-                </section>
+                    <p class="text-slate-600">部署後，複製那串 <code>/exec</code> 結尾的網址。</p>
+                </div>
 
                 <hr class="border-slate-100">
 
-                <section class="flex gap-4">
-                    <div class="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl">4</div>
-                    <div class="space-y-3 flex-1">
-                        <h3 class="text-lg md:text-xl font-bold text-slate-800">連結神經 (Webhook)</h3>
-                        <p class="text-sm text-slate-600">告诉 LINE 要把讯息传到哪里。</p>
-                        <a href="https://manager.line.biz/" target="_blank" class="external-link-btn bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-sm">
-                            💬 點我開啟 LINE Official Account Manager
-                        </a>
-                        <ul class="list-disc pl-5 text-sm text-slate-700 space-y-1">
-                            <li>進入 <b>設定</b> > <b>Messaging API</b>。</li>
-                            <li>在 <b>Webhook URL</b> 欄位，貼上剛剛複製的 <code>/exec</code> 網址，按更新。</li>
-                            <li class="font-bold text-emerald-600">務必開啟下方的「使用 Webhook」開關。</li>
-                            <li>點擊「驗證」，出現 Success 代表成功！</li>
-                        </ul>
-                    </div>
-                </section>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="bg-emerald-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">4</span> Webhook (神經連接)</h3>
+                    <p class="text-slate-600">到 <a href="https://manager.line.biz/" target="_blank" class="text-emerald-600 font-bold underline">LINE OA 後台</a> > 設定 > Messaging API。</p>
+                    <ul class="list-disc pl-5 text-slate-600 space-y-1 text-xs">
+                        <li>在 <b>Webhook URL</b> 貼上剛剛的網址，按更新。</li>
+                        <li><b>務必開啟</b> 下方的「使用 Webhook」開關。</li>
+                    </ul>
+                </div>
 
-                <hr class="border-slate-100">
-
-                <section class="flex gap-4 pb-10">
-                    <div class="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl">5</div>
-                    <div class="space-y-3 flex-1">
-                        <h3 class="text-lg md:text-xl font-bold text-slate-800">完成設定！</h3>
-                        <p class="text-sm text-slate-600">
-                            现在，只要你在这个网站做好设定（画好框框），这段程式码就已经包含了所有的设定。
-                            <br><b>你不需要再下载 JSON 档案去贴了！</b> 因为我们用的是「动态生成代码」。
-                            <br>只要重新部署 Google Apps Script (记得选建立新版本)，你的机器人就会更新！
-                        </p>
-                    </div>
-                </section>
+                <div class="bg-gray-100 p-3 rounded text-center text-xs text-gray-500 mt-4">
+                    🎉 完成！現在只要你在這個網頁畫好圖，機器人就會自動更新，<b>不用再下載 JSON 了！</b>
+                </div>
 
             </div>
             <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
-                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="bg-indigo-600 text-white w-full md:w-auto px-8 py-3 rounded-xl hover:bg-indigo-700 transition font-bold shadow-lg transform active:scale-95">
-                    我學會了，開始製作！🚀
-                </button>
+                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition">我懂了，開始！</button>
             </div>
         </div>
     </div>
@@ -288,7 +243,6 @@
         let currentCardIndex = 0;
         let currentFlowStep = 0;
         let currentZoom = 100;
-        let isHeaderCollapsed = false;
 
         // Data Models
         let imagemapData = { imageUrl: "", localPreview: "", areas: [] };
@@ -318,25 +272,11 @@
         const flowHelpBlock = document.getElementById('flowHelpBlock');
         const carouselControls = document.getElementById('carouselControls');
         const uploadLabel = document.getElementById('uploadLabel');
-        const topSection = document.getElementById('topSection');
-        const collapseIcon = document.getElementById('collapseIcon');
         
         let isDrawing = false; let startX, startY; let currentBox = null;
         let naturalWidth = 0; let naturalHeight = 0; let scaleFactor = 1;
 
         window.addEventListener('DOMContentLoaded', () => { updateGasCode(); renderDots(); updateBatchControls(); });
-
-        // ================= UI Toggle =================
-        function toggleHeader() {
-            isHeaderCollapsed = !isHeaderCollapsed;
-            if(isHeaderCollapsed) {
-                topSection.classList.add('collapsed');
-                collapseIcon.innerText = "▼ 展開選單";
-            } else {
-                topSection.classList.remove('collapsed');
-                collapseIcon.innerText = "▲ 收起選單 (專注模式)";
-            }
-        }
 
         // ================= Data Logic =================
         function getCurrentDataObj() {
@@ -448,8 +388,8 @@
         new ResizeObserver(updateScale).observe(previewImage);
         function updateScale() { if(naturalWidth>0 && previewImage.offsetWidth > 0) scaleFactor = previewImage.offsetWidth / naturalWidth; }
 
-        // ================= Drawing Logic =================
-        // Touch events for mobile drawing
+        // ================= Drawing Logic (Mobile & Desktop) =================
+        // Touch events
         drawLayer.addEventListener('touchstart', handleTouchStart, { passive: false });
         drawLayer.addEventListener('touchmove', handleTouchMove, { passive: false });
         drawLayer.addEventListener('touchend', handleTouchEnd, { passive: false });
@@ -598,7 +538,7 @@
 
             const code = `const CHANNEL_ACCESS_TOKEN = '請換成你的LINE_TOKEN'; 
 
-// 自動生成的流程地圖 (包含您設定的所有圖片與關鍵字)
+// 自動生成的流程地圖
 const flowMap = {
 ${flowMapStr}
 };
@@ -611,7 +551,6 @@ function doPost(e) {
     userMessage = msg.events[0].message.text;
   } catch (error) { return ContentService.createTextOutput(""); }
 
-  // 核心邏輯：檢查用戶訊息是否符合我們設定的任何關鍵字
   if (flowMap[userMessage]) {
     replyMessage(replyToken, flowMap[userMessage]);
   }
@@ -630,7 +569,7 @@ function replyMessage(replyToken, messageJson) {
         }
 
         function downloadJSON() {
-            if (currentMode === 'flow') { alert("流程模式請直接複製「教學與代碼」中的完整程式碼，無需下載 JSON。"); return; }
+            if (currentMode === 'flow') { alert("流程模式請直接複製「教學」中的完整程式碼，無需下載 JSON。"); return; }
             let output = {};
             if (currentMode === 'imagemap') {
                 if (!imagemapData.imageUrl) { alert("請填寫圖片網址"); return; }
