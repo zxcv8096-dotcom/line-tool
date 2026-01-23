@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE Imagemap 座標產生器 (Pro)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; }
+        .canvas-container { 
+            position: relative; 
+            overflow: hidden; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border: 2px dashed #94a3b8; 
+            background-color: white;
+            transition: all 0.3s;
+        }
+        .canvas-container:hover { border-color: #3b82f6; }
+        
+        .area-box { 
+            position: absolute; 
+            border: 2px solid rgba(239, 68, 68, 0.9); 
+            background: rgba(239, 68, 68, 0.2); 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 16px; 
+            text-shadow: 1px 1px 3px black; 
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .area-box:hover { background: rgba(239, 68, 68, 0.4); }
+        .area-box.selected { 
+            border-color: #f59e0b; 
+            background: rgba(245, 158, 11, 0.3); 
+            z-index: 20; 
+        }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-slate-800 text-white shadow-md flex-shrink-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🦁</span>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide">LINE 引流圖片座標產生器</h1>
+                    <p class="text-xs text-slate-400">大心家族專用工具 | v2.0 Web Standalone</p>
+                </div>
+            </div>
+            <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-lg transform transition active:scale-95 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                下載 JSON 設定檔
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
+        
+        <aside class="w-96 bg-white border-r border-slate-200 flex flex-col shadow-xl z-10">
+            <div class="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
+                
+                <div class="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <label class="block font-bold text-slate-700 flex justify-between items-center">
+                        <span>1. 上傳底圖</span>
+                        <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-1 rounded-full">預覽用</span>
+                    </label>
+                    <input type="file" id="imageInput" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition cursor-pointer"/>
+                    
+                    <div id="statusMsg" class="hidden rounded-lg p-3 text-sm"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block font-bold text-slate-700">2. 圖片公開網址 (必填)</label>
+                    <input type="text" id="imageUrl" placeholder="貼上 https://... 網址" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm shadow-sm transition">
+                    <p class="text-xs text-slate-400 leading-relaxed">請將圖片上傳至 Imgur 或您的網站後台，取得公開連結後貼在這邊。</p>
+                </div>
+
+                <div class="flex-1 flex flex-col">
+                    <div class="flex justify-between items-end mb-2 pb-2 border-b border-slate-100">
+                        <label class="block font-bold text-slate-700">3. 關鍵字設定</label>
+                        <span class="text-xs text-slate-400">目前區域: <span id="areaCount">0</span></span>
+                    </div>
+                    <div id="actionList" class="flex-1 space-y-2 overflow-y-auto pr-1 min-h-[200px]">
+                        <div class="text-center text-slate-400 text-sm py-10 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50">
+                            👆 請在右側圖片上<br>拖曳滑鼠畫出框框
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs text-slate-400">
+                © 2026 大心家族系統
+            </div>
+        </aside>
+
+        <main class="flex-1 bg-slate-100 p-8 overflow-auto flex justify-center items-start relative" id="mainArea">
+            <div id="canvasWrapper" class="relative shadow-2xl">
+                <div id="canvasContainer" class="canvas-container">
+                    <div id="placeholder" class="flex flex-col items-center justify-center h-96 w-96 text-slate-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-lg font-medium">請先在左側上傳圖片</span>
+                    </div>
+                    
+                    <img id="previewImage" class="hidden max-w-full block" style="max-height: 85vh;" />
+                    <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
+                </div>
+                
+                <div id="dimLabel" class="absolute -top-8 left-0 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 transition">
+                    1040 x 1040
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const previewImage = document.getElementById('previewImage');
+        const drawLayer = document.getElementById('drawLayer');
+        const actionList = document.getElementById('actionList');
+        const statusMsg = document.getElementById('statusMsg');
+        const placeholder = document.getElementById('placeholder');
+        const areaCountSpan = document.getElementById('areaCount');
+        const dimLabel = document.getElementById('dimLabel');
+        
+        let areas = [];
+        let isDrawing = false;
+        let startX, startY;
+        let currentBox = null;
+        let naturalWidth = 0;
+        let naturalHeight = 0;
+        let scaleFactor = 1; 
+
+        // 圖片上傳與檢測
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewImage.src = event.target.result;
+                previewImage.onload = function() {
+                    naturalWidth = this.naturalWidth;
+                    naturalHeight = this.naturalHeight;
+                    
+                    // UI 切換
+                    placeholder.classList.add('hidden');
+                    previewImage.classList.remove('hidden');
+                    drawLayer.classList.remove('hidden');
+                    dimLabel.innerText = `${naturalWidth} x ${naturalHeight} px`;
+                    dimLabel.classList.remove('opacity-0');
+
+                    // 防呆檢測
+                    statusMsg.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+                    if (naturalWidth !== 1040) {
+                        statusMsg.classList.add('bg-red-100', 'text-red-700');
+                        statusMsg.innerHTML = `⚠️ <b>尺寸錯誤</b><br>寬度 ${naturalWidth}px (標準: 1040px)`;
+                    } else {
+                        statusMsg.classList.add('bg-green-100', 'text-green-700');
+                        statusMsg.innerHTML = `✅ <b>尺寸完美</b><br>符合 LINE 官方標準`;
+                    }
+
+                    areas = [];
+                    renderAreas();
+                    renderList();
+                    updateScale();
+                }
+            }
+            reader.readAsDataURL(file);
+        });
+
+        window.addEventListener('resize', updateScale);
+        function updateScale() {
+            if(naturalWidth > 0) {
+                scaleFactor = previewImage.width / naturalWidth;
+            }
+        }
+
+        // 畫框邏輯
+        drawLayer.addEventListener('mousedown', (e) => {
+            if(!previewImage.src) return;
+            updateScale();
+            isDrawing = true;
+            const rect = drawLayer.getBoundingClientRect();
+            startX = (e.clientX - rect.left) / scaleFactor;
+            startY = (e.clientY - rect.top) / scaleFactor;
+            
+            currentBox = document.createElement('div');
+            currentBox.className = 'area-box border-dashed';
+            currentBox.style.left = (startX * scaleFactor) + 'px';
+            currentBox.style.top = (startY * scaleFactor) + 'px';
+            drawLayer.appendChild(currentBox);
+        });
+
+        drawLayer.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const rect = drawLayer.getBoundingClientRect();
+            const currentX = (e.clientX - rect.left) / scaleFactor;
+            const currentY = (e.clientY - rect.top) / scaleFactor;
+
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+            const left = Math.min(startX, currentX);
+            const top = Math.min(startY, currentY);
+
+            currentBox.style.width = (width * scaleFactor) + 'px';
+            currentBox.style.height = (height * scaleFactor) + 'px';
+            currentBox.style.left = (left * scaleFactor) + 'px';
+            currentBox.style.top = (top * scaleFactor) + 'px';
+        });
+
+        drawLayer.addEventListener('mouseup', (e) => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            const rect = drawLayer.getBoundingClientRect();
+            const endX = (e.clientX - rect.left) / scaleFactor;
+            const endY = (e.clientY - rect.top) / scaleFactor;
+            
+            const x = Math.round(Math.min(startX, endX));
+            const y = Math.round(Math.min(startY, endY));
+            const w = Math.round(Math.abs(endX - startX));
+            const h = Math.round(Math.abs(endY - startY));
+
+            if(currentBox) currentBox.remove();
+            if (w > 20 && h > 20) {
+                areas.push({ x, y, width: w, height: h, text: `關鍵字${areas.length + 1}` });
+                renderAreas();
+                renderList();
+            }
+        });
+
+        function renderAreas() {
+            drawLayer.innerHTML = '';
+            areas.forEach((area, index) => {
+                const box = document.createElement('div');
+                box.className = 'area-box';
+                box.style.left = (area.x * scaleFactor) + 'px';
+                box.style.top = (area.y * scaleFactor) + 'px';
+                box.style.width = (area.width * scaleFactor) + 'px';
+                box.style.height = (area.height * scaleFactor) + 'px';
+                box.innerText = index + 1;
+                box.onclick = (e) => { e.stopPropagation(); highlightArea(index); };
+                drawLayer.appendChild(box);
+            });
+            areaCountSpan.innerText = areas.length;
+        }
+
+        function renderList() {
+            actionList.innerHTML = '';
+            if(areas.length === 0) {
+                actionList.innerHTML = '<div class="text-center text-slate-400 text-sm py-10 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50">👆 請在右側圖片上<br>拖曳滑鼠畫出框框</div>';
+                return;
+            }
+
+            areas.forEach((area, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-white p-3 rounded-lg border border-slate-200 text-sm flex gap-3 items-center shadow-sm hover:shadow-md transition group';
+                item.innerHTML = `
+                    <span class="bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0 shadow-sm">${index + 1}</span>
+                    <input type="text" value="${area.text}" onchange="updateText(${index}, this.value)" class="flex-1 border border-slate-300 p-2 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-slate-50 text-slate-700" placeholder="輸入觸發關鍵字">
+                    <button onclick="deleteArea(${index})" class="text-slate-300 hover:text-red-500 p-1 rounded transition opacity-0 group-hover:opacity-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                `;
+                item.onclick = () => highlightArea(index);
+                actionList.appendChild(item);
+            });
+        }
+
+        function updateText(index, val) {
+            areas[index].text = val;
+        }
+
+        function deleteArea(index) {
+            areas.splice(index, 1);
+            renderAreas();
+            renderList();
+        }
+
+        function highlightArea(index) {
+            document.querySelectorAll('.area-box').forEach((el, i) => {
+                if (i === index) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+        }
+
+        function downloadJSON() {
+            const url = document.getElementById('imageUrl').value;
+            if (!url) { alert("⚠️ 請先在步驟 2 填寫「圖片網址」！"); return; }
+            if (areas.length === 0) { alert("⚠️ 這裡空空的！請先畫幾個框框。"); return; }
+
+            const output = {
+                "type": "imagemap",
+                "baseUrl": url,
+                "altText": "請選擇功能",
+                "baseSize": {
+                    "width": naturalWidth || 1040,
+                    "height": naturalHeight || 1040
+                },
+                "actions": areas.map(area => ({
+                    "type": "message",
+                    "text": area.text,
+                    "area": {
+                        "x": area.x,
+                        "y": area.y,
+                        "width": area.width,
+                        "height": area.height
+                    }
+                }))
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(output, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "imagemap_settings.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+    </script>
+</body>
+</html>
