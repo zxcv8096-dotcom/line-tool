@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE 引流圖片座標產生器 (v3.0 旗艦版)</title>
+    <title>LINE 引流圖片座標產生器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
@@ -45,6 +45,14 @@
             box-shadow: 0 0 0 2px white, 0 0 0 4px #f59e0b;
         }
 
+        /* 模擬視窗樣式 */
+        .mockup-window { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .mockup-header { background: #f8fafc; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 6px; align-items: center; }
+        .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .mockup-body { padding: 16px; font-size: 13px; color: #475569; }
+        .highlight-box { border: 2px solid #ef4444; background: rgba(239, 68, 68, 0.05); padding: 4px; border-radius: 4px; position: relative; }
+        .highlight-box::after { content: '👈 這裡很重要'; position: absolute; right: -85px; top: 50%; transform: translateY(-50%); background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+        
         /* 捲軸美化 */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -52,20 +60,20 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-100 h-screen flex flex-col overflow-hidden text-slate-800">
+<body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
 
     <header class="bg-white border-b border-slate-200 shadow-sm flex-shrink-0 z-30">
         <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">🦁</div>
+                <div class="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">🦁</div>
                 <div>
-                    <h1 class="font-bold text-lg tracking-wide text-slate-800">LINE 座標產生器 <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">v3.0 Pro</span></h1>
-                    <p class="text-xs text-slate-500">大心家族專用 | 自動記憶 + 內建教學</p>
+                    <h1 class="font-bold text-xl tracking-wide text-slate-800">LINE 座標產生器</h1>
+                    <p class="text-xs text-slate-500">大心家族專用工具</p>
                 </div>
             </div>
             <div class="flex gap-3">
-                <button onclick="document.getElementById('tutorialModal').classList.remove('hidden')" class="text-slate-600 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm border border-slate-200 hover:border-blue-200 hover:bg-blue-50">
-                    📚 如何綁定教學
+                <button onclick="document.getElementById('tutorialModal').classList.remove('hidden')" class="text-slate-600 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm border border-slate-200 hover:border-blue-200 hover:bg-blue-50 ring-2 ring-blue-100 ring-offset-1">
+                    📚 綁定教學 (必看)
                 </button>
                 <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-2 text-sm">
                     💾 下載 JSON
@@ -75,27 +83,20 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
-        
         <aside class="w-[400px] bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
             <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                
-                <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-3">
-                    <h3 class="font-bold text-blue-800 flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        圖片規格小教室
+                <div class="bg-orange-50 rounded-xl p-4 border border-orange-100 space-y-2">
+                    <h3 class="font-bold text-orange-800 flex items-center gap-2 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd" /></svg>
+                        智慧輸出設定
                     </h3>
-                    <div class="text-xs space-y-2 text-blue-900">
-                        <div class="flex justify-between border-b border-blue-200 pb-1">
-                            <span>寬度 (必守鐵律)</span>
-                            <span class="font-bold">1040 px</span>
+                    <div class="flex items-start gap-3">
+                        <div class="flex items-center h-5">
+                            <input id="autoScale" type="checkbox" checked class="focus:ring-orange-500 h-4 w-4 text-orange-600 border-gray-300 rounded cursor-pointer">
                         </div>
-                        <div class="flex justify-between border-b border-blue-200 pb-1">
-                            <span>高度 (引流長圖)</span>
-                            <span>建議 1850 px (不限)</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>高度 (滑動卡片)</span>
-                            <span>676 px (標準) / 1040 px (正方)</span>
+                        <div class="text-xs">
+                            <label for="autoScale" class="font-medium text-gray-700 cursor-pointer">強制輸出為 1040px 標準寬度</label>
+                            <p class="text-gray-500 mt-1">開啟後，無論上傳的圖片多大或多小，系統都會自動計算比例。</p>
                         </div>
                     </div>
                 </div>
@@ -113,7 +114,6 @@
                             <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 rounded-full border border-emerald-100 self-center">已自動記憶</span>
                         </label>
                         <input type="text" id="imageUrl" placeholder="請貼上 https://... 結尾是 .jpg/.png 的網址" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm shadow-sm transition font-mono text-slate-600" oninput="saveState()">
-                        <p class="text-[10px] text-slate-400">💡 提示：圖片必須先上傳到網路 (如 GitHub/Imgur) LINE 才讀得到。</p>
                     </div>
                 </div>
 
@@ -142,50 +142,114 @@
                         <svg class="w-20 h-20 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <span class="text-lg font-medium">請先在左側上傳底圖</span>
                     </div>
-                    
                     <img id="previewImage" class="hidden max-w-full block pointer-events-none select-none" style="max-height: 85vh;" />
                     <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden"></div>
                 </div>
-                
                 <div id="dimLabel" class="absolute -top-10 left-0 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 transition shadow-lg flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span id="dimDot" class="w-2 h-2 rounded-full bg-green-400"></span>
                     <span id="dimText">0 x 0</span>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="tutorialModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 class="text-xl font-bold text-slate-800">📚 如何綁定 LINE 官方帳號？</h2>
-                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition">✕</button>
+    <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    📚 綁定 LINE 官方帳號圖解
+                </h2>
+                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition text-xl">✕</button>
             </div>
-            <div class="p-8 space-y-8">
-                <div class="flex gap-4">
-                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">1</div>
-                    <div class="space-y-2">
-                        <h3 class="font-bold text-lg">部署 Google 程式碼</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">在 Google Apps Script 寫好程式碼後：<br>點擊右上角 <span class="bg-slate-100 px-1 rounded border">部署</span> > <span class="bg-slate-100 px-1 rounded border">新增部署</span> > 權限選「所有人」 > 按下部署。<br><span class="text-red-500 font-bold">複製那個以 /exec 結尾的網址。</span></p>
+            
+            <div class="flex-1 overflow-y-auto bg-slate-50 p-8 space-y-10">
+                
+                <section class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</span>
+                        <h3 class="text-xl font-bold text-slate-800">Google 權限設定 (最重要!)</h3>
                     </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">2</div>
-                    <div class="space-y-2">
-                        <h3 class="font-bold text-lg">設定 Webhook</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">前往 <a href="https://manager.line.biz/" target="_blank" class="text-blue-500 hover:underline">LINE 官方帳號後台</a> 或 Developers Console。<br>找到 <b>Webhook URL</b> 欄位，貼上剛剛的網址，並開啟 <b>Use Webhook</b> 開關。</p>
+                    <p class="text-slate-600 ml-11">在 Google Apps Script 點擊「新增部署」時，這兩個選項一定要選對，不然機器人會壞掉。</p>
+                    
+                    <div class="ml-11 max-w-lg">
+                        <div class="mockup-window">
+                            <div class="mockup-header">
+                                <div class="mockup-dot bg-red-400"></div><div class="mockup-dot bg-yellow-400"></div><div class="mockup-dot bg-green-400"></div>
+                                <span class="text-xs text-slate-400 ml-2">Google Apps Script - 新增部署</span>
+                            </div>
+                            <div class="mockup-body space-y-4 bg-white">
+                                <div>
+                                    <label class="block mb-1 font-bold text-xs">執行身分 (Execute as)</label>
+                                    <div class="border p-2 rounded bg-slate-50 text-slate-500">我 (Me) - your@gmail.com</div>
+                                </div>
+                                <div class="highlight-box">
+                                    <label class="block mb-1 font-bold text-xs text-red-600">誰可以存取 (Who has access)</label>
+                                    <div class="border border-red-300 p-2 rounded bg-white text-slate-800 font-bold">所有人 (Anyone)</div>
+                                </div>
+                                <div class="flex justify-end pt-2">
+                                    <button class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold shadow">部署 (Deploy)</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">3</div>
-                    <div class="space-y-2">
-                        <h3 class="font-bold text-lg">使用本工具產生 JSON</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">上傳你的圖片，畫好框框，點擊右上角 <b>下載 JSON</b>。<br>將下載的內容貼到你的 Google Apps Script 程式碼中 (替換原本的 Imagemap 設定)。</p>
+                </section>
+
+                <hr class="border-slate-200">
+
+                <section class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg">2</span>
+                        <h3 class="text-xl font-bold text-slate-800">LINE 後台設定 (Webhook)</h3>
                     </div>
-                </div>
+                    <p class="text-slate-600 ml-11">將 Google 給你的網址 (結尾是 /exec)，貼到 LINE Developers Console 的 Messaging API 頁面。</p>
+
+                    <div class="ml-11 max-w-lg">
+                        <div class="mockup-window">
+                            <div class="mockup-header">
+                                <div class="mockup-dot bg-slate-300"></div><div class="mockup-dot bg-slate-300"></div>
+                                <span class="text-xs text-slate-400 ml-2">LINE Developers Console</span>
+                            </div>
+                            <div class="mockup-body space-y-6 bg-white">
+                                <div>
+                                    <label class="block mb-2 font-bold text-xs">Webhook URL</label>
+                                    <div class="flex gap-2">
+                                        <div class="flex-1 border border-slate-300 rounded p-2 text-slate-500 truncate bg-slate-50">https://script.google.com/.../exec</div>
+                                        <button class="border border-slate-300 px-3 py-1 rounded text-slate-600 font-bold text-xs bg-white">Update</button>
+                                    </div>
+                                    <div class="mt-2 text-green-600 text-xs font-bold flex items-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Success (驗證成功)
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between highlight-box">
+                                    <label class="font-bold text-xs">Use webhook (開啟機器人)</label>
+                                    <div class="w-10 h-5 bg-green-500 rounded-full relative">
+                                        <div class="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5 shadow"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="border-slate-200">
+
+                <section class="space-y-4 pb-8">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-lg">3</span>
+                        <h3 class="text-xl font-bold text-slate-800">最後一步：下載設定檔</h3>
+                    </div>
+                    <p class="text-slate-600 ml-11">
+                        在本工具畫好框框後，點擊右上角的 <span class="inline-block bg-emerald-500 text-white text-xs px-2 py-1 rounded font-bold">💾 下載 JSON</span>。<br>
+                        打開你下載的檔案，複製裡面的內容，取代掉 Google Apps Script 裡的程式碼即可！
+                    </p>
+                </section>
             </div>
-            <div class="p-6 bg-slate-50 border-t border-slate-200 text-right">
-                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="bg-slate-800 text-white px-6 py-2 rounded-lg hover:bg-slate-700 transition font-medium">我知道了</button>
+            
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="bg-slate-800 text-white px-8 py-3 rounded-xl hover:bg-slate-700 transition font-bold shadow-lg transform active:scale-95">
+                    太棒了，我學會了！🚀
+                </button>
             </div>
         </div>
     </div>
@@ -201,6 +265,8 @@
         const areaCountSpan = document.getElementById('areaCount');
         const dimLabel = document.getElementById('dimLabel');
         const dimText = document.getElementById('dimText');
+        const dimDot = document.getElementById('dimDot');
+        const autoScaleCheckbox = document.getElementById('autoScale');
         
         let areas = [];
         let isDrawing = false;
@@ -214,22 +280,12 @@
         window.addEventListener('DOMContentLoaded', () => {
             const savedUrl = localStorage.getItem('line_tool_url');
             if(savedUrl) imageUrlInput.value = savedUrl;
-            
-            // 嘗試讀取上次的區域設定 (如果有)
-            const savedAreas = localStorage.getItem('line_tool_areas');
-            if(savedAreas) {
-                // 注意：這裡只讀取數據，但因為沒有圖片載入，無法渲染框框
-                // 實際應用需等待圖片上傳後再嘗試匹配，這裡簡化處理僅保留 URL
-            }
         });
 
-        // 儲存狀態
         function saveState() {
             localStorage.setItem('line_tool_url', imageUrlInput.value);
-            // localStorage.setItem('line_tool_areas', JSON.stringify(areas)); // 進階：可儲存框框數據
         }
 
-        // 圖片上傳與檢測
         imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -241,22 +297,13 @@
                     naturalWidth = this.naturalWidth;
                     naturalHeight = this.naturalHeight;
                     
-                    // UI 切換
                     placeholder.classList.add('hidden');
                     previewImage.classList.remove('hidden');
                     drawLayer.classList.remove('hidden');
                     dimText.innerText = `${naturalWidth} x ${naturalHeight} px`;
                     dimLabel.classList.remove('opacity-0');
 
-                    // 防呆檢測
-                    statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-emerald-50', 'text-emerald-700');
-                    if (naturalWidth !== 1040) {
-                        statusMsg.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-100');
-                        statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span><b>尺寸注意！</b> 寬度 ${naturalWidth}px (標準: 1040px)</span>`;
-                    } else {
-                        statusMsg.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-100');
-                        statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span><b>完美！</b> 符合 LINE 官方標準</span>`;
-                    }
+                    updateStatusMsg();
 
                     areas = [];
                     renderAreas();
@@ -267,6 +314,31 @@
             reader.readAsDataURL(file);
         });
 
+        autoScaleCheckbox.addEventListener('change', updateStatusMsg);
+
+        function updateStatusMsg() {
+            if(!naturalWidth) return;
+            const isAuto = autoScaleCheckbox.checked;
+
+            statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-emerald-50', 'text-emerald-700', 'bg-blue-50', 'text-blue-700');
+            
+            if (naturalWidth !== 1040) {
+                if (isAuto) {
+                    statusMsg.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-100');
+                    statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg><span><b>已啟用自動修正</b><br>原圖 ${naturalWidth}px 將在下載時自動轉為 1040px 標準</span>`;
+                    dimDot.className = 'w-2 h-2 rounded-full bg-blue-400';
+                } else {
+                    statusMsg.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-100');
+                    statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg><span><b>尺寸不符！</b><br>建議勾選上方「強制輸出」功能</span>`;
+                    dimDot.className = 'w-2 h-2 rounded-full bg-red-400';
+                }
+            } else {
+                statusMsg.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-100');
+                statusMsg.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span><b>完美！</b> 原圖即為 1040px</span>`;
+                dimDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+            }
+        }
+
         window.addEventListener('resize', updateScale);
         function updateScale() {
             if(naturalWidth > 0) {
@@ -274,7 +346,6 @@
             }
         }
 
-        // 畫框邏輯
         drawLayer.addEventListener('mousedown', (e) => {
             if(!previewImage.src) return;
             updateScale();
@@ -384,32 +455,43 @@
                 if (i === index) el.classList.add('selected');
                 else el.classList.remove('selected');
             });
-            // 捲動到對應的輸入框
             const listItems = actionList.children;
             if(listItems[index]) listItems[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function downloadJSON() {
             const url = imageUrlInput.value;
+            const isAuto = autoScaleCheckbox.checked;
+
             if (!url) { alert("⚠️ 請先在步驟 2 填寫「圖片網址」！"); document.getElementById('imageUrl').focus(); return; }
             if (areas.length === 0) { alert("⚠️ 這裡空空的！請先畫幾個框框。"); return; }
+
+            let outputWidth = naturalWidth;
+            let outputHeight = naturalHeight;
+            let outputScale = 1;
+
+            if (isAuto && naturalWidth !== 1040) {
+                outputWidth = 1040;
+                outputScale = 1040 / naturalWidth;
+                outputHeight = Math.round(naturalHeight * outputScale);
+            }
 
             const output = {
                 "type": "imagemap",
                 "baseUrl": url,
                 "altText": "請選擇功能",
                 "baseSize": {
-                    "width": naturalWidth || 1040,
-                    "height": naturalHeight || 1040
+                    "width": outputWidth,
+                    "height": outputHeight
                 },
                 "actions": areas.map(area => ({
                     "type": "message",
                     "text": area.text,
                     "area": {
-                        "x": area.x,
-                        "y": area.y,
-                        "width": area.width,
-                        "height": area.height
+                        "x": Math.round(area.x * outputScale),
+                        "y": Math.round(area.y * outputScale),
+                        "width": Math.round(area.width * outputScale),
+                        "height": Math.round(area.height * outputScale)
                     }
                 }))
             };
