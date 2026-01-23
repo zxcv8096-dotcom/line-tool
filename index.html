@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE 引流圖片座標產生器 (v5.1)</title>
+    <title>LINE 引流圖片座標產生器 (v5.2)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; }
@@ -46,19 +46,15 @@
             box-shadow: 0 0 0 2px white, 0 0 0 4px #f59e0b;
         }
 
-        /* 模擬視窗樣式 (教學用) */
-        .mockup-window { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-top: 8px; }
-        .mockup-header { background: #f1f5f9; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 6px; align-items: center; }
-        .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .mockup-body { padding: 16px; font-size: 13px; color: #475569; font-family: monospace; }
-        .highlight-box { border: 2px solid #ef4444; background: rgba(254, 226, 226, 0.3); padding: 4px; border-radius: 4px; position: relative; display: inline-block; width: 100%; }
-        .highlight-tag { position: absolute; right: -5px; top: -10px; background: #ef4444; color: white; font-size: 10px; padding: 1px 6px; border-radius: 99px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        
         /* 捲軸美化 */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* 連結樣式 */
+        .link-btn { color: #2563eb; text-decoration: underline; font-weight: bold; cursor: pointer; }
+        .link-btn:hover { color: #1d4ed8; }
     </style>
 </head>
 <body class="bg-slate-50 h-screen flex flex-col overflow-hidden text-slate-800">
@@ -66,18 +62,18 @@
     <header class="bg-white border-b border-slate-200 shadow-sm flex-shrink-0 z-30">
         <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">🦁</div>
+                <div class="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">🦁</div>
                 <div>
                     <h1 class="font-bold text-xl tracking-wide text-slate-800 flex items-center gap-2">
                         LINE 座標產生器 
-                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200">v5.1 教育版</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200">v5.2 文字版</span>
                     </h1>
                     <p class="text-xs text-slate-400">大心家族系統 | 2026.01.23 更新</p>
                 </div>
             </div>
             <div class="flex gap-3">
                 <button onclick="document.getElementById('tutorialModal').classList.remove('hidden')" class="text-slate-600 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm border border-slate-200 hover:border-blue-200 hover:bg-blue-50 ring-2 ring-blue-50 ring-offset-1">
-                    📚 綁定教學 (圖解)
+                    📚 綁定教學 (文字版)
                 </button>
                 <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-2 text-sm">
                     💾 下載 JSON
@@ -158,10 +154,10 @@
     </div>
 
     <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
                 <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    📚 綁定 LINE 官方帳號圖解
+                    📚 LINE 官方帳號綁定流程
                 </h2>
                 <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition text-xl">✕</button>
             </div>
@@ -171,90 +167,69 @@
                 <section class="space-y-4">
                     <div class="flex items-center gap-3">
                         <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</span>
-                        <h3 class="text-xl font-bold text-slate-800">Google 權限設定 (最重要!)</h3>
+                        <h3 class="text-xl font-bold text-slate-800">Google 程式碼部署</h3>
                     </div>
-                    <p class="text-slate-600 ml-11">在 Google Apps Script 點擊「新增部署」時，這兩個選項一定要選對：</p>
-                    
-                    <div class="ml-11 max-w-lg">
-                        <div class="mockup-window">
-                            <div class="mockup-header">
-                                <div class="mockup-dot bg-red-400"></div><div class="mockup-dot bg-yellow-400"></div><div class="mockup-dot bg-green-400"></div>
-                                <span class="text-xs text-slate-400 ml-2">Google Apps Script - 新增部署</span>
-                            </div>
-                            <div class="mockup-body space-y-4 bg-white">
-                                <div>
-                                    <label class="block mb-1 font-bold text-xs text-slate-700">執行身分 (Execute as)</label>
-                                    <div class="border p-2 rounded bg-slate-50 text-slate-500">我 (Me) - your@gmail.com</div>
-                                </div>
-                                <div class="highlight-box">
-                                    <span class="highlight-tag">關鍵！</span>
-                                    <label class="block mb-1 font-bold text-xs text-red-600">誰可以存取 (Who has access)</label>
-                                    <div class="border border-red-300 p-2 rounded bg-white text-slate-800 font-bold">所有人 (Anyone)</div>
-                                </div>
-                                <div class="flex justify-end pt-2">
-                                    <button class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold shadow">部署 (Deploy)</button>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-3">
+                        <p class="text-slate-700 leading-relaxed">
+                            回到 Google Apps Script 程式碼頁面，依序點擊右上角的：<br>
+                            <span class="font-bold bg-slate-100 px-2 py-1 rounded">部署</span> > <span class="font-bold bg-slate-100 px-2 py-1 rounded">新增部署</span>
+                        </p>
+                        <ul class="list-disc pl-5 space-y-2 text-slate-600">
+                            <li>選取類型：點擊齒輪圖示，選擇 <b>「網頁應用程式」</b>。</li>
+                            <li>執行身分：選擇 <b>「我 (Me)」</b>。</li>
+                            <li class="text-red-600 font-bold bg-red-50 p-1 rounded">誰可以存取：一定要選「所有人 (Anyone)」。</li>
+                        </ul>
+                        <p class="text-slate-700 mt-2">
+                            部署成功後，請複製那串以 <b>/exec</b> 結尾的長網址。
+                        </p>
                     </div>
                 </section>
-
-                <hr class="border-slate-200">
 
                 <section class="space-y-4">
                     <div class="flex items-center gap-3">
                         <span class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg">2</span>
                         <h3 class="text-xl font-bold text-slate-800">LINE 後台設定 (Webhook)</h3>
                     </div>
-                    <p class="text-slate-600 ml-11">將 Google 給你的網址 (結尾是 /exec)，貼到 LINE 後台：</p>
-
-                    <div class="ml-11 max-w-lg">
-                        <div class="mockup-window">
-                            <div class="mockup-header">
-                                <div class="mockup-dot bg-slate-300"></div><div class="mockup-dot bg-slate-300"></div>
-                                <span class="text-xs text-slate-400 ml-2">LINE Developers Console</span>
-                            </div>
-                            <div class="mockup-body space-y-6 bg-white">
-                                <div>
-                                    <label class="block mb-2 font-bold text-xs text-slate-700">Webhook URL</label>
-                                    <div class="flex gap-2">
-                                        <div class="flex-1 border border-slate-300 rounded p-2 text-slate-500 truncate bg-slate-50">https://script.google.com/.../exec</div>
-                                        <button class="border border-slate-300 px-3 py-1 rounded text-slate-600 font-bold text-xs bg-white hover:bg-slate-50">Update</button>
-                                    </div>
-                                    <div class="mt-2 text-green-600 text-xs font-bold flex items-center gap-1">
-                                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Success
-                                    </div>
-                                </div>
-                                
-                                <div class="flex items-center justify-between highlight-box">
-                                    <span class="highlight-tag">必開！</span>
-                                    <label class="font-bold text-xs text-slate-800 pl-2">Use webhook (開啟機器人)</label>
-                                    <div class="w-10 h-5 bg-green-500 rounded-full relative mr-2">
-                                        <div class="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5 shadow"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-3">
+                        <p class="text-slate-700 flex flex-wrap gap-2 items-center">
+                            請點擊連結進入後台：
+                            <a href="https://manager.line.biz/" target="_blank" class="link-btn">👉 前往 LINE Official Account Manager</a>
+                        </p>
+                        <ol class="list-decimal pl-5 space-y-2 text-slate-600 leading-relaxed">
+                            <li>登入後，選擇你要設定的官方帳號。</li>
+                            <li>點擊右上角的 <b>「設定」</b> (齒輪圖示)。</li>
+                            <li>點擊左側選單的 <b>「Messaging API」</b>。</li>
+                            <li>
+                                往下捲動找到 <b>Webhook URL</b> 欄位：<br>
+                                貼上剛剛複製的 Google 網址，並按下 <b>「更新 (Update)」</b>。
+                            </li>
+                            <li class="bg-green-50 text-green-800 p-2 rounded border border-green-100 font-bold">
+                                關鍵動作：請務必開啟下方的「使用 Webhook (Use Webhook)」開關！
+                            </li>
+                            <li>點擊「驗證 (Verify)」，若出現 Success 即代表成功。</li>
+                        </ol>
                     </div>
                 </section>
 
-                <hr class="border-slate-200">
-
-                <section class="space-y-4 pb-8">
+                <section class="space-y-4 pb-4">
                     <div class="flex items-center gap-3">
                         <span class="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-lg">3</span>
-                        <h3 class="text-xl font-bold text-slate-800">最後一步：下載設定檔</h3>
+                        <h3 class="text-xl font-bold text-slate-800">產生 JSON 並套用</h3>
                     </div>
-                    <p class="text-slate-600 ml-11">
-                        在本工具畫好框框後，點擊右上角的 <span class="inline-block bg-emerald-500 text-white text-xs px-2 py-1 rounded font-bold">💾 下載 JSON</span>。<br>
-                        打開你下載的檔案，複製裡面的內容，取代掉 Google Apps Script 裡的程式碼即可！
-                    </p>
+                    <div class="ml-11 bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-sm space-y-3">
+                         <p class="text-slate-700">
+                            1. 在本工具上傳圖片、畫出點擊區域。<br>
+                            2. 點擊右上角 <span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-xs font-bold">💾 下載 JSON</span>。<br>
+                            3. 打開下載的檔案，全選複製內容。<br>
+                            4. 回到 Google Apps Script，將內容取代掉原本的設定。
+                        </p>
+                    </div>
                 </section>
             </div>
             
             <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
                 <button onclick="document.getElementById('tutorialModal').classList.add('hidden')" class="bg-slate-800 text-white px-8 py-3 rounded-xl hover:bg-slate-700 transition font-bold shadow-lg transform active:scale-95">
-                    太棒了，我學會了！🚀
+                    我瞭解了，開始設定！🚀
                 </button>
             </div>
         </div>
