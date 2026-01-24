@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta 引流自動化中控台 🚀</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <nav class="gradient-bg p-4 text-white shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                🚀 Meta AI 自動回覆管理
+            </h1>
+            <span class="text-sm opacity-80">邁向皇冠大使之路 👑</span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        <div class="bg-white rounded-xl p-6 mb-6 shadow-sm border-l-4 border-yellow-400">
+            <h2 class="text-lg font-bold mb-2 text-gray-800">📖 使用教學</h2>
+            <ul class="text-gray-600 text-sm space-y-1">
+                <li>1. 填寫觸發回覆的 **關鍵字**（例如：想了解健康）。</li>
+                <li>2. 選擇回覆類型：**圖片** (美圖)、**語音** (溫暖錄音) 或 **影片** (數字人影音)。</li>
+                <li>3. 點擊「生成 JSON」並複製到你的 GAS 系統中。</li>
+            </ul>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 border-b pb-2">➕ 新增回覆規則</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">觸發關鍵字</label>
+                        <input id="keyword" type="text" placeholder="例如：領取方案" class="mt-1 block w-full border rounded-md p-2 shadow-sm focus:ring-purple-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">回覆媒體類型</label>
+                        <select id="msgType" class="mt-1 block w-full border rounded-md p-2 shadow-sm">
+                            <option value="text">純文字訊息</option>
+                            <option value="image">圖片連結 🖼️</option>
+                            <option value="audio">語音訊息 (音頻網址) 🎙️</option>
+                            <option value="video">短影音 (MP4網址) 🎥</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">回覆內容 / 媒體網址</label>
+                        <textarea id="content" rows="3" placeholder="輸入文字或多媒體連結" class="mt-1 block w-full border rounded-md p-2 shadow-sm"></textarea>
+                    </div>
+
+                    <button onclick="addRule()" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">新增至列表</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 border-b pb-2">📋 目前規則清單</h3>
+                <div id="ruleList" class="space-y-3 max-h-[400px] overflow-y-auto">
+                    </div>
+                
+                <hr class="my-4">
+                <button onclick="generateConfig()" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">💾 生成 GAS 專用 JSON</button>
+                <pre id="output" class="mt-4 p-3 bg-gray-900 text-green-400 text-xs rounded-md overflow-x-auto hidden"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rules = [];
+
+        function addRule() {
+            const kw = document.getElementById('keyword').value;
+            const type = document.getElementById('msgType').value;
+            const content = document.getElementById('content').value;
+
+            if(!kw || !content) return alert('請填寫完整資訊');
+
+            rules.push({ keyword: kw, type: type, content: content });
+            renderList();
+            
+            // 清空輸入
+            document.getElementById('keyword').value = '';
+            document.getElementById('content').value = '';
+        }
+
+        function renderList() {
+            const list = document.getElementById('ruleList');
+            list.innerHTML = '';
+            rules.forEach((r, index) => {
+                list.innerHTML += `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded border">
+                        <div>
+                            <span class="font-bold text-purple-700">[${r.keyword}]</span> 
+                            <span class="text-xs bg-gray-200 px-2 py-1 rounded">${r.type}</span>
+                            <p class="text-xs text-gray-500 truncate w-48">${r.content}</p>
+                        </div>
+                        <button onclick="rules.splice(${index},1);renderList()" class="text-red-500 hover:text-red-700">❌</button>
+                    </div>
+                `;
+            });
+        }
+
+        function generateConfig() {
+            const output = document.getElementById('output');
+            output.innerText = JSON.stringify(rules, null, 2);
+            output.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
