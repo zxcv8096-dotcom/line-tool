@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 引流導師系統 V2.2 👑</title>
+    <title>AI 智能引流中控台 V2.4 👑</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .gradient-bg { background: linear-gradient(135deg, #1e293b, #4338ca, #701a75); }
-        .step-card { @apply bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-4; }
-        .token-input { @apply bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs w-full focus:ring-2 ring-indigo-500 outline-none transition; }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a, #3730a3, #701a75); }
+        .token-input { @apply bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs w-full focus:ring-2 ring-indigo-500 outline-none; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900">
 
-    <nav class="gradient-bg p-6 text-white shadow-2xl sticky top-0 z-50">
+    <nav class="gradient-bg p-5 text-white shadow-2xl sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-black italic tracking-tight">AI FLOW 引流中控台 🚀</h1>
-                <p class="text-[10px] text-yellow-300 font-bold uppercase tracking-widest">打造複利系統，邁向皇冠大使 👑</p>
+                <h1 class="text-xl font-black italic">INTELLIGENT FLOW V2.4 🧠</h1>
+                <p class="text-[9px] text-yellow-300 font-bold uppercase tracking-widest">智能匹配與自動化圖書館系統</p>
             </div>
-            <div class="text-right hidden md:block">
-                <p class="text-sm font-bold">2026 淨資產 700 萬目標 💰</p>
-                <p class="text-[10px] opacity-70">讓系統為你工作，把時間留給家人 🌹</p>
+            <div class="text-right">
+                <p class="text-xs font-bold text-yellow-400">2026 淨資產 700 萬目標 💰</p>
             </div>
         </div>
     </nav>
@@ -31,105 +29,73 @@
             
             <div class="lg:col-span-1 space-y-6">
                 <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl">
-                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">📖 三分鐘上手教學</h2>
-                    
-                    <div class="space-y-6 text-sm">
-                        <div class="flex gap-4">
-                            <span class="bg-yellow-400 text-indigo-900 w-6 h-6 rounded-full flex items-center justify-center font-bold shrink-0 text-xs">1</span>
-                            <div>
-                                <p class="font-bold">設定金鑰與權杖</p>
-                                <p class="text-[10px] opacity-70 mt-1">「金鑰」是你的帳號，「權杖」是跟 FB/IG 借來的印章。輸入後按同步。</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <span class="bg-yellow-400 text-indigo-900 w-6 h-6 rounded-full flex items-center justify-center font-bold shrink-0 text-xs">2</span>
-                            <div>
-                                <p class="font-bold">新增引流規則</p>
-                                <p class="text-[10px] opacity-70 mt-1">設定「關鍵字」跟「回覆內容」。可以放美圖、語音或你的數字人影片。</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <span class="bg-yellow-400 text-indigo-900 w-6 h-6 rounded-full flex items-center justify-center font-bold shrink-0 text-xs">3</span>
-                            <div>
-                                <p class="font-bold">複製代碼到 GAS</p>
-                                <p class="text-[10px] opacity-70 mt-1">點擊最下方的「複製」，貼到你的雲端大腦 (GAS) 裡按部署就完成了！</p>
-                            </div>
-                        </div>
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">💡 老師傅的撇步</h2>
+                    <p class="text-xs opacity-80 leading-relaxed mb-4">
+                        為什麼朋友留言沒反應？因為你用了「精確匹配」。<br><br>
+                        <b>建議做法：</b> 將模式改為「包含關鍵字」，只要朋友的話裡有這幾個字，系統就會自動跳出來幫你成交！
+                    </p>
+                    <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
+                        <p class="text-[10px] font-bold text-yellow-300 uppercase">目前版本進度</p>
+                        <ul class="text-[11px] mt-2 space-y-1 opacity-90">
+                            <li>✅ V2.2 新手教學介面</li>
+                            <li>✅ V2.3 媒體自動關聯</li>
+                            <li>🔥 V2.4 智能模糊匹配</li>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4 uppercase tracking-widest">🔐 系統安全鎖定</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-[10px] text-slate-400 font-bold uppercase">自訂帳號識別碼 (Access Key)</label>
-                            <input id="accountKey" type="password" placeholder="建議：你的英文名+生日" class="token-input mt-1">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400 font-bold uppercase">FB/IG 權杖 (Token 亂碼)</label>
-                            <input id="metaToken" type="password" placeholder="由 Meta 開發者後台領取" class="token-input mt-1">
-                        </div>
-                        <button onclick="syncData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs shadow-lg transition transform active:scale-95">
-                            同步雲端資料 🔄
-                        </button>
-                    </div>
+                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔐 帳號金鑰</label>
+                    <input id="accountKey" type="password" placeholder="你的私密識別碼" class="token-input mt-1 mb-4">
+                    <button onclick="syncData()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition">同步雲端資料</button>
                 </div>
             </div>
 
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-2 h-full bg-indigo-600"></div>
-                    <h2 class="text-2xl font-black text-slate-800 mb-8 flex justify-between items-center">
-                        新增引流資產
-                        <span id="lockStatus" class="text-[9px] bg-slate-100 text-slate-400 px-3 py-1 rounded-full">未同步</span>
-                    </h2>
+                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+                    <h2 class="text-2xl font-black text-slate-800 mb-8 border-b pb-4">新增智能規則</h2>
                     
                     <div class="grid md:grid-cols-2 gap-8">
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 underline">步驟 A：選擇發布平台</label>
-                                <div class="flex gap-2">
-                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1"><input type="checkbox" name="platform" value="FB" checked> FB</label>
-                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1"><input type="checkbox" name="platform" value="IG" checked> IG</label>
-                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1"><input type="checkbox" name="platform" value="TikTok"> TikTok</label>
-                                </div>
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第一步：設定關鍵字</label>
+                                <input id="keyword" type="text" placeholder="例如：領取" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
                             </div>
+                            
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 underline">步驟 B：設定關鍵字</label>
-                                <input id="keyword" type="text" placeholder="例如：想了解健康、領取方案" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第二步：匹配模式</label>
+                                <select id="matchMode" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
+                                    <option value="includes">包含即可（只要話裡有這幾個字）✨</option>
+                                    <option value="exact">精確相等（必須一模一樣）</option>
+                                    <option value="ai">AI 語意（理解意圖，不限字眼）💎</option>
+                                </select>
                             </div>
+
                             <div class="bg-indigo-50/50 p-5 rounded-3xl border border-indigo-100">
-                                <label class="block text-xs font-bold text-indigo-900 mb-3">步驟 C：添加美圖或影片</label>
-                                <div class="flex gap-2 mb-3">
-                                    <input id="mediaUrl" type="text" placeholder="貼上網址 (HTTPS)" class="flex-1 bg-white border border-indigo-200 rounded-xl px-4 py-2 text-xs outline-none">
+                                <label class="block text-xs font-bold text-indigo-900 mb-3">第三步：內容網址 (若留空則採自動檢索)</label>
+                                <div class="flex gap-2 mb-2">
+                                    <input id="mediaUrl" type="text" placeholder="https://..." class="flex-1 bg-white border border-indigo-200 rounded-xl px-4 py-2 text-[11px] outline-none">
                                     <button onclick="addAttach()" class="bg-indigo-600 text-white px-4 rounded-xl">＋</button>
                                 </div>
-                                <div id="attachList" class="space-y-2"></div>
+                                <div id="attachList" class="space-y-1"></div>
                             </div>
                         </div>
-                        
+
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-2 underline">步驟 D：感性回覆文字 😊</label>
-                            <textarea id="replyText" rows="12" placeholder="親愛的朋友：收到你的詢問太開心了！..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none h-[calc(100%-2rem)]"></textarea>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第四步：感性回覆文案</label>
+                            <textarea id="replyText" rows="12" placeholder="收到！這是我特地為你準備的..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm h-[calc(100%-2rem)] outline-none"></textarea>
                         </div>
                     </div>
 
                     <button onclick="saveRule()" class="mt-8 w-full gradient-bg text-white font-black py-5 rounded-2xl shadow-2xl hover:opacity-90 transition transform active:scale-95 text-lg">
-                        儲存規則，開始複利！ 🚀
+                        儲存智能規則 🚀
                     </button>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
-                        <h3 class="font-bold text-slate-800 mb-4 text-sm">📋 目前資產清單</h3>
-                        <div id="ruleDisplay" class="space-y-3 max-h-[300px] overflow-y-auto pr-2"></div>
-                    </div>
-                    
-                    <div class="bg-slate-900 p-6 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
-                        <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase tracking-widest">// GAS 系統代碼</h3>
-                        <button onclick="copyCode()" class="absolute top-4 right-4 bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] hover:bg-indigo-500 transition">複製代碼</button>
-                        <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[200px]">const REPLY_RULES = [];</pre>
-                    </div>
+                <div class="bg-slate-900 p-8 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
+                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 GAS</h3>
+                    <button onclick="copyCode()" class="absolute top-6 right-8 bg-indigo-600 text-white px-5 py-2 rounded-full text-xs hover:bg-indigo-500">複製代碼</button>
+                    <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[200px]">const REPLY_RULES = [];</pre>
                 </div>
             </div>
         </div>
@@ -137,75 +103,60 @@
 
     <script>
         let rules = [];
-        let currentAttachments = [];
+        let currentAttach = [];
 
         function syncData() {
             const key = document.getElementById('accountKey').value;
-            if(!key) return alert('請輸入帳號識別碼，才能同步你的資料喔！');
+            if(!key) return alert('請輸入識別碼');
             const data = localStorage.getItem('vault_' + key);
             rules = data ? JSON.parse(data) : [];
-            document.getElementById('lockStatus').innerText = '● 已鎖定帳號: ' + key;
-            document.getElementById('lockStatus').className = 'text-[9px] bg-green-100 text-green-600 px-3 py-1 rounded-full font-bold';
             renderUI();
-            alert('同步成功！現在可以開始編輯了 ✨');
+            alert('已同步最新智能規則 ✨');
         }
 
         function addAttach() {
             const url = document.getElementById('mediaUrl').value;
             if(!url) return;
-            currentAttachments.push(url);
+            currentAttach.push(url);
             renderAttach();
             document.getElementById('mediaUrl').value = '';
         }
 
         function renderAttach() {
-            document.getElementById('attachList').innerHTML = currentAttachments.map((url, i) => `
+            document.getElementById('attachList').innerHTML = currentAttach.map((url, i) => `
                 <div class="bg-white p-2 rounded-xl flex justify-between items-center text-[9px] border border-indigo-100 shadow-sm">
                     <span class="truncate opacity-50 flex-1">${url}</span>
-                    <button onclick="currentAttachments.splice(${i},1);renderAttach()" class="text-red-400 ml-2">❌</button>
+                    <button onclick="currentAttach.splice(${i},1);renderAttach()" class="text-red-400 ml-2">❌</button>
                 </div>`).join('');
         }
 
         function saveRule() {
             const key = document.getElementById('accountKey').value;
             const kw = document.getElementById('keyword').value;
+            const mode = document.getElementById('matchMode').value;
             const text = document.getElementById('replyText').value;
             const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
 
-            if(!key) return alert('請先輸入左側的「帳號識別碼」！');
-            if(!kw || !text) return alert('關鍵字與文字不能空著喔！');
+            if(!key || !kw || !text) return alert('請檢查欄位是否填齊');
 
-            rules.push({ platforms, keyword: kw, text, attachments: [...currentAttachments] });
+            rules.push({ keyword: kw, mode: mode, text: text, attachments: [...currentAttach] });
             localStorage.setItem('vault_' + key, JSON.stringify(rules));
             renderUI();
             
-            // 清空輸入框
+            // 清空
             document.getElementById('keyword').value = '';
             document.getElementById('replyText').value = '';
-            currentAttachments = [];
+            currentAttach = [];
             renderAttach();
         }
 
         function renderUI() {
-            const display = document.getElementById('ruleDisplay');
-            display.innerHTML = rules.length === 0 ? '<p class="text-center text-slate-400 py-10 text-xs italic">這裡還空空的，快去新增規則吧！</p>' : '';
-            rules.forEach((r, i) => {
-                display.innerHTML += `
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative shadow-sm">
-                        <div class="flex gap-1 mb-2">
-                            ${r.platforms.map(p => `<span class="px-2 py-0.5 rounded-[4px] text-[8px] font-bold text-white ${p==='FB'?'bg-blue-600':'bg-pink-500'}">${p}</span>`).join('')}
-                        </div>
-                        <h4 class="font-bold text-xs text-indigo-900">${r.keyword}</h4>
-                        <p class="text-[10px] text-slate-400 truncate mt-1">${r.text}</p>
-                        <button onclick="rules.splice(${i},1);localStorage.setItem('vault_'+document.getElementById('accountKey').value, JSON.stringify(rules));renderUI()" class="absolute top-4 right-4 text-slate-300">❌</button>
-                    </div>`;
-            });
             document.getElementById('outputCode').innerText = `const REPLY_RULES = ${JSON.stringify(rules, null, 2)};`;
         }
 
         function copyCode() {
             const code = document.getElementById('outputCode').innerText;
-            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！請去 GAS 貼上並存檔 ✨'));
+            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！請去 GAS 更新大腦 👑'));
         }
     </script>
 </body>
