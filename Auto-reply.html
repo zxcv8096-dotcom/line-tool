@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能健康引流中控台 V2.5 🦁</title>
+    <title>AI 智能健康引流中控台 V2.6 🦁</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .gradient-bg { background: linear-gradient(135deg, #0f172a, #1e1b4b, #4338ca); }
@@ -11,17 +11,17 @@
         .card-glow { box-shadow: 0 0 20px rgba(79, 70, 229, 0.1); }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900 leading-relaxed">
+<body class="bg-slate-50 font-sans text-slate-900 leading-relaxed" onload="initData()">
 
     <nav class="gradient-bg p-5 text-white shadow-2xl sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-black italic tracking-tighter">GAVIN AI FLOW V2.5 🧠</h1>
+                <h1 class="text-xl font-black italic tracking-tighter">GAVIN AI FLOW V2.6 🧠</h1>
                 <p class="text-[9px] text-indigo-300 font-bold uppercase tracking-widest">大心家族自動化戰略系統</p>
             </div>
             <div class="text-right">
                 <p class="text-[10px] font-bold text-yellow-400">2027/08 安麗鑽石目標 💎</p>
-                <p class="text-[9px] opacity-70">2026 淨資產 700 萬 💰</p>
+                <p class="text-[9px] opacity-70">2026 淨資產 700 萬階段目標 💰</p>
             </div>
         </div>
     </nav>
@@ -31,24 +31,23 @@
             
             <div class="lg:col-span-1 space-y-6">
                 <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl card-glow">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🦁 領袖思維：感性大於邏輯</h2>
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🦁 領袖思維：複利系統</h2>
                     <p class="text-xs opacity-80 leading-relaxed mb-4">
-                        106 萬觀看後的轉化關鍵在於<b>「同理心」</b>。回覆時「順便」提到你的家族故事，讓 AI 更有溫度。
+                        運用 GitHub 與 GAS 打造不花體力的自動化名單捕手。記住，106 萬觀看只是開始，轉化才是價值。
                     </p>
-                    <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
-                        <p class="text-[10px] font-bold text-yellow-300 uppercase">引流核心策略</p>
-                        <ul class="text-[11px] mt-2 space-y-2 opacity-90">
-                            <li>✅ 影片給知識 (AI 數字人)</li>
-                            <li>🔥 留言給情緒 (感性鉤子)</li>
-                            <li>🎯 私訊給方案 (自動引流)</li>
-                        </ul>
-                    </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
-                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔐 GitHub 同步識別碼</label>
-                    <input id="accountKey" type="password" placeholder="請輸入私密 Key" class="token-input mt-1 mb-4">
-                    <button onclick="syncData()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition">同步雲端大腦</button>
+                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔐 雲端識別碼 (accountKey)</label>
+                    <input id="accountKey" type="password" placeholder="用於同步 LocalStorage" class="token-input mt-1 mb-4">
+                    
+                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔑 Meta Webhook 暗號 (Verify Token)</label>
+                    <div class="flex gap-2 mt-1 mb-4">
+                        <input id="verifyToken" type="text" placeholder="自訂或點擊生成" class="token-input" oninput="renderUI()">
+                        <button onclick="generateToken()" class="bg-slate-200 text-slate-600 px-3 rounded-xl text-[10px] font-bold">自動生成</button>
+                    </div>
+
+                    <button onclick="syncData()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition">同步雲端資料</button>
                 </div>
             </div>
 
@@ -62,54 +61,48 @@
                                 <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第一步：引流分類</label>
                                 <select id="category" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none">
                                     <option value="health">💉 健康管理 (產品/諮詢)</option>
-                                    <option value="biz">💎 事業招募 (大心家族夥伴)</option>
-                                    <option value="other">💬 一般互動</option>
+                                    <option value="biz">💎 事業招募 (夥伴)</option>
                                 </select>
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第二步：設定觸發關鍵字</label>
-                                <input id="keyword" type="text" placeholder="例如：想領取、了解、中風預防" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第二步：觸發關鍵字</label>
+                                <input id="keyword" type="text" placeholder="例如：想了解、領取" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第三步：匹配模式</label>
                                 <select id="matchMode" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
-                                    <option value="includes">包含關鍵字 (最推薦) ✨</option>
-                                    <option value="exact">完全匹配</option>
-                                    <option value="ai">AI 語意理解 (實驗中)</option>
+                                    <option value="includes">包含即可 ✨</option>
+                                    <option value="exact">精確相等</option>
                                 </select>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第四步：感性回覆文案模板</label>
-                            <div class="flex gap-2 mb-2">
-                                <button onclick="applyTemplate('health')" class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg">健康模板</button>
-                                <button onclick="applyTemplate('biz')" class="text-[10px] bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">事業模板</button>
-                            </div>
-                            <textarea id="replyText" rows="10" placeholder="收到！因為我曾經看過親人受健康所苦，所以特別整理了這份筆記..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm outline-none focus:border-indigo-300"></textarea>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第四步：感性回覆文案</label>
+                            <textarea id="replyText" rows="10" placeholder="收到！因為我曾經看過家人受健康所苦，所以特別整理了..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm outline-none"></textarea>
                         </div>
                     </div>
 
                     <div class="mt-6 bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                        <label class="block text-xs font-bold text-slate-500 mb-3">第五步：引流目標網址 (LINE/表單/PDF)</label>
+                        <label class="block text-xs font-bold text-slate-500 mb-3">第五步：引流目標網址 (LINE/見證 PDF)</label>
                         <div class="flex gap-2 mb-2">
-                            <input id="mediaUrl" type="text" placeholder="https://line.me/ti/p/..." class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus:ring-2 ring-indigo-500">
+                            <input id="mediaUrl" type="text" placeholder="https://..." class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none">
                             <button onclick="addAttach()" class="bg-indigo-600 text-white px-6 rounded-xl font-bold">新增</button>
                         </div>
                         <div id="attachList" class="flex flex-wrap gap-2"></div>
                     </div>
 
                     <button onclick="saveRule()" class="mt-8 w-full gradient-bg text-white font-black py-5 rounded-2xl shadow-2xl hover:opacity-90 transition transform active:scale-95 text-lg">
-                        更新雲端規則 🚀
+                        儲存規則並更新代碼 🚀
                     </button>
                 </div>
 
                 <div class="bg-slate-900 p-8 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
-                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 Google Apps Script (GAS)</h3>
+                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 GAS</h3>
                     <button onclick="copyCode()" class="absolute top-6 right-8 bg-indigo-600 text-white px-5 py-2 rounded-full text-xs hover:bg-indigo-500">複製代碼</button>
-                    <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[150px]">const REPLY_RULES = [];</pre>
+                    <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[250px]"></pre>
                 </div>
             </div>
         </div>
@@ -119,22 +112,13 @@
         let rules = [];
         let currentAttach = [];
 
-        const templates = {
-            health: "收到！這是我特別整理的《健康避坑指南》📖。因為我也曾看過家人受慢性病所苦，所以更懂得預防的重要性。希望能幫到你！點擊下方連結領取：",
-            biz: "看到你對複利系統感興趣，真的很有眼光！💰 我目前正帶領「大心家族」在 2027 前挑戰鑽石目標，如果你也想學習如何用 AI 結合事業，先看這份簡介："
-        };
+        function initData() { renderUI(); }
 
-        function applyTemplate(type) {
-            document.getElementById('replyText').value = templates[type];
-        }
-
-        function syncData() {
-            const key = document.getElementById('accountKey').value;
-            if(!key) return alert('請輸入私密識別碼');
-            const data = localStorage.getItem('v25_vault_' + key);
-            rules = data ? JSON.parse(data) : [];
+        // 生成自動暗號 (Verify Token)
+        function generateToken() {
+            const randomToken = 'GAVIN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            document.getElementById('verifyToken').value = randomToken;
             renderUI();
-            alert('已成功同步雲端大腦！✨');
         }
 
         function addAttach() {
@@ -143,51 +127,119 @@
             currentAttach.push(url);
             renderAttach();
             document.getElementById('mediaUrl').value = '';
+            renderUI();
         }
 
         function renderAttach() {
             document.getElementById('attachList').innerHTML = currentAttach.map((url, i) => `
-                <div class="bg-indigo-600 text-white px-3 py-1 rounded-full flex items-center text-[10px] shadow-sm">
+                <div class="bg-indigo-600 text-white px-3 py-1 rounded-full flex items-center text-[10px]">
                     <span class="truncate max-w-[150px]">${url}</span>
-                    <button onclick="currentAttach.splice(${i},1);renderAttach()" class="ml-2">✕</button>
+                    <button onclick="currentAttach.splice(${i},1);renderAttach();renderUI()" class="ml-2">✕</button>
                 </div>`).join('');
         }
 
         function saveRule() {
             const key = document.getElementById('accountKey').value;
             const kw = document.getElementById('keyword').value;
-            const cat = document.getElementById('category').value;
-            const mode = document.getElementById('matchMode').value;
             const text = document.getElementById('replyText').value;
 
-            if(!key || !kw || !text) return alert('欄位還沒填完喔，獅子座教練衝衝衝！🦁');
+            if(!key || !kw || !text) return alert('獅子座教練，欄位別漏填喔！🦁');
 
             rules.push({ 
-                category: cat,
                 keyword: kw, 
-                mode: mode, 
+                category: document.getElementById('category').value,
+                mode: document.getElementById('matchMode').value, 
                 text: text, 
-                attachments: [...currentAttach],
-                timestamp: new Date().toISOString()
+                attachments: [...currentAttach] 
             });
             
-            localStorage.setItem('v25_vault_' + key, JSON.stringify(rules));
+            localStorage.setItem('v26_vault_' + key, JSON.stringify(rules));
             renderUI();
             
-            // 清空表單
+            // 清空
             document.getElementById('keyword').value = '';
             document.getElementById('replyText').value = '';
             currentAttach = [];
             renderAttach();
         }
 
+        function syncData() {
+            const key = document.getElementById('accountKey').value;
+            const data = localStorage.getItem('v26_vault_' + key);
+            rules = data ? JSON.parse(data) : [];
+            renderUI();
+            alert('同步成功！');
+        }
+
+        // 核心功能：生成 GAS 代碼
         function renderUI() {
-            document.getElementById('outputCode').innerText = `// AI FLOW V2.5 規則集\nconst REPLY_RULES = ${JSON.stringify(rules, null, 2)};`;
+            const vToken = document.getElementById('verifyToken').value || "GAVIN_TOKEN_2027";
+            const codeTemplate = `
+/**
+ * GAVIN AI FLOW V2.6 - 自動化引流大腦
+ * 目標：2027 鑽石 | 2026 淨資產 700 萬
+ */
+
+const VERIFY_TOKEN = "${vToken}"; // Meta Webhook 驗證暗號
+const ACCESS_TOKEN = "YOUR_PAGE_ACCESS_TOKEN"; // 需從 Meta Developer 取得
+const SHEET_NAME = "Real-time_Leads";
+
+const REPLY_RULES = ${JSON.stringify(rules, null, 2)};
+
+// 1. 處理 Meta Webhook 驗證 (暗號比對)
+function doGet(e) {
+  let mode = e.parameter["hub.mode"];
+  let token = e.parameter["hub.verify_token"];
+  let challenge = e.parameter["hub.challenge"];
+  
+  if (mode && token) {
+    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+      return ContentService.createTextOutput(challenge);
+    }
+  }
+  return ContentService.createTextOutput("System Active");
+}
+
+// 2. 接收留言並自動化處理
+function doPost(e) {
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  let data = JSON.parse(e.postData.contents);
+  
+  if (data.entry && data.entry[0].changes) {
+    let change = data.entry[0].changes[0].value;
+    let message = change.message || "";
+    let senderName = change.from ? change.from.name : "未知用戶";
+    let commentId = change.comment_id;
+
+    // 匹配規則
+    REPLY_RULES.forEach(rule => {
+      let isMatch = rule.mode === "includes" ? message.includes(rule.keyword) : message === rule.keyword;
+      
+      if (isMatch) {
+        // A. 記錄名單到試算表
+        sheet.appendRow([new Date(), "FB/IG", senderName, message, rule.category, "待聯繫"]);
+        
+        // B. 呼叫 Meta API 自動回覆 (需填入 ACCESS_TOKEN)
+        sendReply(commentId, rule.text + " " + (rule.attachments[0] || ""));
+      }
+    });
+  }
+  return ContentService.createTextOutput("OK");
+}
+
+function sendReply(id, text) {
+  let url = "https://graph.facebook.com/v18.0/" + id + "/comments";
+  UrlFetchApp.fetch(url, {
+    method: "post",
+    payload: { message: text, access_token: ACCESS_TOKEN }
+  });
+}`;
+            document.getElementById('outputCode').innerText = codeTemplate;
         }
 
         function copyCode() {
             const code = document.getElementById('outputCode').innerText;
-            navigator.clipboard.writeText(code).then(() => alert('大腦代碼已複製！快去 GAS 更新你的自動化系統 👑'));
+            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！快去 Google Apps Script 更新你的大腦 👑'));
         }
     </script>
 </body>
