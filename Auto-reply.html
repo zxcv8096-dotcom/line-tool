@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能引流中控台 V2.4 👑</title>
+    <title>AI 智能健康引流中控台 V2.5 🦁</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .gradient-bg { background: linear-gradient(135deg, #0f172a, #3730a3, #701a75); }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a, #1e1b4b, #4338ca); }
         .token-input { @apply bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs w-full focus:ring-2 ring-indigo-500 outline-none; }
+        .card-glow { box-shadow: 0 0 20px rgba(79, 70, 229, 0.1); }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-slate-50 font-sans text-slate-900 leading-relaxed">
 
     <nav class="gradient-bg p-5 text-white shadow-2xl sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-black italic">INTELLIGENT FLOW V2.4 🧠</h1>
-                <p class="text-[9px] text-yellow-300 font-bold uppercase tracking-widest">智能匹配與自動化圖書館系統</p>
+                <h1 class="text-xl font-black italic tracking-tighter">GAVIN AI FLOW V2.5 🧠</h1>
+                <p class="text-[9px] text-indigo-300 font-bold uppercase tracking-widest">大心家族自動化戰略系統</p>
             </div>
             <div class="text-right">
-                <p class="text-xs font-bold text-yellow-400">2026 淨資產 700 萬目標 💰</p>
+                <p class="text-[10px] font-bold text-yellow-400">2027/08 安麗鑽石目標 💎</p>
+                <p class="text-[9px] opacity-70">2026 淨資產 700 萬 💰</p>
             </div>
         </div>
     </nav>
@@ -28,74 +30,86 @@
         <div class="grid lg:grid-cols-3 gap-8">
             
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">💡 老師傅的撇步</h2>
+                <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl card-glow">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🦁 領袖思維：感性大於邏輯</h2>
                     <p class="text-xs opacity-80 leading-relaxed mb-4">
-                        為什麼朋友留言沒反應？因為你用了「精確匹配」。<br><br>
-                        <b>建議做法：</b> 將模式改為「包含關鍵字」，只要朋友的話裡有這幾個字，系統就會自動跳出來幫你成交！
+                        106 萬觀看後的轉化關鍵在於<b>「同理心」</b>。回覆時「順便」提到你的家族故事，讓 AI 更有溫度。
                     </p>
                     <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
-                        <p class="text-[10px] font-bold text-yellow-300 uppercase">目前版本進度</p>
-                        <ul class="text-[11px] mt-2 space-y-1 opacity-90">
-                            <li>✅ V2.2 新手教學介面</li>
-                            <li>✅ V2.3 媒體自動關聯</li>
-                            <li>🔥 V2.4 智能模糊匹配</li>
+                        <p class="text-[10px] font-bold text-yellow-300 uppercase">引流核心策略</p>
+                        <ul class="text-[11px] mt-2 space-y-2 opacity-90">
+                            <li>✅ 影片給知識 (AI 數字人)</li>
+                            <li>🔥 留言給情緒 (感性鉤子)</li>
+                            <li>🎯 私訊給方案 (自動引流)</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
-                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔐 帳號金鑰</label>
-                    <input id="accountKey" type="password" placeholder="你的私密識別碼" class="token-input mt-1 mb-4">
-                    <button onclick="syncData()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition">同步雲端資料</button>
+                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔐 GitHub 同步識別碼</label>
+                    <input id="accountKey" type="password" placeholder="請輸入私密 Key" class="token-input mt-1 mb-4">
+                    <button onclick="syncData()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition">同步雲端大腦</button>
                 </div>
             </div>
 
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
-                    <h2 class="text-2xl font-black text-slate-800 mb-8 border-b pb-4">新增智能規則</h2>
+                    <h2 class="text-2xl font-black text-slate-800 mb-8 border-b pb-4">新增引流捕捉器</h2>
                     
                     <div class="grid md:grid-cols-2 gap-8">
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第一步：設定關鍵字</label>
-                                <input id="keyword" type="text" placeholder="例如：領取" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第一步：引流分類</label>
+                                <select id="category" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none">
+                                    <option value="health">💉 健康管理 (產品/諮詢)</option>
+                                    <option value="biz">💎 事業招募 (大心家族夥伴)</option>
+                                    <option value="other">💬 一般互動</option>
+                                </select>
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第二步：匹配模式</label>
-                                <select id="matchMode" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
-                                    <option value="includes">包含即可（只要話裡有這幾個字）✨</option>
-                                    <option value="exact">精確相等（必須一模一樣）</option>
-                                    <option value="ai">AI 語意（理解意圖，不限字眼）💎</option>
-                                </select>
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第二步：設定觸發關鍵字</label>
+                                <input id="keyword" type="text" placeholder="例如：想領取、了解、中風預防" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
                             </div>
 
-                            <div class="bg-indigo-50/50 p-5 rounded-3xl border border-indigo-100">
-                                <label class="block text-xs font-bold text-indigo-900 mb-3">第三步：內容網址 (若留空則採自動檢索)</label>
-                                <div class="flex gap-2 mb-2">
-                                    <input id="mediaUrl" type="text" placeholder="https://..." class="flex-1 bg-white border border-indigo-200 rounded-xl px-4 py-2 text-[11px] outline-none">
-                                    <button onclick="addAttach()" class="bg-indigo-600 text-white px-4 rounded-xl">＋</button>
-                                </div>
-                                <div id="attachList" class="space-y-1"></div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第三步：匹配模式</label>
+                                <select id="matchMode" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
+                                    <option value="includes">包含關鍵字 (最推薦) ✨</option>
+                                    <option value="exact">完全匹配</option>
+                                    <option value="ai">AI 語意理解 (實驗中)</option>
+                                </select>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第四步：感性回覆文案</label>
-                            <textarea id="replyText" rows="12" placeholder="收到！這是我特地為你準備的..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm h-[calc(100%-2rem)] outline-none"></textarea>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第四步：感性回覆文案模板</label>
+                            <div class="flex gap-2 mb-2">
+                                <button onclick="applyTemplate('health')" class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg">健康模板</button>
+                                <button onclick="applyTemplate('biz')" class="text-[10px] bg-purple-100 text-purple-700 px-2 py-1 rounded-lg">事業模板</button>
+                            </div>
+                            <textarea id="replyText" rows="10" placeholder="收到！因為我曾經看過親人受健康所苦，所以特別整理了這份筆記..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm outline-none focus:border-indigo-300"></textarea>
                         </div>
                     </div>
 
+                    <div class="mt-6 bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                        <label class="block text-xs font-bold text-slate-500 mb-3">第五步：引流目標網址 (LINE/表單/PDF)</label>
+                        <div class="flex gap-2 mb-2">
+                            <input id="mediaUrl" type="text" placeholder="https://line.me/ti/p/..." class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus:ring-2 ring-indigo-500">
+                            <button onclick="addAttach()" class="bg-indigo-600 text-white px-6 rounded-xl font-bold">新增</button>
+                        </div>
+                        <div id="attachList" class="flex flex-wrap gap-2"></div>
+                    </div>
+
                     <button onclick="saveRule()" class="mt-8 w-full gradient-bg text-white font-black py-5 rounded-2xl shadow-2xl hover:opacity-90 transition transform active:scale-95 text-lg">
-                        儲存智能規則 🚀
+                        更新雲端規則 🚀
                     </button>
                 </div>
 
                 <div class="bg-slate-900 p-8 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
-                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 GAS</h3>
+                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 Google Apps Script (GAS)</h3>
                     <button onclick="copyCode()" class="absolute top-6 right-8 bg-indigo-600 text-white px-5 py-2 rounded-full text-xs hover:bg-indigo-500">複製代碼</button>
-                    <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[200px]">const REPLY_RULES = [];</pre>
+                    <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[150px]">const REPLY_RULES = [];</pre>
                 </div>
             </div>
         </div>
@@ -105,13 +119,22 @@
         let rules = [];
         let currentAttach = [];
 
+        const templates = {
+            health: "收到！這是我特別整理的《健康避坑指南》📖。因為我也曾看過家人受慢性病所苦，所以更懂得預防的重要性。希望能幫到你！點擊下方連結領取：",
+            biz: "看到你對複利系統感興趣，真的很有眼光！💰 我目前正帶領「大心家族」在 2027 前挑戰鑽石目標，如果你也想學習如何用 AI 結合事業，先看這份簡介："
+        };
+
+        function applyTemplate(type) {
+            document.getElementById('replyText').value = templates[type];
+        }
+
         function syncData() {
             const key = document.getElementById('accountKey').value;
-            if(!key) return alert('請輸入識別碼');
-            const data = localStorage.getItem('vault_' + key);
+            if(!key) return alert('請輸入私密識別碼');
+            const data = localStorage.getItem('v25_vault_' + key);
             rules = data ? JSON.parse(data) : [];
             renderUI();
-            alert('已同步最新智能規則 ✨');
+            alert('已成功同步雲端大腦！✨');
         }
 
         function addAttach() {
@@ -124,26 +147,34 @@
 
         function renderAttach() {
             document.getElementById('attachList').innerHTML = currentAttach.map((url, i) => `
-                <div class="bg-white p-2 rounded-xl flex justify-between items-center text-[9px] border border-indigo-100 shadow-sm">
-                    <span class="truncate opacity-50 flex-1">${url}</span>
-                    <button onclick="currentAttach.splice(${i},1);renderAttach()" class="text-red-400 ml-2">❌</button>
+                <div class="bg-indigo-600 text-white px-3 py-1 rounded-full flex items-center text-[10px] shadow-sm">
+                    <span class="truncate max-w-[150px]">${url}</span>
+                    <button onclick="currentAttach.splice(${i},1);renderAttach()" class="ml-2">✕</button>
                 </div>`).join('');
         }
 
         function saveRule() {
             const key = document.getElementById('accountKey').value;
             const kw = document.getElementById('keyword').value;
+            const cat = document.getElementById('category').value;
             const mode = document.getElementById('matchMode').value;
             const text = document.getElementById('replyText').value;
-            const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
 
-            if(!key || !kw || !text) return alert('請檢查欄位是否填齊');
+            if(!key || !kw || !text) return alert('欄位還沒填完喔，獅子座教練衝衝衝！🦁');
 
-            rules.push({ keyword: kw, mode: mode, text: text, attachments: [...currentAttach] });
-            localStorage.setItem('vault_' + key, JSON.stringify(rules));
+            rules.push({ 
+                category: cat,
+                keyword: kw, 
+                mode: mode, 
+                text: text, 
+                attachments: [...currentAttach],
+                timestamp: new Date().toISOString()
+            });
+            
+            localStorage.setItem('v25_vault_' + key, JSON.stringify(rules));
             renderUI();
             
-            // 清空
+            // 清空表單
             document.getElementById('keyword').value = '';
             document.getElementById('replyText').value = '';
             currentAttach = [];
@@ -151,12 +182,12 @@
         }
 
         function renderUI() {
-            document.getElementById('outputCode').innerText = `const REPLY_RULES = ${JSON.stringify(rules, null, 2)};`;
+            document.getElementById('outputCode').innerText = `// AI FLOW V2.5 規則集\nconst REPLY_RULES = ${JSON.stringify(rules, null, 2)};`;
         }
 
         function copyCode() {
             const code = document.getElementById('outputCode').innerText;
-            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！請去 GAS 更新大腦 👑'));
+            navigator.clipboard.writeText(code).then(() => alert('大腦代碼已複製！快去 GAS 更新你的自動化系統 👑'));
         }
     </script>
 </body>
