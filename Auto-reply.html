@@ -6,51 +6,55 @@
     <title>大心AI Flow | 李嘉哲Gavin 👑</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .bright-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-        .instruction-step { @apply flex gap-3 p-4 bg-white rounded-2xl shadow-sm border border-slate-100; }
-        .number-icon { @apply w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0; }
+        .bright-gradient { background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); }
+        .guide-step { @apply border-l-4 border-indigo-500 pl-4 py-1 mb-4; }
+        .warning-item { @apply flex items-start gap-2 text-xs text-orange-800 mb-2; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800">
+<body class="bg-slate-50 font-sans text-slate-800 pb-20">
 
-    <nav class="bg-white border-b border-slate-200 p-6 sticky top-0 z-50 shadow-sm">
+    <nav class="bg-white border-b border-slate-200 p-5 sticky top-0 z-50 shadow-sm">
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="p-2 bg-indigo-600 rounded-lg text-white font-black italic text-xl">大心</div>
+                <div class="p-2 bg-indigo-600 rounded-lg text-white font-black italic text-xl shadow-lg shadow-indigo-200">大心</div>
                 <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">AI Flow 系統</h1>
-                    <p class="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">製作者：李嘉哲 Gavin</p>
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight">AI Flow 系統</h1>
+                    <p class="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">系統監製：李嘉哲 Gavin</p>
                 </div>
             </div>
             <div class="text-right hidden sm:block">
                 <p class="text-sm font-bold text-slate-900">2026 淨資產 700 萬目標 💰</p>
-                <p class="text-[10px] text-slate-400">複利資產系統 | 皇冠大使之路 👑</p>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
         
-        <div class="grid md:grid-cols-3 gap-4 mb-10">
-            <div class="instruction-step">
-                <div class="number-icon">1</div>
-                <div>
-                    <h4 class="font-bold text-sm">輸入身分金鑰</h4>
-                    <p class="text-[10px] text-slate-500 mt-1">設定你的專屬帳號（如：Gavin2026），手機電腦同步就靠它。</p>
+        <div class="bg-orange-50 border border-orange-200 rounded-3xl p-6 mb-8 shadow-sm">
+            <h3 class="text-sm font-black text-orange-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                ⚠️ 使用前必讀：避免系統無效的關鍵
+            </h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="warning-item">
+                    <span class="text-lg">🚫</span>
+                    <div>
+                        <p class="font-bold">FB 個人檔案不能用</p>
+                        <p class="opacity-80">自動回覆僅支援「粉絲專頁 (Fan Page)」。請勿綁定個人帳號。</p>
+                    </div>
                 </div>
-            </div>
-            <div class="instruction-step">
-                <div class="number-icon">2</div>
-                <div>
-                    <h4 class="font-bold text-sm">設定引流關鍵字</h4>
-                    <p class="text-[10px] text-slate-500 mt-1">設定當朋友說什麼字時，系統要自動跳出來幫你服務。</p>
+                <div class="warning-item">
+                    <span class="text-lg">📸</span>
+                    <div>
+                        <p class="font-bold">IG 必須是商業帳號</p>
+                        <p class="opacity-80">請至 IG 設定 > 帳號 > 切換為「商業帳號」或「創作者帳號」。</p>
+                    </div>
                 </div>
-            </div>
-            <div class="instruction-step">
-                <div class="number-icon">3</div>
-                <div>
-                    <h4 class="font-bold text-sm">複製代碼至大腦</h4>
-                    <p class="text-[10px] text-slate-500 mt-1">將生成的代碼複製，貼到 GAS 雲端大腦，系統就正式啟動！</p>
+                <div class="warning-item">
+                    <span class="text-lg">🔑</span>
+                    <div>
+                        <p class="font-bold">權限必須全開</p>
+                        <p class="opacity-80">在連結 Meta 時，請勾選「允許管理訊息」的所有權限，否則機器人會變啞巴。</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,61 +63,59 @@
             
             <div class="lg:col-span-1 space-y-6">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">🔐 安全鎖定</h3>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">🔐 身份金鑰</h3>
                     <div class="space-y-4">
                         <div>
-                            <label class="text-[10px] font-bold text-slate-600">帳號識別金鑰</label>
-                            <input id="accountKey" type="password" placeholder="輸入私密識別碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs mt-1 outline-none focus:ring-2 ring-indigo-500/20">
+                            <label class="text-[10px] font-bold text-slate-600">專屬帳號識別碼</label>
+                            <input id="accountKey" type="password" placeholder="輸入你的金鑰 (如 Gavin01)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs mt-1 outline-none focus:ring-2 ring-indigo-500/20">
                         </div>
-                        <button onclick="syncData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-200 active:scale-95">同步雲端資料 🔄</button>
+                        <button onclick="syncData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg active:scale-95">同步雲端資料 🔄</button>
                     </div>
                 </div>
-
-                <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
-                    <h3 class="text-xs font-bold text-indigo-900 uppercase mb-2">當前版本次序</h3>
-                    <ul class="text-[11px] space-y-2 text-indigo-700 font-medium">
-                        <li>● V2.5 大心AI Flow 冠名版 ✅</li>
-                        <li class="opacity-50">○ V3.0 Meta 實機自動回覆 ⏳</li>
-                        <li class="opacity-50">○ V4.0 全自動潛客記錄系統 🚀</li>
-                    </ul>
+                
+                <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl">
+                    <h3 class="font-bold text-sm mb-2">我是新手怎麼辦？</h3>
+                    <p class="text-xs opacity-80 leading-relaxed">
+                        別擔心！先把右邊的規則填好，按下「生成代碼」，下面會出現詳細的步驟教學圖，跟著做就能完成部署！🚀
+                    </p>
                 </div>
             </div>
 
-            <div class="lg:col-span-3 space-y-6">
+            <div class="lg:col-span-3 space-y-8">
+                
                 <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-2 h-full bg-indigo-600"></div>
                     <div class="flex justify-between items-center mb-8 border-b pb-4">
                         <h2 class="text-xl font-black text-slate-900 tracking-tight">智能規則編輯器</h2>
-                        <span id="syncStatus" class="text-[10px] bg-slate-100 text-slate-500 px-3 py-1 rounded-full">未同步</span>
+                        <span id="syncStatus" class="text-[10px] bg-slate-100 text-slate-500 px-3 py-1 rounded-full">等待同步...</span>
                     </div>
 
                     <div class="grid md:grid-cols-2 gap-8">
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">1. 選擇平台</label>
-                                <div class="flex gap-2">
-                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="FB" checked> FB</label>
-                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="IG" checked> IG</label>
-                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="TikTok"> TikTok</label>
-                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="Threads"> Threads</label>
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">1. 選擇平台</label>
+                                <div class="flex gap-2 flex-wrap">
+                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer font-bold hover:bg-indigo-50"><input type="checkbox" name="platform" value="FB" checked> FB 粉專</label>
+                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer font-bold hover:bg-pink-50"><input type="checkbox" name="platform" value="IG" checked> IG 商業</label>
+                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer font-bold hover:bg-slate-200"><input type="checkbox" name="platform" value="TikTok"> TikTok</label>
                                 </div>
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">2. 關鍵字與匹配模式</label>
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">2. 關鍵字設定</label>
                                 <div class="flex gap-2">
-                                    <input id="keyword" type="text" placeholder="例如：想了解" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none">
+                                    <input id="keyword" type="text" placeholder="例如：領取方案" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none">
                                     <select id="matchMode" class="bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs outline-none">
-                                        <option value="includes">包含字眼 ✨</option>
+                                        <option value="includes">包含即可 ✨</option>
                                         <option value="exact">完全相同</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                                <label class="block text-xs font-bold text-slate-600 mb-2">3. 附加媒體連結 (圖/影/音)</label>
+                                <label class="block text-xs font-bold text-slate-600 mb-2">3. 附加媒體 (美圖/影片)</label>
                                 <div class="flex gap-2 mb-3">
-                                    <input id="mediaUrl" type="text" placeholder="貼上網址 (HTTPS)" class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none">
+                                    <input id="mediaUrl" type="text" placeholder="HTTPS 網址..." class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none">
                                     <button onclick="addAttach()" class="bg-indigo-600 text-white px-4 rounded-xl font-bold">＋</button>
                                 </div>
                                 <div id="attachList" class="space-y-2"></div>
@@ -121,31 +123,64 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">4. 感性回覆文字 😊</label>
-                            <textarea id="replyText" rows="12" placeholder="李嘉哲Gavin 教你寫：『親愛的朋友，很高興見到你...』" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:bg-white transition h-[calc(100%-2rem)]"></textarea>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">4. 感性回覆文案</label>
+                            <textarea id="replyText" rows="12" placeholder="李嘉哲Gavin 建議：多用表情符號 😊，讓對話更有溫度..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:bg-white transition h-[calc(100%-2rem)]"></textarea>
                         </div>
                     </div>
 
-                    <button onclick="saveRule()" class="mt-8 w-full bright-gradient text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 transition transform active:scale-95 text-lg">
-                        儲存資產並同步雲端 🚀
+                    <button onclick="saveRule()" class="mt-8 w-full bright-gradient text-white font-black py-4 rounded-2xl shadow-xl hover:opacity-90 transition transform active:scale-95 text-lg">
+                        儲存並生成代碼 🚀
                     </button>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-200">
-                        <h3 class="font-black text-slate-800 mb-4 text-sm flex items-center justify-between">
-                            📋 目前引流資產庫
-                            <button onclick="clearAll()" class="text-[10px] text-red-400 font-normal">清除全部</button>
-                        </h3>
-                        <div id="ruleDisplay" class="space-y-3 max-h-[300px] overflow-y-auto pr-2"></div>
-                    </div>
+                <div class="grid md:grid-cols-2 gap-8">
                     
-                    <div class="bg-slate-900 p-6 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
-                        <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase tracking-widest">// 大心AI Flow 系統輸出</h3>
-                        <button onclick="copyCode()" class="absolute top-4 right-4 bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] hover:bg-indigo-500 transition">複製代碼</button>
-                        <pre id="outputCode" class="text-indigo-200 font-mono text-[9px] overflow-x-auto leading-loose h-[200px]">const REPLY_RULES = [];</pre>
+                    <div class="bg-slate-900 p-6 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500 h-full">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-indigo-400 font-mono text-[10px] font-bold uppercase tracking-widest">// GAS 系統代碼</h3>
+                            <button onclick="copyCode()" class="bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-bold hover:bg-indigo-500 transition">複製全部</button>
+                        </div>
+                        <pre id="outputCode" class="text-indigo-200 font-mono text-[9px] overflow-x-auto leading-loose h-[300px]">const REPLY_RULES = [];</pre>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-200 h-full">
+                        <h3 class="font-black text-slate-800 mb-6 text-sm flex items-center gap-2">
+                            <span class="bg-indigo-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">?</span>
+                            拿到代碼後，下一步做什麼？
+                        </h3>
+                        
+                        <div class="space-y-1">
+                            <div class="guide-step">
+                                <h4 class="font-bold text-xs text-indigo-700">Step 1. 進入 Google GAS</h4>
+                                <p class="text-[10px] text-slate-500">搜尋 "Google Apps Script" 並建立新專案。</p>
+                            </div>
+                            <div class="guide-step">
+                                <h4 class="font-bold text-xs text-indigo-700">Step 2. 貼上代碼</h4>
+                                <p class="text-[10px] text-slate-500">清空原本的內容，將左邊複製的代碼「貼在最上方」。</p>
+                            </div>
+                            <div class="guide-step">
+                                <h4 class="font-bold text-xs text-indigo-700">Step 3. 填入 Meta 權杖</h4>
+                                <p class="text-[10px] text-slate-500">在代碼中找到 `PAGE_ACCESS_TOKEN`，填入 FB 後台給你的亂碼。</p>
+                            </div>
+                            <div class="guide-step">
+                                <h4 class="font-bold text-xs text-indigo-700">Step 4. 部署為網頁應用程式</h4>
+                                <p class="text-[10px] text-slate-500">點擊右上角「部署」>「新增部署」> 權限選「所有人 (Anyone)」> 複製網址。</p>
+                            </div>
+                            <div class="bg-indigo-50 p-3 rounded-xl mt-4">
+                                <p class="text-[10px] font-bold text-indigo-800 text-center">🎉 最後：將網址貼回 Meta 後台的 Webhook！</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                     <h3 class="font-black text-slate-800 mb-4 text-xs uppercase tracking-widest flex justify-between">
+                        我的引流資產庫
+                        <button onclick="clearAll()" class="text-red-400 font-normal">清空重設</button>
+                    </h3>
+                    <div id="ruleDisplay" class="grid md:grid-cols-2 gap-4 max-h-[200px] overflow-y-auto"></div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -156,13 +191,13 @@
 
         function syncData() {
             const key = document.getElementById('accountKey').value;
-            if(!key) return alert('請先輸入帳號金鑰喔！');
+            if(!key) return alert('請先輸入帳號金鑰！');
             const data = localStorage.getItem('vault_' + key);
             rules = data ? JSON.parse(data) : [];
-            document.getElementById('syncStatus').innerText = '已鎖定帳號: ' + key;
+            document.getElementById('syncStatus').innerText = '已鎖定: ' + key;
             document.getElementById('syncStatus').className = 'text-[10px] bg-green-100 text-green-600 px-3 py-1 rounded-full font-bold';
             renderUI();
-            alert('同步成功！已讀取 [' + key + '] 的資產庫 ✨');
+            alert('同步完成！目前資產庫有 ' + rules.length + ' 條規則。');
         }
 
         function addAttach() {
@@ -189,11 +224,12 @@
             const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
 
             if(!key) return alert('請輸入帳號金鑰以進行存檔！');
-            if(!kw || !text) return alert('關鍵字與文案內容不能空白喔！');
+            if(!kw || !text) return alert('內容不完整喔！');
 
             rules.push({ platforms, keyword: kw, mode: mode, text: text, attachments: [...currentAttach] });
             localStorage.setItem('vault_' + key, JSON.stringify(rules));
             renderUI();
+            
             document.getElementById('keyword').value = '';
             document.getElementById('replyText').value = '';
             currentAttach = [];
@@ -202,15 +238,14 @@
 
         function renderUI() {
             const display = document.getElementById('ruleDisplay');
-            display.innerHTML = rules.length === 0 ? '<p class="text-center text-slate-400 py-10 text-xs italic">目前資產庫是空的...</p>' : '';
+            display.innerHTML = rules.length === 0 ? '<p class="text-center text-slate-400 py-6 text-xs italic col-span-2">暫無資料</p>' : '';
             rules.forEach((r, i) => {
                 display.innerHTML += `
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative shadow-sm hover:border-indigo-200 transition">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group hover:bg-white hover:shadow-md transition">
                         <div class="flex gap-1 mb-2">
-                            ${r.platforms.map(p => `<span class="px-2 py-0.5 rounded text-[8px] font-bold text-white bg-indigo-500">${p}</span>`).join('')}
-                            <span class="px-2 py-0.5 rounded text-[8px] font-bold text-indigo-400 border border-indigo-200">${r.mode === 'includes' ? '智能包含' : '精確相等'}</span>
+                            ${r.platforms.map(p => `<span class="px-2 py-0.5 rounded text-[8px] font-bold text-white bg-indigo-400">${p}</span>`).join('')}
                         </div>
-                        <h4 class="font-bold text-xs text-slate-800">關鍵字: ${r.keyword}</h4>
+                        <h4 class="font-bold text-xs text-slate-800">${r.keyword}</h4>
                         <p class="text-[10px] text-slate-400 truncate mt-1">${r.text}</p>
                         <button onclick="rules.splice(${i},1);localStorage.setItem('vault_'+document.getElementById('accountKey').value, JSON.stringify(rules));renderUI()" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition">❌</button>
                     </div>`;
@@ -220,11 +255,11 @@
 
         function copyCode() {
             const code = document.getElementById('outputCode').innerText;
-            navigator.clipboard.writeText(code).then(() => alert('大腦代碼複製成功！請前往 GAS 貼上並存檔 ✨'));
+            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！請依照右側教學進行部署 👑'));
         }
 
         function clearAll() {
-            if(confirm('確定要清除所有資產嗎？這將無法復原！')) {
+            if(confirm('確定清除？')) {
                 rules = [];
                 localStorage.removeItem('vault_' + document.getElementById('accountKey').value);
                 renderUI();
