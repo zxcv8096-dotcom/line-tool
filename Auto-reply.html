@@ -3,175 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大心 AI FLOW - 李嘉哲 Gavin</title>
+    <title>大心AI Flow | 李嘉哲Gavin 👑</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* --- 全域設定：明亮、乾淨、易讀 --- */
-        :root {
-            --primary-color: #00A3E0; /* 科技藍 */
-            --secondary-color: #E0F7FA; /* 淺藍底色 */
-            --text-dark: #333333;
-            --text-light: #666666;
-            --white: #ffffff;
-        }
-
-        body {
-            font-family: "Helvetica Neue", Arial, "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--white);
-            color: var(--text-dark);
-            line-height: 1.6;
-        }
-
-        /* --- 頂部導覽列 --- */
-        header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            letter-spacing: 1px;
-        }
-
-        .producer-badge {
-            font-size: 0.9rem;
-            color: var(--text-light);
-            background: var(--secondary-color);
-            padding: 5px 12px;
-            border-radius: 20px;
-        }
-
-        /* --- 主視覺區 (Hero Section) --- */
-        .hero {
-            text-align: center;
-            padding: 80px 20px;
-            background: linear-gradient(135deg, #ffffff 0%, #f0faff 100%);
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            color: var(--text-dark);
-        }
-
-        .hero h2 {
-            font-size: 1.5rem;
-            color: var(--text-light);
-            font-weight: normal;
-            margin-bottom: 40px;
-        }
-
-        .cta-button {
-            display: inline-block;
-            background-color: var(--primary-color);
-            color: var(--white);
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            border-radius: 50px;
-            text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(0, 163, 224, 0.3);
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 163, 224, 0.4);
-        }
-
-        /* --- 核心價值區 (Features) --- */
-        .features {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 60px 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        .feature-card {
-            background: var(--white);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            text-align: center;
-            border-top: 4px solid var(--primary-color);
-        }
-
-        .feature-card h3 {
-            margin-top: 0;
-            font-size: 1.3rem;
-        }
-
-        /* --- 頁尾 (Footer) --- */
-        footer {
-            background-color: #f8f9fa;
-            text-align: center;
-            padding: 40px 20px;
-            font-size: 0.9rem;
-            color: var(--text-light);
-            border-top: 1px solid #eeeeee;
-        }
-
-        .footer-producer {
-            margin-top: 10px;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        /* --- 手機版適配 --- */
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.2rem; }
-            .hero h2 { font-size: 1.2rem; }
-            header { flex-direction: column; gap: 10px; }
-        }
+        .bright-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+        .instruction-step { @apply flex gap-3 p-4 bg-white rounded-2xl shadow-sm border border-slate-100; }
+        .number-icon { @apply w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 font-sans text-slate-800">
 
-    <header>
-        <div class="logo">大心 AI FLOW</div>
-        <div class="producer-badge">製作人：李嘉哲 Gavin</div>
-    </header>
-
-    <section class="hero">
-        <h1>大心 AI FLOW</h1>
-        <h2>專屬家庭的健康與財富自動化系統</h2>
-        <p style="max-width: 600px; margin: 0 auto 30px; color: #666;">
-            結合科技與溫度，為你打造全方位的家庭守護網。<br>
-            讓系統處理瑣事，把寶貴的時間留給最愛的人。
-        </p>
-        <a href="#" class="cta-button">立即啟動 AI 助理</a>
-    </section>
-
-    <section class="features">
-        <div class="feature-card">
-            <h3>⚡ 智慧導流系統</h3>
-            <p>從個人互動到專業服務，零秒差銜接，讓粉絲自動轉化為客戶。</p>
+    <nav class="bg-white border-b border-slate-200 p-6 sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-600 rounded-lg text-white font-black italic text-xl">大心</div>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">AI Flow 系統</h1>
+                    <p class="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">製作者：李嘉哲 Gavin</p>
+                </div>
+            </div>
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-bold text-slate-900">2026 淨資產 700 萬目標 💰</p>
+                <p class="text-[10px] text-slate-400">複利資產系統 | 皇冠大使之路 👑</p>
+            </div>
         </div>
-        <div class="feature-card">
-            <h3>📈 雙效管理核心</h3>
-            <p>完美整合「健康數據」與「財富增長」邏輯，一次搞定兩大人生課題。</p>
-        </div>
-        <div class="feature-card">
-            <h3>❤️ 有溫度的科技</h3>
-            <p>不只是冰冷的機器人，更是懂你家庭需求的貼心管家。</p>
-        </div>
-    </section>
+    </nav>
 
-    <footer>
-        <p>&copy; 2026 大心 AI FLOW. All Rights Reserved.</p>
-        <div class="footer-producer">System Created by 李嘉哲 Gavin</div>
-    </footer>
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <div class="grid md:grid-cols-3 gap-4 mb-10">
+            <div class="instruction-step">
+                <div class="number-icon">1</div>
+                <div>
+                    <h4 class="font-bold text-sm">輸入身分金鑰</h4>
+                    <p class="text-[10px] text-slate-500 mt-1">設定你的專屬帳號（如：Gavin2026），手機電腦同步就靠它。</p>
+                </div>
+            </div>
+            <div class="instruction-step">
+                <div class="number-icon">2</div>
+                <div>
+                    <h4 class="font-bold text-sm">設定引流關鍵字</h4>
+                    <p class="text-[10px] text-slate-500 mt-1">設定當朋友說什麼字時，系統要自動跳出來幫你服務。</p>
+                </div>
+            </div>
+            <div class="instruction-step">
+                <div class="number-icon">3</div>
+                <div>
+                    <h4 class="font-bold text-sm">複製代碼至大腦</h4>
+                    <p class="text-[10px] text-slate-500 mt-1">將生成的代碼複製，貼到 GAS 雲端大腦，系統就正式啟動！</p>
+                </div>
+            </div>
+        </div>
 
+        <div class="grid lg:grid-cols-4 gap-8">
+            
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">🔐 安全鎖定</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-600">帳號識別金鑰</label>
+                            <input id="accountKey" type="password" placeholder="輸入私密識別碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs mt-1 outline-none focus:ring-2 ring-indigo-500/20">
+                        </div>
+                        <button onclick="syncData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-200 active:scale-95">同步雲端資料 🔄</button>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
+                    <h3 class="text-xs font-bold text-indigo-900 uppercase mb-2">當前版本次序</h3>
+                    <ul class="text-[11px] space-y-2 text-indigo-700 font-medium">
+                        <li>● V2.5 大心AI Flow 冠名版 ✅</li>
+                        <li class="opacity-50">○ V3.0 Meta 實機自動回覆 ⏳</li>
+                        <li class="opacity-50">○ V4.0 全自動潛客記錄系統 🚀</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 space-y-6">
+                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-2 h-full bg-indigo-600"></div>
+                    <div class="flex justify-between items-center mb-8 border-b pb-4">
+                        <h2 class="text-xl font-black text-slate-900 tracking-tight">智能規則編輯器</h2>
+                        <span id="syncStatus" class="text-[10px] bg-slate-100 text-slate-500 px-3 py-1 rounded-full">未同步</span>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">1. 選擇平台</label>
+                                <div class="flex gap-2">
+                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="FB" checked> FB</label>
+                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="IG" checked> IG</label>
+                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="TikTok"> TikTok</label>
+                                    <label class="bg-slate-50 px-3 py-2 rounded-xl border text-xs cursor-pointer flex items-center gap-1 font-medium"><input type="checkbox" name="platform" value="Threads"> Threads</label>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">2. 關鍵字與匹配模式</label>
+                                <div class="flex gap-2">
+                                    <input id="keyword" type="text" placeholder="例如：想了解" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none">
+                                    <select id="matchMode" class="bg-white border border-slate-200 rounded-xl px-2 py-1 text-xs outline-none">
+                                        <option value="includes">包含字眼 ✨</option>
+                                        <option value="exact">完全相同</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                                <label class="block text-xs font-bold text-slate-600 mb-2">3. 附加媒體連結 (圖/影/音)</label>
+                                <div class="flex gap-2 mb-3">
+                                    <input id="mediaUrl" type="text" placeholder="貼上網址 (HTTPS)" class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none">
+                                    <button onclick="addAttach()" class="bg-indigo-600 text-white px-4 rounded-xl font-bold">＋</button>
+                                </div>
+                                <div id="attachList" class="space-y-2"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-tighter">4. 感性回覆文字 😊</label>
+                            <textarea id="replyText" rows="12" placeholder="李嘉哲Gavin 教你寫：『親愛的朋友，很高興見到你...』" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:bg-white transition h-[calc(100%-2rem)]"></textarea>
+                        </div>
+                    </div>
+
+                    <button onclick="saveRule()" class="mt-8 w-full bright-gradient text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 transition transform active:scale-95 text-lg">
+                        儲存資產並同步雲端 🚀
+                    </button>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-200">
+                        <h3 class="font-black text-slate-800 mb-4 text-sm flex items-center justify-between">
+                            📋 目前引流資產庫
+                            <button onclick="clearAll()" class="text-[10px] text-red-400 font-normal">清除全部</button>
+                        </h3>
+                        <div id="ruleDisplay" class="space-y-3 max-h-[300px] overflow-y-auto pr-2"></div>
+                    </div>
+                    
+                    <div class="bg-slate-900 p-6 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
+                        <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase tracking-widest">// 大心AI Flow 系統輸出</h3>
+                        <button onclick="copyCode()" class="absolute top-4 right-4 bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] hover:bg-indigo-500 transition">複製代碼</button>
+                        <pre id="outputCode" class="text-indigo-200 font-mono text-[9px] overflow-x-auto leading-loose h-[200px]">const REPLY_RULES = [];</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rules = [];
+        let currentAttach = [];
+
+        function syncData() {
+            const key = document.getElementById('accountKey').value;
+            if(!key) return alert('請先輸入帳號金鑰喔！');
+            const data = localStorage.getItem('vault_' + key);
+            rules = data ? JSON.parse(data) : [];
+            document.getElementById('syncStatus').innerText = '已鎖定帳號: ' + key;
+            document.getElementById('syncStatus').className = 'text-[10px] bg-green-100 text-green-600 px-3 py-1 rounded-full font-bold';
+            renderUI();
+            alert('同步成功！已讀取 [' + key + '] 的資產庫 ✨');
+        }
+
+        function addAttach() {
+            const url = document.getElementById('mediaUrl').value;
+            if(!url) return;
+            currentAttach.push(url);
+            renderAttach();
+            document.getElementById('mediaUrl').value = '';
+        }
+
+        function renderAttach() {
+            document.getElementById('attachList').innerHTML = currentAttach.map((url, i) => `
+                <div class="bg-white p-2 rounded-xl flex justify-between items-center text-[9px] border border-slate-100 shadow-sm">
+                    <span class="truncate opacity-50 flex-1">${url}</span>
+                    <button onclick="currentAttach.splice(${i},1);renderAttach()" class="text-red-400 ml-2 font-bold">移除</button>
+                </div>`).join('');
+        }
+
+        function saveRule() {
+            const key = document.getElementById('accountKey').value;
+            const kw = document.getElementById('keyword').value;
+            const mode = document.getElementById('matchMode').value;
+            const text = document.getElementById('replyText').value;
+            const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
+
+            if(!key) return alert('請輸入帳號金鑰以進行存檔！');
+            if(!kw || !text) return alert('關鍵字與文案內容不能空白喔！');
+
+            rules.push({ platforms, keyword: kw, mode: mode, text: text, attachments: [...currentAttach] });
+            localStorage.setItem('vault_' + key, JSON.stringify(rules));
+            renderUI();
+            document.getElementById('keyword').value = '';
+            document.getElementById('replyText').value = '';
+            currentAttach = [];
+            renderAttach();
+        }
+
+        function renderUI() {
+            const display = document.getElementById('ruleDisplay');
+            display.innerHTML = rules.length === 0 ? '<p class="text-center text-slate-400 py-10 text-xs italic">目前資產庫是空的...</p>' : '';
+            rules.forEach((r, i) => {
+                display.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative shadow-sm hover:border-indigo-200 transition">
+                        <div class="flex gap-1 mb-2">
+                            ${r.platforms.map(p => `<span class="px-2 py-0.5 rounded text-[8px] font-bold text-white bg-indigo-500">${p}</span>`).join('')}
+                            <span class="px-2 py-0.5 rounded text-[8px] font-bold text-indigo-400 border border-indigo-200">${r.mode === 'includes' ? '智能包含' : '精確相等'}</span>
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-800">關鍵字: ${r.keyword}</h4>
+                        <p class="text-[10px] text-slate-400 truncate mt-1">${r.text}</p>
+                        <button onclick="rules.splice(${i},1);localStorage.setItem('vault_'+document.getElementById('accountKey').value, JSON.stringify(rules));renderUI()" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition">❌</button>
+                    </div>`;
+            });
+            document.getElementById('outputCode').innerText = `const REPLY_RULES = ${JSON.stringify(rules, null, 2)};`;
+        }
+
+        function copyCode() {
+            const code = document.getElementById('outputCode').innerText;
+            navigator.clipboard.writeText(code).then(() => alert('大腦代碼複製成功！請前往 GAS 貼上並存檔 ✨'));
+        }
+
+        function clearAll() {
+            if(confirm('確定要清除所有資產嗎？這將無法復原！')) {
+                rules = [];
+                localStorage.removeItem('vault_' + document.getElementById('accountKey').value);
+                renderUI();
+            }
+        }
+    </script>
 </body>
 </html>
