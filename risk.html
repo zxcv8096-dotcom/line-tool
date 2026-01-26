@@ -3,149 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>人生風險財務規劃系統</title>
+    <title>人生旅程財務導航</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1a365d;
-            --accent: #e53e3e;
-            --bg: #f0f4f8;
-            --card-bg: #ffffff;
+            --bg-overlay: rgba(20, 30, 48, 0.85); /* 深藍色濾鏡 */
+            --glass-bg: rgba(255, 255, 255, 0.1); /* 毛玻璃背景 */
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-light: #e2e8f0;
+            --text-muted: #a0aec0;
+            --accent-gold: #d4af37; /* 金色：夢想 */
+            --accent-danger: #ff7675; /* 橘紅：危機 */
+            --primary-btn: linear-gradient(135deg, #d4af37 0%, #c69320 100%);
         }
+
         body { 
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
-            background: var(--bg); 
-            margin: 0; padding: 20px; color: #2d3748;
-            line-height: 1.6;
+            font-family: 'Noto Sans TC', sans-serif;
+            /* 背景圖：建議替換為您喜歡的高質感圖片連結 (例如 Unsplash) */
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0; padding: 20px; color: var(--text-light);
+            min-height: 100vh; box-sizing: border-box;
         }
-        .container { max-width: 600px; margin: auto; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: var(--primary); margin-bottom: 5px; font-size: 1.6rem; }
-        .author { font-size: 0.9rem; color: #718096; }
 
-        .card { 
-            background: var(--card-bg); 
-            border-radius: 16px; 
-            padding: 24px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            margin-bottom: 20px; 
-            border: 1px solid rgba(0,0,0,0.03);
+        .container { max-width: 650px; margin: auto; position: relative; z-index: 1; }
+
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { 
+            font-family: 'Cinzel', serif; /* 藝術標題字體 */
+            color: #fff; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
+        .header p.sub-title { color: var(--text-muted); font-style: italic; margin-top: -5px; font-size: 0.95rem; }
+        .author { margin-top: 15px; font-size: 0.85rem; color: var(--accent-gold); letter-spacing: 1px; }
+
+        /* 毛玻璃卡片設計 */
+        .glass-card { 
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px; 
+            padding: 25px; 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 25px;
+            transition: transform 0.3s ease;
+        }
+        .glass-card:hover { transform: translateY(-2px); }
+
         .section-title { 
-            font-size: 1.1rem; font-weight: bold; color: var(--primary);
-            margin-bottom: 15px; display: flex; align-items: center;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem; color: #fff;
+            margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;
+            display: flex; align-items: center;
         }
-        .section-title::before {
-            content: ""; display: inline-block; width: 4px; height: 18px; 
-            background: var(--accent); margin-right: 10px; border-radius: 2px;
-        }
+        .section-icon { margin-right: 10px; color: var(--accent-gold); }
 
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.85rem; color: #4a5568; margin-bottom: 6px; font-weight: 500; }
-        input { 
-            width: 100%; height: 48px; border: 1.5px solid #e2e8f0; border-radius: 10px; 
-            font-size: 1.1rem; padding: 0 15px; box-sizing: border-box; transition: 0.2s;
-            background: #fdfdfd;
-        }
-        input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1); }
+        .input-group { margin-bottom: 18px; }
+        label { display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 300; }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        /* 透明輸入框 */
+        input { 
+            width: 100%; height: 48px; 
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border); border-radius: 12px; 
+            font-size: 1.1rem; padding: 0 15px; box-sizing: border-box; color: #fff;
+            transition: 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--accent-gold); background: rgba(0,0,0,0.4); }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
         button { 
-            width: 100%; height: 55px; background: var(--primary); color: white; 
-            border: none; border-radius: 12px; font-size: 1.2rem; font-weight: bold; 
-            cursor: pointer; margin-top: 10px; box-shadow: 0 4px 12px rgba(26, 54, 93, 0.2);
+            width: 100%; height: 60px; 
+            background: var(--primary-btn);
+            color: #fff; border: none; border-radius: 12px; 
+            font-size: 1.3rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; margin-top: 10px; 
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            font-family: 'Cinzel', serif;
+            transition: 0.3s;
         }
-        button:active { transform: translateY(2px); box-shadow: none; }
+        button:active { transform: scale(0.98); }
 
+        /* 藝術感結果區 */
         .result-box { 
-            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
-            color: white; border-radius: 16px; padding: 25px; display: none; margin-top: 25px;
+            background: rgba(20, 30, 48, 0.95);
+            border-radius: 20px; padding: 30px; display: none; margin-top: 35px;
+            border: 1px solid var(--accent-gold);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        .res-item { margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
-        .res-label { font-size: 0.9rem; color: #cbd5e0; margin-bottom: 5px; }
-        .res-value { font-size: 1.4rem; font-weight: bold; color: #fbbf24; }
-        .danger-text { color: #f87171; font-weight: bold; }
+        .result-title { text-align: center; font-family: 'Cinzel', serif; color: var(--accent-gold); margin-bottom: 25px; font-size: 1.5rem; }
         
-        footer { text-align: center; margin-top: 40px; padding-bottom: 20px; color: #a0aec0; font-size: 0.8rem; }
+        .res-item { margin-bottom: 25px; position: relative; padding-left: 20px; border-left: 2px solid var(--accent-gold); }
+        .res-label { font-size: 1rem; color: var(--text-muted); margin-bottom: 8px; }
+        .res-value { font-size: 1.6rem; font-weight: 700; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .danger-val { color: var(--accent-danger); }
+        .gold-val { color: var(--accent-gold); }
+        .sub-text { font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 5px; }
+        
+        footer { text-align: center; margin-top: 50px; padding-bottom: 20px; color: var(--text-muted); font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>人生風險財務規劃</h1>
-        <div class="author">顧問服務：李嘉哲 Gavin</div>
+        <h1>人生旅程導航</h1>
+        <p class="sub-title">從 24 歲啟程，預見未來的迷霧與微光</p>
+        <div class="author">顧問導航員：李嘉哲 Gavin</div>
     </div>
 
-    <div class="card">
-        <div class="section-title">基本資訊 (責任期計算)</div>
+    <div class="glass-card">
+        <div class="section-title"><span class="section-icon">✦</span> 當前座標 (責任期)</div>
         <div class="grid">
             <div class="input-group">
-                <label>目前年齡</label>
+                <label>您目前的年齡</label>
                 <input type="number" id="currentAge" value="35">
             </div>
             <div class="input-group">
-                <label>現有存款 (萬元)</label>
+                <label>已備妥的行囊 (存款/萬元)</label>
                 <input type="number" id="savings" value="100">
             </div>
         </div>
         <div class="input-group">
-            <label>目前月收入 (元)</label>
+            <label>每月能量補給 (月收入/元)</label>
             <input type="number" id="monthlyIncome" value="60000">
         </div>
     </div>
 
-    <div class="card">
-        <div class="section-title">年度開銷支出</div>
+    <div class="glass-card">
+        <div class="section-title"><span class="section-icon">⚔</span> 旅途的負重 (年度支出)</div>
         <div class="grid">
-            <div class="input-group"><label>生活費/月</label><input type="number" id="livingExp" value="30000"></div>
-            <div class="input-group"><label>房貸車貸/月</label><input type="number" id="debtExp" value="20000"></div>
-            <div class="input-group"><label>孝親費/月</label><input type="number" id="parentExp" value="5000"></div>
-            <div class="input-group"><label>旅遊預算/年</label><input type="number" id="travelExp" value="100000"></div>
+            <div class="input-group"><label>基本生存消耗/月</label><input type="number" id="livingExp" value="30000"></div>
+            <div class="input-group"><label>房貸車貸重擔/月</label><input type="number" id="debtExp" value="20000"></div>
+            <div class="input-group"><label>孝親責任/月</label><input type="number" id="parentExp" value="5000"></div>
+            <div class="input-group"><label>心靈探索旅費/年</label><input type="number" id="travelExp" value="100000"></div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="section-title">退休夢想</div>
+    <div class="glass-card">
+        <div class="section-title"><span class="section-icon">☀</span> 65歲後的彼岸 (退休夢)</div>
         <div class="input-group">
-            <label>退休後希望每月可用 (元)</label>
+            <label>希望屆時月生活水準 (現值)</label>
             <input type="number" id="retireMonthlyTarget" value="50000">
         </div>
         <div class="input-group">
-            <label>預計通膨率 (%)</label>
+            <label>通膨迷霧濃度 (預估通膨率 %)</label>
             <input type="number" id="inflationRate" value="3">
         </div>
     </div>
 
-    <button onclick="calculate()">分析人生的風險與缺口</button>
+    <button onclick="calculate()">啟動未來風險預測</button>
 
     <div id="results" class="result-box">
+        <div class="result-title">您的未來財務藍圖</div>
+        
         <div class="res-item">
-            <div class="res-label">距離 65 歲退休剩餘年數</div>
+            <div class="res-label">距離 65 歲退休港口，剩餘航程：</div>
             <div class="res-value"><span id="yearsRemain"></span> 年</div>
         </div>
+        
         <div class="res-item">
-            <div class="res-label">通膨風險：退休時您的收入購買力</div>
-            <div class="res-value">僅剩現在的 <span id="purchasingPower"></span> 元</div>
-            <div style="font-size: 0.8rem; color: #a0aec0;">* 錢在無聲無息中變小了</div>
+            <div class="res-label">通膨侵蝕：退休當下，您現在收入的真實購買力</div>
+            <div class="res-value gold-val">僅剩 <span id="purchasingPower"></span> 元</div>
+            <div class="sub-text">* 金錢的價值正無聲地消逝在時間長河中。</div>
         </div>
+        
+        <div class="res-item" style="border-left-color: var(--accent-danger);">
+            <div class="res-label">責任期 (現在-65歲) 的資金缺口黑洞</div>
+            <div class="res-value danger-val">$ <span id="totalGap"></span> 元</div>
+            <div class="sub-text">* 已扣除現有存款。若此期間發生風險，這將是家人的重擔。</div>
+        </div>
+        
         <div class="res-item">
-            <div class="res-label">責任期 (24-65歲) 總支出缺口</div>
-            <div class="res-value" style="color:#f87171;">$ <span id="totalGap"></span> 元</div>
-            <div style="font-size: 0.8rem; color: #a0aec0;">* 已扣除現有存款，不含退休後費用</div>
-        </div>
-        <div class="res-item" style="border-bottom:none;">
-            <div class="res-label">退休期 (65-85歲) 所需預備金</div>
+            <div class="res-label">安享退休彼岸 (65-85歲) 所需儲備金</div>
             <div class="res-value">$ <span id="retireNeed"></span> 元</div>
+            <div class="sub-text">* 為了那 20 年的自由，我們現在必須行動。</div>
         </div>
     </div>
 
     <footer>
-        &copy; 2026 製作者：李嘉哲 Gavin | 專業財務風險規劃
+        &copy; 2026 專業財務導航 | Designed by 李嘉哲 Gavin
     </footer>
 </div>
 
 <script>
+// 保持原有的計算邏輯，僅更新顯示ID匹配新的HTML結構
 function calculate() {
     const currentAge = parseInt(document.getElementById('currentAge').value);
     const savings = parseFloat(document.getElementById('savings').value) * 10000;
@@ -157,7 +199,7 @@ function calculate() {
     // 1. 計算購買力縮水
     const pPower = monthlyIncome / Math.pow((1 + inflation), yearsToRetire);
     
-    // 2. 責任期總開銷 (35歲算到65歲)
+    // 2. 責任期總開銷
     const mTotalExp = parseFloat(document.getElementById('livingExp').value) + 
                       parseFloat(document.getElementById('debtExp').value) + 
                       parseFloat(document.getElementById('parentExp').value);
@@ -166,7 +208,7 @@ function calculate() {
     const totalExpInResponsibility = (mTotalExp * 12 + yTravel) * yearsToRetire;
     const finalGap = totalExpInResponsibility - savings;
     
-    // 3. 退休後預備金 (預估活20年)
+    // 3. 退休後預備金
     const retireMonthly = parseFloat(document.getElementById('retireMonthlyTarget').value);
     const retireTotal = retireMonthly * 12 * 20;
 
@@ -176,13 +218,11 @@ function calculate() {
     document.getElementById('totalGap').innerText = Math.round(finalGap).toLocaleString();
     document.getElementById('retireNeed').innerText = Math.round(retireTotal).toLocaleString();
     
-    document.getElementById('results').style.display = 'block';
+    const resultBox = document.getElementById('results');
+    resultBox.style.display = 'block';
     
-    // 自動捲動到結果區
-    window.scrollTo({
-        top: document.getElementById('results').offsetTop - 20,
-        behavior: 'smooth'
-    });
+    // 平滑捲動效果
+    resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 
