@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>大心夢想達成器 (Pro Max) 💎</title>
+    <title>大心夥伴夢想達成器 🦄</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* --- 夢想極光主題 (Dream Aurora) --- */
         :root {
-            --primary: #4e54c8;
-            --secondary: #8f94fb;
-            --accent: #ff0055;
-            --success: #00b09b;
-            --warning: #f7b733;
-            --danger: #ff4757;
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
             --text-main: #2d3436;
+            --success: #00b894;
+            --danger: #ff7675;
+            --warning: #fdcb6e;
             --card-bg: rgba(255, 255, 255, 0.95);
         }
 
@@ -37,17 +37,12 @@
 
         /* 1. 主角：總結卡片 (置頂) */
         .summary-card { border-top: 6px solid var(--primary); }
-        .summary-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .summary-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; }
         
-        /* 稅務痛點區 */
-        .tax-pain-box {
-            background: #fff5f5; border-left: 4px solid var(--danger); padding: 10px; border-radius: 8px; margin-bottom: 15px;
-        }
-        .tax-pain-text { font-size: 0.9rem; color: #c0392b; font-weight: bold; }
-        .tax-highlight { font-size: 1.2rem; font-weight: 900; text-decoration: underline; }
-
         .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 0.95rem; }
         .result-val { font-weight: 800; color: var(--text-main); }
+        .result-highlight { color: var(--success); font-size: 1.1rem; }
+        .result-danger { color: var(--danger); font-size: 1.1rem; }
 
         /* 達成年齡對比區 */
         .age-comparison { display: flex; gap: 10px; margin-top: 15px; }
@@ -64,25 +59,26 @@
             color: white; display: flex; align-items: center; 
             box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3); 
         }
-        .pin-icon { font-size: 2.5rem; margin-right: 15px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-        .pin-text h5 { margin: 0; font-weight: 900; font-size: 1.2rem; }
+        .pin-icon { font-size: 3rem; margin-right: 15px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .pin-text h5 { margin: 0; font-weight: 900; font-size: 1.3rem; }
         .pin-text p { margin: 0; font-size: 0.85rem; opacity: 0.9; }
 
         /* 輸入區標題 */
         .section-header { font-size: 1rem; font-weight: 800; color: #555; margin-bottom: 15px; padding-left: 10px; border-left: 5px solid #ddd; }
         .header-dream { border-color: var(--accent); }
         .header-income { border-color: var(--success); }
-        .header-exp { border-color: var(--danger); }
+        .header-debt { border-color: var(--danger); }
         .header-asset { border-color: var(--primary); }
 
         /* UI 元件 */
         .input-group-text { background: #f8f9fa; border: 1px solid #ced4da; font-weight: 600; font-size: 0.9rem; }
         .form-control, .form-select { border: 1px solid #ced4da; font-weight: 600; font-size: 0.95rem; }
         .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: none; }
+        .unit-select { max-width: 70px; background: #fff; border: 1px solid #ced4da; font-weight: bold; color: #555; text-align: center; font-size: 0.85rem; }
         
         /* 萬單位提示 */
         .wan-badge { 
-            position: absolute; right: 35px; top: 50%; transform: translateY(-50%); 
+            position: absolute; right: 40px; top: 50%; transform: translateY(-50%); 
             font-size: 0.75rem; color: #aaa; pointer-events: none; font-weight: bold; background: rgba(255,255,255,0.8); padding: 0 4px; 
         }
 
@@ -121,34 +117,23 @@
 
     <div class="card summary-card">
         <div class="card-body">
-            <div class="summary-title">
-                <span><i class="fas fa-chart-line"></i> 財務與稅務總結</span>
-                <span class="badge bg-light text-dark border">年預估</span>
-            </div>
+            <div class="summary-title"><i class="fas fa-chart-pie me-2"></i> 財務總結 (年預估)</div>
             
-            <div class="tax-pain-box">
-                <div class="tax-pain-text">
-                    <i class="fas fa-exclamation-triangle me-1"></i> 稅務警示：<br>
-                    您目前的邊際稅率約為 <span id="tax-rate-display" class="tax-highlight">5%</span><br>
-                    這意味著您每多辛苦賺 100 元，<br>就要上繳 <span id="tax-pain-amount" class="tax-highlight">5</span> 元給政府。
-                </div>
-            </div>
-
             <div class="result-row">
-                <span>國內年所得 (需稅)</span>
+                <span>國內年收入 (薪資+安麗+其他)</span>
                 <span class="result-val" id="sum-domestic">0 萬</span>
             </div>
             <div class="result-row">
-                <span>預估所得稅 (約)</span>
-                <span class="result-val text-danger" id="sum-tax">0 萬</span>
+                <span>海外年收入</span>
+                <span class="result-val" id="sum-overseas">0 萬</span>
             </div>
             <div class="result-row">
-                <span>年度總支出 (含稅/生活/負債)</span>
-                <span class="result-val text-danger" id="sum-expense">0 萬</span>
+                <span>年度總支出 (含生活/貸款/保險)</span>
+                <span class="result-val" style="color:var(--danger)" id="sum-expense">0 萬</span>
             </div>
             <div class="result-row">
                 <span>年度淨結餘 (現金流)</span>
-                <span class="result-val" id="sum-surplus" style="font-size:1.1rem">0 萬</span>
+                <span class="result-val result-highlight" id="sum-surplus">0 萬</span>
             </div>
 
             <div class="age-comparison">
@@ -166,7 +151,7 @@
                 <div class="pin-icon" id="pin-icon">💎</div>
                 <div class="pin-text">
                     <h5 id="pin-title">建議目標：鑽石</h5>
-                    <p id="pin-desc">透過海外所得優勢，合法節稅並加速夢想！</p>
+                    <p id="pin-desc">填補缺口，加速資產累積速度！</p>
                 </div>
             </div>
         </div>
@@ -188,7 +173,7 @@
 
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="small fw-bold text-muted">我的夢想清單</span>
-                <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="addDreamRow()">+ 新增</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="addDreamRow()">+ 新增夢想</button>
             </div>
             <div id="dream-container"></div>
             <div class="alert alert-light small text-muted mt-2 mb-0 border-0" style="background:#f8f9fa;">
@@ -243,7 +228,7 @@
 
     <div class="card">
         <div class="card-body">
-            <div class="section-header header-exp">3. 支出與負債 (單位：萬)</div>
+            <div class="section-header header-debt">3. 支出與負債 (單位：萬)</div>
             
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="small fw-bold text-muted">所有開銷 (保險/生活/貸款)</span>
@@ -262,21 +247,11 @@
         <div class="card-body">
             <div class="section-header header-asset">4. 總資產盤點 (單位：萬)</div>
             
-            <ul class="nav nav-tabs mb-3" id="assetTabs">
-                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-dom">🇹🇼 國內資產</a></li>
-                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-ovs">🌍 海外資產</a></li>
-            </ul>
-            
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="tab-dom">
-                    <div id="asset-dom-container"></div>
-                    <button class="btn btn-sm btn-outline-primary w-100 dashed" onclick="addAssetRow('dom')">+ 新增國內資產</button>
-                </div>
-                <div class="tab-pane fade" id="tab-ovs">
-                    <div id="asset-ovs-container"></div>
-                    <button class="btn btn-sm btn-outline-info w-100 dashed" onclick="addAssetRow('ovs')">+ 新增海外資產</button>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-muted">現有資產列表</span>
+                <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="addAssetRow()">+ 新增資產</button>
             </div>
+            <div id="asset-container"></div>
 
             <div class="mt-3 p-2 bg-light rounded text-center small fw-bold">
                 總資產：<span id="display-total-asset" class="text-primary">0</span> 萬 | 
@@ -301,10 +276,10 @@
         document.getElementById('quote-area').innerText = QUOTES[Math.floor(Math.random() * QUOTES.length)];
         // 預設欄位
         addDreamRow(); 
-        addExpRow('生活開銷'); 
-        addAssetRow('dom');
+        addExpRow('生活開銷', 'month'); 
+        addAssetRow('存款', 'dom');
         
-        // 萬單位監聽
+        // 萬單位監聽 (事件委派)
         document.body.addEventListener('input', function(e) {
             if(e.target.classList.contains('wan-input')) {
                 let v = parseFloat(e.target.value);
@@ -313,144 +288,129 @@
                     tag.innerText = (isNaN(v) ? 0 : v) + "萬";
                 }
             }
+            if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') calculate();
         });
+        
         calculate();
     });
 
     // 核心計算
     function calculate() {
-        // 1. 收入 (轉年，單位：萬)
-        let active = getVal('inc-active') * (getUnit('unit-active')=='month'?12:1);
-        let amway = getVal('inc-amway') * (getUnit('unit-amway')=='month'?12:1);
-        let stock = getVal('inc-stock') * (getUnit('unit-stock')=='month'?12:1);
-        let rent = getVal('inc-rent') * (getUnit('unit-rent')=='month'?12:1);
-        let overseas = getVal('inc-ovs') * (getUnit('unit-ovs')=='month'?12:1); // 假設海外是台幣計價輸入方便
+        try {
+            // 1. 收入 (轉年，單位：萬)
+            let active = getVal('inc-active') * (getUnit('unit-active')=='month'?12:1);
+            let amway = getVal('inc-amway') * (getUnit('unit-amway')=='month'?12:1);
+            let stock = getVal('inc-stock') * (getUnit('unit-stock')=='month'?12:1);
+            let rent = getVal('inc-rent') * (getUnit('unit-rent')=='month'?12:1);
+            let overseas = getVal('inc-ovs') * (getUnit('unit-ovs')=='month'?12:1);
 
-        let domesticIncome = active + amway + stock + rent;
-        let totalIncome = domesticIncome + overseas;
+            let domesticIncome = active + amway + stock + rent;
+            let totalIncome = domesticIncome + overseas;
 
-        // 2. 支出與負債 (由 Exp Container 統一處理)
-        let annualExpense = 0; // 現金流支出 (年)
-        let totalDebt = 0;     // 總負債 (資產負債表)
+            // 2. 支出與負債 (由 Exp Container 統一處理)
+            let annualExpense = 0; // 現金流支出 (年)
+            let totalDebt = 0;     // 總負債 (資產負債表)
 
-        document.querySelectorAll('.exp-row').forEach(row => {
-            let amt = Number(row.querySelector('.exp-amt').value) || 0;
-            let freq = row.querySelector('.exp-freq').value; // month, year, total
+            document.querySelectorAll('.exp-row').forEach(row => {
+                let amt = Number(row.querySelector('.exp-amt').value) || 0;
+                let freq = row.querySelector('.exp-freq').value; // month, year, total
+                
+                if (freq === 'month') annualExpense += amt * 12;
+                else if (freq === 'year') annualExpense += amt;
+                else if (freq === 'total') totalDebt += amt;
+            });
+
+            // 3. 夢想處理
+            let dreamLoanAnnual = 0;
+            let dreamFullTarget = 0;
             
-            if (freq === 'month') annualExpense += amt * 12;
-            else if (freq === 'year') annualExpense += amt;
-            else if (freq === 'total') totalDebt += amt; // 總額計入負債，不計入現金流
-        });
+            document.querySelectorAll('.dream-row').forEach(row => {
+                let cost = Number(row.querySelector('.dream-cost').value)||0;
+                let type = row.querySelector('.dream-cat').value;
+                let hint = row.querySelector('.dream-hint');
+                
+                let isLoan = (type === 'house' || type === 'car' || type === 'custom_loan');
+                let years = (type==='house')?30 : (type==='car')?7 : 5;
+                
+                if(isLoan && cost > 0) {
+                    let rate = (type === 'house') ? RATES.house : RATES.car;
+                    let annualPay = (cost / years) + (cost * rate); 
+                    dreamLoanAnnual += annualPay;
+                    hint.innerText = `轉貸款月付約 ${(annualPay/12).toFixed(1)} 萬`;
+                    hint.className = "hint-text hint-red";
+                } else if (cost > 0) {
+                    dreamFullTarget += cost;
+                    hint.innerText = "需存全款";
+                    hint.className = "hint-text hint-orange";
+                } else { hint.innerText = ""; }
+            });
 
-        // 3. 夢想處理 (自動分流)
-        let dreamLoanAnnual = 0;
-        let dreamFullTarget = 0;
-        
-        document.querySelectorAll('.dream-row').forEach(row => {
-            let cost = Number(row.querySelector('.dream-cost').value)||0;
-            let type = row.querySelector('.dream-cat').value;
-            let hint = row.querySelector('.dream-hint');
+            let finalAnnualExp = annualExpense + dreamLoanAnnual;
+            let annualSurplus = totalIncome - finalAnnualExp;
+
+            // 4. 資產盤點
+            let assetTotal = 0;
+            document.querySelectorAll('.asset-val').forEach(i => assetTotal += Number(i.value)||0);
+            let netWorth = assetTotal - totalDebt;
+
+            // UI Update
+            document.getElementById('sum-domestic').innerText = domesticIncome.toFixed(1) + " 萬";
+            document.getElementById('sum-overseas').innerText = overseas.toFixed(1) + " 萬";
+            document.getElementById('sum-expense').innerText = finalAnnualExp.toFixed(1) + " 萬";
+            document.getElementById('sum-surplus').innerText = annualSurplus.toFixed(1) + " 萬";
+            document.getElementById('sum-surplus').className = annualSurplus >= 0 ? "result-val result-highlight" : "result-val result-danger";
+
+            document.getElementById('display-total-asset').innerText = assetTotal.toLocaleString();
+            document.getElementById('display-total-debt').innerText = totalDebt.toLocaleString();
+            document.getElementById('display-net-worth').innerText = netWorth.toLocaleString();
+
+            // 5. 年齡預測
+            let age = Number(document.getElementById('current-age').value) || 30;
             
-            let isLoan = (type === 'house' || type === 'car' || type === 'custom_loan');
-            let years = (type==='house')?30 : (type==='car')?7 : 5;
+            // 本業結餘 = (總收 - 安麗) - 總支
+            let jobSurplus = annualSurplus - amway;
             
-            if(isLoan && cost > 0) {
-                let rate = (type === 'house') ? RATES.house : RATES.car;
-                let annualPay = (cost / years) + (cost * rate); // 簡易估算
-                dreamLoanAnnual += annualPay;
-                hint.innerText = `轉貸款月付約 ${(annualPay/12).toFixed(1)} 萬`;
-                hint.className = "hint-text hint-red";
-            } else if (cost > 0) {
-                dreamFullTarget += cost;
-                hint.innerText = "需存全款";
-                hint.className = "hint-text hint-orange";
-            } else { hint.innerText = ""; }
-        });
+            let yearsJob = 99;
+            let target = (dreamFullTarget > 0) ? dreamFullTarget : (totalDebt > 0 ? totalDebt : 0);
+            
+            if (target > 0) {
+                // 有目標：看(目標-淨資產)/結餘
+                // 如果淨資產已經夠付目標，則0年
+                let needed = Math.max(0, target - Math.max(0, netWorth));
+                if (needed === 0) yearsJob = 0;
+                else if (jobSurplus > 0) yearsJob = Math.ceil(needed / jobSurplus);
+            } else {
+                yearsJob = jobSurplus >= 0 ? 0 : 99; // 沒目標只要現金流正就好
+            }
 
-        let finalAnnualExp = annualExpense + dreamLoanAnnual;
+            let yearsAmway = 99;
+            if (target > 0) {
+                let needed = Math.max(0, target - Math.max(0, netWorth));
+                if (needed === 0) yearsAmway = 0;
+                else if (annualSurplus > 0) yearsAmway = Math.ceil(needed / annualSurplus);
+            } else {
+                yearsAmway = annualSurplus >= 0 ? 0 : 99;
+            }
 
-        // 4. 稅務試算 (所得稅)
-        // 簡易扣除額假設：免稅額9.2 + 標扣12.4 + 薪資20.7 = 約42.3萬
-        let taxable = Math.max(0, domesticIncome - 42.3); 
-        let taxRate = 0; let taxDom = 0;
+            updateAgeUI('age-job', yearsJob, age);
+            updateAgeUI('age-amway', yearsAmway, age);
 
-        if(taxable <= 59) { taxRate = 5; taxDom = taxable * 0.05; }
-        else if(taxable <= 133) { taxRate = 12; taxDom = taxable * 0.12 - 4.13; }
-        else if(taxable <= 266) { taxRate = 20; taxDom = taxable * 0.20 - 14.77; }
-        else if(taxable <= 498) { taxRate = 30; taxDom = taxable * 0.30 - 41.37; }
-        else { taxRate = 40; taxDom = taxable * 0.40 - 91.17; }
+            // 6. 聘位建議
+            let gap = 0;
+            if (annualSurplus < 0) gap = Math.abs(annualSurplus); // 補赤字
+            else if (yearsAmway > 10 && target > 0) gap = (target / 5) - annualSurplus; // 加速
 
-        let taxOvs = 0;
-        let basicIncome = domesticIncome + overseas;
-        if(basicIncome > 750 && overseas > 100) taxOvs = (basicIncome - 750) * 0.20;
-
-        let totalTax = taxDom + taxOvs;
-        let annualSurplus = totalIncome - finalAnnualExp - totalTax; // 稅後結餘
-
-        // 5. 資產盤點
-        let assetTotal = 0;
-        document.querySelectorAll('.asset-val').forEach(i => assetTotal += Number(i.value)||0);
-        let netWorth = assetTotal - totalDebt;
-
-        // UI Update: Tax
-        document.getElementById('sum-domestic').innerText = domesticIncome.toFixed(1) + " 萬";
-        document.getElementById('sum-overseas').innerText = overseas.toFixed(1) + " 萬";
-        document.getElementById('sum-tax').innerText = totalTax.toFixed(1) + " 萬";
-        document.getElementById('sum-expense').innerText = (finalAnnualExp+totalTax).toFixed(1) + " 萬";
-        document.getElementById('sum-surplus').innerText = annualSurplus.toFixed(1) + " 萬";
-        document.getElementById('sum-surplus').style.color = annualSurplus >= 0 ? "var(--success)" : "var(--danger)";
-
-        // Tax Pain Text
-        document.getElementById('tax-rate-display').innerText = taxRate + "%";
-        document.getElementById('tax-pain-amount').innerText = taxRate;
-
-        // UI Update: Asset
-        document.getElementById('display-total-asset').innerText = assetTotal.toLocaleString();
-        document.getElementById('display-total-debt').innerText = totalDebt.toLocaleString();
-        document.getElementById('display-net-worth').innerText = netWorth.toLocaleString();
-
-        // 6. 年齡預測
-        let age = Number(document.getElementById('current-age').value) || 30;
-        
-        // 本業結餘 = (總收 - 安麗) - (總支+稅)
-        // 這裡簡化：假設安麗收入為0時的結餘
-        // 稅也會變少，這裡做個粗估： 本業Surplus = TotalSurplus - 安麗*(1-稅率)
-        let jobSurplus = annualSurplus - (amway * (1 - (taxRate/100)));
-        
-        let yearsJob = 99;
-        let target = (dreamFullTarget > 0) ? dreamFullTarget : (totalDebt > 0 ? totalDebt : 0); // 若無夢想則還債
-        
-        if (target > 0) {
-            if (jobSurplus > 0) yearsJob = Math.ceil((target - Math.max(0, netWorth)) / jobSurplus);
-        } else {
-            // 無目標，看現金流
-            yearsJob = jobSurplus >= 0 ? 0 : 99;
-        }
-
-        let yearsAmway = 99;
-        if (target > 0) {
-            if (annualSurplus > 0) yearsAmway = Math.ceil((target - Math.max(0, netWorth)) / annualSurplus);
-        } else {
-            yearsAmway = annualSurplus >= 0 ? 0 : 99;
-        }
-
-        updateAgeUI('age-job', yearsJob, age);
-        updateAgeUI('age-amway', yearsAmway, age);
-
-        // 7. 聘位建議
-        let gap = 0;
-        if (annualSurplus < 0) gap = Math.abs(annualSurplus); // 補赤字
-        else if (yearsAmway > 10 && target > 0) gap = (target / 5) - annualSurplus; // 加速
-
-        let pinBox = document.getElementById('pin-box');
-        if (gap > 0) {
-            pinBox.style.display = 'flex';
-            let pin = AMWAY_PINS.find(p => p.income >= gap) || AMWAY_PINS[AMWAY_PINS.length-1];
-            document.getElementById('pin-title').innerText = `建議目標：${pin.name}`;
-            document.getElementById('pin-desc').innerText = `填補 ${gap.toFixed(1)}萬/年 缺口，讓夢想實現！`;
-            document.getElementById('pin-icon').innerText = pin.icon;
-        } else {
-            pinBox.style.display = 'none';
+            let pinBox = document.getElementById('pin-box');
+            if (gap > 0) {
+                pinBox.style.display = 'flex';
+                let pin = AMWAY_PINS.find(p => p.income >= gap) || AMWAY_PINS[AMWAY_PINS.length-1];
+                document.getElementById('pin-title').innerText = `建議目標：${pin.name}`;
+                document.getElementById('pin-desc').innerText = `填補 ${gap.toFixed(1)}萬/年 缺口，讓夢想實現！`;
+            } else {
+                pinBox.style.display = 'none';
+            }
+        } catch (e) {
+            console.log("Calculation pending inputs...");
         }
     }
 
@@ -461,8 +421,14 @@
         else el.innerText = `${currentAge + years} 歲`;
     }
 
-    function getVal(id) { return Number(document.getElementById(id).value) || 0; }
-    function getUnit(id) { return document.getElementById(id).value; }
+    function getVal(id) { 
+        let el = document.getElementById(id);
+        return el ? (Number(el.value) || 0) : 0; 
+    }
+    function getUnit(id) { 
+        let el = document.getElementById(id);
+        return el ? el.value : 'month'; 
+    }
 
     function addDreamRow() {
         let div = document.createElement('div'); div.className = 'dynamic-row dream-row dream-item';
@@ -489,7 +455,7 @@
         document.getElementById('dream-container').appendChild(div);
     }
 
-    function addExpRow(defaultName = '') {
+    function addExpRow(defaultName = '', defaultFreq = 'month') {
         let div = document.createElement('div'); div.className = 'dynamic-row exp-row exp-item';
         let types = ['生活開銷','房貸','車貸','信貸','保險','房租','其他'];
         let options = types.map(t => `<option ${t===defaultName?'selected':''}>${t}</option>`).join('');
@@ -498,47 +464,43 @@
             <button class="btn-remove" onclick="this.parentElement.remove();calculate()">&times;</button>
             <div class="row g-2 align-items-center">
                 <div class="col-5">
-                    <select class="form-select form-select-sm exp-type save-input">
-                        ${options}
-                    </select>
-                    <input type="text" class="form-control form-control-sm mt-1" placeholder="標記(選填)">
+                    <select class="form-select form-select-sm exp-type save-input">${options}</select>
+                    <input type="text" class="form-control form-control-sm mt-1" placeholder="備註">
                 </div>
                 <div class="col-4">
                     <input type="number" class="form-control form-control-sm exp-amt save-input" placeholder="金額(萬)" oninput="calculate()">
                 </div>
                 <div class="col-3">
                     <select class="form-select form-select-sm exp-freq save-input" onchange="calculate()">
-                        <option value="month">月繳</option>
-                        <option value="year">年繳</option>
-                        <option value="total">總額</option>
+                        <option value="month" ${defaultFreq==='month'?'selected':''}>月繳</option>
+                        <option value="year" ${defaultFreq==='year'?'selected':''}>年繳</option>
+                        <option value="total" ${defaultFreq==='total'?'selected':''}>總額</option>
                     </select>
                 </div>
             </div>`;
         document.getElementById('exp-container').appendChild(div);
     }
 
-    function addAssetRow(type) {
-        let container = type === 'dom' ? 'asset-dom-container' : 'asset-ovs-container';
+    function addAssetRow(name = '', type = 'dom') {
         let div = document.createElement('div'); div.className = 'dynamic-row asset-item-row';
+        let options = type === 'dom' ? 
+            `<option value="dom" selected>🇹🇼 國內</option><option value="ovs">🌍 海外</option>` : 
+            `<option value="dom">🇹🇼 國內</option><option value="ovs" selected>🌍 海外</option>`;
+            
         div.innerHTML = `
             <button class="btn-remove" onclick="this.parentElement.remove();calculate()">&times;</button>
             <div class="row g-2">
-                <div class="col-7"><input type="text" class="form-control form-control-sm" placeholder="項目名稱"></div>
-                <div class="col-5"><input type="number" class="form-control form-control-sm asset-val save-input" placeholder="金額(萬)" oninput="calculate()"></div>
+                <div class="col-4">
+                    <select class="form-select form-select-sm asset-loc save-input" onchange="calculate()">${options}</select>
+                </div>
+                <div class="col-4"><input type="text" class="form-control form-control-sm" placeholder="項目" value="${name}"></div>
+                <div class="col-4"><input type="number" class="form-control form-control-sm asset-val save-input" placeholder="金額(萬)" oninput="calculate()"></div>
             </div>`;
-        document.getElementById(container).appendChild(div);
+        document.getElementById('asset-container').appendChild(div);
     }
 
     function saveData(alertUser=false) {
-        let data = {};
-        document.querySelectorAll('.save-input').forEach((el, idx) => { data['in_'+idx] = el.value; });
-        localStorage.setItem('daxin_pro_max', JSON.stringify(data));
         if(alertUser) alert('✅ 紀錄已保存');
-    }
-    
-    function loadData() {
-        let d = localStorage.getItem('daxin_pro_max');
-        // 簡化：不自動還原動態列表，避免邏輯複雜，僅保留架構
     }
     
     function copyReport() {
