@@ -62,11 +62,10 @@
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
-        /* 針對支出的特別標籤顏色 */
         .exp-label { color: #555; font-size: 0.85rem; }
 
         button { 
-            width: 100%; height: 55px; 
+            width: 100%; height: 60px; 
             background: var(--primary-blue);
             color: #fff; border: none; border-radius: 8px; 
             font-size: 1.2rem; font-weight: 700;
@@ -90,6 +89,18 @@
         .gold-val { color: var(--accent-gold); }
         .blue-val { color: var(--primary-blue); }
         .sub-text { font-size: 0.8rem; color: var(--text-grey); display: block; margin-top: 2px; }
+
+        /* 最後的結論卡片 */
+        .final-verdict {
+            background: #fff5f5;
+            border: 2px solid #feb2b2;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .final-verdict h3 { color: #c53030; margin: 0 0 10px 0; font-size: 1.1rem; }
+        .final-number { font-size: 2rem; font-weight: 800; color: #c53030; display: block; margin: 5px 0; }
         
         footer { text-align: center; margin-top: 30px; padding-bottom: 20px; color: var(--text-grey); font-size: 0.8rem; }
     </style>
@@ -99,7 +110,7 @@
 <div class="container">
     <div class="header">
         <h1>人生財務風險導航</h1>
-        <p class="sub-title">細算每一筆開銷，看見真實的未來</p>
+        <p class="sub-title">從現在開始，計算通往未來的代價</p>
         <div class="author">專業顧問：李嘉哲 Gavin</div>
     </div>
 
@@ -122,7 +133,7 @@
     </div>
 
     <div class="light-card">
-        <div class="section-title"><span class="section-icon">💸</span> 年度必要支出細項 (每月/每年)</div>
+        <div class="section-title"><span class="section-icon">💸</span> 年度必要支出細項 (負重分析)</div>
         
         <div class="grid">
             <div class="input-group">
@@ -130,7 +141,7 @@
                 <input type="number" id="houseExp" value="20000">
             </div>
             <div class="input-group">
-                <label class="exp-label">車貸/養車/交通 (月)</label>
+                <label class="exp-label">車貸/養車 (月)</label>
                 <input type="number" id="carExp" value="8000">
             </div>
             <div class="input-group">
@@ -183,7 +194,7 @@
         </div>
     </div>
 
-    <button onclick="calculate()">分析人生財務缺口</button>
+    <button onclick="calculate()">分析我的財務缺口</button>
 
     <div id="results" class="result-box">
         <div class="header">
@@ -198,19 +209,26 @@
         <div class="res-item">
             <div class="res-label">通膨購買力風險 (退休時)：</div>
             <div class="res-value gold-val">剩 <span id="purchasingPower"></span> 元</div>
-            <span class="sub-text">💡 假設通膨持續，您現在收入的價值將大幅縮水。</span>
+            <span class="sub-text">💡 若收入不成長，未來生活品質將嚴重縮水。</span>
         </div>
         
         <div class="res-item">
-            <div class="res-label">責任期 (現在-65歲) 總資金缺口</div>
+            <div class="res-label">責任期 (現在-65歲) 總支出缺口</div>
             <div class="res-value danger-val">$ <span id="totalGap"></span> 元</div>
-            <span class="sub-text">⚠️ 包含房車貸、育兒、伴侶經營、生活費，扣除現有存款後的數字。</span>
+            <span class="sub-text">⚠️ 包含房車貸、育兒及生活費，扣除存款後的數字。</span>
         </div>
         
-        <div class="res-item" style="border-bottom:none;">
-            <div class="res-label">退休後 (65-85歲) 養老準備金</div>
+        <div class="res-item">
+            <div class="res-label">退休期 (65-85歲) 養老準備金</div>
             <div class="res-value blue-val">$ <span id="retireNeed"></span> 元</div>
-            <span class="sub-text">🎯 想要有尊嚴的退休生活，這筆錢不能少。</span>
+            <span class="sub-text">🎯 想要有尊嚴的退休生活，這筆錢是必須的。</span>
+        </div>
+
+        <div class="final-verdict">
+            <h3>🔴 現實的殘酷結論</h3>
+            <p style="margin:5px 0; color:#555; font-size:0.9rem;">為了填補責任期與退休金的所有缺口<br>從<b>今天</b>開始，您每個月必須存下：</p>
+            <span class="final-number">$ <span id="monthlySaveNeeded"></span> 元</span>
+            <p style="margin-top:10px; font-size:0.85rem; color:#c53030; font-weight:bold;" id="warningText"></p>
         </div>
     </div>
 
@@ -221,7 +239,7 @@
 
 <script>
 function calculate() {
-    // 1. 基礎數據
+    // 1. 獲取數值
     const currentAge = parseInt(document.getElementById('currentAge').value);
     const savings = parseFloat(document.getElementById('savings').value) * 10000;
     const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value);
@@ -233,13 +251,10 @@ function calculate() {
         return;
     }
 
-    // 2. 通膨購買力計算 (FV = PV * (1+r)^n 的反向概念，這裡展示現在收入在未來的縮水感)
-    // 修正邏輯：展示現在的收入，在未來相當於多少購買力
-    // 公式：現在收入 / (1+通膨)^年數
+    // 2. 購買力縮水
     const pPower = monthlyIncome / Math.pow((1 + inflation), yearsToRetire);
 
-    // 3. 責任期總支出計算 (Monthly items * 12 + Yearly items)
-    // 每月項目
+    // 3. 責任期總支出
     const mHouse = parseFloat(document.getElementById('houseExp').value) || 0;
     const mCar = parseFloat(document.getElementById('carExp').value) || 0;
     const mParent = parseFloat(document.getElementById('parentExp').value) || 0;
@@ -247,33 +262,53 @@ function calculate() {
     const mDaily = parseFloat(document.getElementById('dailyExp').value) || 0;
     const mPartner = parseFloat(document.getElementById('partnerExp').value) || 0;
     
-    // 年度項目
     const yInsurance = parseFloat(document.getElementById('insuranceExp').value) || 0;
     const yLearn = parseFloat(document.getElementById('learnExp').value) || 0;
     const yTravel = parseFloat(document.getElementById('travelExp').value) || 0;
 
-    // 計算一年總支出
     const annualTotalExp = (mHouse + mCar + mParent + mChild + mDaily + mPartner) * 12 + (yInsurance + yLearn + yTravel);
-    
-    // 責任期總支出 (簡單預估，未計算支出的通膨增長，讓數字保守一點但依然驚人)
     const totalExpInResponsibility = annualTotalExp * yearsToRetire;
-    
-    // 缺口 = 總支出 - 存款
-    const finalGap = totalExpInResponsibility - savings;
+    const finalGap = totalExpInResponsibility - savings; // 這是責任期的缺口
 
-    // 4. 退休後需求 (簡單計算 20 年)
+    // 4. 退休金需求
     const retireMonthly = parseFloat(document.getElementById('retireMonthlyTarget').value);
     const retireTotal = retireMonthly * 12 * 20;
 
-    // 5. 顯示結果
+    // 5. 計算每月需存金額 (Total Gap + Retire Gap) / 剩餘月份
+    // 注意：如果finalGap是負的(代表存款夠付責任期)，則只需要算退休金，扣掉剩餘存款
+    let grandTotalNeeded = 0;
+    if (finalGap > 0) {
+        grandTotalNeeded = finalGap + retireTotal;
+    } else {
+        grandTotalNeeded = retireTotal + finalGap; // finalGap是負數，等於變相扣除
+    }
+
+    const monthsToRetire = yearsToRetire * 12;
+    const monthlySave = grandTotalNeeded > 0 ? (grandTotalNeeded / monthsToRetire) : 0;
+
+    // 6. 顯示結果
     document.getElementById('yearsRemain').innerText = yearsToRetire;
     document.getElementById('purchasingPower').innerText = Math.round(pPower).toLocaleString();
-    document.getElementById('totalGap').innerText = Math.round(finalGap).toLocaleString();
+    
+    // 如果缺口是負數，顯示0
+    document.getElementById('totalGap').innerText = Math.round(Math.max(0, finalGap)).toLocaleString();
     document.getElementById('retireNeed').innerText = Math.round(retireTotal).toLocaleString();
+    
+    const saveElement = document.getElementById('monthlySaveNeeded');
+    saveElement.innerText = Math.round(monthlySave).toLocaleString();
+
+    // 警告文字邏輯
+    const warningText = document.getElementById('warningText');
+    if (monthlySave > monthlyIncome) {
+        warningText.innerText = "⚠️ 警告：這已超過您目前的月收入！";
+    } else if (monthlySave > monthlyIncome * 0.5) {
+        warningText.innerText = "⚠️ 警告：這需要您存下超過一半的收入！";
+    } else {
+        warningText.innerText = "💡 這是要在 65 歲前財富自由的最低標準。";
+    }
     
     const resultBox = document.getElementById('results');
     resultBox.style.display = 'block';
-    
     resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
