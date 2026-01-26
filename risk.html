@@ -3,100 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>人生風險財務規劃系統</title>
+    <title>人生財務風險導航</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-blue: #0056b3;   /* 專業藍 */
-            --accent-gold: #b7892b;    /* 重點金 */
-            --danger-red: #dc3545;     /* 危機紅 */
-            --bg-light: #f4f7f9;       /* 明亮背景 */
-            --card-white: #ffffff;     /* 純白卡片 */
-            --text-dark: #2c3e50;      /* 深色文字 */
-            --text-grey: #6c757d;      /* 次要文字 */
+            --primary-blue: #0056b3;
+            --accent-gold: #b7892b;
+            --danger-red: #dc3545;
+            --bg-light: #f4f7f9;
+            --card-white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-grey: #6c757d;
         }
 
         body { 
             font-family: 'Noto Sans TC', sans-serif;
             background: var(--bg-light);
-            margin: 0; padding: 25px; color: var(--text-dark);
+            margin: 0; padding: 20px; color: var(--text-dark);
             line-height: 1.5;
         }
 
         .container { max-width: 650px; margin: auto; }
 
-        .header { text-align: center; margin-bottom: 30px; }
+        .header { text-align: center; margin-bottom: 25px; }
         .header h1 { 
-            color: var(--primary-blue); margin-bottom: 8px; font-size: 1.8rem; font-weight: 700;
+            color: var(--primary-blue); margin-bottom: 5px; font-size: 1.6rem; font-weight: 700;
         }
-        .header p.sub-title { color: var(--text-grey); margin-top: 0; font-size: 1rem; }
-        .author { margin-top: 10px; font-size: 0.9rem; color: var(--primary-blue); font-weight: 500; }
+        .header p.sub-title { color: var(--text-grey); margin-top: 0; font-size: 0.95rem; }
+        .author { margin-top: 8px; font-size: 0.85rem; color: var(--primary-blue); font-weight: 500; }
 
-        /* 明亮卡片設計 */
         .light-card { 
             background: var(--card-white);
             border-radius: 12px; 
-            padding: 24px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* 柔和陰影 */
-            margin-bottom: 20px;
+            padding: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            margin-bottom: 15px;
             border: 1px solid #e9ecef;
         }
 
         .section-title { 
-            font-size: 1.2rem; font-weight: 700; color: var(--primary-blue);
-            margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;
+            font-size: 1.1rem; font-weight: 700; color: var(--primary-blue);
+            margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e9ecef;
             display: flex; align-items: center;
         }
-        .section-icon { margin-right: 8px; font-size: 1.3rem; }
+        .section-icon { margin-right: 8px; font-size: 1.2rem; }
 
-        .input-group { margin-bottom: 18px; }
-        label { display: block; font-size: 0.95rem; color: var(--text-dark); margin-bottom: 6px; font-weight: 500; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.9rem; color: var(--text-dark); margin-bottom: 4px; font-weight: 500; }
         
-        /* 清晰輸入框 */
         input { 
-            width: 100%; height: 48px; 
+            width: 100%; height: 44px; 
             background: #f8f9fa;
             border: 2px solid #dee2e6; border-radius: 8px; 
-            font-size: 1.1rem; padding: 0 15px; box-sizing: border-box; color: var(--text-dark);
+            font-size: 1rem; padding: 0 12px; box-sizing: border-box; color: var(--text-dark);
             transition: 0.2s;
         }
         input:focus { outline: none; border-color: var(--primary-blue); background: #fff; }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
+        /* 針對支出的特別標籤顏色 */
+        .exp-label { color: #555; font-size: 0.85rem; }
+
         button { 
             width: 100%; height: 55px; 
             background: var(--primary-blue);
             color: #fff; border: none; border-radius: 8px; 
-            font-size: 1.25rem; font-weight: 700;
-            cursor: pointer; margin-top: 10px; 
+            font-size: 1.2rem; font-weight: 700;
+            cursor: pointer; margin-top: 15px; 
             box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2);
             transition: 0.2s;
         }
         button:active { transform: translateY(1px); box-shadow: none; background: #004494; }
 
-        /* 明亮結果區 */
         .result-box { 
             background: #fff;
-            border-radius: 12px; padding: 25px; display: none; margin-top: 30px;
-            border-top: 5px solid var(--primary-blue); /* 頂部強調線 */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px; padding: 25px; display: none; margin-top: 25px;
+            border-top: 5px solid var(--primary-blue);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
-        .result-title { text-align: center; font-weight: 700; color: var(--primary-blue); margin-bottom: 25px; font-size: 1.4rem; }
+        .res-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .res-label { font-size: 0.95rem; color: var(--text-grey); margin-bottom: 4px; }
+        .res-value { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); line-height: 1.2; }
         
-        .res-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        .res-item:last-child { border-bottom: none; }
-        .res-label { font-size: 1rem; color: var(--text-grey); margin-bottom: 5px; }
-        .res-value { font-size: 1.8rem; font-weight: 700; color: var(--text-dark); line-height: 1.2; }
-        
-        /* 重點顏色 */
         .danger-val { color: var(--danger-red); }
         .gold-val { color: var(--accent-gold); }
         .blue-val { color: var(--primary-blue); }
+        .sub-text { font-size: 0.8rem; color: var(--text-grey); display: block; margin-top: 2px; }
         
-        .sub-text { font-size: 0.85rem; color: var(--text-grey); margin-top: 5px; display: block; }
-        
-        footer { text-align: center; margin-top: 40px; padding-bottom: 20px; color: var(--text-grey); font-size: 0.85rem; }
+        footer { text-align: center; margin-top: 30px; padding-bottom: 20px; color: var(--text-grey); font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -104,76 +99,118 @@
 <div class="container">
     <div class="header">
         <h1>人生財務風險導航</h1>
-        <p class="sub-title">清晰預見未來，掌握責任期關鍵規劃</p>
+        <p class="sub-title">細算每一筆開銷，看見真實的未來</p>
         <div class="author">專業顧問：李嘉哲 Gavin</div>
     </div>
 
     <div class="light-card">
-        <div class="section-title"><span class="section-icon">📋</span> 目前狀態 (責任期 24-65歲)</div>
+        <div class="section-title"><span class="section-icon">📋</span> 目前狀態 (24-65歲 責任期)</div>
         <div class="grid">
             <div class="input-group">
-                <label>您目前的年齡</label>
+                <label>目前年齡</label>
                 <input type="number" id="currentAge" value="35">
             </div>
             <div class="input-group">
-                <label>已備存款 (萬元)</label>
+                <label>目前存款 (萬元)</label>
                 <input type="number" id="savings" value="100">
             </div>
         </div>
         <div class="input-group">
-            <label>目前月收入 (元)</label>
+            <label>每月收入 (元)</label>
             <input type="number" id="monthlyIncome" value="60000">
         </div>
     </div>
 
     <div class="light-card">
-        <div class="section-title"><span class="section-icon">💰</span> 年度必要支出 (負重分析)</div>
+        <div class="section-title"><span class="section-icon">💸</span> 年度必要支出細項 (每月/每年)</div>
+        
         <div class="grid">
-            <div class="input-group"><label>基本生活費/月</label><input type="number" id="livingExp" value="30000"></div>
-            <div class="input-group"><label>房貸車貸/月</label><input type="number" id="debtExp" value="20000"></div>
-            <div class="input-group"><label>孝親費/月</label><input type="number" id="parentExp" value="5000"></div>
-            <div class="input-group"><label>旅遊預算/年</label><input type="number" id="travelExp" value="100000"></div>
+            <div class="input-group">
+                <label class="exp-label">房貸/房租 (月)</label>
+                <input type="number" id="houseExp" value="20000">
+            </div>
+            <div class="input-group">
+                <label class="exp-label">車貸/養車/交通 (月)</label>
+                <input type="number" id="carExp" value="8000">
+            </div>
+            <div class="input-group">
+                <label class="exp-label">孝親費 (月)</label>
+                <input type="number" id="parentExp" value="5000">
+            </div>
+            <div class="input-group">
+                <label class="exp-label">育兒/教育費 (月)</label>
+                <input type="number" id="childExp" value="10000">
+            </div>
+            <div class="input-group">
+                <label class="exp-label">飲食/生活雜支 (月)</label>
+                <input type="number" id="dailyExp" value="15000">
+            </div>
+            <div class="input-group">
+                <label class="exp-label" style="color:var(--primary-blue); font-weight:bold;">伴侶經營與紀念日 (月)</label>
+                <input type="number" id="partnerExp" value="5000">
+            </div>
+        </div>
+
+        <hr style="border:0; border-top:1px dashed #ddd; margin: 10px 0;">
+
+        <div class="grid">
+            <div class="input-group">
+                <label class="exp-label">年度保險/醫療 (年)</label>
+                <input type="number" id="insuranceExp" value="40000">
+            </div>
+            <div class="input-group">
+                <label class="exp-label">自我進修/社交 (年)</label>
+                <input type="number" id="learnExp" value="20000">
+            </div>
+            <div class="input-group" style="grid-column: span 2;">
+                <label class="exp-label">年度旅遊/娛樂預算 (年)</label>
+                <input type="number" id="travelExp" value="60000">
+            </div>
         </div>
     </div>
 
     <div class="light-card">
-        <div class="section-title"><span class="section-icon">🎯</span> 65歲退休目標</div>
-        <div class="input-group">
-            <label>期望退休月生活費 (現值)</label>
-            <input type="number" id="retireMonthlyTarget" value="50000">
-        </div>
-        <div class="input-group">
-            <label>預估平均通膨率 (%)</label>
-            <input type="number" id="inflationRate" value="3">
+        <div class="section-title"><span class="section-icon">🎯</span> 65歲後的目標</div>
+        <div class="grid">
+            <div class="input-group">
+                <label>退休月生活費 (現值)</label>
+                <input type="number" id="retireMonthlyTarget" value="50000">
+            </div>
+            <div class="input-group">
+                <label>預估通膨率 (%)</label>
+                <input type="number" id="inflationRate" value="3">
+            </div>
         </div>
     </div>
 
-    <button onclick="calculate()">開始分析財務缺口</button>
+    <button onclick="calculate()">分析人生財務缺口</button>
 
     <div id="results" class="result-box">
-        <div class="result-title">您的財務風險分析報告</div>
+        <div class="header">
+            <h2 style="color:var(--primary-blue); margin:0;">財務風險分析報告</h2>
+        </div>
         
         <div class="res-item">
-            <div class="res-label">距離 65 歲退休還有：</div>
+            <div class="res-label">距離 65 歲退休剩餘：</div>
             <div class="res-value blue-val"><span id="yearsRemain"></span> 年</div>
         </div>
         
         <div class="res-item">
-            <div class="res-label">通膨影響：退休時您現在收入的實質購買力</div>
-            <div class="res-value gold-val">僅剩 <span id="purchasingPower"></span> 元</div>
-            <span class="sub-text">💡 您的錢正在變薄，需要抗通膨的工具。</span>
+            <div class="res-label">通膨購買力風險 (退休時)：</div>
+            <div class="res-value gold-val">剩 <span id="purchasingPower"></span> 元</div>
+            <span class="sub-text">💡 假設通膨持續，您現在收入的價值將大幅縮水。</span>
         </div>
         
         <div class="res-item">
             <div class="res-label">責任期 (現在-65歲) 總資金缺口</div>
             <div class="res-value danger-val">$ <span id="totalGap"></span> 元</div>
-            <span class="sub-text">⚠️ 已扣除現有存款。這是維持現狀所需的總開銷。</span>
+            <span class="sub-text">⚠️ 包含房車貸、育兒、伴侶經營、生活費，扣除現有存款後的數字。</span>
         </div>
         
-        <div class="res-item">
-            <div class="res-label">退休期 (65-85歲) 所需準備金</div>
+        <div class="res-item" style="border-bottom:none;">
+            <div class="res-label">退休後 (65-85歲) 養老準備金</div>
             <div class="res-value blue-val">$ <span id="retireNeed"></span> 元</div>
-            <span class="sub-text">🎯 為了 20 年的優質退休生活，必須提早準備。</span>
+            <span class="sub-text">🎯 想要有尊嚴的退休生活，這筆錢不能少。</span>
         </div>
     </div>
 
@@ -183,32 +220,52 @@
 </div>
 
 <script>
-// JavaScript 邏輯保持不變
 function calculate() {
+    // 1. 基礎數據
     const currentAge = parseInt(document.getElementById('currentAge').value);
     const savings = parseFloat(document.getElementById('savings').value) * 10000;
     const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value);
     const inflation = parseFloat(document.getElementById('inflationRate').value) / 100;
     
     const yearsToRetire = 65 - currentAge;
-    
-    // 1. 計算購買力縮水
+    if (yearsToRetire <= 0) {
+        alert("年齡已超過退休年齡，請重新輸入");
+        return;
+    }
+
+    // 2. 通膨購買力計算 (FV = PV * (1+r)^n 的反向概念，這裡展示現在收入在未來的縮水感)
+    // 修正邏輯：展示現在的收入，在未來相當於多少購買力
+    // 公式：現在收入 / (1+通膨)^年數
     const pPower = monthlyIncome / Math.pow((1 + inflation), yearsToRetire);
+
+    // 3. 責任期總支出計算 (Monthly items * 12 + Yearly items)
+    // 每月項目
+    const mHouse = parseFloat(document.getElementById('houseExp').value) || 0;
+    const mCar = parseFloat(document.getElementById('carExp').value) || 0;
+    const mParent = parseFloat(document.getElementById('parentExp').value) || 0;
+    const mChild = parseFloat(document.getElementById('childExp').value) || 0;
+    const mDaily = parseFloat(document.getElementById('dailyExp').value) || 0;
+    const mPartner = parseFloat(document.getElementById('partnerExp').value) || 0;
     
-    // 2. 責任期總開銷
-    const mTotalExp = parseFloat(document.getElementById('livingExp').value) + 
-                      parseFloat(document.getElementById('debtExp').value) + 
-                      parseFloat(document.getElementById('parentExp').value);
-    const yTravel = parseFloat(document.getElementById('travelExp').value);
+    // 年度項目
+    const yInsurance = parseFloat(document.getElementById('insuranceExp').value) || 0;
+    const yLearn = parseFloat(document.getElementById('learnExp').value) || 0;
+    const yTravel = parseFloat(document.getElementById('travelExp').value) || 0;
+
+    // 計算一年總支出
+    const annualTotalExp = (mHouse + mCar + mParent + mChild + mDaily + mPartner) * 12 + (yInsurance + yLearn + yTravel);
     
-    const totalExpInResponsibility = (mTotalExp * 12 + yTravel) * yearsToRetire;
+    // 責任期總支出 (簡單預估，未計算支出的通膨增長，讓數字保守一點但依然驚人)
+    const totalExpInResponsibility = annualTotalExp * yearsToRetire;
+    
+    // 缺口 = 總支出 - 存款
     const finalGap = totalExpInResponsibility - savings;
-    
-    // 3. 退休後預備金
+
+    // 4. 退休後需求 (簡單計算 20 年)
     const retireMonthly = parseFloat(document.getElementById('retireMonthlyTarget').value);
     const retireTotal = retireMonthly * 12 * 20;
 
-    // 顯示結果
+    // 5. 顯示結果
     document.getElementById('yearsRemain').innerText = yearsToRetire;
     document.getElementById('purchasingPower').innerText = Math.round(pPower).toLocaleString();
     document.getElementById('totalGap').innerText = Math.round(finalGap).toLocaleString();
@@ -217,7 +274,6 @@ function calculate() {
     const resultBox = document.getElementById('results');
     resultBox.style.display = 'block';
     
-    // 平滑捲動
     resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
