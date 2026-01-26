@@ -3,264 +3,461 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能健康引流中控台 V2.6 🦁</title>
+    <title>GAVIN AI COMMANDER V3.0 💎</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        diamond: { 100: '#e0f2fe', 500: '#0ea5e9', 900: '#0c4a6e' },
+                        gold: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' },
+                        dark: { 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .gradient-bg { background: linear-gradient(135deg, #0f172a, #1e1b4b, #4338ca); }
-        .token-input { @apply bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs w-full focus:ring-2 ring-indigo-500 outline-none; }
-        .card-glow { box-shadow: 0 0 20px rgba(79, 70, 229, 0.1); }
-        .warning-glow { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+        body { background-color: #0f172a; background-image: radial-gradient(circle at 50% 0%, #1e3a8a 0%, #0f172a 70%); min-height: 100vh; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .input-dark { @apply w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:ring-2 focus:ring-sky-500 outline-none transition; }
+        .btn-gold { @apply bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition active:scale-95; }
+        .code-block { background: #0d1117; color: #c9d1d9; font-family: 'JetBrains Mono', monospace; }
+        
+        /* 滾動條美化 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900 leading-relaxed" onload="initData()">
+<body class="text-slate-200" onload="initData()">
 
-    <nav class="gradient-bg p-5 text-white shadow-2xl sticky top-0 z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black italic tracking-tighter">GAVIN AI FLOW V2.6 🧠</h1>
-                <p class="text-[9px] text-indigo-300 font-bold uppercase tracking-widest">大心家族自動化戰略系統</p>
+    <nav class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-sky-400 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid fa-lion"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-xl tracking-tight text-white">GAVIN FLOW <span class="text-sky-400">V3.0</span></h1>
+                    <p class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">Diamond Strategy System</p>
+                </div>
             </div>
-            <div class="text-right">
-                <p class="text-[10px] font-bold text-yellow-400">2027/08 安麗鑽石目標 💎</p>
-                <p class="text-[9px] opacity-70">2026 淨資產 700 萬階段目標 💰</p>
+            <div class="hidden md:flex items-center gap-6 text-xs font-bold">
+                <div class="flex items-center gap-2 text-yellow-500">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span>2027 鑽石目標</span>
+                </div>
+                <div class="px-3 py-1 bg-slate-800 rounded-full border border-slate-700">
+                    <span class="text-green-400">● 系統就緒</span>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-        <div class="grid lg:grid-cols-3 gap-8">
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl grid lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-4 space-y-6">
             
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl card-glow">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🦁 領袖思維：複利系統</h2>
-                    <p class="text-xs opacity-80 leading-relaxed">
-                        運用 GitHub 與 GAS 打造不花體力的自動化名單捕手。記住，106 萬觀看只是開始，轉化才是價值。
-                    </p>
+            <div class="glass-panel rounded-2xl p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition">
+                    <i class="fa-solid fa-file-excel text-6xl text-green-500"></i>
                 </div>
+                <h3 class="text-green-400 font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-brands fa-google-drive"></i> 試算表綁定教學
+                </h3>
+                <ol class="text-xs space-y-3 text-slate-300 list-decimal pl-4 leading-relaxed">
+                    <li>建立一個新的 <b class="text-white">Google Sheet</b>。</li>
+                    <li>上方選單點擊 <b class="text-white">擴充功能 (Extensions)</b> > <b class="text-white">Apps Script</b>。</li>
+                    <li>將右側生成的代碼 <b class="text-white">全選貼上</b> 並覆蓋原有內容。</li>
+                    <li>第一行代碼會自動抓取當前試算表，<b class="text-yellow-400">所有 AI 回覆紀錄都會存入 Sheet1</b>。</li>
+                </ol>
+            </div>
 
-                <div class="bg-amber-50 border-2 border-amber-200 p-6 rounded-3xl warning-glow">
-                    <h3 class="text-amber-800 text-sm font-black mb-3 flex items-center gap-2">
-                        ⚠️ 系統運行先決條件
-                    </h3>
-                    <ul class="text-[11px] text-amber-700 space-y-3 leading-relaxed">
-                        <li>
-                            <b class="text-amber-900">【Facebook】</b> 
-                            必須使用「粉絲專頁」。個人檔案 (Profile) 不支援 API 自動回覆，強行使用會導致帳號異常。
-                        </li>
-                        <li>
-                            <b class="text-amber-900">【Instagram】</b> 
-                            需切換為「專業/商業帳號」，並連結至 FB 粉絲專頁方可連動。
-                        </li>
-                        <li>
-                            <b class="text-amber-900">【LINE】</b> 
-                            需使用「LINE 官方帳號 (OA)」並開啟 Messaging API 模式。
-                        </li>
-                        <li>
-                            <b class="text-amber-900">【TikTok】</b> 
-                            目前 API 權限嚴格，建議以 Bio 連結引流至上述平台。
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
-                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔐 雲端識別碼 (accountKey)</label>
-                    <input id="accountKey" type="password" placeholder="用於同步 LocalStorage" class="token-input mt-1 mb-4">
-                    
-                    <label class="text-[10px] text-slate-400 font-bold uppercase">🔑 Meta Webhook 暗號 (Verify Token)</label>
-                    <div class="flex gap-2 mt-1 mb-4">
-                        <input id="verifyToken" type="text" placeholder="自訂或點擊生成" class="token-input" oninput="renderUI()">
-                        <button onclick="generateToken()" class="bg-slate-200 text-slate-600 px-3 rounded-xl text-[10px] font-bold">自動生成</button>
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="text-sky-400 font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> 全局參數設定
+                </h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">OpenAI / Gemini API Key (AI 功能必填)</label>
+                        <input id="apiKey" type="password" placeholder="sk-..." class="input-dark mt-1 border-l-4 border-l-purple-500">
                     </div>
 
-                    <button onclick="syncData()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg hover:bg-indigo-700 transition">同步雲端資料</button>
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Meta Page Access Token</label>
+                        <input id="accessToken" type="password" placeholder="EAA..." class="input-dark mt-1">
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Webhook Verify Token</label>
+                        <div class="flex gap-2 mt-1">
+                            <input id="verifyToken" type="text" value="GAVIN_DIAMOND_2027" class="input-dark">
+                            <button onclick="saveConfig()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 rounded-lg text-xs"><i class="fa-solid fa-save"></i></button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
-                    <h2 class="text-2xl font-black text-slate-800 mb-8 border-b pb-4">新增引流捕捉器</h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第一步：引流分類</label>
-                                <select id="category" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none">
-                                    <option value="health">💉 健康管理 (產品/諮詢)</option>
-                                    <option value="biz">💎 事業招募 (夥伴)</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第二步：觸發關鍵字</label>
-                                <input id="keyword" type="text" placeholder="例如：想了解、領取" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
-                            </div>
+            <div class="bg-gradient-to-br from-purple-900/50 to-slate-900 rounded-2xl p-6 border border-purple-500/30">
+                <h3 class="text-purple-400 font-bold mb-2 text-sm"><i class="fa-solid fa-robot"></i> 獅子座教練 AI 人設</h3>
+                <p class="text-[10px] text-slate-400 mb-3">當啟用 AI 模式時，系統將使用此人設進行回覆。</p>
+                <textarea id="systemPrompt" rows="4" class="input-dark text-xs leading-relaxed" placeholder="你是一位專業、溫暖且激勵人心的健康教練，名叫 Gavin。請用繁體中文回覆，語氣正向，結尾帶有行動呼籲...">你是一位專業、有同理心的健康事業教練 Gavin。請用繁體中文回覆用戶的留言。
+語氣：自信、像獅子一樣溫暖有力、專業但不高冷。
+目標：引導用戶對健康或事業感興趣，並鼓勵他們點擊連結或私訊。
+限制：回覆不超過 100 字。</textarea>
+            </div>
+        </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第三步：匹配模式</label>
-                                <select id="matchMode" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:ring-4 ring-indigo-50 outline-none transition">
-                                    <option value="includes">包含即可 ✨</option>
-                                    <option value="exact">精確相等</option>
-                                </select>
-                            </div>
-                        </div>
+        <div class="lg:col-span-8 space-y-6">
+            
+            <div class="glass-panel rounded-2xl p-8 border-t-4 border-t-yellow-500 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black text-white">新增戰略規則</h2>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-400">啟用 AI 智能回覆</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="useAI" class="sr-only peer" onchange="toggleAIMode()">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+                </div>
 
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">第四步：感性回覆文案</label>
-                            <textarea id="replyText" rows="10" placeholder="收到！因為我曾經看過家人受健康所苦，所以特別整理了..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm outline-none"></textarea>
+                            <label class="text-xs text-slate-400 font-bold">🎯 指定文章 ID (可選，留空則全域觸發)</label>
+                            <input id="postId" type="text" placeholder="例如：1234567890_987654321" class="input-dark mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-bold">🔑 觸發關鍵字</label>
+                            <input id="keyword" type="text" placeholder="例如：想了解, +1" class="input-dark mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-bold">📂 名單分類</label>
+                            <select id="category" class="input-dark mt-1">
+                                <option value="Biz">💎 事業合作</option>
+                                <option value="Product">💉 產品諮詢</option>
+                                <option value="Other">👋 一般互動</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="mt-6 bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                        <label class="block text-xs font-bold text-slate-500 mb-3">第五步：引流目標網址 (LINE/見證 PDF)</label>
-                        <div class="flex gap-2 mb-2">
-                            <input id="mediaUrl" type="text" placeholder="https://..." class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none">
-                            <button onclick="addAttach()" class="bg-indigo-600 text-white px-6 rounded-xl font-bold">新增</button>
+                    <div class="relative">
+                        <label id="replyLabel" class="text-xs text-slate-400 font-bold">💬 固定回覆內容</label>
+                        <textarea id="replyText" rows="6" class="input-dark mt-1" placeholder="填寫固定的回覆文案..."></textarea>
+                        
+                        <div id="aiOverlay" class="hidden absolute inset-0 bg-slate-900/90 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center border border-purple-500/50 mt-6">
+                            <i class="fa-solid fa-wand-magic-sparkles text-3xl text-purple-400 mb-2 animate-pulse"></i>
+                            <p class="text-sm font-bold text-white">AI 智能模式已啟用</p>
+                            <p class="text-[10px] text-slate-400 mt-1">系統將根據左側「AI 人設」自動生成回覆</p>
                         </div>
-                        <div id="attachList" class="flex flex-wrap gap-2"></div>
                     </div>
+                </div>
 
-                    <button onclick="saveRule()" class="mt-8 w-full gradient-bg text-white font-black py-5 rounded-2xl shadow-2xl hover:opacity-90 transition transform active:scale-95 text-lg">
-                        儲存規則並更新代碼 🚀
+                <button onclick="addRule()" class="btn-gold w-full text-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-plus-circle mr-2"></i> 加入戰略隊列
+                </button>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 min-h-[150px]">
+                <h3 class="text-slate-400 text-xs font-bold uppercase mb-4">目前生效規則</h3>
+                <div id="rulesList" class="space-y-3">
+                    <div class="text-center text-slate-600 py-4 text-xs">尚無規則，請上方新增 👆</div>
+                </div>
+            </div>
+
+            <div class="bg-[#0d1117] rounded-2xl border border-slate-700 overflow-hidden relative">
+                <div class="flex justify-between items-center bg-slate-800 px-4 py-2 border-b border-slate-700">
+                    <span class="text-xs font-mono text-sky-400">Code.gs</span>
+                    <button onclick="copyCode()" class="text-xs bg-sky-600 hover:bg-sky-500 text-white px-3 py-1 rounded transition">
+                        <i class="fa-regular fa-copy"></i> 複製代碼
                     </button>
                 </div>
-
-                <div class="bg-slate-900 p-8 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
-                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 GAS (記得要在粉專環境下運行)</h3>
-                    <button onclick="copyCode()" class="absolute top-6 right-8 bg-indigo-600 text-white px-5 py-2 rounded-full text-xs hover:bg-indigo-500">複製代碼</button>
-                    <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[250px]"></pre>
-                </div>
+                <pre id="outputCode" class="p-4 text-[10px] md:text-xs overflow-x-auto h-[300px] code-block leading-loose"></pre>
             </div>
+
         </div>
     </div>
 
     <script>
         let rules = [];
-        let currentAttach = [];
+        let config = {
+            apiKey: '',
+            accessToken: '',
+            verifyToken: 'GAVIN_DIAMOND_2027',
+            systemPrompt: ''
+        };
 
-        function initData() { renderUI(); }
-
-        function generateToken() {
-            const randomToken = 'GAVIN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
-            document.getElementById('verifyToken').value = randomToken;
-            renderUI();
+        function initData() {
+            // 嘗試讀取 LocalStorage
+            const saved = localStorage.getItem('gavin_v3_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                rules = data.rules || [];
+                config = data.config || config;
+                
+                // 還原 UI
+                document.getElementById('apiKey').value = config.apiKey;
+                document.getElementById('accessToken').value = config.accessToken;
+                document.getElementById('verifyToken').value = config.verifyToken;
+                document.getElementById('systemPrompt').value = config.systemPrompt || document.getElementById('systemPrompt').value;
+                renderRulesList();
+            }
+            renderCode();
         }
 
-        function addAttach() {
-            const url = document.getElementById('mediaUrl').value;
-            if(!url) return;
-            currentAttach.push(url);
-            renderAttach();
-            document.getElementById('mediaUrl').value = '';
-            renderUI();
+        function toggleAIMode() {
+            const isAI = document.getElementById('useAI').checked;
+            const overlay = document.getElementById('aiOverlay');
+            const label = document.getElementById('replyLabel');
+            
+            if (isAI) {
+                overlay.classList.remove('hidden');
+                label.innerText = "🤖 AI 將接管回覆";
+            } else {
+                overlay.classList.add('hidden');
+                label.innerText = "💬 固定回覆內容";
+            }
         }
 
-        function renderAttach() {
-            document.getElementById('attachList').innerHTML = currentAttach.map((url, i) => `
-                <div class="bg-indigo-600 text-white px-3 py-1 rounded-full flex items-center text-[10px]">
-                    <span class="truncate max-w-[150px]">${url}</span>
-                    <button onclick="currentAttach.splice(${i},1);renderAttach();renderUI()" class="ml-2">✕</button>
-                </div>`).join('');
+        function saveConfig() {
+            config.apiKey = document.getElementById('apiKey').value;
+            config.accessToken = document.getElementById('accessToken').value;
+            config.verifyToken = document.getElementById('verifyToken').value;
+            config.systemPrompt = document.getElementById('systemPrompt').value;
+            saveToLocal();
+            renderCode();
+            alert('設定已保存！代碼已更新。');
         }
 
-        function saveRule() {
-            const key = document.getElementById('accountKey').value;
-            const kw = document.getElementById('keyword').value;
-            const text = document.getElementById('replyText').value;
-
-            if(!key || !kw || !text) return alert('獅子座教練，欄位別漏填喔！🦁');
-
-            rules.push({ 
-                keyword: kw, 
+        function addRule() {
+            const isAI = document.getElementById('useAI').checked;
+            
+            const newRule = {
+                id: Date.now(),
+                postId: document.getElementById('postId').value.trim(),
+                keyword: document.getElementById('keyword').value.trim(),
                 category: document.getElementById('category').value,
-                mode: document.getElementById('matchMode').value, 
-                text: text, 
-                attachments: [...currentAttach] 
-            });
+                type: isAI ? 'AI' : 'STATIC',
+                content: isAI ? 'AI Auto Gen' : document.getElementById('replyText').value
+            };
+
+            if (!newRule.keyword && !newRule.postId) {
+                alert('請至少填寫「觸發關鍵字」或「指定文章 ID」！');
+                return;
+            }
+
+            rules.push(newRule);
+            saveToLocal();
+            renderRulesList();
+            renderCode();
             
-            localStorage.setItem('v26_vault_' + key, JSON.stringify(rules));
-            renderUI();
-            
+            // 清空輸入
             document.getElementById('keyword').value = '';
             document.getElementById('replyText').value = '';
-            currentAttach = [];
-            renderAttach();
-            alert('規則儲存成功！');
         }
 
-        function syncData() {
-            const key = document.getElementById('accountKey').value;
-            if(!key) return alert('請先輸入識別碼');
-            const data = localStorage.getItem('v26_vault_' + key);
-            rules = data ? JSON.parse(data) : [];
-            renderUI();
-            alert('同步成功！已從 LocalStorage 載入資料。');
+        function removeRule(id) {
+            rules = rules.filter(r => r.id !== id);
+            saveToLocal();
+            renderRulesList();
+            renderCode();
         }
 
-        function renderUI() {
-            const vToken = document.getElementById('verifyToken').value || "GAVIN_TOKEN_2027";
-            const codeTemplate = `/**
- * GAVIN AI FLOW V2.6 - 自動化引流大腦
- * 🚀 目標：2027 鑽石 | 2026 淨資產 700 萬
- * ⚠️ 注意：此代碼僅適用於 FB 粉絲專頁與 IG 商業帳號
+        function saveToLocal() {
+            const data = { rules: rules, config: config };
+            localStorage.setItem('gavin_v3_data', JSON.stringify(data));
+        }
+
+        function renderRulesList() {
+            const container = document.getElementById('rulesList');
+            if (rules.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-600 py-4 text-xs">尚無規則，請上方新增 👆</div>';
+                return;
+            }
+
+            container.innerHTML = rules.map(rule => `
+                <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-3 flex justify-between items-center group hover:border-sky-500 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center ${rule.type === 'AI' ? 'bg-purple-900 text-purple-400' : 'bg-sky-900 text-sky-400'}">
+                            <i class="fa-solid ${rule.type === 'AI' ? 'fa-robot' : 'fa-comment-dots'} text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="flex gap-2 items-center mb-1">
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-700 text-slate-300 font-mono">${rule.category}</span>
+                                ${rule.postId ? `<span class="text-[10px] text-yellow-500"><i class="fa-solid fa-thumbtack"></i> 指定文章</span>` : ''}
+                            </div>
+                            <p class="text-xs text-white font-bold">關鍵字: ${rule.keyword || '(無/全文章)'}</p>
+                            <p class="text-[10px] text-slate-400 truncate max-w-[200px]">${rule.type === 'AI' ? '⚡ AI 智能生成中...' : rule.content}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeRule(${rule.id})" class="text-slate-600 hover:text-red-400 px-2 transition"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function renderCode() {
+            const sysPromptSafe = config.systemPrompt.replace(/\n/g, "\\n").replace(/"/g, '\\"');
+            
+            const code = `/**
+ * GAVIN AI COMMANDER V3.0 - 鑽石戰略中控台
+ * * 使用說明：
+ * 1. 在 Google Sheet 中點擊 [擴充功能] > [Apps Script]
+ * 2. 貼上此代碼，並按 [部署] > [新增部署] > [Web 應用程式]
+ * 3. 權限設定為 [任何人]
+ * 4. 將生成的網址填入 Meta App 的 Webhook 設定
  */
 
-const VERIFY_TOKEN = "${vToken}"; 
-const ACCESS_TOKEN = "YOUR_PAGE_ACCESS_TOKEN"; // 需從 Meta Developer 取得
-const SHEET_NAME = "Real-time_Leads";
+// ========== 配置區 ==========
+const VERIFY_TOKEN = "${config.verifyToken}";
+const PAGE_ACCESS_TOKEN = "${config.accessToken}";
+const OPENAI_API_KEY = "${config.apiKey}"; // 若為 Gemini 可自行修改 callAI 函數
+const SYSTEM_PROMPT = "${sysPromptSafe}";
 
-const REPLY_RULES = ${JSON.stringify(rules, null, 2)};
+// 規則資料庫
+const RULES = ${JSON.stringify(rules, null, 2)};
 
 function doGet(e) {
-  let mode = e.parameter["hub.mode"];
-  let token = e.parameter["hub.verify_token"];
-  let challenge = e.parameter["hub.challenge"];
-  
+  // Webhook 驗證握手
+  let mode = e.parameter['hub.mode'];
+  let token = e.parameter['hub.verify_token'];
+  let challenge = e.parameter['hub.challenge'];
   if (mode && token) {
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
       return ContentService.createTextOutput(challenge);
     }
   }
-  return ContentService.createTextOutput("System Active");
+  return ContentService.createTextOutput('Gavin AI System Online 💎');
 }
 
 function doPost(e) {
-  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-  let data = JSON.parse(e.postData.contents);
-  
-  if (data.entry && data.entry[0].changes) {
-    let change = data.entry[0].changes[0].value;
-    let message = change.message || "";
-    let senderName = change.from ? change.from.name : "未知用戶";
-    let commentId = change.comment_id;
+  try {
+    let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]; // 自動抓取第一個工作表
+    let data = JSON.parse(e.postData.contents);
 
-    REPLY_RULES.forEach(rule => {
-      let isMatch = rule.mode === "includes" ? message.includes(rule.keyword) : message === rule.keyword;
+    if (data.entry && data.entry[0].changes) {
+      let change = data.entry[0].changes[0].value;
       
-      if (isMatch) {
-        // A. 記錄名單
-        sheet.appendRow([new Date(), "FB/IG", senderName, message, rule.category, "待聯繫"]);
+      // 確保是留言 (Comment) 且不是自己發的
+      if (change.item === "comment" && change.verb === "add" && change.from.id !== change.post_id.split('_')[0]) {
         
-        // B. 自動回覆
-        sendReply(commentId, rule.text + " " + (rule.attachments[0] || ""));
+        let message = change.message;
+        let senderName = change.from.name;
+        let commentId = change.comment_id;
+        let postId = change.post_id;
+        
+        // 遍歷規則
+        RULES.forEach(rule => {
+          // 1. 檢查文章 ID 是否匹配 (若規則無 ID 則略過此檢查)
+          if (rule.postId && !postId.includes(rule.postId)) return;
+          
+          // 2. 檢查關鍵字
+          if (rule.keyword && !message.includes(rule.keyword)) return;
+
+          let replyContent = "";
+
+          // 3. 執行回覆邏輯
+          if (rule.type === 'AI') {
+            replyContent = callAI(message, senderName);
+          } else {
+            replyContent = rule.content;
+          }
+
+          // 4. 發送回覆
+          if (replyContent) {
+            sendFbReply(commentId, replyContent);
+            
+            // 5. 寫入 Log 到 Google Sheet (美化紀錄)
+            sheet.appendRow([
+              new Date(),           // 時間
+              rule.category,        // 分類
+              senderName,           // 客戶姓名
+              message,              // 客戶留言
+              replyContent,         // 系統回覆
+              rule.type,            // 回覆類型
+              "已執行"               // 狀態
+            ]);
+          }
+        });
       }
-    });
+    }
+    return ContentService.createTextOutput('OK');
+  } catch (err) {
+    // 錯誤紀錄
+    SpreadsheetApp.getActiveSpreadsheet().getSheets()[0].appendRow([new Date(), "ERROR", err.toString()]);
+    return ContentService.createTextOutput('Error');
   }
-  return ContentService.createTextOutput("OK");
 }
 
-function sendReply(id, text) {
-  let url = "https://graph.facebook.com/v18.0/" + id + "/comments";
+// FB API 回覆函數
+function sendFbReply(commentId, message) {
+  let url = "https://graph.facebook.com/v18.0/" + commentId + "/comments";
+  let payload = {
+    "message": message,
+    "access_token": PAGE_ACCESS_TOKEN
+  };
+  
   UrlFetchApp.fetch(url, {
-    method: "post",
-    payload: { message: text, access_token: ACCESS_TOKEN }
+    "method": "post",
+    "payload": payload
   });
+}
+
+// AI 生成函數 (預設使用 OpenAI 格式，可相容大部分模型)
+function callAI(userMessage, userName) {
+  if (!OPENAI_API_KEY) return "AI Key 未設定，請檢查系統。";
+
+  // 簡單的防呆：如果沒有 Key 就不跑
+  let url = "https://api.openai.com/v1/chat/completions"; 
+  
+  let prompt = SYSTEM_PROMPT + "\\n\\n用戶名稱: " + userName + "\\n用戶留言: " + userMessage;
+
+  let payload = {
+    "model": "gpt-3.5-turbo", // 或 gpt-4
+    "messages": [
+      {"role": "system", "content": SYSTEM_PROMPT},
+      {"role": "user", "content": userMessage}
+    ],
+    "temperature": 0.7
+  };
+
+  let options = {
+    "method": "post",
+    "contentType": "application/json",
+    "headers": { "Authorization": "Bearer " + OPENAI_API_KEY },
+    "payload": JSON.stringify(payload),
+    "muteHttpExceptions": true
+  };
+
+  try {
+    let response = UrlFetchApp.fetch(url, options);
+    let json = JSON.parse(response.getContentText());
+    if (json.choices && json.choices.length > 0) {
+      return json.choices[0].message.content.trim();
+    } else {
+      return "AI 思考受阻，請稍後再試。";
+    }
+  } catch (e) {
+    return "AI 連線錯誤: " + e.message;
+  }
 }`;
-            document.getElementById('outputCode').innerText = codeTemplate;
+            document.getElementById('outputCode').innerText = code;
         }
 
         function copyCode() {
             const code = document.getElementById('outputCode').innerText;
-            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！記得去 GAS 貼上並佈署為 Web App 👑'));
+            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！通往鑽石之路的鑰匙到手 💎'));
         }
     </script>
 </body>
