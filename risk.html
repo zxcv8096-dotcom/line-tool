@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>財務顧問風險分析系統</title>
+    <style>
+        :root { --danger: #e74c3c; --primary: #2c3e50; --bg: #f8f9fa; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h2 { color: var(--primary); font-size: 1.4rem; border-left: 5px solid var(--danger); padding-left: 10px; margin-top: 0; }
+        .input-item { margin-bottom: 15px; }
+        label { display: block; font-size: 0.9rem; color: #666; margin-bottom: 5px; }
+        input { width: 100%; height: 45px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; padding: 0 10px; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { width: 100%; height: 55px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+        .result-box { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 12px; padding: 15px; display: none; margin-top: 20px; }
+        .highlight { color: var(--danger); font-weight: bold; font-size: 1.2rem; }
+        .info-text { font-size: 0.85rem; color: #777; line-height: 1.5; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>客戶基本資料</h2>
+    <div class="grid">
+        <div class="input-item">
+            <label>客戶目前年齡</label>
+            <input type="number" id="currentAge" placeholder="例如: 30" value="30">
+        </div>
+        <div class="input-item">
+            <label>目前月收入</label>
+            <input type="number" id="monthlyIncome" value="50000">
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>年度開銷評估 (至65歲)</h2>
+    <div class="grid">
+        <div class="input-item"><label>生活費/月</label><input type="number" id="livingExp" value="25000"></div>
+        <div class="input-item"><label>孝親費/月</label><input type="number" id="parentExp" value="5000"></div>
+        <div class="input-item"><label>房貸車貸/月</label><input type="number" id="debtExp" value="15000"></div>
+        <div class="input-item"><label>旅遊年預算</label><input type="number" id="travelExp" value="100000"></div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>退休目標與風險</h2>
+    <div class="input-item">
+        <label>退休後希望每月可用金額 (現值計算)</label>
+        <input type="number" id="retireMonthlyTarget" value="40000">
+    </div>
+    <div class="input-item">
+        <label>預計通膨率 (%)</label>
+        <input type="number" id="inflationRate" value="3">
+    </div>
+</div>
+
+<button onclick="calculateRisk()">生成風險分析報表</button>
+
+<div id="results" class="result-box">
+    <p>1️⃣ <b>通膨危機：</b> 退休時(65歲)，您現在的 <span id="incomeNow"></span> 元月收入，實質購買力僅剩 <span id="purchasingPower" class="highlight"></span> 元。</p>
+    <p>2️⃣ <b>總支出黑洞：</b> 退休前您必須籌措 <span id="totalLifeExp" class="highlight"></span> 元才能維持基本生活。</p>
+    <p>3️⃣ <b>退休金缺口：</b> 若要維持退休後每月 <span id="targetText"></span> 元品質，考慮平均餘命至85歲，您還需要額外準備 <span id="retireGap" class="highlight"></span> 元。</p>
+    <div class="info-text">
+        * 註：以上計算基準從 24 歲起薪資成長與通膨對沖，並假設 65 歲退休。
+    </div>
+</div>
+
+<script>
+function calculateRisk() {
+    // 獲取數值
+    const currentAge = parseInt(document.getElementById('currentAge').value);
+    const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value);
+    const inflation = parseFloat(document.getElementById('inflationRate').value) / 100;
+    const yearsToRetire = 65 - currentAge;
+    
+    // 1. 通膨購買力計算
+    const power = monthlyIncome / Math.pow((1 + inflation), yearsToRetire);
+    
+    // 2. 退休前總支出 (含旅遊)
+    const monthlyTotalExp = parseFloat(document.getElementById('livingExp').value) + 
+                            parseFloat(document.getElementById('parentExp').value) + 
+                            parseFloat(document.getElementById('debtExp').value);
+    const yearlyTravel = parseFloat(document.getElementById('travelExp').value);
+    const totalBeforeRetire = (monthlyTotalExp * 12 + yearlyTravel) * yearsToRetire;
+    
+    // 3. 退休準備金 (假設退休後活20年，即85歲)
+    const retireTarget = parseFloat(document.getElementById('retireMonthlyTarget').value);
+    const totalRetireNeed = retireTarget * 12 * 20; 
+
+    // 顯示結果
+    document.getElementById('incomeNow').innerText = monthlyIncome.toLocaleString();
+    document.getElementById('purchasingPower').innerText = Math.round(power).toLocaleString();
+    document.getElementById('totalLifeExp').innerText = Math.round(totalBeforeRetire).toLocaleString();
+    document.getElementById('targetText').innerText = retireTarget.toLocaleString();
+    document.getElementById('retireGap').innerText = Math.round(totalRetireNeed).toLocaleString();
+    
+    document.getElementById('results').style.display = 'block';
+    window.scrollTo(0, document.body.scrollHeight);
+}
+</script>
+
+</body>
+</html>
