@@ -3,268 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新手理財導航：個人資產負債表</title>
+    <title>Rich Dad Cashflow Dashboard</title>
     <style>
         :root {
-            --primary: #2c3e50;
-            --asset-color: #27ae60;
-            --liab-color: #c0392b;
-            --bg-color: #f4f7f6;
+            --rich-green: #27ae60;
+            --poor-red: #e74c3c;
+            --gold: #f1c40f;
+            --dark-blue: #2c3e50;
+            --light-gray: #ecf0f1;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: #333;
-            line-height: 1.6;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: #bdc3c7;
             margin: 0;
             padding: 20px;
         }
-        .container {
-            max-width: 800px;
+        .board {
+            max-width: 900px;
             margin: 0 auto;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 8px solid var(--dark-blue);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
         }
-        h1 { text-align: center; color: var(--primary); }
-        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px; }
-        
-        .section-title.asset { color: var(--asset-color); }
-        .section-title.liab { color: var(--liab-color); }
+        header {
+            background: var(--dark-blue);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 { margin: 0; letter-spacing: 2px; font-size: 1.8em; }
+        header p { margin: 5px 0 0; color: var(--gold); font-weight: bold; }
 
-        .input-group {
-            margin-bottom: 15px;
+        /* 核心報表區塊 */
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            background: var(--dark-blue);
+        }
+        .column {
+            background: white;
+            padding: 20px;
+        }
+        .column-title {
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .asset-title { background: var(--rich-green); color: white; }
+        .liab-title { background: var(--poor-red); color: white; }
+
+        /* 輸入項樣式 */
+        .row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
+            margin-bottom: 12px;
+            font-size: 0.95em;
         }
-        .input-group label { flex: 1; min-width: 150px; font-weight: 500; }
-        .input-group input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
+        .row label { flex: 1; color: #555; }
+        .row input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: right;
+            font-weight: bold;
         }
-        .input-group .unit { margin-left: 10px; color: #777; width: 30px;}
+        .unit { margin-left: 5px; color: #888; font-size: 0.8em; width: 20px;}
 
-        .summary-box {
-            background: #ecf0f1;
+        /* 現金流總結區 */
+        .summary-bar {
+            grid-column: span 2;
+            background: var(--light-gray);
             padding: 20px;
-            border-radius: 10px;
-            margin-top: 30px;
+            border-top: 4px solid var(--dark-blue);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             text-align: center;
         }
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.2em;
-            margin: 10px 0;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-        }
-        .net-worth {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--primary);
-            margin-top: 20px;
-        }
-        .alert {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.9em;
-            display: none;
-        }
-        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .alert-good { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-
-        .btn {
-            display: block;
-            width: 100%;
+        .stat-card {
+            background: white;
             padding: 15px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            cursor: pointer;
-            margin-top: 20px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
         }
-        .btn:hover { background: #34495e; }
-        
-        /* Toggle Switch for Period */
-        .toggle-container { display: flex; align-items: center; gap: 10px; font-size: 0.9em; color: #666; margin-bottom: 5px;}
+        .stat-value { font-size: 1.5em; font-weight: bold; margin-top: 5px; }
+        .cash-in { color: var(--rich-green); }
+        .cash-out { color: var(--poor-red); }
+
+        /* 導航提示 */
+        .advisor-note {
+            padding: 15px;
+            background: #fff3cd;
+            border-left: 5px solid var(--gold);
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .report-grid { grid-template-columns: 1fr; }
+            .summary-bar { grid-column: span 1; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>📊 我的資產負債表 (新手版)</h1>
-    <p style="text-align: center; color: #666;">釐清你的身價，這不是夢想，這是現實。</p>
+<div class="board">
+    <header>
+        <h1>CASHFLOW® 個人報表</h1>
+        <p>「別為錢工作，讓錢為你工作」</p>
+    </header>
 
-    <h2 class="section-title asset">💰 資產 (我擁有的)</h2>
-    
-    <div class="input-group">
-        <label>現金/活存</label>
-        <input type="number" id="cash" placeholder="手邊隨時可用的錢" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <div class="input-group">
-        <label>台股/國內基金</label>
-        <input type="number" id="stockTW" placeholder="目前的市值" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <div class="input-group">
-        <label>海外資產 (美股/債券)</label>
-        <input type="number" id="stockForeign" placeholder="換算回台幣" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-    <div class="toggle-container">
-        <span>*系統會自動檢核海外所得稅務風險 (基本所得額 > 750萬)</span>
-    </div>
-    <div class="input-group" style="background: #f9f9f9; padding: 10px; border-radius: 5px;">
-        <label style="font-size: 0.9em;">(選填) 今年已實現海外獲利</label>
-        <input type="number" id="overseasIncome" placeholder="今年賺多少(非本金)" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <div class="input-group">
-        <label>房地產市值</label>
-        <input type="number" id="realEstate" placeholder="保守估計現價" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <h2 class="section-title liab">💸 負債 (我欠人的)</h2>
-
-    <div class="input-group">
-        <label>信用卡未繳餘額</label>
-        <input type="number" id="creditCard" placeholder="分期付款總額也要算" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <div class="input-group">
-        <label>信貸/學貸</label>
-        <input type="number" id="personalLoan" placeholder="剩餘本金" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <div class="input-group">
-        <label>房屋貸款</label>
-        <input type="number" id="mortgage" placeholder="剩餘本金" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <div class="input-group">
-        <label>汽車貸款</label>
-        <input type="number" id="carLoan" placeholder="剩餘本金" oninput="calculate()">
-        <span class="unit">萬</span>
-    </div>
-
-    <div class="summary-box">
-        <h3>財務總結</h3>
-        <div class="result-row">
-            <span style="color: var(--asset-color);">總資產</span>
-            <span id="totalAssets">0 萬</span>
-        </div>
-        <div class="result-row">
-            <span style="color: var(--liab-color);">總負債</span>
-            <span id="totalLiabilities">0 萬</span>
-        </div>
-        <div class="result-row">
-            <span>負債比 (負債/資產)</span>
-            <span id="debtRatio">0%</span>
-        </div>
-        
-        <div class="net-worth">
-            淨值 (身價)：<span id="netWorth">0</span> 萬
+    <div class="report-grid">
+        <div class="column">
+            <div class="column-title asset-title">資產 (口袋進錢)</div>
+            
+            <div class="row">
+                <label>儲蓄 / 現金</label>
+                <input type="number" id="cash" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <div class="row">
+                <label>股票 (國內)</label>
+                <input type="number" id="stkTW" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <div class="row">
+                <label>股票/債券 (海外)</label>
+                <input type="number" id="stkOS" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <div class="row">
+                <label>房地產 (資產)</label>
+                <input type="number" id="estate" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <hr>
+            <div class="row" style="color: var(--rich-green); font-weight: bold;">
+                <label>年度海外獲利</label>
+                <input type="number" id="osIncome" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <p style="font-size: 0.7em; color: #888;">*海外獲利免稅額：750萬</p>
         </div>
 
-        <div id="taxAlert" class="alert alert-warning">
-            ⚠️ <strong>稅務提醒：</strong> 您的年度海外獲利已接近或超過 <strong>750萬</strong>。請留意需申報「個人基本所得額 (AMT)」，超過部分可能需繳納 20% 稅款。
+        <div class="column">
+            <div class="column-title liab-title">負債 (口袋出錢)</div>
+            
+            <div class="row">
+                <label>信用卡欠款</label>
+                <input type="number" id="card" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <div class="row">
+                <label>信貸 / 學貸</label>
+                <input type="number" id="loan" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <div class="row">
+                <label>房屋貸款</label>
+                <input type="number" id="mort" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <div class="row">
+                <label>汽車貸款</label>
+                <input type="number" id="car" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
+            <div class="row">
+                <label>其他長期負債</label>
+                <input type="number" id="otherL" value="0" oninput="calc()">
+                <span class="unit">萬</span>
+            </div>
         </div>
-        <div id="healthAlert" class="alert"></div>
+
+        <div class="summary-bar">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div>總資產</div>
+                    <div id="totalA" class="stat-value">0 萬</div>
+                </div>
+                <div class="stat-card" style="border-color: var(--gold);">
+                    <div>我的淨值</div>
+                    <div id="netWorth" class="stat-value">0 萬</div>
+                </div>
+                <div class="stat-card">
+                    <div>總負債</div>
+                    <div id="totalL" class="stat-value">0 萬</div>
+                </div>
+            </div>
+
+            <div id="advisor" class="advisor-note">
+                💡 <b>富爸爸提醒：</b> 小白第一步，請先看右邊的「負債」。減少壞債，增加能產生現金流的「資產」。
+            </div>
+            
+            <div id="taxBox" class="advisor-note" style="display:none; background:#e1f5fe; border-color:#03a9f4;">
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    function getValue(id) {
-        return parseFloat(document.getElementById(id).value) || 0;
-    }
+    function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
 
-    function calculate() {
-        // 1. 取得資產資料
-        const cash = getValue('cash');
-        const stockTW = getValue('stockTW');
-        const stockForeign = getValue('stockForeign');
-        const realEstate = getValue('realEstate');
-        const overseasIncome = getValue('overseasIncome');
+    function calc() {
+        const tA = v('cash') + v('stkTW') + v('stkOS') + v('estate');
+        const tL = v('card') + v('loan') + v('mort') + v('car') + v('otherL');
+        const nw = tA - tL;
+        const osInc = v('osIncome');
 
-        // 2. 取得負債資料
-        const creditCard = getValue('creditCard');
-        const personalLoan = getValue('personalLoan');
-        const mortgage = getValue('mortgage');
-        const carLoan = getValue('carLoan');
+        document.getElementById('totalA').innerText = tA.toLocaleString() + ' 萬';
+        document.getElementById('totalL').innerText = tL.toLocaleString() + ' 萬';
+        document.getElementById('netWorth').innerText = nw.toLocaleString() + ' 萬';
 
-        // 3. 計算總和
-        const totalAssets = cash + stockTW + stockForeign + realEstate;
-        const totalLiabilities = creditCard + personalLoan + mortgage + carLoan;
-        const netWorth = totalAssets - totalLiabilities;
-        
-        // 4. 計算比率
-        let debtRatio = 0;
-        if (totalAssets > 0) {
-            debtRatio = (totalLiabilities / totalAssets) * 100;
+        // 淨值顏色判斷
+        document.getElementById('netWorth').style.color = nw >= 0 ? '#27ae60' : '#e74c3c';
+
+        // 稅務邏輯 (750萬免稅)
+        const taxBox = document.getElementById('taxBox');
+        if (osInc >= 750) {
+            taxBox.style.display = 'block';
+            taxBox.innerHTML = `⚠️ <b>稅務警告：</b> 海外獲利達 ${osInc}萬，已過 750萬 門檻！需申報基本稅額。`;
+        } else if (osInc >= 600) {
+            taxBox.style.display = 'block';
+            taxBox.innerHTML = `ℹ️ <b>稅務提醒：</b> 海外獲利接近 750萬，請留意今年實現獲利的節奏。`;
+        } else {
+            taxBox.style.display = 'none';
         }
 
-        // 5. 更新介面
-        document.getElementById('totalAssets').innerText = totalAssets.toLocaleString() + " 萬";
-        document.getElementById('totalLiabilities').innerText = totalLiabilities.toLocaleString() + " 萬";
-        document.getElementById('netWorth').innerText = netWorth.toLocaleString();
-        document.getElementById('debtRatio').innerText = debtRatio.toFixed(1) + "%";
-
-        // Style Net Worth Color
-        const netWorthEl = document.getElementById('netWorth');
-        if (netWorth < 0) {
-            netWorthEl.style.color = "#c0392b"; // Red
+        // 顧問邏輯
+        const adv = document.getElementById('advisor');
+        if (nw < 0) {
+            adv.innerHTML = "🔴 <b>緊急：</b> 你正處於「窮爸爸」紅字狀態。優先償還信用卡與高利貸，停止購買虛榮性負債！";
+        } else if (tL / tA > 0.5) {
+            adv.innerHTML = "🟡 <b>警示：</b> 你的負債比偏高。雖然有資產，但大部分是被貸款撐起來的，風險較高。";
         } else {
-            netWorthEl.style.color = "#27ae60"; // Green
-        }
-
-        // 6. 邏輯判斷與提醒
-        
-        // 稅務提醒 (海外所得基本稅額門檻 750萬)
-        const taxAlert = document.getElementById('taxAlert');
-        if (overseasIncome >= 750) {
-            taxAlert.style.display = 'block';
-            taxAlert.innerHTML = `⚠️ <strong>稅務注意：</strong> 海外所得已達 <strong>${overseasIncome}萬</strong>，超過 750萬 免稅額度。需注意基本稅額申報。`;
-        } else if (overseasIncome >= 600) {
-            taxAlert.style.display = 'block';
-            taxAlert.innerHTML = `ℹ️ <strong>預警：</strong> 海外所得已達 ${overseasIncome}萬，接近 750萬 免稅門檻，請提早規劃。`;
-        } else {
-            taxAlert.style.display = 'none';
-        }
-
-        // 財務健康診斷 (針對小白)
-        const healthAlert = document.getElementById('healthAlert');
-        healthAlert.style.display = 'block';
-        
-        if (netWorth < 0) {
-            healthAlert.className = "alert alert-warning";
-            healthAlert.innerHTML = "💡 <strong>顧問建議：</strong> 您目前處於「資不抵債」狀態。請優先處理高利率債務（如信用卡），暫停新增投資。";
-        } else if (cash < (totalLiabilities * 0.05) && totalLiabilities > 0) {
-            // 簡單判斷流動性風險
-            healthAlert.className = "alert alert-warning";
-            healthAlert.innerHTML = "💡 <strong>風險提醒：</strong> 手邊現金相對於負債過低。建議保留至少 6 個月生活費或房貸/車貸支出作為緊急預備金。";
-        } else {
-            healthAlert.className = "alert alert-good";
-            healthAlert.innerHTML = "👍 <strong>狀態良好：</strong> 您的淨值為正。保持資產累積，並注意定期檢視投資組合的回報率。";
+            adv.innerHTML = "🟢 <b>恭喜：</b> 你的財務狀況健全。下一步是增加被動收入，直到它超過你的總支出！";
         }
     }
+    // 初始計算一次
+    calc();
 </script>
 
 </body>
