@@ -9,6 +9,7 @@
         .gradient-bg { background: linear-gradient(135deg, #0f172a, #1e1b4b, #4338ca); }
         .token-input { @apply bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs w-full focus:ring-2 ring-indigo-500 outline-none; }
         .card-glow { box-shadow: 0 0 20px rgba(79, 70, 229, 0.1); }
+        .warning-glow { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 leading-relaxed" onload="initData()">
@@ -32,9 +33,33 @@
             <div class="lg:col-span-1 space-y-6">
                 <div class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl card-glow">
                     <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🦁 領袖思維：複利系統</h2>
-                    <p class="text-xs opacity-80 leading-relaxed mb-4">
+                    <p class="text-xs opacity-80 leading-relaxed">
                         運用 GitHub 與 GAS 打造不花體力的自動化名單捕手。記住，106 萬觀看只是開始，轉化才是價值。
                     </p>
+                </div>
+
+                <div class="bg-amber-50 border-2 border-amber-200 p-6 rounded-3xl warning-glow">
+                    <h3 class="text-amber-800 text-sm font-black mb-3 flex items-center gap-2">
+                        ⚠️ 系統運行先決條件
+                    </h3>
+                    <ul class="text-[11px] text-amber-700 space-y-3 leading-relaxed">
+                        <li>
+                            <b class="text-amber-900">【Facebook】</b> 
+                            必須使用「粉絲專頁」。個人檔案 (Profile) 不支援 API 自動回覆，強行使用會導致帳號異常。
+                        </li>
+                        <li>
+                            <b class="text-amber-900">【Instagram】</b> 
+                            需切換為「專業/商業帳號」，並連結至 FB 粉絲專頁方可連動。
+                        </li>
+                        <li>
+                            <b class="text-amber-900">【LINE】</b> 
+                            需使用「LINE 官方帳號 (OA)」並開啟 Messaging API 模式。
+                        </li>
+                        <li>
+                            <b class="text-amber-900">【TikTok】</b> 
+                            目前 API 權限嚴格，建議以 Bio 連結引流至上述平台。
+                        </li>
+                    </ul>
                 </div>
 
                 <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
@@ -100,7 +125,7 @@
                 </div>
 
                 <div class="bg-slate-900 p-8 rounded-3xl shadow-2xl relative border-t-8 border-indigo-500">
-                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 GAS</h3>
+                    <h3 class="text-indigo-400 font-mono text-[10px] font-bold mb-4 uppercase">最後一步：複製代碼到 GAS (記得要在粉專環境下運行)</h3>
                     <button onclick="copyCode()" class="absolute top-6 right-8 bg-indigo-600 text-white px-5 py-2 rounded-full text-xs hover:bg-indigo-500">複製代碼</button>
                     <pre id="outputCode" class="text-indigo-300 font-mono text-[9px] overflow-x-auto leading-loose h-[250px]"></pre>
                 </div>
@@ -114,7 +139,6 @@
 
         function initData() { renderUI(); }
 
-        // 生成自動暗號 (Verify Token)
         function generateToken() {
             const randomToken = 'GAVIN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
             document.getElementById('verifyToken').value = randomToken;
@@ -156,37 +180,36 @@
             localStorage.setItem('v26_vault_' + key, JSON.stringify(rules));
             renderUI();
             
-            // 清空
             document.getElementById('keyword').value = '';
             document.getElementById('replyText').value = '';
             currentAttach = [];
             renderAttach();
+            alert('規則儲存成功！');
         }
 
         function syncData() {
             const key = document.getElementById('accountKey').value;
+            if(!key) return alert('請先輸入識別碼');
             const data = localStorage.getItem('v26_vault_' + key);
             rules = data ? JSON.parse(data) : [];
             renderUI();
-            alert('同步成功！');
+            alert('同步成功！已從 LocalStorage 載入資料。');
         }
 
-        // 核心功能：生成 GAS 代碼
         function renderUI() {
             const vToken = document.getElementById('verifyToken').value || "GAVIN_TOKEN_2027";
-            const codeTemplate = `
-/**
+            const codeTemplate = `/**
  * GAVIN AI FLOW V2.6 - 自動化引流大腦
- * 目標：2027 鑽石 | 2026 淨資產 700 萬
+ * 🚀 目標：2027 鑽石 | 2026 淨資產 700 萬
+ * ⚠️ 注意：此代碼僅適用於 FB 粉絲專頁與 IG 商業帳號
  */
 
-const VERIFY_TOKEN = "${vToken}"; // Meta Webhook 驗證暗號
+const VERIFY_TOKEN = "${vToken}"; 
 const ACCESS_TOKEN = "YOUR_PAGE_ACCESS_TOKEN"; // 需從 Meta Developer 取得
 const SHEET_NAME = "Real-time_Leads";
 
 const REPLY_RULES = ${JSON.stringify(rules, null, 2)};
 
-// 1. 處理 Meta Webhook 驗證 (暗號比對)
 function doGet(e) {
   let mode = e.parameter["hub.mode"];
   let token = e.parameter["hub.verify_token"];
@@ -200,7 +223,6 @@ function doGet(e) {
   return ContentService.createTextOutput("System Active");
 }
 
-// 2. 接收留言並自動化處理
 function doPost(e) {
   let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
   let data = JSON.parse(e.postData.contents);
@@ -211,15 +233,14 @@ function doPost(e) {
     let senderName = change.from ? change.from.name : "未知用戶";
     let commentId = change.comment_id;
 
-    // 匹配規則
     REPLY_RULES.forEach(rule => {
       let isMatch = rule.mode === "includes" ? message.includes(rule.keyword) : message === rule.keyword;
       
       if (isMatch) {
-        // A. 記錄名單到試算表
+        // A. 記錄名單
         sheet.appendRow([new Date(), "FB/IG", senderName, message, rule.category, "待聯繫"]);
         
-        // B. 呼叫 Meta API 自動回覆 (需填入 ACCESS_TOKEN)
+        // B. 自動回覆
         sendReply(commentId, rule.text + " " + (rule.attachments[0] || ""));
       }
     });
@@ -239,7 +260,7 @@ function sendReply(id, text) {
 
         function copyCode() {
             const code = document.getElementById('outputCode').innerText;
-            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！快去 Google Apps Script 更新你的大腦 👑'));
+            navigator.clipboard.writeText(code).then(() => alert('代碼已複製！記得去 GAS 貼上並佈署為 Web App 👑'));
         }
     </script>
 </body>
