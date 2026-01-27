@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 - 大心家族 x 李嘉哲Gavin</title>
+    <title>LINE 萬能編輯器 PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
@@ -11,9 +11,12 @@
         /* 畫布容器 */
         .canvas-scroll-container { border: 2px dashed #cbd5e1; background: #f8fafc radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; position: relative; display: flex; align-items: center; justify-content: center; overflow: auto; height: 100%; }
         .canvas-content-wrapper { position: relative; transform-origin: center top; transition: width 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px black; user-select: none; touch-action: none; }
-        .area-box.selected { border-color: #f59e0b; background: rgba(245,158,11,0.3); z-index: 20; }
+        .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px black; user-select: none; touch-action: none; z-index: 30; }
+        .area-box.selected { border-color: #f59e0b; background: rgba(245,158,11,0.3); z-index: 40; }
         
+        /* 廣告圖層 */
+        .ad-layer-img { position: absolute; object-fit: contain; pointer-events: none; z-index: 20; }
+
         /* UI 元件 */
         ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .tab-btn { opacity: 0.6; border-bottom: 3px solid transparent; } .tab-btn.active { opacity: 1; border-bottom: 3px solid #1f2937; color: #1f2937; background: #f3f4f6; }
@@ -70,10 +73,8 @@
                     <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-yellow-400 text-lg shadow-lg shrink-0">🦁</div>
                     <div>
                         <h1 class="font-bold text-sm md:text-base tracking-wide text-slate-900 flex items-center flex-wrap gap-1">
-                            LINE 萬能編輯器 
-                            <span class="text-[9px] bg-slate-900 text-yellow-400 px-1.5 py-0.5 rounded border border-slate-700 shadow-sm">PRO 旗艦版</span>
-                            <span class="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 font-bold shadow-sm">❤️ 大心家族</span>
-                            <span class="text-[10px] text-slate-500 font-medium ml-1">by 李嘉哲Gavin</span>
+                            LINE 萬能編輯器 PRO
+                            <span class="text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded shadow-sm">廣告合成版</span>
                         </h1>
                     </div>
                 </div>
@@ -82,7 +83,7 @@
                         📖 教學
                     </button>
                     <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1.5 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-1 text-xs">
-                        💾 下載
+                        💾 下載設定
                     </button>
                 </div>
             </div>
@@ -127,13 +128,15 @@
                 </div>
 
                 <div id="richMenuControls" class="hidden space-y-2 p-2 bg-emerald-50 rounded border border-emerald-100">
-                    <div class="text-xs font-bold text-emerald-800 mb-1">✨ 快速版型 (魔法棒)</div>
-                    <div class="grid grid-cols-3 gap-1">
-                        <button onclick="applyRichMenuGrid(6)" class="bg-white border border-emerald-200 text-emerald-700 text-[10px] py-1 rounded hover:bg-emerald-100">6格 (大)</button>
-                        <button onclick="applyRichMenuGrid(4)" class="bg-white border-emerald-200 text-emerald-700 text-[10px] py-1 rounded hover:bg-emerald-100">4格 (大)</button>
-                        <button onclick="applyRichMenuGrid(3)" class="bg-white border-emerald-200 text-emerald-700 text-[10px] py-1 rounded hover:bg-emerald-100">3格 (小)</button>
+                    <div class="text-xs font-bold text-emerald-800 mb-1 flex items-center justify-between">
+                         <span>✨ 自由排版模式</span>
+                         <button onclick="downloadCompositeImage()" class="bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700 shadow-sm animate-pulse">⬇️ 下載合成圖片</button>
                     </div>
-                    <div class="text-[9px] text-emerald-600 mt-1">* 點擊後可再手動微調框框</div>
+                    <div class="text-[10px] text-emerald-700 leading-relaxed">
+                        <p>1. 上傳底圖，然後直接<b>「畫框框」</b>。</p>
+                        <p>2. 在下方動作區點擊<b>「🖼️ 貼圖」</b>可放廣告。</p>
+                        <p>3. 若有貼廣告，請點擊上方<b>「下載合成圖片」</b>，再上傳到 LINE 後台。</p>
+                    </div>
                 </div>
 
                 <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
@@ -191,7 +194,8 @@
                             <span class="text-sm md:text-lg font-bold">請先上傳圖片<br>然後在這裡「畫格子」</span>
                         </div>
                         <img id="previewImage" class="hidden block select-none pointer-events-none" style="width: 100%; display: block;" />
-                        <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden z-10"></div>
+                        <div id="adLayer" class="absolute inset-0 pointer-events-none z-10"></div>
+                        <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden z-20"></div>
                     </div>
                 </div>
             </div>
@@ -205,7 +209,7 @@
                             <span class="cursor-pointer hover:text-red-300" onclick="resetFlowSimulation()">🔄 重置</span>
                         </div>
                         <div id="simChatContainer" class="chat-bg custom-scrollbar"></div>
-                        <div id="richMenuPreview" class="rich-menu-bar hidden">圖文選單預覽區</div>
+                        <div id="richMenuPreview" class="rich-menu-bar hidden relative">圖文選單預覽區</div>
                     </div>
                 </div>
                 <button onclick="closeModal('previewModal')" class="mt-6 bg-white/10 text-white border border-white/20 px-8 py-3 rounded-full font-bold hover:bg-white/20 transition flex items-center gap-2 backdrop-blur-md">
@@ -214,6 +218,8 @@
             </div>
         </main>
     </div>
+
+    <input type="file" id="adImageUpload" accept="image/*" class="hidden">
 
     <footer class="bg-white border-t border-slate-200 py-2 text-center text-[10px] text-slate-400 flex-shrink-0">
         &copy; 2026 Designed by 李嘉哲Gavin | 大心家族系統
@@ -237,16 +243,16 @@
                 <hr class="border-slate-100">
 
                 <div>
-                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><span class="step-circle">2</span> 圖文選單安裝器 (Rich Menu)</h3>
-                    <p class="text-xs text-slate-500 mb-1">適用：圖文選單模式。請將此代碼複製到 GAS 執行一次即可。</p>
+                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><span class="step-circle">2</span> 圖文選單 JSON 數據</h3>
+                    <p class="text-xs text-slate-500 mb-1">這是您的<b>自由排版數據</b>，請將下方代碼複製，用於 LINE API。</p>
                     <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 relative">
-                        <button onclick="copyRichMenuCode()" class="absolute top-2 right-2 bg-emerald-600 text-white px-2 py-1 rounded text-xs hover:bg-emerald-700">複製安裝碼</button>
-                        <pre id="richMenuCode" class="text-xs text-yellow-300 font-mono overflow-x-auto p-1">/* 點選「圖文選單」模式後，這裡會出現安裝代碼 */</pre>
+                        <button onclick="copyRichMenuCode()" class="absolute top-2 right-2 bg-emerald-600 text-white px-2 py-1 rounded text-xs hover:bg-emerald-700">複製 JSON</button>
+                        <pre id="richMenuCode" class="text-xs text-yellow-300 font-mono overflow-x-auto p-1">/* 點選「圖文選單」模式後，這裡會出現 JSON */</pre>
                     </div>
                 </div>
 
                 <div class="bg-blue-50 p-2 rounded text-xs text-blue-800">
-                    <b>提示：</b> 圖文選單不需要 Webhook，它是透過 API 直接綁定到你的機器人上。只要執行一次安裝碼，手機上就會出現選單了！
+                    <b>提示：</b> 如果您使用了「貼廣告」功能，請記得點擊主畫面的「下載合成圖片」，並將該圖片上傳到 LINE Rich Menu 後台。
                 </div>
             </div>
         </div>
@@ -261,12 +267,13 @@
         let currentZoom = 100;
         let projectId = Date.now().toString();
         let isSidebarCollapsed = false;
+        let selectedAreaIndexForAd = -1; // 用於記錄正在貼廣告的格子
 
-        // Data Models
+        // Data Models (Updated Area Structure: {x, y, w, h, type, text, adImage?})
         let projectData = {
             id: projectId, name: "未命名專案", token: "", mode: "imagemap",
             imagemap: { imageUrl: "", localPreview: "", areas: [] },
-            richmenu: { imageUrl: "", localPreview: "", areas: [] }, // New for Rich Menu
+            richmenu: { imageUrl: "", localPreview: "", areas: [] }, 
             carousel: [{ title: "", desc: "", imageUrl: "", localPreview: "", btns: [{label:"按鈕", text:"回覆"}], areas:[] }],
             flow: [
                 { name: "Step 1", imageUrl: "", localPreview: "", areas: [], trigger: "開始導覽" },
@@ -277,7 +284,7 @@
         };
 
         const refs = {
-            imageInput: document.getElementById('imageInput'), imageUrl: document.getElementById('imageUrl'), previewImage: document.getElementById('previewImage'), drawLayer: document.getElementById('drawLayer'), actionList: document.getElementById('actionList'), placeholder: document.getElementById('placeholder'), triggerKeyword: document.getElementById('triggerKeyword'), canvasWrapper: document.getElementById('canvasWrapper'), lineTokenInput: document.getElementById('lineTokenInput'), previewCodeLine: document.getElementById('previewCodeLine'), sidebarPanel: document.getElementById('sidebarPanel'), toggleBtnWrapper: document.getElementById('toggleBtnWrapper'), toggleIcon: document.getElementById('toggleIcon'), uploadLabel: document.getElementById('uploadLabel'), simChatContainer: document.getElementById('simChatContainer'), richMenuPreview: document.getElementById('richMenuPreview')
+            imageInput: document.getElementById('imageInput'), imageUrl: document.getElementById('imageUrl'), previewImage: document.getElementById('previewImage'), drawLayer: document.getElementById('drawLayer'), adLayer: document.getElementById('adLayer'), actionList: document.getElementById('actionList'), placeholder: document.getElementById('placeholder'), triggerKeyword: document.getElementById('triggerKeyword'), canvasWrapper: document.getElementById('canvasWrapper'), lineTokenInput: document.getElementById('lineTokenInput'), previewCodeLine: document.getElementById('previewCodeLine'), sidebarPanel: document.getElementById('sidebarPanel'), toggleBtnWrapper: document.getElementById('toggleBtnWrapper'), toggleIcon: document.getElementById('toggleIcon'), uploadLabel: document.getElementById('uploadLabel'), simChatContainer: document.getElementById('simChatContainer'), richMenuPreview: document.getElementById('richMenuPreview'), adImageUpload: document.getElementById('adImageUpload')
         };
         
         let isDrawing = false, startX, startY, naturalWidth = 0, naturalHeight = 0, scaleFactor = 1;
@@ -292,6 +299,92 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
+        // ================= Ad & Composition Logic =================
+        function triggerAdUpload(index) {
+            selectedAreaIndexForAd = index;
+            refs.adImageUpload.click();
+        }
+
+        refs.adImageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file || selectedAreaIndexForAd === -1) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = getCurrentDataObj();
+                if (data.areas[selectedAreaIndexForAd]) {
+                    data.areas[selectedAreaIndexForAd].adImage = evt.target.result;
+                    renderAdLayer();
+                    alert("廣告圖已貼上！\n請記得點擊上方「下載合成圖片」來獲取最終底圖。");
+                }
+                refs.adImageUpload.value = ''; // reset
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function renderAdLayer() {
+            const data = getCurrentDataObj();
+            refs.adLayer.innerHTML = '';
+            if (!data.areas) return;
+
+            data.areas.forEach(a => {
+                if (a.adImage) {
+                    const img = document.createElement('img');
+                    img.src = a.adImage;
+                    img.className = 'ad-layer-img';
+                    img.style.left = (a.x * scaleFactor) + 'px';
+                    img.style.top = (a.y * scaleFactor) + 'px';
+                    img.style.width = (a.width * scaleFactor) + 'px';
+                    img.style.height = (a.height * scaleFactor) + 'px';
+                    refs.adLayer.appendChild(img);
+                }
+            });
+        }
+
+        function downloadCompositeImage() {
+            const data = getCurrentDataObj();
+            if (!data.localPreview && !data.imageUrl) { alert("沒有底圖可供合成"); return; }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = naturalWidth;
+            canvas.height = naturalHeight;
+            const ctx = canvas.getContext('2d');
+
+            const baseImg = new Image();
+            baseImg.crossOrigin = "anonymous";
+            baseImg.src = data.localPreview || data.imageUrl;
+            
+            baseImg.onload = () => {
+                ctx.drawImage(baseImg, 0, 0, naturalWidth, naturalHeight);
+                
+                // Draw Ads
+                let loadedCount = 0;
+                const ads = data.areas.filter(a => a.adImage);
+                if (ads.length === 0) {
+                     downloadCanvas(canvas, "composite_base.png");
+                     return;
+                }
+
+                ads.forEach(a => {
+                    const adImg = new Image();
+                    adImg.src = a.adImage;
+                    adImg.onload = () => {
+                        ctx.drawImage(adImg, a.x, a.y, a.width, a.height);
+                        loadedCount++;
+                        if (loadedCount === ads.length) {
+                            downloadCanvas(canvas, "composite_richmenu.png");
+                        }
+                    }
+                });
+            };
+        }
+
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
         // ================= Interactive Simulator =================
         function openPreviewModal() { 
             document.getElementById('previewModal').classList.remove('hidden'); 
@@ -307,8 +400,22 @@
             else if (currentMode === 'richmenu') { 
                 refs.simChatContainer.innerHTML = '<div class="text-center text-gray-400 mt-20 text-xs">圖文選單顯示於底部 ↓</div>';
                 refs.richMenuPreview.classList.remove('hidden');
-                if(projectData.richmenu.localPreview) refs.richMenuPreview.innerHTML = `<img src="${projectData.richmenu.localPreview}">`;
-                else refs.richMenuPreview.innerHTML = '請先上傳圖片';
+                
+                // Rich Menu Preview with Ads
+                const data = projectData.richmenu;
+                const src = data.localPreview || data.imageUrl;
+                if(src) {
+                    let adsHtml = '';
+                    const scale = 300 / naturalWidth; // Mockup width is 300
+                    data.areas.forEach(a => {
+                        if(a.adImage) {
+                            adsHtml += `<img src="${a.adImage}" style="position:absolute; left:${a.x*scale}px; top:${a.y*scale}px; width:${a.width*scale}px; height:${a.height*scale}px; pointer-events:none;">`;
+                        }
+                    });
+                    refs.richMenuPreview.innerHTML = `<img src="${src}" style="width:100%;">${adsHtml}`;
+                } else {
+                    refs.richMenuPreview.innerHTML = '請先上傳圖片';
+                }
             }
             else { addBotMessageImagemap(projectData.imagemap); }
         }
@@ -377,7 +484,24 @@
         function updateUI() {
             const data = getCurrentDataObj(); refs.imageUrl.value = data.imageUrl || ""; const imgSource = data.localPreview || data.imageUrl;
             refs.previewImage.classList.add('hidden'); refs.drawLayer.classList.add('hidden'); refs.placeholder.classList.remove('hidden');
-            if(imgSource) { refs.previewImage.src = imgSource; refs.previewImage.onload = function() { naturalWidth = this.naturalWidth; naturalHeight = this.naturalHeight; refs.previewImage.classList.remove('hidden'); refs.drawLayer.classList.remove('hidden'); refs.placeholder.classList.add('hidden'); updateScale(); renderAreas(); renderActionList(); } } else { refs.previewImage.src = ""; renderActionList(); }
+            if(imgSource) { 
+                refs.previewImage.src = imgSource; 
+                refs.previewImage.onload = function() { 
+                    naturalWidth = this.naturalWidth; 
+                    naturalHeight = this.naturalHeight; 
+                    refs.previewImage.classList.remove('hidden'); 
+                    refs.drawLayer.classList.remove('hidden'); 
+                    refs.placeholder.classList.add('hidden'); 
+                    updateScale(); 
+                    renderAreas(); 
+                    renderAdLayer(); // Render Ads
+                    renderActionList(); 
+                } 
+            } else { 
+                refs.previewImage.src = ""; 
+                refs.adLayer.innerHTML = '';
+                renderActionList(); 
+            }
             
             document.getElementById('keywordBlock').classList.remove('hidden');
             if(currentMode === 'flow') { if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger; document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0); } 
@@ -401,47 +525,63 @@
             if(mode !== 'flow') refs.uploadLabel.innerText = "1. 上傳底圖"; updateUI(); updateGasCode(); 
         }
 
-        // ================= Rich Menu Templates =================
-        function applyRichMenuGrid(type) {
-            const data = projectData.richmenu;
-            data.areas = [];
-            const W = 2500, H = 1686; // Standard Large
-            // Simple grids assuming standard size
-            if (type === 6) {
-                // 3x2 grid
-                const w = W/3, h = H/2;
-                for(let r=0; r<2; r++) for(let c=0; c<3; c++) data.areas.push({x:c*w, y:r*h, width:w, height:h, text:`Btn ${r*3+c+1}`, type:'message'});
-            } else if (type === 4) {
-                // 2x2 grid (Big)
-                const w = W/2, h = H/2;
-                for(let r=0; r<2; r++) for(let c=0; c<2; c++) data.areas.push({x:c*w, y:r*h, width:w, height:h, text:`Btn ${r*2+c+1}`, type:'message'});
-            } else if (type === 3) {
-                // 3x1 (Small compact) - height usually 843
-                const w = W/3, h = 843;
-                for(let c=0; c<3; c++) data.areas.push({x:c*w, y:0, width:w, height:h, text:`Btn ${c+1}`, type:'message'});
-            }
-            updateUI();
-        }
-
         refs.imageInput.addEventListener('change', function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(evt) { const data = getCurrentDataObj(); data.localPreview = evt.target.result; updateUI(); }; reader.readAsDataURL(file); });
         function saveCurrentDataState() { getCurrentDataObj().imageUrl = refs.imageUrl.value; updateUI(); }
 
         refs.drawLayer.addEventListener('mousedown', handleMouseDown); refs.drawLayer.addEventListener('mousemove', handleMouseMove); refs.drawLayer.addEventListener('mouseup', handleMouseUp);
-        // Touch support skipped for brevity but same logic as before
-
+        
         function handleMouseDown(e) { if(!refs.previewImage.src) return; isDrawing=true; updateScale(); const r=refs.drawLayer.getBoundingClientRect(); startX=(e.clientX-r.left)/scaleFactor; startY=(e.clientY-r.top)/scaleFactor; currentBox=document.createElement('div'); currentBox.className='area-box'; currentBox.style.left=(startX*scaleFactor)+'px'; currentBox.style.top=(startY*scaleFactor)+'px'; refs.drawLayer.appendChild(currentBox); }
         function handleMouseMove(e) { if(!isDrawing)return; const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); currentBox.style.width=(w*scaleFactor)+'px'; currentBox.style.height=(h*scaleFactor)+'px'; currentBox.style.left=(Math.min(startX,(e.clientX-r.left)/scaleFactor)*scaleFactor)+'px'; currentBox.style.top=(Math.min(startY,(e.clientY-r.top)/scaleFactor)*scaleFactor)+'px'; }
         function handleMouseUp(e) { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); let type='message', text=`關鍵字${d.areas.length+1}`; if(currentMode==='flow' && currentFlowStep<3) { type='flow_next'; text=projectData.flow[currentFlowStep+1].trigger; } d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:text, type:type, selected:false}); renderAreas(); renderActionList(); } }
 
         function updateScale() { if(naturalWidth>0 && refs.previewImage.offsetWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
         function renderAreas() { const data = getCurrentDataObj(); refs.drawLayer.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`; el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px'; el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px'; el.innerText=i+1; el.onclick=(e)=>{e.stopPropagation(); toggleAreaSelection(i);}; if(a.type==='flow_next'){el.style.borderColor='#be123c';el.style.backgroundColor='rgba(190,18,60,0.2)';} refs.drawLayer.appendChild(el); }); }
-        function renderActionList() { const data = getCurrentDataObj(); refs.actionList.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; let flowOpt = (currentMode==='flow'&&currentFlowStep<3)?`<option value="flow_next" ${a.type==='flow_next'?'selected':''}>🔗 跳轉</option>`:''; el.innerHTML = `<span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span><select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-16"><option value="message" ${a.type==='message'?'selected':''}>文字</option><option value="uri" ${a.type==='uri'?'selected':''}>連結</option>${flowOpt}</select><input value="${a.text}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0" ${a.type==='flow_next'?'readonly':''}><button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button>`; refs.actionList.appendChild(el); }); }
+        
+        // Render Action List (Updated for Switch Menu & Ad Upload)
+        function renderActionList() { 
+            const data = getCurrentDataObj(); 
+            refs.actionList.innerHTML = ''; 
+            data.areas.forEach((a, i) => { 
+                const el = document.createElement('div'); 
+                el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex flex-wrap gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; 
+                
+                let flowOpt = (currentMode==='flow'&&currentFlowStep<3)?`<option value="flow_next" ${a.type==='flow_next'?'selected':''}>🔗 跳轉</option>`:'';
+                let switchOpt = (currentMode==='richmenu')?`<option value="richmenuswitch" ${a.type==='richmenuswitch'?'selected':''}>🔄 切換選單</option>`:'';
+                
+                // Input logic based on type
+                let inputHtml = `<input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0" placeholder="關鍵字/連結">`;
+                if (a.type === 'richmenuswitch') {
+                    inputHtml = `<input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0 border-orange-300 bg-orange-50" placeholder="Rich Menu Alias ID">`;
+                }
+
+                el.innerHTML = `
+                <div class="flex items-center gap-1 w-full">
+                    <span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span>
+                    <select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-20">
+                        <option value="message" ${a.type==='message'?'selected':''}>文字</option>
+                        <option value="uri" ${a.type==='uri'?'selected':''}>連結</option>
+                        ${flowOpt}
+                        ${switchOpt}
+                    </select>
+                    ${inputHtml}
+                    <button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button>
+                </div>
+                <div class="w-full flex justify-end mt-1">
+                     <button onclick="triggerAdUpload(${i})" class="text-[10px] ${a.adImage?'text-green-600 font-bold':'text-slate-400'} border px-1 rounded hover:bg-slate-50">
+                        ${a.adImage ? '✅ 已貼圖' : '🖼️ 貼廣告'}
+                     </button>
+                </div>
+                `; 
+                refs.actionList.appendChild(el); 
+            }); 
+        }
+
         function updateArea(i, f, v) { const d = getCurrentDataObj(); d.areas[i][f] = v; if(v==='flow_next') d.areas[i].text = projectData.flow[currentFlowStep+1].trigger; renderAreas(); renderActionList(); }
-        function removeArea(i) { getCurrentDataObj().areas.splice(i, 1); renderAreas(); renderActionList(); }
+        function removeArea(i) { getCurrentDataObj().areas.splice(i, 1); renderAreas(); renderActionList(); renderAdLayer(); }
         function toggleAreaSelection(i) { const d=getCurrentDataObj(); d.areas[i].selected=!d.areas[i].selected; renderAreas(); renderActionList(); }
-        function deleteSelectedAreas() { const d=getCurrentDataObj(); d.areas=d.areas.filter(a=>!a.selected); renderAreas(); renderActionList(); }
+        function deleteSelectedAreas() { const d=getCurrentDataObj(); d.areas=d.areas.filter(a=>!a.selected); renderAreas(); renderActionList(); renderAdLayer(); }
         function toggleSelectAll(checked) { const d=getCurrentDataObj(); d.areas.forEach(a=>a.selected=checked); renderAreas(); renderActionList(); }
-        function adjustZoom(delta) { currentZoom = Math.max(10, currentZoom+delta); document.getElementById('zoomDisplay').innerText = currentZoom+'%'; refs.previewImage.style.width = currentZoom+'%'; setTimeout(()=>{updateScale(); renderAreas()},0); }
+        function adjustZoom(delta) { currentZoom = Math.max(10, currentZoom+delta); document.getElementById('zoomDisplay').innerText = currentZoom+'%'; refs.previewImage.style.width = currentZoom+'%'; setTimeout(()=>{updateScale(); renderAreas(); renderAdLayer()},0); }
         function resetZoom() { currentZoom = 100; adjustZoom(0); }
 
         function generateImagemapJson(data) { const scale = (naturalWidth&&naturalWidth!==1040)?1040/naturalWidth:1; return { "type": "imagemap", "baseUrl": data.imageUrl, "altText": "選單", "baseSize": { "width": 1040, "height": Math.round((naturalHeight||1040)*scale) }, "actions": data.areas.map(a => ({ "type": a.type==='uri'?'uri':'message', "text": a.type!=='uri'?a.text:undefined, "linkUri": a.type==='uri'?a.text:undefined, "area": { x: Math.round(a.x*scale), y: Math.round(a.y*scale), width: Math.round(a.width*scale), height: Math.round(a.height*scale) } })) }; }
@@ -451,19 +591,37 @@
             const token = refs.lineTokenInput.value || '請換成你的LINE_TOKEN';
             refs.previewCodeLine.innerText = `const CHANNEL_ACCESS_TOKEN = '${token}'; ...`;
             
-            // Rich Menu Installation Code
+            // Rich Menu JSON Code
             const richData = projectData.richmenu;
-            let richAreas = richData.areas.map(a => ({
-                bounds: { x: Math.round(a.x), y: Math.round(a.y), width: Math.round(a.width), height: Math.round(a.height) },
-                action: { type: a.type==='uri'?'uri':'message', text: a.type!=='uri'?a.text:undefined, uri: a.type==='uri'?a.text:undefined, label: 'btn' }
-            }));
-            const richCode = `// 執行此函式一次即可安裝圖文選單
-function installRichMenu() {
-  const token = '${token}';
-  const imageUrl = '${richData.imageUrl}';
-  const menuArea = ${JSON.stringify(richAreas)};
-  // (需搭配完整的 API 呼叫邏輯，因篇幅省略詳細實作，建議使用 Postman 或 LINE Manager)
-  console.log("請將 Image URL 與 Area JSON 貼到 LINE Manager 或使用進階 API 工具");
+            let richAreas = richData.areas.map(a => {
+                let action = {};
+                if(a.type === 'uri') { action = { type: 'uri', uri: a.text }; }
+                else if(a.type === 'richmenuswitch') { 
+                    action = { 
+                        type: 'richmenuswitch', 
+                        richMenuAliasId: a.text,
+                        data: 'action=switch' 
+                    }; 
+                }
+                else { action = { type: 'message', text: a.text }; }
+                
+                return {
+                    bounds: { x: Math.round(a.x), y: Math.round(a.y), width: Math.round(a.width), height: Math.round(a.height) },
+                    action: action
+                };
+            });
+
+            const richCode = `// 這是給 LINE Rich Menu API 的 areas 參數
+// 圖片大小: ${naturalWidth} x ${naturalHeight}
+{
+  "size": {
+    "width": ${naturalWidth || 2500},
+    "height": ${naturalHeight || 1686}
+  },
+  "selected": true,
+  "name": "我的圖文選單",
+  "chatBarText": "開啟選單",
+  "areas": ${JSON.stringify(richAreas, null, 2)}
 }`;
             document.getElementById('richMenuCode').innerText = richCode;
 
