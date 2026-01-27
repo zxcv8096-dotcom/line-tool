@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 PRO - 廣告合成版</title>
+    <title>LINE 萬能編輯器 PRO - 全功能版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
@@ -135,7 +135,7 @@
                     <div class="text-[10px] text-emerald-700 leading-relaxed">
                         <p>1. 上傳底圖，然後直接<b>「畫框框」</b>。</p>
                         <p>2. 在下方動作區點擊<b>「🖼️ 貼圖」</b>可放廣告。</p>
-                        <p>3. 若有貼廣告，請點擊上方<b>「下載合成圖片」</b>，再上傳到 LINE 後台。</p>
+                        <p>3. 若要連外網，請在動作選擇<b>「連結」</b>並貼上網址。</p>
                     </div>
                 </div>
 
@@ -537,7 +537,7 @@
         function updateScale() { if(naturalWidth>0 && refs.previewImage.offsetWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
         function renderAreas() { const data = getCurrentDataObj(); refs.drawLayer.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`; el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px'; el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px'; el.innerText=i+1; el.onclick=(e)=>{e.stopPropagation(); toggleAreaSelection(i);}; if(a.type==='flow_next'){el.style.borderColor='#be123c';el.style.backgroundColor='rgba(190,18,60,0.2)';} refs.drawLayer.appendChild(el); }); }
         
-        // Render Action List (Updated for Switch Menu & Ad Upload)
+        // Render Action List (Updated logic for Placeholder)
         function renderActionList() { 
             const data = getCurrentDataObj(); 
             refs.actionList.innerHTML = ''; 
@@ -548,11 +548,12 @@
                 let flowOpt = (currentMode==='flow'&&currentFlowStep<3)?`<option value="flow_next" ${a.type==='flow_next'?'selected':''}>🔗 跳轉</option>`:'';
                 let switchOpt = (currentMode==='richmenu')?`<option value="richmenuswitch" ${a.type==='richmenuswitch'?'selected':''}>🔄 切換選單</option>`:'';
                 
-                // Input logic based on type
-                let inputHtml = `<input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0" placeholder="關鍵字/連結">`;
-                if (a.type === 'richmenuswitch') {
-                    inputHtml = `<input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0 border-orange-300 bg-orange-50" placeholder="Rich Menu Alias ID">`;
-                }
+                // Dynamic Placeholder Logic
+                let ph = "關鍵字/連結";
+                let inputClass = "border-slate-300";
+                if(a.type === 'uri') { ph = "輸入網址 (https://...)"; inputClass="border-blue-400 text-blue-700"; }
+                else if(a.type === 'message') { ph = "輸入用戶點擊後的文字"; }
+                else if(a.type === 'richmenuswitch') { ph = "輸入 Rich Menu Alias ID"; inputClass="border-orange-300 bg-orange-50"; }
 
                 el.innerHTML = `
                 <div class="flex items-center gap-1 w-full">
@@ -563,7 +564,7 @@
                         ${flowOpt}
                         ${switchOpt}
                     </select>
-                    ${inputHtml}
+                    <input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0 ${inputClass}" placeholder="${ph}">
                     <button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button>
                 </div>
                 <div class="w-full flex justify-end mt-1">
