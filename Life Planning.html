@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>大心AI Flow 夢想藝廊 v2.0</title>
+    <title>大心AI Flow 夢想藝廊</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-dream: #6a11cb;
             --secondary-dream: #2575fc;
             --accent-gold: #d4af37;
-            --tax-saving: #28a745; /* 節稅綠 */
             --text-dark: #2c3e50;
             --card-glass: rgba(255, 255, 255, 0.65);
             --card-border: rgba(255, 255, 255, 0.4);
+            --tax-saving: #28a745; /* 新增節稅綠色 */
         }
 
         body {
@@ -65,10 +65,12 @@
             box-shadow: 0 4px 20px rgba(31, 38, 135, 0.1);
         }
 
-        /* 儀表板樣式 */
+        /* -------------------------------------------
+           儀表板樣式
+           ------------------------------------------- */
         .summary-card {
             z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.9);
             border-left: 5px solid var(--secondary-dream);
             transition: all 0.3s ease;
         }
@@ -81,6 +83,7 @@
             text-align: center;
         }
 
+        /* 手機版維持原樣 (Grid 佈局) */
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -98,14 +101,15 @@
         .stat-label { font-size: 0.75em; color: #666; margin-bottom: 0; }
         .stat-value { font-size: 1.1em; font-weight: bold; color: var(--primary-dream); line-height: 1.2; }
         .stat-value.highlight { color: #b8860b; }
-        .stat-value.saving { color: var(--tax-saving); }
         
         .motivation {
             text-align: center; font-style: italic; color: var(--primary-dream);
             margin-top: 10px; font-weight: 700; font-size: 0.9em;
         }
 
-        /* 電腦版優化 */
+        /* -------------------------------------------
+           電腦版特別優化
+           ------------------------------------------- */
         @media (min-width: 769px) {
             .summary-card {
                 position: sticky;
@@ -119,18 +123,42 @@
                 border-radius: 0 0 15px 15px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 margin-bottom: 30px;
+                backdrop-filter: blur(15px);
             }
 
-            .summary-title { margin: 0; font-size: 1.1em; margin-right: 20px; white-space: nowrap; }
-            .summary-grid { display: flex; gap: 0; width: auto; flex-grow: 1; justify-content: flex-end; }
+            .summary-title {
+                margin: 0;
+                font-size: 1.1em;
+                margin-right: 20px;
+                white-space: nowrap;
+            }
+            .summary-title span { display: none; }
+
+            .summary-grid {
+                display: flex;
+                gap: 0;
+                width: auto;
+                flex-grow: 1;
+                justify-content: flex-end;
+            }
+
             .stat-box {
-                background: transparent; border: none; border-right: 1px solid #ddd;
-                border-radius: 0; padding: 0 20px; text-align: left;
-                display: flex; flex-direction: column; justify-content: center; min-width: 120px;
+                background: transparent;
+                border: none;
+                border-right: 1px solid #ddd;
+                border-radius: 0;
+                padding: 0 20px;
+                text-align: left;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-width: 120px;
             }
             .stat-box:last-child { border: none; }
+            
             .stat-label { font-size: 0.7em; opacity: 0.8; }
             .stat-value { font-size: 1.2em; margin-top: 2px; }
+
             .motivation { display: none; }
         }
 
@@ -212,23 +240,15 @@
             background: linear-gradient(135deg, rgba(255, 250, 240, 0.9), rgba(255, 239, 213, 0.8));
         }
 
-        /* 稅務分析區塊 */
+        /* 新增：稅務分析區塊樣式 (融入原有風格) */
         .tax-analysis-box {
-            background: rgba(40, 167, 69, 0.1);
+            background: rgba(255, 255, 255, 0.6);
             border: 1px solid var(--tax-saving);
             border-radius: 10px;
             padding: 15px;
             margin-top: 20px;
             font-size: 0.9em;
-        }
-        .tax-badge {
-            display: inline-block;
-            background: var(--tax-saving);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin-bottom: 5px;
+            display: none; /* 預設隱藏 */
         }
 
         footer { text-align: center; margin-top: 40px; color: #666; font-size: 0.85em; }
@@ -239,26 +259,26 @@
 <div class="container">
     <header>
         <h1>大心 AI Flow 夢想藝廊</h1>
-        <p>財務自由與稅務優化計算機</p>
+        <p>為夢想著色，預見財務自由的未來</p>
     </header>
 
     <div class="glass-card summary-card">
         <div class="summary-title">
-            財務總覽
+            財務能量
             <span style="font-size:0.6em; color:#888;">(預估)</span>
         </div>
         <div class="summary-grid">
             <div class="stat-box">
-                <div class="stat-label">淨現金流/年</div>
+                <div class="stat-label">年度淨現流</div>
                 <div class="stat-value" id="disp-net-cashflow">0</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">節稅策略</div>
-                <div class="stat-value" id="disp-tax-strategy" style="font-size: 0.9em;">個人申報</div>
+                <div class="stat-label">預估稅額</div>
+                <div class="stat-value" id="disp-tax">0</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">稅務CP值</div>
-                <div class="stat-value saving" id="disp-tax-saving">0</div>
+                <div class="stat-label">月自由現金</div>
+                <div class="stat-value" id="disp-monthly-surplus">0</div>
             </div>
             <div class="stat-box" style="border-right: none;">
                 <div class="stat-label" style="color:#b8860b;">加速後月現流</div>
@@ -291,56 +311,21 @@
             </div>
             <div>
                 <div class="input-group">
-                    <label>被動收入 (不含安麗)</label>
+                    <label>被動收入 (國內配息/房租)</label>
                     <div class="input-wrapper">
                         <input type="number" id="income-passive-local" step="0.1" placeholder="0" oninput="updatePreview(this, 'pre-pas-local')">
                         <span class="unit">萬/年</span>
                     </div>
                     <div class="preview-box" id="pre-pas-local">0 元</div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="glass-card amway-boost">
-        <h2>🚀 事業加速引擎 & 稅務優化</h2>
-        <div class="input-group">
-            <label style="color: #9c7c14;">選擇目標聘位 (影響安麗收入)</label>
-            <div class="input-wrapper" style="background: rgba(255,255,255,0.7); border-color: var(--accent-gold);">
-                <select id="amway-pin" onchange="calcAll()" style="font-weight:bold; color:#9c7c14;">
-                    <option value="0" selected>⚪ 維持現狀 (基準線)</option>
-                    <option value="1">🥈 銀獎章 (Silver) - 約 4 萬/月</option>
-                    <option value="2">🥇 金獎章 (Gold) - 約 6 萬/月</option>
-                    <option value="3">🏆 白金 (Platinum) - 約 9 萬/月</option>
-                    <option value="101">🔴 紅寶石 (Ruby) - 約 11 萬/月</option>
-                    <option value="4">🎗️ 創辦人白金 (F.Platinum) - 約 13 萬/月</option>
-                    <option value="102">🔵 藍寶石 (Sapphire) - 約 15 萬/月</option>
-                    <option value="5">💎 翡翠 (Emerald) - 年收約250萬</option>
-                    <option value="6">💎 創辦人翡翠 (F.Emerald) - 年收約350萬</option>
-                    <option value="7">💎 鑽石 (Diamond) - 年收約710萬</option>
-                    <option value="8">💎 創辦人鑽石 (F.Diamond) - 年收約900萬</option>
-                    <option value="12">👑 皇冠 (Crown) - 年收約2500萬</option>
-                    <option value="13">👑 皇冠大使 (FC) - 年收約3000萬</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="tax-analysis-container" style="display:none;" class="tax-analysis-box">
-            <div class="tax-badge">稅務 CP 值分析</div>
-            <div style="margin-top:5px; font-weight:bold; color:#155724;">
-                <span id="tax-recommendation">分析中...</span>
-            </div>
-            <div style="font-size:0.85em; color:#555; margin-top:5px;">
-                個人名義稅金：<span id="tax-personal-val">0</span> 萬 <br>
-                開公司總成本：<span id="tax-company-val">0</span> 萬 (含營所稅+維護費) <br>
-                <strong style="color:var(--tax-saving)">開公司每年省下：<span id="tax-saved-val">0</span> 萬</strong>
-            </div>
-        </div>
-
-        <div class="dream-result-container" style="background: rgba(255,250,240,0.8); border-color: var(--accent-gold); margin-top:15px;">
-            <div style="font-weight:bold; color: #9c7c14; margin-bottom:8px;">🔥 加速後夢想評估：</div>
-            <div id="dream-status-amway" style="color: #b8860b; font-weight:bold; font-size: 1.1em;">
-                請選擇聘位
+                <div class="input-group">
+                    <label>被動收入 (海外配息)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="income-passive-overseas" step="0.1" placeholder="0" oninput="updatePreview(this, 'pre-pas-over')">
+                        <span class="unit">萬/年</span>
+                    </div>
+                    <div class="preview-box" id="pre-pas-over">0 元</div>
+                </div>
             </div>
         </div>
     </div>
@@ -349,25 +334,91 @@
         <h2>⛓️ 2. 現有負擔：負債</h2>
         <div id="debt-container"></div>
         <button class="btn-add" style="background: #ddd; color:#555; margin-top:0;" onclick="addDebtRow()">+ 新增負債項目</button>
+        <p style="font-size:0.8em; color:#888; text-align:center;">*以簡易本息平均攤還概算</p>
     </div>
 
     <div class="glass-card" style="border-color: var(--secondary-dream);">
         <h2>🎨 3. 夢想藝廊</h2>
+        <p style="color:#666; font-size:0.9em; margin-bottom:15px;">添加所有夢想，系統將計算實現「整張清單」所需時間。</p>
+        
         <div id="dreams-container"></div>
         <button class="btn-add" onclick="addDreamRow()">+ 添加一個夢想</button>
+        
+        <div class="dream-result-container">
+            <div style="font-weight:bold; color:var(--primary-dream); margin-bottom:8px;">🌟 原本狀態評估：</div>
+            <div id="dream-status-current" style="font-size: 1.05em;">請輸入資料...</div>
+        </div>
+    </div>
+
+    <div class="glass-card amway-boost">
+        <h2>🚀 事業加速引擎</h2>
+        <div class="input-group">
+            <label style="color: #9c7c14;">選擇目標聘位 (增加被動收入)</label>
+            <div class="input-wrapper" style="background: rgba(255,255,255,0.7); border-color: var(--accent-gold);">
+                <select id="amway-pin" onchange="calcAll()" style="font-weight:bold; color:#9c7c14;">
+                    <option value="0" selected>⚪ 維持現狀 (基準線)</option>
+                    <option value="1">🥈 銀獎章 (Silver) - 增加約 4 萬/月</option>
+                    <option value="2">🥇 金獎章 (Gold) - 增加約 6 萬/月</option>
+                    <option value="3">🏆 白金 (Platinum) - 增加約 9 萬/月</option>
+                    <option value="101">🔴 紅寶石 (Ruby) - 增加約 11 萬/月</option>
+                    <option value="4">🎗️ 創辦人白金 (F.Platinum) - 增加約 13 萬/月</option>
+                    <option value="102">🔵 藍寶石 (Sapphire) - 增加約 15 萬/月</option>
+                    <option value="5">💎 翡翠 (Emerald) - 年收約250萬</option>
+                    <option value="6">💎 創辦人翡翠 (F.Emerald) - 年收約350萬</option>
+                    <option value="7">💎 鑽石 (Diamond) - 年收約500萬</option>
+                    <option value="8">💎 創辦人鑽石 (F.Diamond) - 年收約600萬</option>
+                    <option value="9">💎 執行專才鑽石 (EDC) - 年收約700萬</option>
+                    <option value="10">💎 雙鑽石 (Double Diamond) - 年收約800萬</option>
+                    <option value="11">💎 參鑽石 (Triple Diamond) - 年收約900萬</option>
+                    <option value="12">👑 皇冠 (Crown) - 年收約1000萬</option>
+                    <option value="13">👑 皇冠大使 (FC) - 年收約1500萬</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="tax-analysis-container" class="tax-analysis-box">
+            <div style="font-weight:bold; color: var(--tax-saving); margin-bottom:5px;">💡 節稅策略建議</div>
+            <div style="font-size:0.95em; line-height:1.5;">
+                <span id="tax-recommendation-text">分析中...</span>
+                <br>
+                <span style="font-size:0.85em; color:#555;">(已依據 2025 年最新稅制計算)</span>
+            </div>
+        </div>
+
+        <div class="dream-result-container" style="background: rgba(255,250,240,0.8); border-color: var(--accent-gold);">
+            <div style="font-weight:bold; color: #9c7c14; margin-bottom:8px;">🔥 加速後評估：</div>
+            <div id="dream-status-amway" style="color: #b8860b; font-weight:bold; font-size: 1.1em;">
+                請選擇聘位
+            </div>
+        </div>
     </div>
 
     <footer>
         設計製作：李嘉哲 Gavin <br>
-        &copy; 2026 大心 AI Flow
+        &copy; 2025 大心 AI Flow
     </footer>
 </div>
 
 <script>
+    // 數據校準：2026/01/27 用戶指定
+    // Diamond=500, Crown=1000
     const amwayIncomes = {
         0: 0,
-        1: 4, 2: 6, 3: 9, 101: 11, 4: 13, 102: 15,
-        5: 21, 6: 30, 7: 59, 8: 75, 9: 92, 10: 125, 11: 166, 12: 208, 13: 250
+        1: 4,     // 銀獎章
+        2: 6,     // 金獎章
+        3: 9,     // 白金
+        101: 11,  // 紅寶石
+        4: 13,    // 創辦人白金
+        102: 15,  // 藍寶石
+        5: 21,    // 翡翠 (約252萬/年)
+        6: 30,    // 創辦人翡翠 (約360萬/年)
+        7: 41.6,  // 鑽石 (修正: 500萬/年)
+        8: 50,    // 創辦人鑽石 (修正: 600萬/年)
+        9: 58.3,  // EDC (修正: 700萬/年)
+        10: 66.6, // 雙鑽 (修正: 800萬/年)
+        11: 75,   // 參鑽 (修正: 900萬/年)
+        12: 83.3, // 皇冠 (修正: 1000萬/年)
+        13: 125   // FC (修正: 3000萬/年)
     };
 
     window.onload = function() {
@@ -446,28 +497,34 @@
         calcAll();
     }
 
-    // --- 核心計算邏輯 ---
-    function calculateTax(income) {
-        // 台灣綜所稅簡易級距 (單位:萬) - 假設已扣除免稅額與扣除額約 42萬
-        let taxable = income - 42; 
+    // --- 2025 最新稅制計算核心 ---
+    function calculatePersonalTax2025(income) {
+        // 免稅額 10.3 + 標扣 13.9 + 薪扣 23.2 = 47.4 萬
+        let taxable = income - 47.4; 
         if (taxable <= 0) return 0;
         
         let tax = 0;
-        if(taxable <= 56) tax = taxable * 0.05;
-        else if(taxable <= 126) tax = taxable * 0.12 - 3.92;
-        else if(taxable <= 252) tax = taxable * 0.2 - 14;
-        else if(taxable <= 472) tax = taxable * 0.3 - 39;
-        else tax = taxable * 0.4 - 86;
-        
+        // 2025 課稅級距
+        if(taxable <= 59) {
+            tax = taxable * 0.05;
+        } else if(taxable <= 133) {
+            tax = taxable * 0.12 - 4.13;
+        } else if(taxable <= 266) {
+            tax = taxable * 0.20 - 14.77;
+        } else if(taxable <= 498) {
+            tax = taxable * 0.30 - 41.37;
+        } else {
+            tax = taxable * 0.40 - 91.17;
+        }
         return tax;
     }
 
     function calcAll() {
         const incomeActiveYear = parseFloat(document.getElementById('income-active').value) || 0;
         const incomePassiveLocal = parseFloat(document.getElementById('income-passive-local').value) || 0;
+        const incomePassiveOver = parseFloat(document.getElementById('income-passive-overseas').value) || 0;
         const expenseTotalYear = parseFloat(document.getElementById('expense-total').value) || 0;
 
-        // 計算負債
         let monthlyDebtPay = 0;
         const debtAmts = document.getElementsByClassName('debt-amount');
         const debtMons = document.getElementsByClassName('debt-months');
@@ -478,83 +535,72 @@
         }
         const annualDebtPay = monthlyDebtPay * 12;
 
-        // 安麗收入
-        const pinLevel = parseInt(document.getElementById('amway-pin').value);
-        const amwayMonthly = amwayIncomes[pinLevel];
-        const amwayYearly = amwayMonthly * 12;
-
-        // --- 稅務分析 CP值計算 ---
-        // 方案 A: 全部個人申報
-        const totalIncomeIndividual = incomeActiveYear + incomePassiveLocal + amwayYearly;
-        const taxIndividual = calculateTax(totalIncomeIndividual);
-
-        // 方案 B: 開公司 (安麗收入 -> 公司, 本業 -> 個人)
-        // 本業個人稅
-        const taxPersonalBase = calculateTax(incomeActiveYear + incomePassiveLocal);
-        // 公司稅 (安麗收入)
-        // 假設公司營所稅 20% + 5%保留盈餘稅(粗估) + 每年維護費約 3.5萬 (記帳費等)
-        // 營所稅起徵點 12萬，這裡簡化計算：若安麗年收 > 12萬 則 20%
-        let taxCompany = 0;
-        let companyMaintenanceCost = 3.5; // 公司維護成本
+        const totalIncomeNoAmway = incomeActiveYear + incomePassiveLocal;
         
-        if (amwayYearly > 0) {
-            // 簡易算法：營所稅 20%
-            let taxableCompany = amwayYearly; // 實際可扣抵費用，這裡從寬認定作保守估計
-            taxCompany = taxableCompany * 0.2; 
-        }
+        // 1. 基礎情境 (無安麗)
+        let taxBase = calculatePersonalTax2025(totalIncomeNoAmway);
+        const netCashflowYear = (totalIncomeNoAmway + incomePassiveOver) - expenseTotalYear - taxBase - annualDebtPay;
+        const monthlySurplus = netCashflowYear / 12;
 
-        const totalCostCompanyMode = taxPersonalBase + taxCompany + companyMaintenanceCost;
-
-        // 判定哪種划算
-        let finalTax = taxIndividual;
-        let isCompanyBetter = false;
+        // 2. 加速情境 (有安麗)
+        const pinLevel = parseFloat(document.getElementById('amway-pin').value);
+        const amwayYearly = amwayIncomes[pinLevel] * 12;
+        
+        // --- 節稅判斷邏輯 ---
+        // 方案A: 全部個人申報
+        const totalIncomeWithAmway = totalIncomeNoAmway + amwayYearly;
+        const taxPersonalMode = calculatePersonalTax2025(totalIncomeWithAmway);
+        
+        // 方案B: 開公司 (安麗收入->公司)
+        // 個人稅只算本業+被動
+        const taxPersonalPart = taxBase; 
+        // 公司稅 (安麗部分)
+        let taxCompanyPart = 0;
+        let maintenance = 4.0; // 記帳費約4萬
+        let isCompanyMode = false;
         let taxSaved = 0;
 
-        const taxAnalysisEl = document.getElementById('tax-analysis-container');
-        
-        if (pinLevel > 0) {
-            taxAnalysisEl.style.display = 'block';
+        if (amwayYearly > 0) {
+            let profit = amwayYearly - maintenance;
+            if(profit < 0) profit = 0;
+            taxCompanyPart = profit * 0.2; // 營所稅 20%
             
-            // 如果開公司成本 < 個人稅
-            if (totalCostCompanyMode < taxIndividual && amwayYearly > 50) { // 設定一個門檻，太少錢開公司不划算
-                isCompanyBetter = true;
-                finalTax = totalCostCompanyMode; // 採用優化後的稅負成本
-                taxSaved = taxIndividual - totalCostCompanyMode;
-                
-                document.getElementById('tax-recommendation').innerText = "💡 建議成立公司！CP 值極高";
-                document.getElementById('tax-recommendation').style.color = "#d9534f"; // 醒目紅
-                
-                document.getElementById('disp-tax-strategy').innerText = "建議開公司";
-                document.getElementById('disp-tax-strategy').style.color = "var(--tax-saving)";
-                document.getElementById('disp-tax-saving').innerText = "省 " + taxSaved.toFixed(1) + " 萬";
-            } else {
-                document.getElementById('tax-recommendation').innerText = "目前維持個人申報較划算";
-                document.getElementById('tax-recommendation').style.color = "#155724";
-                
-                document.getElementById('disp-tax-strategy').innerText = "個人申報";
-                document.getElementById('disp-tax-strategy').style.color = "#555";
-                document.getElementById('disp-tax-saving').innerText = "-";
+            const totalCostCompany = taxPersonalPart + taxCompanyPart + maintenance;
+            
+            // 判斷：若開公司成本 < 個人合併申報，且安麗年收 > 60萬 (避免太小額開公司不划算)
+            if (totalCostCompany < taxPersonalMode && amwayYearly > 60) {
+                isCompanyMode = true;
+                taxSaved = taxPersonalMode - totalCostCompany;
             }
-            
-            document.getElementById('tax-personal-val').innerText = taxIndividual.toFixed(1);
-            document.getElementById('tax-company-val').innerText = totalCostCompanyMode.toFixed(1);
-            document.getElementById('tax-saved-val').innerText = taxSaved.toFixed(1);
-        } else {
-            taxAnalysisEl.style.display = 'none';
-            document.getElementById('disp-tax-strategy').innerText = "尚未啟動";
-            document.getElementById('disp-tax-saving').innerText = "0";
         }
 
-        // --- 最終現金流計算 ---
-        // (總收入) - (總支出) - (優化後的稅) - (房貸信貸)
-        const netCashflowYearAmway = (incomeActiveYear + incomePassiveLocal + amwayYearly) - expenseTotalYear - finalTax - annualDebtPay;
+        // 決定最終稅額
+        let finalTaxAmwayScenario = isCompanyMode ? (taxPersonalPart + taxCompanyPart + maintenance) : taxPersonalMode;
+        
+        const netCashflowYearAmway = (totalIncomeWithAmway + incomePassiveOver) - expenseTotalYear - finalTaxAmwayScenario - annualDebtPay;
         const monthlySurplusAmway = netCashflowYearAmway / 12;
 
-        // 更新儀表板
-        document.getElementById('disp-net-cashflow').innerText = Math.round(netCashflowYearAmway * 10000).toLocaleString();
+        // 更新顯示
+        document.getElementById('disp-net-cashflow').innerText = Math.round(netCashflowYear * 10000).toLocaleString();
+        
+        // 儀表板的預估稅額：如果有選聘位，顯示該聘位下的最優稅額；沒選則顯示基礎稅額
+        const displayTax = (pinLevel > 0) ? finalTaxAmwayScenario : taxBase;
+        document.getElementById('disp-tax').innerText = Math.round(displayTax * 10000).toLocaleString();
+        
+        document.getElementById('disp-monthly-surplus').innerText = Math.round(monthlySurplus * 10000).toLocaleString();
         document.getElementById('disp-amway-surplus').innerText = Math.round(monthlySurplusAmway * 10000).toLocaleString();
 
-        // 夢想計算
+        // 顯示/隱藏 節稅分析框
+        const taxBox = document.getElementById('tax-analysis-container');
+        const taxText = document.getElementById('tax-recommendation-text');
+        
+        if (pinLevel > 0 && isCompanyMode) {
+            taxBox.style.display = 'block';
+            taxText.innerHTML = `成立公司較划算！<br>相較個人申報，每年預計省下 <strong style="color:#d9534f; font-size:1.1em;">${taxSaved.toFixed(1)} 萬</strong> 稅金。`;
+        } else {
+            taxBox.style.display = 'none';
+        }
+
         let totalTargetSavings = 0;
         let totalFutureMonthlyLoan = 0;
         let dreamCount = 0;
@@ -576,23 +622,30 @@
             }
         }
 
+        const dreamStatusEl = document.getElementById('dream-status-current');
         const amwayStatusEl = document.getElementById('dream-status-amway');
+
         if (dreamCount > 0 && totalTargetSavings > 0) {
+            calculateTotalDreamTime(totalTargetSavings, totalFutureMonthlyLoan, monthlySurplus, dreamStatusEl, false);
             calculateTotalDreamTime(totalTargetSavings, totalFutureMonthlyLoan, monthlySurplusAmway, amwayStatusEl, true);
         } else {
-            amwayStatusEl.innerHTML = "請選擇聘位";
+             dreamStatusEl.innerHTML = "請輸入資料...";
+             amwayStatusEl.innerHTML = "請選擇聘位";
         }
-        
+
         const motivation = document.getElementById('motivation-text');
-        if(isCompanyBetter) {
-             motivation.innerText = "開公司節稅策略生效！財富加速中";
-             motivation.style.color = "var(--tax-saving)";
-        } else if (monthlySurplusAmway > 0) {
-             motivation.innerText = "安麗事業正強力加速你的夢想！";
-             motivation.style.color = "#b8860b";
-        } else {
-             motivation.innerText = "準備好開始規劃了嗎？";
+        if (pinLevel === 0) {
+             motivation.innerText = "輸入數據，繪製你的未來藍圖";
              motivation.style.color = "#555";
+        } else if(monthlySurplusAmway > monthlySurplus * 1.5 && monthlySurplusAmway > 0) {
+            motivation.innerText = "安麗事業正強力加速你的夢想！";
+            motivation.style.color = "#b8860b";
+        } else if (monthlySurplusAmway <= 0) {
+             motivation.innerText = "注意：現金流吃緊";
+             motivation.style.color = "#d9534f";
+        } else {
+            motivation.innerText = "穩健前行，夢想必達";
+            motivation.style.color = "var(--secondary-dream)";
         }
     }
 
@@ -603,7 +656,7 @@
         }
         if (monthlyNet < futureMonthlyLoan) {
              const shortfall = Math.round((futureMonthlyLoan - monthlyNet) * 10000).toLocaleString();
-             element.innerHTML = `<span style='color:#d9534f'>月收不足支付貸款 (差${shortfall}元)</span>`;
+             element.innerHTML = `<span style='color:#d9534f'>存到頭期款後，月收仍不足支付貸款 (差${shortfall}元)</span>`;
              return;
         }
 
@@ -616,7 +669,7 @@
         if (months > 0) timeStr += `${months}個月`;
         if (years === 0 && months === 0) timeStr = "1個月內";
 
-        const color = "#b8860b";
+        const color = isAmway ? "#b8860b" : "var(--primary-dream)";
         if(years > 60) element.innerHTML = "需超過 60 年...";
         else element.innerHTML = `預計達成：<strong style="color:${color}; font-size:1.2em;">${timeStr}</strong>`;
     }
