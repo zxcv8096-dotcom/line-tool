@@ -3,21 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 PRO - 全功能版</title>
+    <title>LINE 萬能編輯器 PRO - 終極修正版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
-        
-        /* 畫布容器 */
         .canvas-scroll-container { border: 2px dashed #cbd5e1; background: #f8fafc radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; position: relative; display: flex; align-items: center; justify-content: center; overflow: auto; height: 100%; }
         .canvas-content-wrapper { position: relative; transform-origin: center top; transition: width 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px black; user-select: none; touch-action: none; z-index: 30; }
         .area-box.selected { border-color: #f59e0b; background: rgba(245,158,11,0.3); z-index: 40; }
-        
-        /* 廣告圖層 */
         .ad-layer-img { position: absolute; object-fit: contain; pointer-events: none; z-index: 20; }
-
-        /* UI 元件 */
         ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .tab-btn { opacity: 0.6; border-bottom: 3px solid transparent; } .tab-btn.active { opacity: 1; border-bottom: 3px solid #1f2937; color: #1f2937; background: #f3f4f6; }
         .flow-step-btn { background: white; border: 2px solid #e2e8f0; color: #64748b; transition: all 0.2s ease; position: relative; overflow: hidden; }
@@ -28,8 +22,6 @@
         .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all 0.2s; } .card-dot.active { background: #1f2937; transform: scale(1.3); border: 1px solid #fbbf24; }
         .code-block-slim { background: #1e293b; color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.75rem; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .step-circle { width: 24px; height: 24px; background: #1f2937; color: #fbbf24; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; flex-shrink: 0; }
-
-        /* 手機模擬器樣式 */
         .phone-mockup { width: 300px; height: 580px; background: #fff; border-radius: 30px; border: 8px solid #1f2937; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; margin: 0 auto; transform: scale(0.95); transform-origin: top center; }
         .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 20px; background: #1f2937; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 50; }
         .chat-bg { background-color: #849ebf; flex: 1; overflow-y: auto; padding: 40px 10px 10px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
@@ -39,7 +31,6 @@
         .chat-bubble { max-width: 240px; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
         .chat-bubble img { width: 100%; display: block; }
         .chat-bubble.text { padding: 8px 12px; font-size: 14px; background: #92e3a9; border-radius: 15px; max-width: 200px; word-break: break-all; }
-        
         .carousel-track { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scroll-snap-type: x mandatory; max-width: 100%; }
         .line-bubble { min-width: 240px; max-width: 240px; background: white; border-radius: 12px; overflow: hidden; scroll-snap-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
         .bubble-hero { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; }
@@ -52,16 +43,14 @@
         .hotspot-overlay { position: absolute; background: rgba(0, 0, 255, 0.1); cursor: pointer; border: 1px dashed rgba(255, 255, 255, 0.5); transition: background 0.2s; }
         .hotspot-overlay:active { background: rgba(0, 0, 255, 0.3); }
         .sim-hotspot { position: absolute; border: 1px dashed rgba(255, 0, 0, 0.5); background: rgba(255, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; color: red; font-size: 10px; font-weight: bold; }
-
-        /* Rich Menu 模擬區 */
         .rich-menu-bar { background: #f8fafc; border-top: 1px solid #ddd; height: 180px; width: 100%; position: absolute; bottom: 0; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px; }
         .rich-menu-bar img { width: 100%; height: 100%; object-fit: contain; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @media (min-width: 768px) { body { height: 100vh; overflow: hidden; } #main-layout { height: 100%; overflow: hidden; } }
-        
         #sidebarPanel { transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease; }
         .sidebar-collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden; padding: 0 !important; opacity: 0; }
+        .code-modal-tab { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; font-weight: bold; }
+        .code-modal-tab.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; }
     </style>
 </head>
 <body class="bg-slate-50 flex flex-col text-slate-800">
@@ -74,16 +63,19 @@
                     <div>
                         <h1 class="font-bold text-sm md:text-base tracking-wide text-slate-900 flex items-center flex-wrap gap-1">
                             LINE 萬能編輯器 PRO
-                            <span class="text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded shadow-sm">廣告合成版</span>
+                            <span class="text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded shadow-sm">修正版</span>
                         </h1>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="openModal('tutorialModal')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 animate-pulse">
-                        📖 教學
+                    <button onclick="openModal('codeModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 animate-pulse">
+                        📤 取得程式碼
                     </button>
                     <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1.5 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-1 text-xs">
-                        💾 下載設定
+                        💾 儲存專案
+                    </button>
+                    <button onclick="openModal('tutorialModal')" class="bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1.5 rounded-lg font-bold text-xs shadow-sm">
+                        ❓ 教學
                     </button>
                 </div>
             </div>
@@ -100,9 +92,7 @@
     </div>
 
     <div id="main-layout" class="flex flex-col md:flex-row flex-1 w-full bg-white relative">
-        
         <aside id="sidebarPanel" class="w-full md:w-[380px] border-b md:border-b-0 md:border-r border-slate-200 flex flex-col z-20 bg-white flex-shrink-0 max-h-[40vh] md:max-h-full overflow-hidden relative">
-            
             <div id="flowStepNav" class="hidden grid grid-cols-4 gap-2 p-2 bg-slate-100 border-b flex-shrink-0">
                 <button onclick="switchFlowStep(0)" id="flow-step-0" class="flow-step-btn active rounded py-2 text-[10px] font-bold text-center">Step 1<div class="step-badge" id="badge-0"></div></button>
                 <button onclick="switchFlowStep(1)" id="flow-step-1" class="flow-step-btn rounded py-2 text-[10px] font-bold text-center">Step 2<div class="step-badge" id="badge-1"></div></button>
@@ -111,34 +101,30 @@
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
-                
                 <div class="bg-yellow-50 p-2 rounded border border-yellow-200 shadow-sm">
-                    <label class="text-[10px] font-bold text-yellow-800 block mb-1">🔑 LINE Token (教學第一步用到)</label>
+                    <label class="text-[10px] font-bold text-yellow-800 block mb-1">🔑 LINE Token (產生程式碼需要)</label>
                     <input type="text" id="lineTokenInput" placeholder="請貼上 Channel Access Token..." class="w-full text-[10px] p-1.5 border border-yellow-300 rounded focus:outline-none focus:border-yellow-500 bg-white" oninput="updateGasCode(); saveProjectSilent();">
                 </div>
-
                 <div id="keywordBlock" class="bg-blue-50 rounded p-2 border border-blue-100 flex items-center gap-2">
                     <label class="font-bold text-blue-800 text-xs whitespace-nowrap">關鍵字:</label>
                     <input type="text" id="triggerKeyword" value="選單" class="flex-1 p-1 border border-blue-200 rounded text-xs font-bold text-blue-700 h-6" oninput="updateGasCode()">
                 </div>
-
                 <div id="flowHelpBtn" class="hidden flex gap-2">
                     <button onclick="openModal('flowExplainModal')" class="flex-1 bg-rose-100 text-rose-700 border border-rose-200 py-1.5 rounded text-xs font-bold hover:bg-rose-200 transition">❓ 怎麼用？</button>
                     <button onclick="openPreviewModal()" class="flex-1 bg-slate-800 text-yellow-400 border border-slate-900 py-1.5 rounded text-xs font-bold hover:bg-slate-700 transition shadow">👁️ 模擬預覽</button>
                 </div>
-
                 <div id="richMenuControls" class="hidden space-y-2 p-2 bg-emerald-50 rounded border border-emerald-100">
                     <div class="text-xs font-bold text-emerald-800 mb-1 flex items-center justify-between">
                          <span>✨ 自由排版模式</span>
-                         <button onclick="downloadCompositeImage()" class="bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700 shadow-sm animate-pulse">⬇️ 下載合成圖片</button>
+                         <button onclick="downloadCompositeImage()" class="bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700 shadow-sm">⬇️ 下載合成圖片</button>
                     </div>
                     <div class="text-[10px] text-emerald-700 leading-relaxed">
                         <p>1. 上傳底圖，然後直接<b>「畫框框」</b>。</p>
                         <p>2. 在下方動作區點擊<b>「🖼️ 貼圖」</b>可放廣告。</p>
                         <p>3. 若要連外網，請在動作選擇<b>「連結」</b>並貼上網址。</p>
+                        <p>4. 設好後點右上角<b>「📤 取得程式碼」</b>。</p>
                     </div>
                 </div>
-
                 <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
                     <div class="flex justify-between items-center">
                         <label class="font-bold text-amber-800 text-xs">📦 卡片管理</label>
@@ -150,17 +136,14 @@
                     <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
                     <button onclick="openPreviewModal()" class="w-full bg-slate-800 text-yellow-400 py-1.5 rounded font-bold text-xs shadow hover:bg-slate-700 transition flex items-center justify-center gap-2">👁️ 模擬預覽</button>
                 </div>
-
                 <div class="bg-slate-50 p-2 rounded border border-slate-200">
                     <label class="block font-bold text-slate-700 text-[10px] mb-1" id="uploadLabel">1. 上傳底圖</label>
                     <input type="file" id="imageInput" accept="image/*" class="block w-full text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-white file:text-slate-700 hover:file:bg-slate-100"/>
                 </div>
-                
                 <div class="flex items-center gap-2">
                     <input type="text" id="imageUrl" placeholder="2. 貼上 https://...圖片網址 (必填)" class="flex-1 p-1.5 border border-slate-300 rounded text-[10px] font-mono" oninput="saveCurrentDataState()">
                     <button onclick="openModal('imageHelpModal')" class="bg-gray-200 px-2 py-1 rounded text-[10px] hover:bg-gray-300 whitespace-nowrap">圖床?</button>
                 </div>
-
                 <div class="flex-1">
                     <div class="flex justify-between items-center mb-1 border-b pb-1">
                         <label class="font-bold text-slate-700 text-[10px]">3. 點擊區域 (自由調整)</label>
@@ -178,7 +161,6 @@
         </div>
 
         <main class="flex-1 bg-slate-100 p-2 md:p-4 flex flex-col w-full md:w-auto overflow-hidden items-center justify-center">
-            
             <div id="canvasWrapper" class="relative shadow-xl bg-white rounded-lg overflow-hidden border border-slate-300 w-full h-full max-w-4xl flex flex-col">
                 <div class="bg-white border-b p-1.5 flex justify-between items-center flex-shrink-0">
                     <span class="text-xs font-bold text-slate-500 pl-1">🔍 畫布</span>
@@ -199,7 +181,6 @@
                     </div>
                 </div>
             </div>
-
             <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/90 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeModal('previewModal')">
                 <div class="relative w-full max-w-xs shrink-0">
                     <div class="phone-mockup">
@@ -221,42 +202,57 @@
 
     <input type="file" id="adImageUpload" accept="image/*" class="hidden">
 
-    <footer class="bg-white border-t border-slate-200 py-2 text-center text-[10px] text-slate-400 flex-shrink-0">
-        &copy; 2026 Designed by 李嘉哲Gavin | 大心家族系統
-    </footer>
-
-    <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center bg-indigo-50"><h2 class="text-lg font-bold text-indigo-900">💡 機器人架設</h2><button onclick="closeModal('tutorialModal')" class="text-slate-400 text-xl">✕</button></div>
-            <div class="p-6 overflow-y-auto space-y-6 text-sm">
-                
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><span class="step-circle">1</span> 自動回覆 (GAS)</h3>
-                    <p class="text-xs text-slate-500 mb-1">適用：引流圖、滑動卡片、導覽流程。</p>
-                    <div class="code-block-slim">
-                        <code class="text-green-400 flex-1 truncate" id="previewCodeLine">const CHANNEL_ACCESS_TOKEN = '...';</code>
-                        <button onclick="copyCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-bold shrink-0">複製</button>
+    <div id="codeModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full h-[85vh] flex flex-col overflow-hidden">
+            <div class="flex border-b bg-slate-100">
+                <div class="code-modal-tab active flex-1 text-center py-3" onclick="switchCodeTab('gas')" id="tabBtn-gas">🤖 GAS 程式碼 (自動回覆)</div>
+                <div class="code-modal-tab flex-1 text-center py-3" onclick="switchCodeTab('rich')" id="tabBtn-rich">☰ 圖文選單 JSON</div>
+                <button onclick="closeModal('codeModal')" class="px-4 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            </div>
+            <div class="flex-1 overflow-hidden relative">
+                <div id="codeSection-gas" class="absolute inset-0 flex flex-col p-4">
+                    <div class="mb-2 text-xs text-slate-500 bg-blue-50 p-2 rounded border border-blue-100">
+                        <b>用途：</b> 貼到 Google Apps Script，負責「引流圖」、「卡片」、「多層導覽」的觸發與回覆。<br>
+                        <b>包含功能：</b> 自動回應文字、圖片、連結跳轉 (Uri)。
                     </div>
-                    <pre id="gasCode" class="hidden"></pre>
-                </div>
-
-                <hr class="border-slate-100">
-
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2"><span class="step-circle">2</span> 圖文選單 JSON 數據</h3>
-                    <p class="text-xs text-slate-500 mb-1">這是您的<b>自由排版數據</b>，請將下方代碼複製，用於 LINE API。</p>
-                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 relative">
-                        <button onclick="copyRichMenuCode()" class="absolute top-2 right-2 bg-emerald-600 text-white px-2 py-1 rounded text-xs hover:bg-emerald-700">複製 JSON</button>
-                        <pre id="richMenuCode" class="text-xs text-yellow-300 font-mono overflow-x-auto p-1">/* 點選「圖文選單」模式後，這裡會出現 JSON */</pre>
+                    <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
+                        <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('gasCode')" class="text-xs text-white bg-indigo-600 px-2 py-1 rounded hover:bg-indigo-700">複製全部</button></div>
+                        <pre id="gasCode" class="flex-1 overflow-auto p-3 text-xs text-green-400 font-mono"></pre>
                     </div>
                 </div>
-
-                <div class="bg-blue-50 p-2 rounded text-xs text-blue-800">
-                    <b>提示：</b> 如果您使用了「貼廣告」功能，請記得點擊主畫面的「下載合成圖片」，並將該圖片上傳到 LINE Rich Menu 後台。
+                <div id="codeSection-rich" class="hidden absolute inset-0 flex flex-col p-4">
+                    <div class="mb-2 text-xs text-slate-500 bg-emerald-50 p-2 rounded border border-emerald-100">
+                        <b>用途：</b> 貼到 Postman 或 LINE Manager API 工具。<br>
+                        <b>注意：</b> 圖文選單是「綁定」在用戶介面上的，不需要透過 GAS 回覆，所以這裡提供的是 JSON 格式的設定檔。
+                    </div>
+                    <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
+                        <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('richMenuCode')" class="text-xs text-white bg-emerald-600 px-2 py-1 rounded hover:bg-emerald-700">複製 JSON</button></div>
+                        <pre id="richMenuCode" class="flex-1 overflow-auto p-3 text-xs text-yellow-300 font-mono"></pre>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[80vh] overflow-y-auto flex flex-col p-6">
+            <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">💡 快速教學</h2><button onclick="closeModal('tutorialModal')" class="text-2xl">✕</button></div>
+            <div class="space-y-4 text-sm text-slate-700">
+                <p><b>1. 設定 Token：</b> 在左側欄位填入 LINE Channel Access Token。</p>
+                <p><b>2. 製作內容：</b> 上傳圖片、畫框框、設定動作 (連結或文字)。</p>
+                <p><b>3. 取得程式碼：</b> 點擊右上角 <span class="bg-indigo-600 text-white px-1 rounded text-xs">📤 取得程式碼</span>。</p>
+                <p><b>4. 部署 GAS：</b></p>
+                <ul class="list-disc pl-5">
+                    <li>將 GAS 分頁的代碼全選複製。</li>
+                    <li>開新 GAS 專案，貼上，儲存。</li>
+                    <li>點擊「部署」>「新增部署」>「網頁應用程式」。</li>
+                    <li>權限選「Anyone (任何人)」。</li>
+                    <li>將生成的 Webhook URL 貼回 LINE Developer Console。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <div id="flowExplainModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"><div class="p-4 border-b bg-rose-50 flex justify-between items-center"><h2 class="text-lg font-bold text-rose-800">🤔 多層次導覽</h2><button onclick="closeModal('flowExplainModal')" class="text-2xl text-slate-400">✕</button></div><div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700"><div class="space-y-2"><h3 class="font-bold text-base flex items-center gap-2">🕹️ 概念：像闖關遊戲一樣</h3><p>一般圖片只有一層。多層次導覽讓你設計<b>「點了這張圖 ➡ 跳出下一張圖」</b>的效果。</p></div><div class="space-y-2"><h3 class="font-bold text-base flex items-center gap-2">🛠️ 怎麼設定？</h3><ul class="list-decimal pl-5 space-y-2"><li>點擊上方的 <b>Step 1</b>，上傳第一張圖。</li><li>在圖上畫框框，動作選擇 <b>「🔗 跳轉到下一層」</b>。</li><li>點擊 <b>Step 2</b>，上傳第二張圖。</li><li>系統會自動串接，無需寫程式。</li></ul></div><div class="text-center"><button onclick="closeModal('flowExplainModal')" class="bg-rose-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-rose-700">懂了！</button></div></div></div></div>
     <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="closeModal('imageHelpModal')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">請使用 Imgur 上傳，並對圖片按右鍵「複製圖片位址」。</p></div></div>
 
@@ -267,9 +263,8 @@
         let currentZoom = 100;
         let projectId = Date.now().toString();
         let isSidebarCollapsed = false;
-        let selectedAreaIndexForAd = -1; // 用於記錄正在貼廣告的格子
+        let selectedAreaIndexForAd = -1;
 
-        // Data Models (Updated Area Structure: {x, y, w, h, type, text, adImage?})
         let projectData = {
             id: projectId, name: "未命名專案", token: "", mode: "imagemap",
             imagemap: { imageUrl: "", localPreview: "", areas: [] },
@@ -284,7 +279,7 @@
         };
 
         const refs = {
-            imageInput: document.getElementById('imageInput'), imageUrl: document.getElementById('imageUrl'), previewImage: document.getElementById('previewImage'), drawLayer: document.getElementById('drawLayer'), adLayer: document.getElementById('adLayer'), actionList: document.getElementById('actionList'), placeholder: document.getElementById('placeholder'), triggerKeyword: document.getElementById('triggerKeyword'), canvasWrapper: document.getElementById('canvasWrapper'), lineTokenInput: document.getElementById('lineTokenInput'), previewCodeLine: document.getElementById('previewCodeLine'), sidebarPanel: document.getElementById('sidebarPanel'), toggleBtnWrapper: document.getElementById('toggleBtnWrapper'), toggleIcon: document.getElementById('toggleIcon'), uploadLabel: document.getElementById('uploadLabel'), simChatContainer: document.getElementById('simChatContainer'), richMenuPreview: document.getElementById('richMenuPreview'), adImageUpload: document.getElementById('adImageUpload')
+            imageInput: document.getElementById('imageInput'), imageUrl: document.getElementById('imageUrl'), previewImage: document.getElementById('previewImage'), drawLayer: document.getElementById('drawLayer'), adLayer: document.getElementById('adLayer'), actionList: document.getElementById('actionList'), placeholder: document.getElementById('placeholder'), triggerKeyword: document.getElementById('triggerKeyword'), canvasWrapper: document.getElementById('canvasWrapper'), lineTokenInput: document.getElementById('lineTokenInput'), sidebarPanel: document.getElementById('sidebarPanel'), toggleBtnWrapper: document.getElementById('toggleBtnWrapper'), toggleIcon: document.getElementById('toggleIcon'), uploadLabel: document.getElementById('uploadLabel'), simChatContainer: document.getElementById('simChatContainer'), richMenuPreview: document.getElementById('richMenuPreview'), adImageUpload: document.getElementById('adImageUpload')
         };
         
         let isDrawing = false, startX, startY, naturalWidth = 0, naturalHeight = 0, scaleFactor = 1;
@@ -299,218 +294,85 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
-        // ================= Ad & Composition Logic =================
-        function triggerAdUpload(index) {
-            selectedAreaIndexForAd = index;
-            refs.adImageUpload.click();
+        function switchCodeTab(tab) {
+            document.querySelectorAll('.code-modal-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tabBtn-${tab}`).classList.add('active');
+            document.getElementById('codeSection-gas').classList.add('hidden');
+            document.getElementById('codeSection-rich').classList.add('hidden');
+            document.getElementById(`codeSection-${tab}`).classList.remove('hidden');
         }
 
+        // ================= Ad & Composition Logic =================
+        function triggerAdUpload(index) { selectedAreaIndexForAd = index; refs.adImageUpload.click(); }
         refs.adImageUpload.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file || selectedAreaIndexForAd === -1) return;
+            const file = e.target.files[0]; if (!file || selectedAreaIndexForAd === -1) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const data = getCurrentDataObj();
-                if (data.areas[selectedAreaIndexForAd]) {
-                    data.areas[selectedAreaIndexForAd].adImage = evt.target.result;
-                    renderAdLayer();
-                    alert("廣告圖已貼上！\n請記得點擊上方「下載合成圖片」來獲取最終底圖。");
-                }
-                refs.adImageUpload.value = ''; // reset
-            };
-            reader.readAsDataURL(file);
+                if (data.areas[selectedAreaIndexForAd]) { data.areas[selectedAreaIndexForAd].adImage = evt.target.result; renderAdLayer(); alert("廣告圖已貼上！\n請記得點擊上方「下載合成圖片」來獲取最終底圖。"); }
+                refs.adImageUpload.value = '';
+            }; reader.readAsDataURL(file);
         });
-
         function renderAdLayer() {
-            const data = getCurrentDataObj();
-            refs.adLayer.innerHTML = '';
-            if (!data.areas) return;
-
-            data.areas.forEach(a => {
-                if (a.adImage) {
-                    const img = document.createElement('img');
-                    img.src = a.adImage;
-                    img.className = 'ad-layer-img';
-                    img.style.left = (a.x * scaleFactor) + 'px';
-                    img.style.top = (a.y * scaleFactor) + 'px';
-                    img.style.width = (a.width * scaleFactor) + 'px';
-                    img.style.height = (a.height * scaleFactor) + 'px';
-                    refs.adLayer.appendChild(img);
-                }
-            });
+            const data = getCurrentDataObj(); refs.adLayer.innerHTML = ''; if (!data.areas) return;
+            data.areas.forEach(a => { if (a.adImage) { const img = document.createElement('img'); img.src = a.adImage; img.className = 'ad-layer-img'; img.style.left = (a.x * scaleFactor) + 'px'; img.style.top = (a.y * scaleFactor) + 'px'; img.style.width = (a.width * scaleFactor) + 'px'; img.style.height = (a.height * scaleFactor) + 'px'; refs.adLayer.appendChild(img); } });
         }
-
         function downloadCompositeImage() {
-            const data = getCurrentDataObj();
-            if (!data.localPreview && !data.imageUrl) { alert("沒有底圖可供合成"); return; }
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = naturalWidth;
-            canvas.height = naturalHeight;
-            const ctx = canvas.getContext('2d');
-
-            const baseImg = new Image();
-            baseImg.crossOrigin = "anonymous";
-            baseImg.src = data.localPreview || data.imageUrl;
-            
+            const data = getCurrentDataObj(); if (!data.localPreview && !data.imageUrl) { alert("沒有底圖可供合成"); return; }
+            const canvas = document.createElement('canvas'); canvas.width = naturalWidth; canvas.height = naturalHeight; const ctx = canvas.getContext('2d');
+            const baseImg = new Image(); baseImg.crossOrigin = "anonymous"; baseImg.src = data.localPreview || data.imageUrl;
             baseImg.onload = () => {
                 ctx.drawImage(baseImg, 0, 0, naturalWidth, naturalHeight);
-                
-                // Draw Ads
-                let loadedCount = 0;
-                const ads = data.areas.filter(a => a.adImage);
-                if (ads.length === 0) {
-                     downloadCanvas(canvas, "composite_base.png");
-                     return;
-                }
-
-                ads.forEach(a => {
-                    const adImg = new Image();
-                    adImg.src = a.adImage;
-                    adImg.onload = () => {
-                        ctx.drawImage(adImg, a.x, a.y, a.width, a.height);
-                        loadedCount++;
-                        if (loadedCount === ads.length) {
-                            downloadCanvas(canvas, "composite_richmenu.png");
-                        }
-                    }
-                });
+                let loadedCount = 0; const ads = data.areas.filter(a => a.adImage);
+                if (ads.length === 0) { downloadCanvas(canvas, "composite_base.png"); return; }
+                ads.forEach(a => { const adImg = new Image(); adImg.src = a.adImage; adImg.onload = () => { ctx.drawImage(adImg, a.x, a.y, a.width, a.height); loadedCount++; if (loadedCount === ads.length) { downloadCanvas(canvas, "composite_richmenu.png"); } } });
             };
         }
-
-        function downloadCanvas(canvas, filename) {
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
-        }
+        function downloadCanvas(canvas, filename) { const link = document.createElement('a'); link.download = filename; link.href = canvas.toDataURL("image/png"); link.click(); }
 
         // ================= Interactive Simulator =================
-        function openPreviewModal() { 
-            document.getElementById('previewModal').classList.remove('hidden'); 
-            resetFlowSimulation(); 
-        }
-
+        function openPreviewModal() { document.getElementById('previewModal').classList.remove('hidden'); resetFlowSimulation(); }
         function resetFlowSimulation() {
-            refs.simChatContainer.innerHTML = '';
-            refs.richMenuPreview.classList.add('hidden');
-            
-            if(currentMode === 'flow') { addBotMessageFlow(0); } 
-            else if (currentMode === 'carousel') { renderCarouselSim(); } 
-            else if (currentMode === 'richmenu') { 
-                refs.simChatContainer.innerHTML = '<div class="text-center text-gray-400 mt-20 text-xs">圖文選單顯示於底部 ↓</div>';
-                refs.richMenuPreview.classList.remove('hidden');
-                
-                // Rich Menu Preview with Ads
-                const data = projectData.richmenu;
-                const src = data.localPreview || data.imageUrl;
-                if(src) {
-                    let adsHtml = '';
-                    const scale = 300 / naturalWidth; // Mockup width is 300
-                    data.areas.forEach(a => {
-                        if(a.adImage) {
-                            adsHtml += `<img src="${a.adImage}" style="position:absolute; left:${a.x*scale}px; top:${a.y*scale}px; width:${a.width*scale}px; height:${a.height*scale}px; pointer-events:none;">`;
-                        }
-                    });
-                    refs.richMenuPreview.innerHTML = `<img src="${src}" style="width:100%;">${adsHtml}`;
-                } else {
-                    refs.richMenuPreview.innerHTML = '請先上傳圖片';
-                }
-            }
-            else { addBotMessageImagemap(projectData.imagemap); }
+            refs.simChatContainer.innerHTML = ''; refs.richMenuPreview.classList.add('hidden');
+            if(currentMode === 'flow') { addBotMessageFlow(0); } else if (currentMode === 'carousel') { renderCarouselSim(); } else if (currentMode === 'richmenu') { 
+                refs.simChatContainer.innerHTML = '<div class="text-center text-gray-400 mt-20 text-xs">圖文選單顯示於底部 ↓</div>'; refs.richMenuPreview.classList.remove('hidden');
+                const data = projectData.richmenu; const src = data.localPreview || data.imageUrl;
+                if(src) { let adsHtml = ''; const scale = 300 / naturalWidth; data.areas.forEach(a => { if(a.adImage) { adsHtml += `<img src="${a.adImage}" style="position:absolute; left:${a.x*scale}px; top:${a.y*scale}px; width:${a.width*scale}px; height:${a.height*scale}px; pointer-events:none;">`; } }); refs.richMenuPreview.innerHTML = `<img src="${src}" style="width:100%;">${adsHtml}`; } else { refs.richMenuPreview.innerHTML = '請先上傳圖片'; }
+            } else { addBotMessageImagemap(projectData.imagemap); }
         }
-
         function renderCarouselSim() {
             const wrapper = document.createElement('div'); wrapper.className = 'bubble-container custom-scrollbar';
             projectData.carousel.forEach((card, idx) => {
-                const img = card.localPreview || card.imageUrl || 'https://via.placeholder.com/240x160?text=No+Image';
-                let hot = ''; if(card.areas.length > 0) { card.areas.forEach(a => { const style = `left:${(a.x/naturalWidth*100)}%; top:${(a.y/naturalHeight*100)}%; width:${(a.width/naturalWidth*100)}%; height:${(a.height/naturalHeight*100)}%;`; hot += `<div class="hotspot-overlay" style="${style}" onclick="alert('點擊: ${a.text}')"></div>`; }); }
+                const img = card.localPreview || card.imageUrl || 'https://via.placeholder.com/240x160?text=No+Image'; let hot = ''; if(card.areas.length > 0) { card.areas.forEach(a => { const style = `left:${(a.x/naturalWidth*100)}%; top:${(a.y/naturalHeight*100)}%; width:${(a.width/naturalWidth*100)}%; height:${(a.height/naturalHeight*100)}%;`; hot += `<div class="hotspot-overlay" style="${style}" onclick="alert('點擊: ${a.text}')"></div>`; }); }
                 const bubble = document.createElement('div'); bubble.className = 'line-bubble'; if(idx === currentCardIndex) bubble.style.border = '2px solid #4f46e5';
                 bubble.innerHTML = `<div style="position:relative;"><img src="${img}" class="bubble-hero">${hot}</div><div class="carousel-body"><div class="font-bold text-sm mb-1">${card.title||'標題'}</div><div class="text-xs text-gray-500">${card.desc||'說明'}</div></div>`; wrapper.appendChild(bubble);
-            });
-            const row = document.createElement('div'); row.className = 'chat-row'; row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(wrapper); refs.simChatContainer.appendChild(row);
+            }); const row = document.createElement('div'); row.className = 'chat-row'; row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(wrapper); refs.simChatContainer.appendChild(row);
         }
-
         function addBotMessageFlow(stepIndex) {
-            if(stepIndex >= 4) return;
-            const data = projectData.flow[stepIndex];
-            if(!data.imageUrl) return;
-            const img = data.localPreview || data.imageUrl;
-            const row = document.createElement('div'); row.className = 'chat-row';
-            const bubble = document.createElement('div'); bubble.className = 'chat-bubble';
-            bubble.innerHTML = `<div style="position:relative;"><img src="${img}"><div id="overlay-${stepIndex}" style="position:absolute;inset:0;"></div></div>`;
-            const overlay = bubble.querySelector(`#overlay-${stepIndex}`);
-            const baseW = 1040;
-            data.areas.forEach(a => {
-                const div = document.createElement('div'); div.className = 'hotspot-overlay';
-                let baseH = (currentMode==='flow'&&currentFlowStep===stepIndex)?naturalHeight:1040;
-                div.style.left = (a.x/baseW*100)+'%'; div.style.top = (a.y/baseH*100)+'%'; div.style.width = (a.width/baseW*100)+'%'; div.style.height = (a.height/baseH*100)+'%';
-                div.onclick = () => { if(a.type==='flow_next') { addUserMessage("點擊: "+a.text); setTimeout(()=>addBotMessageFlow(stepIndex+1),600); } else { alert(a.type==='uri'?'開連結':'文字: '+a.text); } };
-                overlay.appendChild(div);
-            });
-            row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(bubble);
-            refs.simChatContainer.appendChild(row); refs.simChatContainer.scrollTop = refs.simChatContainer.scrollHeight;
+            if(stepIndex >= 4) return; const data = projectData.flow[stepIndex]; if(!data.imageUrl) return; const img = data.localPreview || data.imageUrl;
+            const row = document.createElement('div'); row.className = 'chat-row'; const bubble = document.createElement('div'); bubble.className = 'chat-bubble'; bubble.innerHTML = `<div style="position:relative;"><img src="${img}"><div id="overlay-${stepIndex}" style="position:absolute;inset:0;"></div></div>`;
+            const overlay = bubble.querySelector(`#overlay-${stepIndex}`); const baseW = 1040;
+            data.areas.forEach(a => { const div = document.createElement('div'); div.className = 'hotspot-overlay'; let baseH = (currentMode==='flow'&&currentFlowStep===stepIndex)?naturalHeight:1040; div.style.left = (a.x/baseW*100)+'%'; div.style.top = (a.y/baseH*100)+'%'; div.style.width = (a.width/baseW*100)+'%'; div.style.height = (a.height/baseH*100)+'%'; div.onclick = () => { if(a.type==='flow_next') { addUserMessage("點擊: "+a.text); setTimeout(()=>addBotMessageFlow(stepIndex+1),600); } else { alert(a.type==='uri'?'開連結':'文字: '+a.text); } }; overlay.appendChild(div); });
+            row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(bubble); refs.simChatContainer.appendChild(row); refs.simChatContainer.scrollTop = refs.simChatContainer.scrollHeight;
         }
-
         function addBotMessageImagemap(data) {
-            const img = data.localPreview || data.imageUrl;
-            const row = document.createElement('div'); row.className = 'chat-row';
-            const bubble = document.createElement('div'); bubble.className = 'chat-bubble';
-            bubble.innerHTML = `<div style="position:relative;"><img src="${img}"><div id="img-overlay" style="position:absolute;inset:0;"></div></div>`;
-            const overlay = bubble.querySelector('#img-overlay');
-            data.areas.forEach(a => {
-                const div = document.createElement('div'); div.className = 'hotspot-overlay';
-                div.style.left=(a.x/1040*100)+'%'; div.style.top=(a.y/naturalHeight*100)+'%'; div.style.width=(a.width/1040*100)+'%'; div.style.height=(a.height/naturalHeight*100)+'%';
-                div.onclick=()=>alert(a.type==='uri'?'開連結':'文字: '+a.text); overlay.appendChild(div);
-            });
-            row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(bubble);
-            refs.simChatContainer.appendChild(row);
+            const img = data.localPreview || data.imageUrl; const row = document.createElement('div'); row.className = 'chat-row'; const bubble = document.createElement('div'); bubble.className = 'chat-bubble'; bubble.innerHTML = `<div style="position:relative;"><img src="${img}"><div id="img-overlay" style="position:absolute;inset:0;"></div></div>`; const overlay = bubble.querySelector('#img-overlay');
+            data.areas.forEach(a => { const div = document.createElement('div'); div.className = 'hotspot-overlay'; div.style.left=(a.x/1040*100)+'%'; div.style.top=(a.y/naturalHeight*100)+'%'; div.style.width=(a.width/1040*100)+'%'; div.style.height=(a.height/naturalHeight*100)+'%'; div.onclick=()=>alert(a.type==='uri'?'開連結':'文字: '+a.text); overlay.appendChild(div); });
+            row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(bubble); refs.simChatContainer.appendChild(row);
         }
-
-        function addUserMessage(text) {
-            const row = document.createElement('div'); row.className = 'chat-row right';
-            row.innerHTML = `<div class="chat-bubble text">${text}</div>`;
-            refs.simChatContainer.appendChild(row); refs.simChatContainer.scrollTop = refs.simChatContainer.scrollHeight;
-        }
+        function addUserMessage(text) { const row = document.createElement('div'); row.className = 'chat-row right'; row.innerHTML = `<div class="chat-bubble text">${text}</div>`; refs.simChatContainer.appendChild(row); refs.simChatContainer.scrollTop = refs.simChatContainer.scrollHeight; }
 
         // ================= Core Logic =================
-        function getCurrentDataObj() {
-            if(currentMode === 'imagemap') return projectData.imagemap;
-            if(currentMode === 'richmenu') return projectData.richmenu;
-            if(currentMode === 'carousel') return projectData.carousel[currentCardIndex];
-            if(currentMode === 'flow') return projectData.flow[currentFlowStep];
-        }
-
+        function getCurrentDataObj() { if(currentMode === 'imagemap') return projectData.imagemap; if(currentMode === 'richmenu') return projectData.richmenu; if(currentMode === 'carousel') return projectData.carousel[currentCardIndex]; if(currentMode === 'flow') return projectData.flow[currentFlowStep]; }
         function updateUI() {
             const data = getCurrentDataObj(); refs.imageUrl.value = data.imageUrl || ""; const imgSource = data.localPreview || data.imageUrl;
             refs.previewImage.classList.add('hidden'); refs.drawLayer.classList.add('hidden'); refs.placeholder.classList.remove('hidden');
-            if(imgSource) { 
-                refs.previewImage.src = imgSource; 
-                refs.previewImage.onload = function() { 
-                    naturalWidth = this.naturalWidth; 
-                    naturalHeight = this.naturalHeight; 
-                    refs.previewImage.classList.remove('hidden'); 
-                    refs.drawLayer.classList.remove('hidden'); 
-                    refs.placeholder.classList.add('hidden'); 
-                    updateScale(); 
-                    renderAreas(); 
-                    renderAdLayer(); // Render Ads
-                    renderActionList(); 
-                } 
-            } else { 
-                refs.previewImage.src = ""; 
-                refs.adLayer.innerHTML = '';
-                renderActionList(); 
-            }
-            
+            if(imgSource) { refs.previewImage.src = imgSource; refs.previewImage.onload = function() { naturalWidth = this.naturalWidth; naturalHeight = this.naturalHeight; refs.previewImage.classList.remove('hidden'); refs.drawLayer.classList.remove('hidden'); refs.placeholder.classList.add('hidden'); updateScale(); renderAreas(); renderAdLayer(); renderActionList(); } } else { refs.previewImage.src = ""; refs.adLayer.innerHTML = ''; renderActionList(); }
             document.getElementById('keywordBlock').classList.remove('hidden');
-            if(currentMode === 'flow') { if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger; document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0); } 
-            else if (currentMode === 'richmenu') { document.getElementById('keywordBlock').classList.add('hidden'); }
-            else if (currentMode === 'carousel') { refs.triggerKeyword.value = "命盤"; } else { refs.triggerKeyword.value = "選單"; }
+            if(currentMode === 'flow') { if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger; document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0); } else if (currentMode === 'richmenu') { document.getElementById('keywordBlock').classList.add('hidden'); } else if (currentMode === 'carousel') { refs.triggerKeyword.value = "命盤"; } else { refs.triggerKeyword.value = "選單"; }
             updateStepBadges();
         }
         function updateStepBadges() { if(currentMode !== 'flow') return; projectData.flow.forEach((step, i) => { const badge = document.getElementById(`badge-${i}`); if(step.imageUrl) badge.classList.add('has-data'); else badge.classList.remove('has-data'); }); }
-
         function addCard() { if(projectData.carousel.length >= 10) return; projectData.carousel.push({ title:"", desc:"", imageUrl:"", localPreview:"", btns:[], areas:[] }); currentCardIndex = projectData.carousel.length - 1; updateUI(); renderDots(); }
         function deleteCard() { if(projectData.carousel.length <= 1) return; projectData.carousel.splice(currentCardIndex, 1); currentCardIndex = Math.max(0, currentCardIndex - 1); updateUI(); renderDots(); }
         function switchCard(idx) { currentCardIndex = idx; updateUI(); renderDots(); }
@@ -518,62 +380,29 @@
         function switchFlowStep(i) { currentFlowStep = i; document.querySelectorAll('.flow-step-btn').forEach(b => b.classList.remove('active')); document.getElementById(`flow-step-${i}`).classList.add('active'); refs.uploadLabel.innerText = `1. 上傳 Step ${i+1} 底圖`; updateUI(); }
         function switchTab(mode) { 
             projectData.mode = mode; currentMode = mode; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${mode}`).classList.add('active'); 
-            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel'); 
-            document.getElementById('flowStepNav').classList.toggle('hidden', mode !== 'flow'); 
-            document.getElementById('flowHelpBtn').classList.toggle('hidden', mode !== 'flow'); 
-            document.getElementById('richMenuControls').classList.toggle('hidden', mode !== 'richmenu');
+            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel'); document.getElementById('flowStepNav').classList.toggle('hidden', mode !== 'flow'); document.getElementById('flowHelpBtn').classList.toggle('hidden', mode !== 'flow'); document.getElementById('richMenuControls').classList.toggle('hidden', mode !== 'richmenu');
             if(mode !== 'flow') refs.uploadLabel.innerText = "1. 上傳底圖"; updateUI(); updateGasCode(); 
         }
-
         refs.imageInput.addEventListener('change', function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(evt) { const data = getCurrentDataObj(); data.localPreview = evt.target.result; updateUI(); }; reader.readAsDataURL(file); });
         function saveCurrentDataState() { getCurrentDataObj().imageUrl = refs.imageUrl.value; updateUI(); }
-
         refs.drawLayer.addEventListener('mousedown', handleMouseDown); refs.drawLayer.addEventListener('mousemove', handleMouseMove); refs.drawLayer.addEventListener('mouseup', handleMouseUp);
-        
         function handleMouseDown(e) { if(!refs.previewImage.src) return; isDrawing=true; updateScale(); const r=refs.drawLayer.getBoundingClientRect(); startX=(e.clientX-r.left)/scaleFactor; startY=(e.clientY-r.top)/scaleFactor; currentBox=document.createElement('div'); currentBox.className='area-box'; currentBox.style.left=(startX*scaleFactor)+'px'; currentBox.style.top=(startY*scaleFactor)+'px'; refs.drawLayer.appendChild(currentBox); }
         function handleMouseMove(e) { if(!isDrawing)return; const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); currentBox.style.width=(w*scaleFactor)+'px'; currentBox.style.height=(h*scaleFactor)+'px'; currentBox.style.left=(Math.min(startX,(e.clientX-r.left)/scaleFactor)*scaleFactor)+'px'; currentBox.style.top=(Math.min(startY,(e.clientY-r.top)/scaleFactor)*scaleFactor)+'px'; }
         function handleMouseUp(e) { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); let type='message', text=`關鍵字${d.areas.length+1}`; if(currentMode==='flow' && currentFlowStep<3) { type='flow_next'; text=projectData.flow[currentFlowStep+1].trigger; } d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:text, type:type, selected:false}); renderAreas(); renderActionList(); } }
-
         function updateScale() { if(naturalWidth>0 && refs.previewImage.offsetWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
         function renderAreas() { const data = getCurrentDataObj(); refs.drawLayer.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`; el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px'; el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px'; el.innerText=i+1; el.onclick=(e)=>{e.stopPropagation(); toggleAreaSelection(i);}; if(a.type==='flow_next'){el.style.borderColor='#be123c';el.style.backgroundColor='rgba(190,18,60,0.2)';} refs.drawLayer.appendChild(el); }); }
         
-        // Render Action List (Updated logic for Placeholder)
         function renderActionList() { 
-            const data = getCurrentDataObj(); 
-            refs.actionList.innerHTML = ''; 
+            const data = getCurrentDataObj(); refs.actionList.innerHTML = ''; 
             data.areas.forEach((a, i) => { 
-                const el = document.createElement('div'); 
-                el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex flex-wrap gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; 
-                
+                const el = document.createElement('div'); el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex flex-wrap gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; 
                 let flowOpt = (currentMode==='flow'&&currentFlowStep<3)?`<option value="flow_next" ${a.type==='flow_next'?'selected':''}>🔗 跳轉</option>`:'';
                 let switchOpt = (currentMode==='richmenu')?`<option value="richmenuswitch" ${a.type==='richmenuswitch'?'selected':''}>🔄 切換選單</option>`:'';
-                
-                // Dynamic Placeholder Logic
-                let ph = "關鍵字/連結";
-                let inputClass = "border-slate-300";
+                let ph = "關鍵字/連結"; let inputClass = "border-slate-300";
                 if(a.type === 'uri') { ph = "輸入網址 (https://...)"; inputClass="border-blue-400 text-blue-700"; }
                 else if(a.type === 'message') { ph = "輸入用戶點擊後的文字"; }
                 else if(a.type === 'richmenuswitch') { ph = "輸入 Rich Menu Alias ID"; inputClass="border-orange-300 bg-orange-50"; }
-
-                el.innerHTML = `
-                <div class="flex items-center gap-1 w-full">
-                    <span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span>
-                    <select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-20">
-                        <option value="message" ${a.type==='message'?'selected':''}>文字</option>
-                        <option value="uri" ${a.type==='uri'?'selected':''}>連結</option>
-                        ${flowOpt}
-                        ${switchOpt}
-                    </select>
-                    <input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0 ${inputClass}" placeholder="${ph}">
-                    <button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button>
-                </div>
-                <div class="w-full flex justify-end mt-1">
-                     <button onclick="triggerAdUpload(${i})" class="text-[10px] ${a.adImage?'text-green-600 font-bold':'text-slate-400'} border px-1 rounded hover:bg-slate-50">
-                        ${a.adImage ? '✅ 已貼圖' : '🖼️ 貼廣告'}
-                     </button>
-                </div>
-                `; 
-                refs.actionList.appendChild(el); 
+                el.innerHTML = `<div class="flex items-center gap-1 w-full"><span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span><select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-20"><option value="message" ${a.type==='message'?'selected':''}>文字</option><option value="uri" ${a.type==='uri'?'selected':''}>連結</option>${flowOpt}${switchOpt}</select><input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0 ${inputClass}" placeholder="${ph}"><button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button></div><div class="w-full flex justify-end mt-1"><button onclick="triggerAdUpload(${i})" class="text-[10px] ${a.adImage?'text-green-600 font-bold':'text-slate-400'} border px-1 rounded hover:bg-slate-50">${a.adImage ? '✅ 已貼圖' : '🖼️ 貼廣告'}</button></div>`; refs.actionList.appendChild(el); 
             }); 
         }
 
@@ -590,40 +419,17 @@
 
         function updateGasCode() {
             const token = refs.lineTokenInput.value || '請換成你的LINE_TOKEN';
-            refs.previewCodeLine.innerText = `const CHANNEL_ACCESS_TOKEN = '${token}'; ...`;
             
-            // Rich Menu JSON Code
+            // Rich Menu JSON
             const richData = projectData.richmenu;
             let richAreas = richData.areas.map(a => {
                 let action = {};
                 if(a.type === 'uri') { action = { type: 'uri', uri: a.text }; }
-                else if(a.type === 'richmenuswitch') { 
-                    action = { 
-                        type: 'richmenuswitch', 
-                        richMenuAliasId: a.text,
-                        data: 'action=switch' 
-                    }; 
-                }
+                else if(a.type === 'richmenuswitch') { action = { type: 'richmenuswitch', richMenuAliasId: a.text, data: 'action=switch' }; }
                 else { action = { type: 'message', text: a.text }; }
-                
-                return {
-                    bounds: { x: Math.round(a.x), y: Math.round(a.y), width: Math.round(a.width), height: Math.round(a.height) },
-                    action: action
-                };
+                return { bounds: { x: Math.round(a.x), y: Math.round(a.y), width: Math.round(a.width), height: Math.round(a.height) }, action: action };
             });
-
-            const richCode = `// 這是給 LINE Rich Menu API 的 areas 參數
-// 圖片大小: ${naturalWidth} x ${naturalHeight}
-{
-  "size": {
-    "width": ${naturalWidth || 2500},
-    "height": ${naturalHeight || 1686}
-  },
-  "selected": true,
-  "name": "我的圖文選單",
-  "chatBarText": "開啟選單",
-  "areas": ${JSON.stringify(richAreas, null, 2)}
-}`;
+            const richCode = `// 這是給 LINE Rich Menu API 的 areas 參數\n// 圖片大小: ${naturalWidth} x ${naturalHeight}\n{\n  "size": {\n    "width": ${naturalWidth || 2500},\n    "height": ${naturalHeight || 1686}\n  },\n  "selected": true,\n  "name": "我的圖文選單",\n  "chatBarText": "開啟選單",\n  "areas": ${JSON.stringify(richAreas, null, 2)}\n}`;
             document.getElementById('richMenuCode').innerText = richCode;
 
             // GAS Auto Reply
@@ -632,29 +438,10 @@
             else if (currentMode === 'imagemap' && projectData.imagemap.imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateImagemapJson(projectData.imagemap), null, 2)}`; }
             else if (currentMode === 'carousel' && projectData.carousel[0].imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateFlexCarouselJson(projectData.carousel), null, 2)}`; }
             
-            const code = `const CHANNEL_ACCESS_TOKEN = '${token}'; 
-const flowMap = {
-${flowMapStr}
-};
-function doPost(e) {
-  try {
-    const msg = JSON.parse(e.postData.contents);
-    const replyToken = msg.events[0].replyToken;
-    const userMessage = msg.events[0].message.text;
-    if (flowMap[userMessage]) {
-      UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
-        'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
-        'method': 'post',
-        'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [flowMap[userMessage]] }),
-      });
-    }
-  } catch (error) {}
-  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
-}`;
+            const code = `const CHANNEL_ACCESS_TOKEN = '${token}'; \nconst flowMap = {\n${flowMapStr}\n};\nfunction doPost(e) {\n  try {\n    const msg = JSON.parse(e.postData.contents);\n    const replyToken = msg.events[0].replyToken;\n    const userMessage = msg.events[0].message.text;\n    if (flowMap[userMessage]) {\n      UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {\n        'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },\n        'method': 'post',\n        'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [flowMap[userMessage]] }),\n      });\n    }\n  } catch (error) {}\n  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);\n}`;
             document.getElementById('gasCode').innerText = code;
         }
-        function copyCode() { navigator.clipboard.writeText(document.getElementById('gasCode').innerText); alert('複製成功！'); }
-        function copyRichMenuCode() { navigator.clipboard.writeText(document.getElementById('richMenuCode').innerText); alert('安裝碼已複製！'); }
+        function copyCode(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert('複製成功！'); }
     </script>
 </body>
 </html>
