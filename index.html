@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 PRO - 終極修正版</title>
+    <title>LINE 萬能編輯器 PRO - GAS 一鍵安裝版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
@@ -49,7 +49,7 @@
         @media (min-width: 768px) { body { height: 100vh; overflow: hidden; } #main-layout { height: 100%; overflow: hidden; } }
         #sidebarPanel { transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease; }
         .sidebar-collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden; padding: 0 !important; opacity: 0; }
-        .code-modal-tab { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; font-weight: bold; }
+        .code-modal-tab { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; font-weight: bold; font-size: 0.8rem; }
         .code-modal-tab.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; }
     </style>
 </head>
@@ -63,7 +63,7 @@
                     <div>
                         <h1 class="font-bold text-sm md:text-base tracking-wide text-slate-900 flex items-center flex-wrap gap-1">
                             LINE 萬能編輯器 PRO
-                            <span class="text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded shadow-sm">修正版</span>
+                            <span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm">GAS安裝版</span>
                         </h1>
                     </div>
                 </div>
@@ -72,10 +72,7 @@
                         📤 取得程式碼
                     </button>
                     <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1.5 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-1 text-xs">
-                        💾 儲存專案
-                    </button>
-                    <button onclick="openModal('tutorialModal')" class="bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1.5 rounded-lg font-bold text-xs shadow-sm">
-                        ❓ 教學
+                        💾 儲存
                     </button>
                 </div>
             </div>
@@ -119,10 +116,10 @@
                          <button onclick="downloadCompositeImage()" class="bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700 shadow-sm">⬇️ 下載合成圖片</button>
                     </div>
                     <div class="text-[10px] text-emerald-700 leading-relaxed">
-                        <p>1. 上傳底圖，然後直接<b>「畫框框」</b>。</p>
-                        <p>2. 在下方動作區點擊<b>「🖼️ 貼圖」</b>可放廣告。</p>
-                        <p>3. 若要連外網，請在動作選擇<b>「連結」</b>並貼上網址。</p>
-                        <p>4. 設好後點右上角<b>「📤 取得程式碼」</b>。</p>
+                        <p>1. 上傳底圖 (可用圖床或直接上傳)。</p>
+                        <p>2. 直接在右側畫布<b>「畫框框」</b>。</p>
+                        <p>3. 設定好後，點擊右上角<b>「📤 取得程式碼」</b>。</p>
+                        <p class="text-red-500 font-bold mt-1">※ 注意：若是用「GAS 安裝腳本」，圖片網址必須是公開網址 (Imgur)，GAS 才能讀取並上傳。</p>
                     </div>
                 </div>
                 <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
@@ -141,7 +138,7 @@
                     <input type="file" id="imageInput" accept="image/*" class="block w-full text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-white file:text-slate-700 hover:file:bg-slate-100"/>
                 </div>
                 <div class="flex items-center gap-2">
-                    <input type="text" id="imageUrl" placeholder="2. 貼上 https://...圖片網址 (必填)" class="flex-1 p-1.5 border border-slate-300 rounded text-[10px] font-mono" oninput="saveCurrentDataState()">
+                    <input type="text" id="imageUrl" placeholder="2. 貼上 https://...圖片網址 (GAS需用到)" class="flex-1 p-1.5 border border-slate-300 rounded text-[10px] font-mono" oninput="saveCurrentDataState()">
                     <button onclick="openModal('imageHelpModal')" class="bg-gray-200 px-2 py-1 rounded text-[10px] hover:bg-gray-300 whitespace-nowrap">圖床?</button>
                 </div>
                 <div class="flex-1">
@@ -205,25 +202,34 @@
     <div id="codeModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full h-[85vh] flex flex-col overflow-hidden">
             <div class="flex border-b bg-slate-100">
-                <div class="code-modal-tab active flex-1 text-center py-3" onclick="switchCodeTab('gas')" id="tabBtn-gas">🤖 GAS 程式碼 (自動回覆)</div>
-                <div class="code-modal-tab flex-1 text-center py-3" onclick="switchCodeTab('rich')" id="tabBtn-rich">☰ 圖文選單 JSON</div>
+                <div class="code-modal-tab active flex-1 text-center py-3" onclick="switchCodeTab('gas')" id="tabBtn-gas">🤖 GAS 機器人 (自動回覆)</div>
+                <div class="code-modal-tab flex-1 text-center py-3" onclick="switchCodeTab('install')" id="tabBtn-install">🚀 GAS 安裝腳本 (圖文選單)</div>
+                <div class="code-modal-tab flex-1 text-center py-3" onclick="switchCodeTab('rich')" id="tabBtn-rich">☰ 原始 JSON</div>
                 <button onclick="closeModal('codeModal')" class="px-4 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
             </div>
             <div class="flex-1 overflow-hidden relative">
                 <div id="codeSection-gas" class="absolute inset-0 flex flex-col p-4">
                     <div class="mb-2 text-xs text-slate-500 bg-blue-50 p-2 rounded border border-blue-100">
-                        <b>用途：</b> 貼到 Google Apps Script，負責「引流圖」、「卡片」、「多層導覽」的觸發與回覆。<br>
-                        <b>包含功能：</b> 自動回應文字、圖片、連結跳轉 (Uri)。
+                        <b>用途：</b> 用於 <code>doPost</code>，負責「引流圖」、「卡片」、「多層導覽」的觸發。
                     </div>
                     <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
                         <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('gasCode')" class="text-xs text-white bg-indigo-600 px-2 py-1 rounded hover:bg-indigo-700">複製全部</button></div>
                         <pre id="gasCode" class="flex-1 overflow-auto p-3 text-xs text-green-400 font-mono"></pre>
                     </div>
                 </div>
+                <div id="codeSection-install" class="hidden absolute inset-0 flex flex-col p-4">
+                    <div class="mb-2 text-xs text-slate-500 bg-rose-50 p-2 rounded border border-rose-100">
+                        <b>用途：</b> 用於 <b>安裝圖文選單</b>。請將此代碼貼到 GAS，並執行 <code>installRichMenu()</code> 函式一次即可。<br>
+                        <b>注意：</b> 此腳本會自動下載您提供的「圖片網址」，並上傳到 LINE 伺服器，最後設為預設選單。
+                    </div>
+                    <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
+                        <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('installCode')" class="text-xs text-white bg-rose-600 px-2 py-1 rounded hover:bg-rose-700">複製安裝腳本</button></div>
+                        <pre id="installCode" class="flex-1 overflow-auto p-3 text-xs text-orange-300 font-mono"></pre>
+                    </div>
+                </div>
                 <div id="codeSection-rich" class="hidden absolute inset-0 flex flex-col p-4">
                     <div class="mb-2 text-xs text-slate-500 bg-emerald-50 p-2 rounded border border-emerald-100">
-                        <b>用途：</b> 貼到 Postman 或 LINE Manager API 工具。<br>
-                        <b>注意：</b> 圖文選單是「綁定」在用戶介面上的，不需要透過 GAS 回覆，所以這裡提供的是 JSON 格式的設定檔。
+                        <b>用途：</b> 這是原始數據，給工程師或 Postman 使用。
                     </div>
                     <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
                         <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('richMenuCode')" class="text-xs text-white bg-emerald-600 px-2 py-1 rounded hover:bg-emerald-700">複製 JSON</button></div>
@@ -234,27 +240,7 @@
         </div>
     </div>
 
-    <div id="tutorialModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[80vh] overflow-y-auto flex flex-col p-6">
-            <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">💡 快速教學</h2><button onclick="closeModal('tutorialModal')" class="text-2xl">✕</button></div>
-            <div class="space-y-4 text-sm text-slate-700">
-                <p><b>1. 設定 Token：</b> 在左側欄位填入 LINE Channel Access Token。</p>
-                <p><b>2. 製作內容：</b> 上傳圖片、畫框框、設定動作 (連結或文字)。</p>
-                <p><b>3. 取得程式碼：</b> 點擊右上角 <span class="bg-indigo-600 text-white px-1 rounded text-xs">📤 取得程式碼</span>。</p>
-                <p><b>4. 部署 GAS：</b></p>
-                <ul class="list-disc pl-5">
-                    <li>將 GAS 分頁的代碼全選複製。</li>
-                    <li>開新 GAS 專案，貼上，儲存。</li>
-                    <li>點擊「部署」>「新增部署」>「網頁應用程式」。</li>
-                    <li>權限選「Anyone (任何人)」。</li>
-                    <li>將生成的 Webhook URL 貼回 LINE Developer Console。</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <div id="flowExplainModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"><div class="p-4 border-b bg-rose-50 flex justify-between items-center"><h2 class="text-lg font-bold text-rose-800">🤔 多層次導覽</h2><button onclick="closeModal('flowExplainModal')" class="text-2xl text-slate-400">✕</button></div><div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700"><div class="space-y-2"><h3 class="font-bold text-base flex items-center gap-2">🕹️ 概念：像闖關遊戲一樣</h3><p>一般圖片只有一層。多層次導覽讓你設計<b>「點了這張圖 ➡ 跳出下一張圖」</b>的效果。</p></div><div class="space-y-2"><h3 class="font-bold text-base flex items-center gap-2">🛠️ 怎麼設定？</h3><ul class="list-decimal pl-5 space-y-2"><li>點擊上方的 <b>Step 1</b>，上傳第一張圖。</li><li>在圖上畫框框，動作選擇 <b>「🔗 跳轉到下一層」</b>。</li><li>點擊 <b>Step 2</b>，上傳第二張圖。</li><li>系統會自動串接，無需寫程式。</li></ul></div><div class="text-center"><button onclick="closeModal('flowExplainModal')" class="bg-rose-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-rose-700">懂了！</button></div></div></div></div>
-    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="closeModal('imageHelpModal')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">請使用 Imgur 上傳，並對圖片按右鍵「複製圖片位址」。</p></div></div>
+    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="closeModal('imageHelpModal')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">請使用 Imgur 上傳，並對圖片按右鍵「複製圖片位址」。<br><br><b>GAS 安裝重要提示：</b><br>因為 GAS 需要讀取圖片才能上傳給 LINE，所以請務必填寫有效的公開圖片連結 (Imgur)，不能只上傳本機檔案。</p></div></div>
 
     <script>
         let currentMode = 'imagemap';
@@ -298,11 +284,11 @@
             document.querySelectorAll('.code-modal-tab').forEach(el => el.classList.remove('active'));
             document.getElementById(`tabBtn-${tab}`).classList.add('active');
             document.getElementById('codeSection-gas').classList.add('hidden');
+            document.getElementById('codeSection-install').classList.add('hidden');
             document.getElementById('codeSection-rich').classList.add('hidden');
             document.getElementById(`codeSection-${tab}`).classList.remove('hidden');
         }
 
-        // ================= Ad & Composition Logic =================
         function triggerAdUpload(index) { selectedAreaIndexForAd = index; refs.adImageUpload.click(); }
         refs.adImageUpload.addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file || selectedAreaIndexForAd === -1) return;
@@ -330,7 +316,6 @@
         }
         function downloadCanvas(canvas, filename) { const link = document.createElement('a'); link.download = filename; link.href = canvas.toDataURL("image/png"); link.click(); }
 
-        // ================= Interactive Simulator =================
         function openPreviewModal() { document.getElementById('previewModal').classList.remove('hidden'); resetFlowSimulation(); }
         function resetFlowSimulation() {
             refs.simChatContainer.innerHTML = ''; refs.richMenuPreview.classList.add('hidden');
@@ -362,7 +347,6 @@
         }
         function addUserMessage(text) { const row = document.createElement('div'); row.className = 'chat-row right'; row.innerHTML = `<div class="chat-bubble text">${text}</div>`; refs.simChatContainer.appendChild(row); refs.simChatContainer.scrollTop = refs.simChatContainer.scrollHeight; }
 
-        // ================= Core Logic =================
         function getCurrentDataObj() { if(currentMode === 'imagemap') return projectData.imagemap; if(currentMode === 'richmenu') return projectData.richmenu; if(currentMode === 'carousel') return projectData.carousel[currentCardIndex]; if(currentMode === 'flow') return projectData.flow[currentFlowStep]; }
         function updateUI() {
             const data = getCurrentDataObj(); refs.imageUrl.value = data.imageUrl || ""; const imgSource = data.localPreview || data.imageUrl;
@@ -420,7 +404,7 @@
         function updateGasCode() {
             const token = refs.lineTokenInput.value || '請換成你的LINE_TOKEN';
             
-            // Rich Menu JSON
+            // Rich Menu Data
             const richData = projectData.richmenu;
             let richAreas = richData.areas.map(a => {
                 let action = {};
@@ -429,17 +413,69 @@
                 else { action = { type: 'message', text: a.text }; }
                 return { bounds: { x: Math.round(a.x), y: Math.round(a.y), width: Math.round(a.width), height: Math.round(a.height) }, action: action };
             });
-            const richCode = `// 這是給 LINE Rich Menu API 的 areas 參數\n// 圖片大小: ${naturalWidth} x ${naturalHeight}\n{\n  "size": {\n    "width": ${naturalWidth || 2500},\n    "height": ${naturalHeight || 1686}\n  },\n  "selected": true,\n  "name": "我的圖文選單",\n  "chatBarText": "開啟選單",\n  "areas": ${JSON.stringify(richAreas, null, 2)}\n}`;
-            document.getElementById('richMenuCode').innerText = richCode;
 
-            // GAS Auto Reply
+            // 1. GAS Robot Code (doPost)
             let flowMapStr = "";
             if(currentMode === 'flow') { projectData.flow.forEach(step => { if(!step.imageUrl) return; flowMapStr += `  "${step.trigger}": ${JSON.stringify(generateImagemapJson(step), null, 2)},\n`; }); } 
             else if (currentMode === 'imagemap' && projectData.imagemap.imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateImagemapJson(projectData.imagemap), null, 2)}`; }
             else if (currentMode === 'carousel' && projectData.carousel[0].imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateFlexCarouselJson(projectData.carousel), null, 2)}`; }
-            
-            const code = `const CHANNEL_ACCESS_TOKEN = '${token}'; \nconst flowMap = {\n${flowMapStr}\n};\nfunction doPost(e) {\n  try {\n    const msg = JSON.parse(e.postData.contents);\n    const replyToken = msg.events[0].replyToken;\n    const userMessage = msg.events[0].message.text;\n    if (flowMap[userMessage]) {\n      UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {\n        'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },\n        'method': 'post',\n        'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [flowMap[userMessage]] }),\n      });\n    }\n  } catch (error) {}\n  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);\n}`;
-            document.getElementById('gasCode').innerText = code;
+            const gasCode = `const CHANNEL_ACCESS_TOKEN = '${token}'; \nconst flowMap = {\n${flowMapStr}\n};\nfunction doPost(e) {\n  try {\n    const msg = JSON.parse(e.postData.contents);\n    const replyToken = msg.events[0].replyToken;\n    const userMessage = msg.events[0].message.text;\n    if (flowMap[userMessage]) {\n      UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {\n        'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },\n        'method': 'post',\n        'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [flowMap[userMessage]] }),\n      });\n    }\n  } catch (error) {}\n  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);\n}`;
+            document.getElementById('gasCode').innerText = gasCode;
+
+            // 2. Installer Script
+            const richObj = {
+                size: { width: naturalWidth || 2500, height: naturalHeight || 1686 },
+                selected: true,
+                name: "我的圖文選單",
+                chatBarText: "開啟選單",
+                areas: richAreas
+            };
+            const imageUrl = richData.imageUrl || 'YOUR_IMAGE_URL';
+            const installCode = `// 🚀 圖文選單一鍵安裝腳本
+// 1. 請確保 'imageUrl' 是公開可存取的 (如 Imgur)
+// 2. 貼到 GAS 後，請手動執行 'installRichMenu' 函式
+const RICH_MENU_TOKEN = '${token}';
+const RICH_MENU_IMAGE = '${imageUrl}';
+
+function installRichMenu() {
+  const menuData = ${JSON.stringify(richObj, null, 2)};
+  
+  // 1. 建立選單物件
+  const createOpt = {
+    method: 'post',
+    headers: { 'Authorization': 'Bearer ' + RICH_MENU_TOKEN, 'Content-Type': 'application/json' },
+    payload: JSON.stringify(menuData)
+  };
+  const createRes = UrlFetchApp.fetch('https://api.line.me/v2/bot/richmenu', createOpt);
+  const richMenuId = JSON.parse(createRes.getContentText()).richMenuId;
+  Logger.log('1. 選單建立成功 ID: ' + richMenuId);
+
+  // 2. 下載並上傳圖片
+  if (RICH_MENU_IMAGE.startsWith('http')) {
+    const blob = UrlFetchApp.fetch(RICH_MENU_IMAGE).getBlob();
+    const uploadOpt = {
+      method: 'post',
+      headers: { 'Authorization': 'Bearer ' + RICH_MENU_TOKEN, 'Content-Type': blob.getContentType() },
+      payload: blob
+    };
+    UrlFetchApp.fetch('https://api-data.line.me/v2/bot/richmenu/' + richMenuId + '/content', uploadOpt);
+    Logger.log('2. 圖片上傳成功');
+  } else {
+    Logger.log('⚠ 跳過圖片上傳 (無有效網址)');
+  }
+
+  // 3. 設為預設選單
+  const defaultOpt = {
+    method: 'post',
+    headers: { 'Authorization': 'Bearer ' + RICH_MENU_TOKEN }
+  };
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/user/all/richmenu/' + richMenuId, defaultOpt);
+  Logger.log('3. 已設為預設選單！請在手機上查看。');
+}`;
+            document.getElementById('installCode').innerText = installCode;
+
+            // 3. Raw JSON
+            document.getElementById('richMenuCode').innerText = JSON.stringify(richObj, null, 2);
         }
         function copyCode(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert('複製成功！'); }
     </script>
