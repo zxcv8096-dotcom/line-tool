@@ -38,39 +38,51 @@
 
   <div class="box">
     <label>關鍵字</label>
-    <input placeholder="例如：菜單" />
+    <input id="keyword" placeholder="例如：菜單" />
 
     <label>回覆內容</label>
-    <textarea rows="5" placeholder="輸入要回覆的文字"></textarea>
+    <textarea id="reply" rows="5" placeholder="輸入要回覆的文字"></textarea>
 
-    <button>儲存</button>
-    <script>
-const btn = document.querySelector("button");
-
-btn.onclick = async () => {
-  const keyword = document.querySelector("input").value.trim();
-  const reply = document.querySelector("textarea").value.trim();
-
-  if (!keyword || !reply) {
-    alert("請輸入關鍵字與回覆內容");
-    return;
-  }
-
-  const res = await fetch("https://api.zxcv8096.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ keyword, reply })
-  });
-
-  if (res.ok) {
-    alert("已儲存");
-  } else {
-    alert("儲存失敗");
-  }
-};
-</script>
-
-
+    <button id="saveBtn">儲存</button>
   </div>
+
+  <script>
+    // ⚠️ 你的 Worker API（固定這個）
+    const API_BASE = "https://api.zxcv8096.workers.dev";
+
+    const keywordEl = document.getElementById("keyword");
+    const replyEl = document.getElementById("reply");
+    const saveBtn = document.getElementById("saveBtn");
+
+    saveBtn.addEventListener("click", async () => {
+      const keyword = keywordEl.value.trim();
+      const reply = replyEl.value.trim();
+
+      if (!keyword || !reply) {
+        alert("請輸入關鍵字與回覆內容");
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + "/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keyword, reply })
+        });
+
+        const text = await res.text();
+
+        if (!res.ok) {
+          alert("儲存失敗：" + text);
+          return;
+        }
+
+        alert("已儲存");
+        replyEl.value = "";
+      } catch (err) {
+        alert("連線失敗：" + err.message);
+      }
+    });
+  </script>
 </body>
 </html>
