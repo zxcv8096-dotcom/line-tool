@@ -45,20 +45,31 @@
 
     <button>儲存</button>
     <script>
-const btn = document.querySelector("button")
-btn.onclick = async () => {
-  const keyword = document.querySelector("input").value
-  const reply = document.querySelector("textarea").value
+const btn = document.querySelector("button");
 
-  await fetch("https://api.zxcv8096.workers.dev", {
+btn.onclick = async () => {
+  const keyword = document.querySelector("input").value.trim();
+  const reply = document.querySelector("textarea").value.trim();
+
+  if (!keyword || !reply) {
+    alert("請輸入關鍵字與回覆內容");
+    return;
+  }
+
+  const res = await fetch("https://api.zxcv8096.workers.dev", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ keyword, reply })
-  })
+  });
 
-  alert("已儲存")
-}
+  if (res.ok) {
+    alert("已儲存");
+  } else {
+    alert("儲存失敗");
+  }
+};
 </script>
+
 
   </div>
 </body>
