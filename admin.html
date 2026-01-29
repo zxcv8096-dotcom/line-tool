@@ -44,6 +44,22 @@
     <textarea rows="5" placeholder="輸入要回覆的文字"></textarea>
 
     <button>儲存</button>
+    <script>
+const btn = document.querySelector("button")
+btn.onclick = async () => {
+  const keyword = document.querySelector("input").value
+  const reply = document.querySelector("textarea").value
+
+  await fetch("https://api.zxcv8096.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ keyword, reply })
+  })
+
+  alert("已儲存")
+}
+</script>
+
   </div>
 </body>
 </html>
