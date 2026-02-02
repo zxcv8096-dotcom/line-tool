@@ -3,377 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE 萬能編輯器 (完整版)</title>
+    <title>LINE Bot 萬能控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; overscroll-behavior: none; }
-        .canvas-scroll-container { border: 2px dashed #cbd5e1; background: #f8fafc radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; position: relative; display: flex; align-items: center; justify-content: center; overflow: auto; height: 100%; }
-        .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; user-select: none; z-index: 30; }
-        .area-box.selected { border-color: #f59e0b; background: rgba(245,158,11,0.3); z-index: 40; }
-        .tab-btn { opacity: 0.6; border-bottom: 3px solid transparent; } .tab-btn.active { opacity: 1; border-bottom: 3px solid #1f2937; color: #1f2937; background: #f3f4f6; }
-        .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; } .card-dot.active { background: #1f2937; transform: scale(1.3); border: 1px solid #fbbf24; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    </style>
+    <style>body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }</style>
 </head>
-<body class="bg-slate-50 flex flex-col h-screen overflow-hidden text-slate-800">
+<body class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+        <div class="text-6xl mb-4">🦁</div>
+        <h1 class="text-2xl font-bold text-slate-800 mb-2">LINE Bot 萬能控制台</h1>
+        <p class="text-slate-500 mb-8 text-sm">請選擇您要設定的功能模組</p>
 
-    <div class="bg-white shadow-sm z-30 border-b border-slate-200 shrink-0">
-        <div class="px-3 h-14 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">🦁</span>
-                <h1 class="font-bold text-sm md:text-base">LINE 萬能編輯器 <span class="text-[10px] bg-indigo-600 text-white px-1 py-0.5 rounded">PRO</span></h1>
-            </div>
-            
-            <div class="flex gap-2 items-center">
-                <input type="text" id="workerUrl" placeholder="Worker網址 (https://api...)" class="border border-slate-300 rounded px-2 py-1 text-xs w-32 md:w-48">
-                <input type="password" id="workerPwd" value="1234" class="border border-slate-300 rounded px-2 py-1 text-xs w-16 text-center">
-                <button onclick="loadFromKV()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1">📂 讀取</button>
-                <button onclick="saveToKV()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1">💾 儲存</button>
-            </div>
+        <div class="space-y-4">
+            <a href="tool_imagemap.html" class="block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white shadow-lg transition hover:scale-105">
+                <div class="flex items-center gap-4">
+                    <span class="text-3xl">🗺️</span>
+                    <div class="text-left">
+                        <h3 class="font-bold text-lg">引流圖編輯器</h3>
+                        <p class="text-xs opacity-90">單圖/多圖、點擊區域、自動回覆</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="tool_carousel.html" class="block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white shadow-lg transition hover:scale-105">
+                <div class="flex items-center gap-4">
+                    <span class="text-3xl">🎠</span>
+                    <div class="text-left">
+                        <h3 class="font-bold text-lg">滑動卡片編輯器</h3>
+                        <p class="text-xs opacity-90">多張卡片左右滑動、商品展示</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="tool_flow.html" class="block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white shadow-lg transition hover:scale-105">
+                <div class="flex items-center gap-4">
+                    <span class="text-3xl">🔀</span>
+                    <div class="text-left">
+                        <h3 class="font-bold text-lg">見證流程設計</h3>
+                        <p class="text-xs opacity-90">點擊放大、分類跳轉、摺疊選單</p>
+                    </div>
+                </div>
+            </a>
         </div>
-        <div class="flex border-t border-slate-100">
-            <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-2 font-bold text-xs">🗺️ 引流圖 (Imagemap)</button>
-            <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-2 font-bold text-xs">🎠 滑動卡片 (Carousel)</button>
+        
+        <div class="mt-8 text-xs text-slate-400">
+            Powered by Cloudflare Workers & KV
         </div>
     </div>
-
-    <div class="flex flex-1 overflow-hidden">
-        
-        <aside class="w-[350px] border-r border-slate-200 bg-white flex flex-col z-20 overflow-y-auto custom-scrollbar p-3 gap-3 shadow-lg">
-            
-            <div class="bg-blue-50 rounded p-2 border border-blue-100 flex items-center gap-2">
-                <label class="font-bold text-blue-800 text-xs whitespace-nowrap">觸發關鍵字:</label>
-                <input type="text" id="triggerKeyword" value="選單" class="flex-1 p-1 border border-blue-200 rounded text-xs font-bold text-blue-700 h-7">
-            </div>
-
-            <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
-                <div class="flex justify-between items-center">
-                    <label class="font-bold text-amber-800 text-xs">📦 卡片管理</label>
-                    <div class="flex gap-1">
-                        <button onclick="addCard()" class="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] hover:bg-amber-600 shadow">+新增</button>
-                        <button onclick="deleteCard()" class="text-red-500 text-[10px] hover:underline">刪除</button>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
-            </div>
-
-            <div class="bg-slate-50 p-3 rounded border border-slate-200 space-y-2">
-                <div class="flex justify-between">
-                    <label class="font-bold text-slate-700 text-xs">1. 上傳圖片 (存到 Worker)</label>
-                    <span id="uploadStatus" class="text-[10px] text-orange-500 font-bold"></span>
-                </div>
-                <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
-                <input type="text" id="imageUrl" placeholder="或是貼上圖片網址..." class="w-full p-1.5 border border-slate-300 rounded text-[10px]" onchange="updateImageFromUrl()">
-            </div>
-
-            <div class="flex-1 flex flex-col min-h-[150px]">
-                <div class="flex justify-between items-center mb-1 border-b pb-1">
-                    <label class="font-bold text-slate-700 text-xs">2. 畫面點擊區域 (畫格子)</label>
-                    <button onclick="deleteSelectedAreas()" class="text-[10px] text-red-500 hover:underline">刪除選取</button>
-                </div>
-                <div id="actionList" class="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar"></div>
-            </div>
-
-            <div class="bg-red-50 p-3 rounded border border-red-200 mt-2">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="font-bold text-red-800 text-xs">🔴 紅色框框按鈕 (Quick Reply)</label>
-                    <button onclick="addQuickReply()" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] hover:bg-red-600 shadow">+ 新增按鈕</button>
-                </div>
-                <div id="quickReplyList" class="space-y-2">
-                    </div>
-            </div>
-
-        </aside>
-
-        <main class="flex-1 bg-slate-100 relative overflow-hidden flex flex-col">
-            <div class="absolute top-2 right-2 z-10 bg-white/80 backdrop-blur px-2 py-1 rounded shadow text-xs font-bold flex gap-2">
-                <button onclick="adjustZoom(-10)">-</button>
-                <span id="zoomDisplay">100%</span>
-                <button onclick="adjustZoom(10)">+</button>
-            </div>
-            <div class="canvas-scroll-container flex-1" id="canvasContainer">
-                <div id="canvasContent" class="bg-white shadow-lg relative">
-                    <div id="placeholder" class="absolute inset-0 flex items-center justify-center text-slate-300 pointer-events-none">
-                        <span class="text-lg font-bold">請先上傳圖片</span>
-                    </div>
-                    <img id="previewImage" class="block select-none pointer-events-none" style="max-width: none;" />
-                    <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        // --- 核心變數 ---
-        let currentMode = 'imagemap';
-        let currentCardIndex = 0;
-        let scaleFactor = 1;
-        let currentZoom = 100;
-        let isDrawing = false, startX, startY;
-        let naturalWidth = 0, naturalHeight = 0;
-
-        // 資料結構
-        let projectData = {
-            mode: "imagemap",
-            keyword: "選單",
-            imagemap: { imageUrl: "", naturalWidth: 0, naturalHeight: 0, areas: [] },
-            carousel: [{ imageUrl: "", naturalWidth: 0, naturalHeight: 0, areas: [] }],
-            quickReplies: [] // 新增：紅色按鈕
-        };
-
-        const refs = {
-            imageInput: document.getElementById('imageInput'),
-            imageUrl: document.getElementById('imageUrl'),
-            previewImage: document.getElementById('previewImage'),
-            drawLayer: document.getElementById('drawLayer'),
-            actionList: document.getElementById('actionList'),
-            triggerKeyword: document.getElementById('triggerKeyword'),
-            workerUrl: document.getElementById('workerUrl'),
-            workerPwd: document.getElementById('workerPwd'),
-            uploadStatus: document.getElementById('uploadStatus'),
-            quickReplyList: document.getElementById('quickReplyList')
-        };
-
-        window.onload = () => { updateUI(); renderQuickReplies(); };
-
-        // --- 上傳圖片 ---
-        refs.imageInput.addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const url = refs.workerUrl.value.replace(/\/$/, '');
-            if (!url) { alert("請先填寫 Worker 網址！"); return; }
-            refs.uploadStatus.innerText = "⏳ 上傳中...";
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async function() {
-                try {
-                    const res = await fetch(url + '/upload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ password: refs.workerPwd.value, image: reader.result })
-                    });
-                    if (res.ok) {
-                        const json = await res.json();
-                        getCurrentData().imageUrl = json.url;
-                        refs.imageUrl.value = json.url;
-                        refs.uploadStatus.innerText = "✅ 成功";
-                        loadImage(json.url);
-                    } else {
-                        alert("上傳失敗");
-                        refs.uploadStatus.innerText = "❌ 失敗";
-                    }
-                } catch (err) { alert("連線錯誤"); refs.uploadStatus.innerText = "❌ 錯誤"; }
-            };
-        });
-
-        // --- 儲存與讀取 ---
-        async function saveToKV() {
-            const url = refs.workerUrl.value.replace(/\/$/, '');
-            const keyword = refs.triggerKeyword.value.trim();
-            if (!url || !keyword) { alert("請填寫 Worker 網址與關鍵字"); return; }
-            projectData.keyword = keyword;
-            projectData.mode = currentMode;
-            try {
-                const res = await fetch(url + '/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: refs.workerPwd.value, keyword: keyword, ...projectData })
-                });
-                if (res.ok) alert("儲存成功！"); else alert("失敗: " + await res.text());
-            } catch (err) { alert("連線錯誤"); }
-        }
-
-        async function loadFromKV() {
-            const url = refs.workerUrl.value.replace(/\/$/, '');
-            const keyword = refs.triggerKeyword.value.trim();
-            if (!url || !keyword) { alert("請填寫 Worker 網址與關鍵字"); return; }
-            try {
-                const res = await fetch(url + '/load', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: refs.workerPwd.value, keyword: keyword })
-                });
-                if (res.ok) {
-                    projectData = await res.json();
-                    if(!projectData.quickReplies) projectData.quickReplies = [];
-                    currentMode = projectData.mode || 'imagemap';
-                    switchTab(currentMode);
-                    renderQuickReplies();
-                    alert("讀取成功！");
-                } else alert("找不到資料");
-            } catch (err) { alert("連線錯誤"); }
-        }
-
-        // --- 介面邏輯 ---
-        function getCurrentData() {
-            if (currentMode === 'imagemap') return projectData.imagemap;
-            if (currentMode === 'carousel') return projectData.carousel[currentCardIndex];
-            return projectData.imagemap;
-        }
-
-        function switchTab(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${mode}`).classList.add('active');
-            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel');
-            updateUI();
-        }
-
-        function updateUI() {
-            const data = getCurrentData();
-            refs.imageUrl.value = data.imageUrl || "";
-            if (data.imageUrl) loadImage(data.imageUrl);
-            else {
-                refs.previewImage.src = "";
-                refs.previewImage.style.display = 'none';
-                document.getElementById('placeholder').style.display = 'flex';
-                renderAreas();
-                renderActionList();
-            }
-            if (currentMode === 'carousel') renderDots();
-        }
-
-        function loadImage(url) {
-            refs.previewImage.src = url;
-            refs.previewImage.style.display = 'block';
-            document.getElementById('placeholder').style.display = 'none';
-            refs.previewImage.onload = function() {
-                naturalWidth = this.naturalWidth;
-                naturalHeight = this.naturalHeight;
-                getCurrentData().naturalWidth = naturalWidth;
-                getCurrentData().naturalHeight = naturalHeight;
-                updateScale();
-                renderAreas();
-                renderActionList();
-            };
-        }
-
-        // --- 畫布與區域 ---
-        refs.drawLayer.addEventListener('mousedown', (e) => {
-            if (!refs.previewImage.src) return;
-            isDrawing = true;
-            updateScale();
-            const r = refs.drawLayer.getBoundingClientRect();
-            startX = (e.clientX - r.left) / scaleFactor;
-            startY = (e.clientY - r.top) / scaleFactor;
-            const box = document.createElement('div');
-            box.className = 'area-box';
-            box.id = 'currentDraw';
-            box.style.left = (startX * scaleFactor) + 'px';
-            box.style.top = (startY * scaleFactor) + 'px';
-            refs.drawLayer.appendChild(box);
-        });
-
-        refs.drawLayer.addEventListener('mousemove', (e) => {
-            if (!isDrawing) return;
-            const r = refs.drawLayer.getBoundingClientRect();
-            const mouseX = (e.clientX - r.left) / scaleFactor;
-            const mouseY = (e.clientY - r.top) / scaleFactor;
-            const w = Math.abs(mouseX - startX);
-            const h = Math.abs(mouseY - startY);
-            const x = Math.min(startX, mouseX);
-            const y = Math.min(startY, mouseY);
-            const box = document.getElementById('currentDraw');
-            box.style.width = (w * scaleFactor) + 'px';
-            box.style.height = (h * scaleFactor) + 'px';
-            box.style.left = (x * scaleFactor) + 'px';
-            box.style.top = (y * scaleFactor) + 'px';
-        });
-
-        refs.drawLayer.addEventListener('mouseup', (e) => {
-            if (!isDrawing) return;
-            isDrawing = false;
-            const box = document.getElementById('currentDraw');
-            if (box) box.remove();
-            const r = refs.drawLayer.getBoundingClientRect();
-            const mouseX = (e.clientX - r.left) / scaleFactor;
-            const mouseY = (e.clientY - r.top) / scaleFactor;
-            const w = Math.abs(mouseX - startX);
-            const h = Math.abs(mouseY - startY);
-            if (w > 20 && h > 20) {
-                getCurrentData().areas.push({
-                    x: Math.min(startX, mouseX), y: Math.min(startY, mouseY),
-                    width: w, height: h, type: 'message', text: `選項`
-                });
-                renderAreas(); renderActionList();
-            }
-        });
-
-        function updateScale() {
-            if (naturalWidth > 0 && refs.previewImage.offsetWidth > 0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth;
-        }
-
-        function renderAreas() {
-            const data = getCurrentData();
-            refs.drawLayer.innerHTML = '';
-            data.areas.forEach((a, i) => {
-                const el = document.createElement('div');
-                el.className = `area-box ${a.selected ? 'selected' : ''}`;
-                el.style.left = (a.x * scaleFactor) + 'px';
-                el.style.top = (a.y * scaleFactor) + 'px';
-                el.style.width = (a.width * scaleFactor) + 'px';
-                el.style.height = (a.height * scaleFactor) + 'px';
-                el.innerText = i + 1;
-                el.onclick = (e) => { e.stopPropagation(); toggleAreaSelection(i); };
-                refs.drawLayer.appendChild(el);
-            });
-        }
-
-        function renderActionList() {
-            const data = getCurrentData();
-            refs.actionList.innerHTML = '';
-            data.areas.forEach((a, i) => {
-                const row = document.createElement('div');
-                row.className = `p-2 rounded border border-slate-200 text-xs flex gap-2 items-center mb-1 ${a.selected ? 'bg-blue-50 border-blue-300' : 'bg-white'}`;
-                row.innerHTML = `
-                    <span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span>
-                    <select onchange="updateArea(${i}, 'type', this.value)" class="border rounded px-1 py-1"><option value="message" ${a.type==='message'?'selected':''}>文字</option><option value="uri" ${a.type==='uri'?'selected':''}>連結</option></select>
-                    <input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 py-1 min-w-0" placeholder="內容">
-                    <button onclick="removeArea(${i})" class="text-red-500 font-bold px-1">✕</button>
-                `;
-                refs.actionList.appendChild(row);
-            });
-        }
-
-        // --- 🔴 Quick Reply 邏輯 ---
-        function addQuickReply() {
-            projectData.quickReplies.push({ label: "", text: "" });
-            renderQuickReplies();
-        }
-        function updateQuickReply(i, key, val) {
-            projectData.quickReplies[i][key] = val;
-        }
-        function removeQuickReply(i) {
-            projectData.quickReplies.splice(i, 1);
-            renderQuickReplies();
-        }
-        function renderQuickReplies() {
-            const list = refs.quickReplyList;
-            list.innerHTML = "";
-            projectData.quickReplies.forEach((q, i) => {
-                const div = document.createElement('div');
-                div.className = "flex gap-1 items-center bg-white p-1 rounded border border-red-100";
-                div.innerHTML = `
-                    <input type="text" placeholder="顯示文字" value="${q.label}" class="border rounded px-1 py-1 text-xs w-1/3" onchange="updateQuickReply(${i}, 'label', this.value)">
-                    <input type="text" placeholder="發送文字" value="${q.text}" class="border rounded px-1 py-1 text-xs flex-1" onchange="updateQuickReply(${i}, 'text', this.value)">
-                    <button onclick="removeQuickReply(${i})" class="text-red-500 font-bold px-1">✕</button>
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        // --- 輔助函式 ---
-        function updateArea(i, f, v) { getCurrentData().areas[i][f] = v; renderAreas(); }
-        function removeArea(i) { getCurrentData().areas.splice(i, 1); renderAreas(); renderActionList(); }
-        function toggleAreaSelection(i) { getCurrentData().areas[i].selected = !getCurrentData().areas[i].selected; renderAreas(); renderActionList(); }
-        function deleteSelectedAreas() { const d=getCurrentData(); d.areas=d.areas.filter(a=>!a.selected); renderAreas(); renderActionList(); }
-        function adjustZoom(d) { currentZoom = Math.max(10, currentZoom + d); document.getElementById('zoomDisplay').innerText = currentZoom + '%'; refs.previewImage.style.width = currentZoom + '%'; setTimeout(() => { updateScale(); renderAreas(); }, 0); }
-        
-        // Carousel Funcs
-        function addCard() { projectData.carousel.push({ imageUrl:"", areas:[] }); currentCardIndex = projectData.carousel.length-1; updateUI(); }
-        function deleteCard() { if(projectData.carousel.length>1) { projectData.carousel.splice(currentCardIndex,1); currentCardIndex=Math.max(0, currentCardIndex-1); updateUI(); } }
-        function switchCard(i) { currentCardIndex = i; updateUI(); }
-        function renderDots() { const c=document.getElementById('cardDots'); c.innerHTML=''; projectData.carousel.forEach((_,i)=>{ const d=document.createElement('div'); d.className=`card-dot ${i===currentCardIndex?'active':''}`; d.onclick=()=>switchCard(i); c.appendChild(d); }); }
-    </script>
 </body>
 </html>
