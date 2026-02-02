@@ -19,7 +19,8 @@
             </h1>
             <div class="flex gap-2">
                 <input type="text" id="workerUrl" placeholder="Worker 網址..." class="border rounded px-2 text-sm w-48 bg-yellow-50">
-                <input type="password" id="workerPwd" value="1234" class="hidden"> <input type="text" id="triggerKeyword" placeholder="觸發關鍵字" class="border rounded px-2 text-sm font-bold w-32 border-blue-500">
+                <input type="password" id="workerPwd" value="1234" class="hidden">
+                <input type="text" id="triggerKeyword" placeholder="設定此圖的關鍵字" class="border rounded px-2 text-sm font-bold w-40 border-blue-500">
                 <button onclick="loadSettings()" class="bg-gray-500 text-white px-3 rounded text-sm hover:bg-gray-600">讀取</button>
                 <button onclick="saveSettings()" class="bg-green-600 text-white px-3 rounded text-sm hover:bg-green-700">儲存</button>
             </div>
@@ -28,14 +29,15 @@
 
     <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
         <div class="w-1/4 bg-white border-r overflow-y-auto p-4 flex flex-col gap-4">
-            <h3 class="font-bold text-sm">1. 圖片清單 (可多張)</h3>
+            <div class="bg-blue-50 p-2 rounded text-xs text-blue-700 mb-2">
+                <strong>💡 提示：</strong><br>
+                在這裡設定好圖片與關鍵字儲存後，<br>
+                去「紅色框框設定器」設定按鈕來觸發這個關鍵字。
+            </div>
+            
+            <h3 class="font-bold text-sm">圖片清單 (可多張)</h3>
             <div id="imageList" class="space-y-4"></div>
             <button onclick="addImageBlock()" class="w-full py-2 border-2 border-dashed border-blue-300 text-blue-500 rounded hover:bg-blue-50">+ 新增一張圖</button>
-            
-            <hr class="my-4">
-            <h3 class="font-bold text-sm text-red-600">🔴 紅色框框按鈕 (Quick Reply)</h3>
-            <div id="qrList" class="space-y-2"></div>
-            <button onclick="addQR()" class="w-full py-1 bg-red-50 text-red-500 text-xs rounded border border-red-200 hover:bg-red-100">+ 新增按鈕</button>
         </div>
 
         <div class="flex-1 bg-slate-200 relative overflow-auto flex justify-center p-8">
@@ -54,11 +56,10 @@
 
     <script>
         let images = []; 
-        let quickReplies = [];
         let currentImgIndex = -1;
         let isDrawing = false, startX, startY;
 
-        // ★★★ 自動讀取網址 ★★★
+        // 自動讀取網址
         window.onload = function() {
             const savedUrl = localStorage.getItem('line_worker_url');
             if(savedUrl) document.getElementById('workerUrl').value = savedUrl;
@@ -128,7 +129,6 @@
             }
         }
 
-        // 上傳邏輯
         function triggerUpload(idx) {
             const url = document.getElementById('workerUrl').value;
             if (!url) return alert('請先輸入 Worker 網址');
@@ -137,7 +137,6 @@
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                // 轉 Base64
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = async () => {
@@ -156,7 +155,6 @@
             document.getElementById('fileInput').click();
         }
 
-        // 畫布邏輯
         const layer = document.getElementById('drawLayer');
         layer.onmousedown = (e) => {
             if (currentImgIndex === -1) return;
@@ -177,9 +175,10 @@
             const w = Math.abs(endX - startX);
             const h = Math.abs(endY - startY);
             if (w > 20 && h > 20) {
-                const type = prompt("類型? (輸入 'text' 回覆文字, 'link' 開網頁)", "text");
+                // 修改提示文字，讓使用者知道這裡可以填關鍵字
+                const type = prompt("點擊後動作? (輸入 'text' 發送關鍵字/文字, 'link' 開網頁)", "text");
                 if(!type) return;
-                const content = prompt("內容? (關鍵字 或 網址)", type==='link' ? 'https://' : '');
+                const content = prompt("內容? (例如：輸入 '產品介紹' 以觸發另一張圖，或輸入網址)", type==='link' ? 'https://' : '');
                 if (content) {
                     images[currentImgIndex].areas.push({
                         x: Math.min(startX, endX), y: Math.min(startY, endY), width: w, height: h,
@@ -208,7 +207,7 @@
                 div.innerText = i + 1;
                 div.onclick = (e) => {
                     e.stopPropagation();
-                    if(confirm('刪除區域 ' + (i+1) + '?')) {
+                    if(confirm(`刪除區域 ${i+1} (${area.text})?`)) {
                         imgData.areas.splice(i, 1);
                         renderAreas();
                         renderImageList();
@@ -218,23 +217,11 @@
             });
         }
 
-        // Quick Reply 邏輯
-        function addQR() { quickReplies.push({ label: '按鈕', text: '回覆' }); renderQR(); }
-        function renderQR() {
-            const list = document.getElementById('qrList');
-            list.innerHTML = '';
-            quickReplies.forEach((qr, i) => {
-                list.innerHTML += `<div class="flex gap-1 mb-1 items-center bg-white p-1 rounded border"><input value="${qr.label}" onchange="quickReplies[${i}].label=this.value" class="w-1/3 border px-1 text-xs py-1 rounded" placeholder="顯示"><input value="${qr.text}" onchange="quickReplies[${i}].text=this.value" class="w-1/2 border px-1 text-xs py-1 rounded" placeholder="發送"><button onclick="quickReplies.splice(${i},1);renderQR()" class="text-red-500 px-1 font-bold">✕</button></div>`;
-            });
-        }
-
-        // 存檔與讀取
         async function saveSettings() {
             const keyword = document.getElementById('triggerKeyword').value;
             const url = document.getElementById('workerUrl').value;
             if(!keyword || !url) return alert('資料不全');
             
-            // 轉換為 LINE Message 格式
             const messages = images.map(img => ({
                 type: "imagemap",
                 baseUrl: img.url,
@@ -248,13 +235,15 @@
                 }))
             }));
 
-            const payload = { mode: 'imagemap', messages, quickReplies };
+            // 這裡移除了 quickReplies
+            const payload = { mode: 'imagemap', messages };
             
             try {
                 const res = await fetch(url + '/save', {
                     method: 'POST', body: JSON.stringify({ password: '1234', keyword, payload })
                 });
-                if(res.ok) alert('儲存成功'); else alert('儲存失敗');
+                if(res.ok) alert('儲存成功！\n現在去「紅色框框設定器」，設定一個按鈕來發送「' + keyword + '」即可彈出此圖。'); 
+                else alert('儲存失敗');
             } catch(e) { alert('失敗'); }
         }
 
@@ -265,8 +254,6 @@
                 const res = await fetch(url + '/load', { method: 'POST', body: JSON.stringify({ password: '1234', keyword }) });
                 if(res.ok) {
                     const data = await res.json();
-                    quickReplies = data.quickReplies || [];
-                    // 反向解析 Imagemap
                     if(data.messages) {
                         images = data.messages.map(m => ({
                             url: m.baseUrl,
@@ -277,7 +264,7 @@
                             width: 1040, height: m.baseSize.height 
                         }));
                     }
-                    renderImageList(); renderQR(); selectImage(0);
+                    renderImageList(); selectImage(0);
                     alert('讀取成功');
                 } else alert('無資料');
             } catch(e) { alert('錯誤'); }
