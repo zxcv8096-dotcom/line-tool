@@ -11,43 +11,64 @@
     <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
         <div class="text-6xl mb-4">🦁</div>
         <h1 class="text-2xl font-bold text-slate-800 mb-2">LINE Bot 萬能控制台</h1>
-        <p class="text-slate-500 mb-8 text-sm">請選擇您要設定的功能模組</p>
+        
+        <div class="mb-6 bg-slate-100 p-4 rounded-lg text-left">
+            <label class="block text-xs font-bold text-slate-500 mb-1">Worker 網址 (自動記憶)</label>
+            <input id="globalWorkerUrl" placeholder="https://api.xxx.workers.dev" class="w-full border p-2 rounded text-sm mb-2" oninput="saveUrl(this.value)">
+            <p class="text-[10px] text-green-600" id="statusMsg">在此輸入一次，所有工具自動填入 👌</p>
+        </div>
 
-        <div class="space-y-4">
-            <a href="tool_imagemap.html" class="block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white shadow-lg transition hover:scale-105">
-                <div class="flex items-center gap-4">
-                    <span class="text-3xl">🗺️</span>
+        <div class="grid grid-cols-2 gap-4">
+            <a href="tool_imagemap.html" class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white shadow-lg transition hover:scale-105">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🗺️</span>
                     <div class="text-left">
-                        <h3 class="font-bold text-lg">引流圖編輯器</h3>
-                        <p class="text-xs opacity-90">單圖/多圖、點擊區域、自動回覆</p>
+                        <h3 class="font-bold">引流圖工具</h3>
+                        <p class="text-[10px] opacity-90">大圖點擊、多圖回覆</p>
                     </div>
                 </div>
             </a>
 
-            <a href="tool_carousel.html" class="block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white shadow-lg transition hover:scale-105">
-                <div class="flex items-center gap-4">
-                    <span class="text-3xl">🎠</span>
-                    <div class="text-left">
-                        <h3 class="font-bold text-lg">滑動卡片編輯器</h3>
-                        <p class="text-xs opacity-90">多張卡片左右滑動、商品展示</p>
-                    </div>
+            <a href="tool_carousel.html" class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 p-3 text-white shadow-lg transition hover:scale-105">
+                <div class="text-left">
+                    <span class="text-2xl block mb-1">🎠</span>
+                    <h3 class="font-bold text-sm">滑動卡片</h3>
+                    <p class="text-[10px] opacity-90">多圖輪播</p>
                 </div>
             </a>
 
-            <a href="tool_flow.html" class="block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white shadow-lg transition hover:scale-105">
-                <div class="flex items-center gap-4">
-                    <span class="text-3xl">🔀</span>
+            <a href="tool_flow.html" class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white shadow-lg transition hover:scale-105">
+                <div class="text-left">
+                    <span class="text-2xl block mb-1">🔀</span>
+                    <h3 class="font-bold text-sm">見證流程</h3>
+                    <p class="text-[10px] opacity-90">連續跳轉</p>
+                </div>
+            </a>
+            
+            <a href="tool_quickreply.html" class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-red-500 to-rose-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-red-300">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔴</span>
                     <div class="text-left">
-                        <h3 class="font-bold text-lg">見證流程設計</h3>
-                        <p class="text-xs opacity-90">點擊放大、分類跳轉、摺疊選單</p>
+                        <h3 class="font-bold">紅色框框按鈕 (Quick Reply)</h3>
+                        <p class="text-[10px] opacity-90">單純的文字回覆 + 底部浮動按鈕</p>
                     </div>
                 </div>
             </a>
         </div>
         
-        <div class="mt-8 text-xs text-slate-400">
-            Powered by Cloudflare Workers & KV
-        </div>
+        <div class="mt-8 text-xs text-slate-400">Powered by Cloudflare Workers & KV</div>
     </div>
+
+    <script>
+        // 頁面載入時，讀取網址
+        window.onload = function() {
+            const saved = localStorage.getItem('line_worker_url');
+            if(saved) document.getElementById('globalWorkerUrl').value = saved;
+        }
+        // 輸入時，儲存網址
+        function saveUrl(val) {
+            localStorage.setItem('line_worker_url', val);
+        }
+    </script>
 </body>
 </html>
