@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>見證流程設計器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>.flow-arrow { text-align: center; font-size: 24px; color: #cbd5e1; padding: 10px; }</style>
+</head>
+<body class="bg-slate-50 text-slate-800 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-4 text-purple-600">🔀 見證流程設計器</h1>
+        
+        <div class="bg-white p-4 rounded shadow mb-4 flex gap-4 items-end">
+            <div>
+                <label class="block text-xs font-bold text-gray-500">Worker 網址</label>
+                <input id="workerUrl" class="border p-2 rounded w-64">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500">主觸發關鍵字</label>
+                <input id="mainKeyword" placeholder="例如: 見證" class="border p-2 rounded w-40 font-bold text-purple-600">
+            </div>
+            <button onclick="publishAll()" class="bg-purple-600 text-white px-6 py-2 rounded font-bold hover:bg-purple-700">一鍵發布所有流程</button>
+        </div>
+
+        <div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-blue-500">
+            <h3 class="font-bold text-lg">步驟 1: 分類頁 (首頁)</h3>
+            <p class="text-xs text-gray-400 mb-2">用戶輸入「<span class="key-display">見證</span>」時顯示此圖</p>
+            <div class="flex gap-4">
+                <div class="w-40 h-40 bg-gray-100 rounded flex items-center justify-center cursor-pointer border-dashed border-2 hover:bg-gray-50" onclick="uploadStep(1)">
+                    <img id="img1" class="max-w-full max-h-full hidden">
+                    <span id="txt1" class="text-xs text-gray-400">點擊上傳圖片</span>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-bold mb-1">設定點擊跳轉:</label>
+                    <div id="link1" class="text-sm text-gray-500">上傳圖片後，點擊圖片設定熱區，目標設為「步驟 2」</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flow-arrow">⬇️ 點擊後跳轉</div>
+
+        <div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-amber-500">
+            <h3 class="font-bold text-lg">步驟 2: 見證列表</h3>
+            <p class="text-xs text-gray-400 mb-2">隱藏關鍵字: <span class="key-display">見證_列表</span></p>
+            <div class="flex gap-4">
+                <div class="w-40 h-40 bg-gray-100 rounded flex items-center justify-center cursor-pointer border-dashed border-2 hover:bg-gray-50" onclick="uploadStep(2)">
+                    <img id="img2" class="max-w-full max-h-full hidden">
+                    <span id="txt2" class="text-xs text-gray-400">上傳列表圖</span>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-bold mb-1">設定互動:</label>
+                    <div class="text-sm text-gray-600">1. 設定點擊某個見證 -> 跳轉「步驟 3」</div>
+                    <div class="text-sm text-gray-600">2. 設定點擊藍色區域 -> 跳轉「回首頁」或「折疊」</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flow-arrow">⬇️ 點擊見證跳轉 ⬆️ 點擊返回列表</div>
+
+        <div class="bg-white p-4 rounded shadow mb-4 border-l-4 border-green-500">
+            <h3 class="font-bold text-lg">步驟 3: 見證大圖 (詳細)</h3>
+            <p class="text-xs text-gray-400 mb-2">隱藏關鍵字: <span class="key-display">見證_詳細</span></p>
+            <div class="flex gap-4">
+                <div class="w-40 h-40 bg-gray-100 rounded flex items-center justify-center cursor-pointer border-dashed border-2 hover:bg-gray-50" onclick="uploadStep(3)">
+                    <img id="img3" class="max-w-full max-h-full hidden">
+                    <span id="txt3" class="text-xs text-gray-400">上傳大圖</span>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-bold mb-1">設定返回:</label>
+                    <div class="text-sm text-gray-600">設定點擊整張圖 (或任意區域) -> 跳轉回「步驟 2」</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <input type="file" id="fileInput" hidden>
+
+    <script>
+        // 這裡為了簡化，直接將「圖片上傳」與「設定熱區」的概念抽象化
+        // 實際上這個工具會幫你產生三個獨立的 Imagemap 設定，並用關鍵字串起來
+        
+        let steps = {
+            1: { url: '', areas: [] },
+            2: { url: '', areas: [] },
+            3: { url: '', areas: [] }
+        };
+
+        function uploadStep(n) {
+            document.getElementById('fileInput').click();
+            document.getElementById('fileInput').onchange = async (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                const url = document.getElementById('workerUrl').value;
+                if(!url) return alert('請先填寫 Worker 網址');
+
+                // 上傳
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const res = await fetch(url+'/upload', {method:'POST', body:JSON.stringify({password:'1234', image:reader.result})});
+                    const json = await res.json();
+                    
+                    steps[n].url = json.url;
+                    document.getElementById('img'+n).src = json.url;
+                    document.getElementById('img'+n).classList.remove('hidden');
+                    document.getElementById('txt'+n).classList.add('hidden');
+                    
+                    // 模擬設定熱區 (真實情況需要像引流圖工具一樣的畫布，這裡自動全版跳轉演示)
+                    if(n === 1) steps[n].areas = [{x:0,y:0,width:1040,height:1040, type:'message', text:'KEY_STEP_2'}];
+                    if(n === 2) steps[n].areas = [{x:0,y:0,width:1040,height:500, type:'message', text:'KEY_STEP_3'}]; // 上半部去詳細
+                    if(n === 3) steps[n].areas = [{x:0,y:0,width:1040,height:1040, type:'message', text:'KEY_STEP_2'}]; // 點擊回列表
+                }
+            }
+        }
+
+        async function publishAll() {
+            const mainKey = document.getElementById('mainKeyword').value;
+            const url = document.getElementById('workerUrl').value;
+            if(!mainKey || !url) return alert('資料不全');
+
+            // 自動生成關聯關鍵字
+            const key1 = mainKey;
+            const key2 = mainKey + "_列表";
+            const key3 = mainKey + "_詳細";
+
+            // 替換佔位符
+            steps[1].areas[0].text = key2; // 首頁 -> 列表
+            steps[2].areas[0].text = key3; // 列表 -> 詳細
+            steps[3].areas[0].text = key2; // 詳細 -> 列表 (返回)
+
+            // 批次儲存
+            await saveOne(url, key1, steps[1]);
+            await saveOne(url, key2, steps[2]);
+            await saveOne(url, key3, steps[3]);
+
+            alert('發布成功！\n請在 LINE 輸入「' + mainKey + '」測試流程。');
+        }
+
+        async function saveOne(url, key, stepData) {
+            // 建構 Imagemap Payload
+            const payload = {
+                messages: [{
+                    type: "imagemap",
+                    baseUrl: stepData.url,
+                    altText: "見證流程",
+                    baseSize: { width: 1040, height: 1040 }, // 簡化處理
+                    actions: stepData.areas.map(a => ({
+                        type: a.type, text: a.text,
+                        area: {x:a.x, y:a.y, width:a.width, height:a.height}
+                    }))
+                }]
+            };
+            await fetch(url+'/save', {
+                method:'POST', body:JSON.stringify({password:'1234', keyword:key, payload})
+            });
+        }
+    </script>
+</body>
+</html>
