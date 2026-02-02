@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE Bot 紅框選單設定</title>
+    <title>LINE Bot 超級選單設定</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; }
         h2 { text-align: center; color: #1DB446; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; color: #333; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        textarea { height: 80px; resize: vertical; }
         .btn-group { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 8px; }
         .btn-group input { margin: 0; }
         button { cursor: pointer; border: none; padding: 12px; border-radius: 8px; font-size: 16px; transition: 0.2s; width: 100%; }
@@ -22,13 +23,11 @@
 </head>
 <body>
 
-    <h2>🛠️ Bot 選單 DIY (Menu)</h2>
+    <h2>🛠️ Bot 選單 DIY (進階版)</h2>
 
     <div class="card">
         <label>1. Worker 網址</label>
         <input type="text" id="workerUrl" placeholder="例如 https://api.xxx.workers.dev">
-        <small style="color:gray">請填入 Cloudflare `api` Worker 的網址</small>
-
         <label>2. 管理密碼</label>
         <input type="password" id="password" value="1234">
     </div>
@@ -37,9 +36,11 @@
         <label>3. 觸發關鍵字 (當使用者輸入...)</label>
         <input type="text" id="triggerKeyword" placeholder="例如：發燒">
 
+        <label>🆕 3.5 機器人回覆內容 (文字訊息)</label>
+        <textarea id="replyText" placeholder="例如：這是有關發燒的資訊，請選擇您想了解的細節👇"></textarea>
+
         <label>4. 設定紅色框框按鈕</label>
         <div id="buttonsContainer"></div>
-        
         <button type="button" class="add-btn" onclick="addButton()">+ 新增按鈕</button>
     </div>
 
@@ -65,11 +66,12 @@
             if(workerUrl.endsWith('/')) workerUrl = workerUrl.slice(0, -1);
             
             const keyword = document.getElementById('triggerKeyword').value.trim();
+            const replyText = document.getElementById('replyText').value.trim(); // 取得自訂回覆
             const password = document.getElementById('password').value;
             const status = document.getElementById('status');
 
-            if (!workerUrl || !keyword) {
-                status.innerText = "⚠️ 網址和關鍵字都要填喔！";
+            if (!workerUrl || !keyword || !replyText) {
+                status.innerText = "⚠️ 網址、關鍵字、回覆內容都要填喔！";
                 status.style.color = "red";
                 return;
             }
@@ -92,22 +94,22 @@
             status.style.color = "black";
 
             try {
+                // 資料結構變了，多傳一個 replyText
                 const response = await fetch(workerUrl + '/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password, keyword, buttons })
+                    body: JSON.stringify({ password, keyword, replyText, buttons })
                 });
 
                 if (response.ok) {
-                    status.innerText = `✅ 成功！去 LINE 輸入「${keyword}」試試看！`;
+                    status.innerText = `✅ 成功！去 LINE 輸入「${keyword}」看新效果！`;
                     status.style.color = "green";
                 } else {
                     status.innerText = "❌ 失敗：" + await response.text();
                     status.style.color = "red";
                 }
             } catch (error) {
-                status.innerText = "❌ 連線錯誤，請檢查網址對不對。";
-                status.style.color = "red";
+                status.innerText = "❌ 連線錯誤";
                 console.error(error);
             }
         }
