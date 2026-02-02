@@ -2,15 +2,14 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>滑動卡片編輯器</title>
+    <title>滑動卡片編輯器 (純淨版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>.area-box { position: absolute; border: 2px solid red; background: rgba(255,0,0,0.2); cursor: pointer; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center; }</style>
 </head>
 <body class="bg-slate-100 flex flex-col h-screen text-slate-800">
     <div class="bg-white shadow p-4 z-10 flex justify-between items-center">
         <h1 class="font-bold text-xl text-amber-600 flex items-center gap-2">
-            <a href="index.html" class="text-2xl hover:bg-slate-50 rounded px-1">🔙</a> 
-            滑動卡片編輯器
+            <a href="index.html" class="text-2xl hover:bg-slate-50 rounded px-1">🔙</a> 滑動卡片編輯器
         </h1>
         <div class="flex gap-2 text-sm">
             <input id="workerUrl" placeholder="Worker網址" class="border px-2 rounded w-48 bg-yellow-50">
@@ -23,9 +22,7 @@
     <div class="flex flex-1 overflow-hidden">
         <div class="w-72 bg-white border-r p-4 overflow-y-auto flex flex-col gap-2">
             <div class="bg-amber-50 p-2 rounded text-xs text-amber-800 mb-2">
-                <strong>💡 提示：</strong><br>
-                在這裡畫框框設定互動 (如點擊跳轉)。<br>
-                完成後，請去「紅色框框設定器」設定按鈕來發送這個關鍵字。
+                <strong>💡 提示：</strong><br>此處設定圖片點擊跳轉。<br>紅色選單請去「紅色框框設定器」設定。
             </div>
             <h3 class="font-bold mb-2">卡片清單</h3>
             <div id="cardList" class="space-y-2"></div>
@@ -36,26 +33,21 @@
             <div id="editor" class="hidden bg-white shadow-xl rounded-lg overflow-hidden w-[320px] flex-shrink-0 self-start">
                 <div class="relative group">
                     <img id="preview" class="w-full h-[220px] object-cover bg-gray-100">
-                    <button onclick="uploadImg()" class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">📷 更換圖片</button>
                     <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
                 </div>
-                <div class="p-4 bg-gray-50">
-                    <p class="text-xs text-gray-500 text-center">👇 請在上圖拖曳畫框框設定點擊區域</p>
-                    <p class="text-[10px] text-gray-400 text-center mt-1">目前區域數: <span id="areaCount">0</span></p>
+                <div class="p-4 bg-gray-50 text-center">
+                    <p class="text-xs text-gray-500">👇 在圖片上拖曳畫框設定點擊</p>
                 </div>
             </div>
             <div id="emptyState" class="text-slate-400 mt-20 flex flex-col items-center">
-                <span class="text-4xl mb-2">👈</span>
-                <span>請從左側新增或選擇卡片</span>
+                <span class="text-4xl mb-2">👈</span><span>請從左側新增或選擇卡片</span>
             </div>
         </div>
     </div>
     <input type="file" id="fileInput" hidden>
 
     <script>
-        let cards = []; 
-        let currentIdx = -1;
-        let isDrawing=false, startX, startY;
+        let cards = []; let currentIdx = -1; let isDrawing=false, startX, startY;
 
         window.onload = function() {
             const savedUrl = localStorage.getItem('line_worker_url');
@@ -68,136 +60,109 @@
             const c=document.getElementById('cardList'); c.innerHTML='';
             cards.forEach((card,i)=>{
                 c.innerHTML += `
-                <div onclick="selectCard(${i})" class="p-3 border rounded cursor-pointer flex justify-between items-center transition ${i===currentIdx?'bg-amber-50 border-amber-500 shadow-sm':'hover:bg-gray-50'}">
-                    <div>
-                        <span class="font-bold text-sm">卡片 ${i+1}</span>
-                        <div class="text-xs text-gray-400">${card.areas.length} 個熱區</div>
+                <div class="p-3 border rounded transition ${i===currentIdx?'bg-amber-50 border-amber-500 shadow-sm':'hover:bg-gray-50'}">
+                    <div class="flex justify-between items-center mb-2" onclick="selectCard(${i})">
+                        <span class="font-bold text-sm cursor-pointer">卡片 ${i+1}</span>
+                        <button onclick="cards.splice(${i},1);renderList();selectCard(-1);" class="text-red-400 font-bold px-1">✕</button>
                     </div>
-                    <button onclick="event.stopPropagation(); cards.splice(${i},1); renderList(); selectCard(-1);" class="text-red-400 hover:text-red-600 px-2 font-bold">✕</button>
+                    ${card.url ? `<img src="${card.url}" class="w-full h-16 object-cover rounded mb-2 border">` : '<div class="w-full h-16 bg-gray-100 text-xs flex items-center justify-center text-gray-400 mb-2">無圖片</div>'}
+                    <button onclick="uploadImg(${i})" class="w-full bg-amber-500 text-white text-xs py-1 rounded hover:bg-amber-600">上傳圖片</button>
                 </div>`;
             });
         }
 
         function selectCard(i) {
-            currentIdx = i; renderList();
-            const div = document.getElementById('editor');
-            const img = document.getElementById('preview');
-            const empty = document.getElementById('emptyState');
-            
-            if(i===-1 || !cards[i]) { 
-                div.classList.add('hidden'); 
-                empty.classList.remove('hidden');
-                return; 
-            }
-            
-            div.classList.remove('hidden');
-            empty.classList.add('hidden');
-            img.src = cards[i].url || 'https://via.placeholder.com/320x220?text=Click+Upload';
+            currentIdx = i;
+            const div = document.getElementById('editor'); const img = document.getElementById('preview'); const empty = document.getElementById('emptyState');
+            if(i===-1 || !cards[i]) { div.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+            div.classList.remove('hidden'); empty.classList.add('hidden');
+            img.src = cards[i].url || 'https://via.placeholder.com/320x220?text=Wait+Upload';
             renderAreas();
-            document.getElementById('areaCount').innerText = cards[i].areas.length;
         }
 
-        function uploadImg() {
+        // ★★★ 重點修正：改用 FormData 上傳，並直接帶入 index ★★★
+        function uploadImg(idx) {
             const url = document.getElementById('workerUrl').value;
             if(!url) return alert('請先輸入 Worker 網址');
 
-            document.getElementById('fileInput').click();
             document.getElementById('fileInput').onchange = async(e)=>{
-                const file=e.target.files[0];
-                if(!file) return;
-                const reader=new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload=async()=>{
-                    try {
-                        const res = await fetch(url+'/upload', {
-                            method:'POST', body:JSON.stringify({password:'1234', image:reader.result})
-                        });
-                        const json=await res.json();
-                        cards[currentIdx].url = json.url;
-                        selectCard(currentIdx);
-                    } catch(e) { alert('上傳錯誤'); }
-                }
-            }
+                const file=e.target.files[0]; if(!file) return;
+                
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('password', '1234');
+
+                // 切換到該卡片並顯示上傳中
+                selectCard(idx); 
+                const img = document.getElementById('preview');
+                const oldSrc = img.src; 
+                // 這裡可以做 loading UI，簡單起見省略
+
+                try {
+                    const res = await fetch(url+'/upload', { method:'POST', body: formData });
+                    if(res.ok) {
+                        const json = await res.json();
+                        cards[idx].url = json.url;
+                        renderList(); selectCard(idx);
+                    } else { alert('上傳失敗: ' + await res.text()); }
+                } catch(e) { alert('上傳錯誤'); }
+            };
+            document.getElementById('fileInput').click();
         }
 
+        // 畫框框
         const layer = document.getElementById('drawLayer');
         layer.onmousedown = e => { isDrawing=true; const r=layer.getBoundingClientRect(); startX=e.clientX-r.left; startY=e.clientY-r.top; }
         layer.onmouseup = e => {
             if(!isDrawing) return; isDrawing=false;
             const r=layer.getBoundingClientRect();
-            const w=Math.abs(e.clientX-r.left-startX);
-            const h=Math.abs(e.clientY-r.top-startY);
+            const w=Math.abs(e.clientX-r.left-startX); const h=Math.abs(e.clientY-r.top-startY);
             if(w>10&&h>10) {
-                const type = prompt("類型? (text=發送關鍵字, link=開網頁)", "text");
-                const txt = prompt("內容? (目標關鍵字 或 網址)");
+                const txt = prompt("內容? (輸入 關鍵字 或 網址)");
                 if(txt) {
                     cards[currentIdx].areas.push({
                         x: Math.min(startX, e.clientX-r.left)/r.width,
                         y: Math.min(startY, e.clientY-r.top)/r.height,
                         w: w/r.width, h: h/r.height,
-                        text: txt, type: type==='link'?'uri':'message'
+                        text: txt, type: txt.startsWith('http')?'uri':'message'
                     });
-                    renderAreas(); renderList();
-                    document.getElementById('areaCount').innerText = cards[currentIdx].areas.length;
+                    renderAreas();
                 }
             }
         }
         function renderAreas() {
-            layer.innerHTML='';
-            if(currentIdx===-1) return;
+            layer.innerHTML=''; if(currentIdx===-1) return;
             cards[currentIdx].areas.forEach((a,i)=>{
                 const d=document.createElement('div'); d.className='area-box';
                 d.style.left=(a.x*100)+'%'; d.style.top=(a.y*100)+'%'; d.style.width=(a.w*100)+'%'; d.style.height=(a.h*100)+'%';
                 d.innerText=i+1;
-                d.onclick=e=>{e.stopPropagation(); if(confirm('刪除?')) { cards[currentIdx].areas.splice(i,1); renderAreas(); document.getElementById('areaCount').innerText = cards[currentIdx].areas.length; } }
+                d.onclick=e=>{e.stopPropagation(); if(confirm('刪除?')) { cards[currentIdx].areas.splice(i,1); renderAreas(); } }
                 layer.appendChild(d);
             });
         }
 
         async function save() {
-            const url = document.getElementById('workerUrl').value;
-            const key = document.getElementById('keyword').value;
+            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value;
             if(!url || !key) return alert('資料不全');
-
             const bubbles = cards.map(c => ({
-                type: "bubble",
-                body: {
-                    type: "box", layout: "overlap", paddingAll: "0px",
-                    contents: [
-                        { type: "image", url: c.url, size: "full", aspectMode: "cover" },
-                        ...c.areas.map(a => ({
-                            type: "box", layout: "vertical", position: "absolute",
-                            offsetStart: (a.x*100)+'%', offsetTop: (a.y*100)+'%', width: (a.w*100)+'%', height: (a.h*100)+'%',
-                            action: { type: a.type, label: 'action', text: a.type==='message'?a.text:undefined, uri: a.type==='uri'?a.text:undefined }
-                        }))
-                    ]
-                }
+                type: "bubble", body: { type: "box", layout: "overlap", paddingAll: "0px", contents: [{ type: "image", url: c.url, size: "full", aspectMode: "cover" }, ...c.areas.map(a => ({ type: "box", layout: "vertical", position: "absolute", offsetStart: (a.x*100)+'%', offsetTop: (a.y*100)+'%', width: (a.w*100)+'%', height: (a.h*100)+'%', action: { type: a.type, label: 'action', text: a.type==='message'?a.text:undefined, uri: a.type==='uri'?a.text:undefined } }))] }
             }));
-            
-            // 移除了 quickReplies
             const payload = { mode: 'carousel', messages: [{ type: "flex", altText: "卡片選單", contents: { type: "carousel", contents: bubbles } }] };
-            
             try {
-                const res = await fetch(url+'/save', {
-                    method:'POST', body:JSON.stringify({password:'1234', keyword:key, payload})
-                });
-                if(res.ok) alert('儲存成功'); else alert('失敗');
+                const res = await fetch(url+'/save', { method:'POST', body:JSON.stringify({password:'1234', keyword:key, payload}) });
+                if(res.ok) alert('儲存成功！請去紅色框框設定器設定按鈕觸發「'+key+'」'); else alert('失敗');
             } catch(e) { alert('連線錯誤'); }
         }
 
         async function load() {
-            const url = document.getElementById('workerUrl').value;
-            const key = document.getElementById('keyword').value;
-            if(!url || !key) return alert('資料不全');
+            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value;
             try {
                 const res = await fetch(url+'/load', { method:'POST', body:JSON.stringify({password:'1234', keyword:key}) });
                 if(res.ok) {
                     const data = await res.json();
                     if(data.messages && data.messages[0].contents.type === 'carousel') {
-                        cards = data.messages[0].contents.contents.map(b => {
-                            return { url: b.body.contents[0].url, areas: [] }; 
-                        });
-                        alert('讀取成功 (注意：舊的熱區可能無法還原顯示，需重新繪製，但功能正常)');
+                        cards = data.messages[0].contents.contents.map(b => ({ url: b.body.contents[0].url, areas: [] }));
+                        alert('讀取成功 (注意: 熱區需重新繪製)');
                     }
                     renderList(); selectCard(0);
                 } else alert('無資料');
