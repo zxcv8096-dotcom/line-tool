@@ -14,7 +14,7 @@
         </h1>
         <div class="flex gap-2 text-sm">
             <input id="workerUrl" placeholder="Worker網址" class="border px-2 rounded w-48 bg-yellow-50">
-            <input id="keyword" placeholder="關鍵字" class="border px-2 rounded font-bold w-32 border-amber-500">
+            <input id="keyword" placeholder="設定此卡片的關鍵字" class="border px-2 rounded font-bold w-40 border-amber-500">
             <button onclick="load()" class="bg-gray-500 text-white px-3 rounded hover:bg-gray-600">讀取</button>
             <button onclick="save()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700">儲存</button>
         </div>
@@ -22,15 +22,14 @@
 
     <div class="flex flex-1 overflow-hidden">
         <div class="w-72 bg-white border-r p-4 overflow-y-auto flex flex-col gap-2">
+            <div class="bg-amber-50 p-2 rounded text-xs text-amber-800 mb-2">
+                <strong>💡 提示：</strong><br>
+                在這裡畫框框設定互動 (如點擊跳轉)。<br>
+                完成後，請去「紅色框框設定器」設定按鈕來發送這個關鍵字。
+            </div>
             <h3 class="font-bold mb-2">卡片清單</h3>
             <div id="cardList" class="space-y-2"></div>
             <button onclick="addCard()" class="w-full mt-2 py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded hover:bg-amber-50">+ 新增卡片</button>
-            
-            <div class="mt-8 border-t pt-4">
-                <h3 class="font-bold text-red-600 text-sm mb-2">🔴 底部紅色按鈕 (Quick Reply)</h3>
-                <div id="qrList" class="space-y-2"></div>
-                <button onclick="addQR()" class="w-full text-xs text-red-500 border border-red-200 rounded py-1 hover:bg-red-50">+ 新增按鈕</button>
-            </div>
         </div>
         
         <div class="flex-1 bg-slate-200 p-8 flex justify-center overflow-auto relative items-start">
@@ -54,12 +53,10 @@
     <input type="file" id="fileInput" hidden>
 
     <script>
-        let cards = []; // { url, areas: [] }
-        let quickReplies = [];
+        let cards = []; 
         let currentIdx = -1;
         let isDrawing=false, startX, startY;
 
-        // ★★★ 自動讀取網址 ★★★
         window.onload = function() {
             const savedUrl = localStorage.getItem('line_worker_url');
             if(savedUrl) document.getElementById('workerUrl').value = savedUrl;
@@ -100,7 +97,6 @@
             document.getElementById('areaCount').innerText = cards[i].areas.length;
         }
 
-        // 圖片上傳
         function uploadImg() {
             const url = document.getElementById('workerUrl').value;
             if(!url) return alert('請先輸入 Worker 網址');
@@ -124,7 +120,6 @@
             }
         }
 
-        // 畫框框邏輯
         const layer = document.getElementById('drawLayer');
         layer.onmousedown = e => { isDrawing=true; const r=layer.getBoundingClientRect(); startX=e.clientX-r.left; startY=e.clientY-r.top; }
         layer.onmouseup = e => {
@@ -133,8 +128,8 @@
             const w=Math.abs(e.clientX-r.left-startX);
             const h=Math.abs(e.clientY-r.top-startY);
             if(w>10&&h>10) {
-                const type = prompt("類型? (text/link)", "text");
-                const txt = prompt("內容? (關鍵字/網址)");
+                const type = prompt("類型? (text=發送關鍵字, link=開網頁)", "text");
+                const txt = prompt("內容? (目標關鍵字 或 網址)");
                 if(txt) {
                     cards[currentIdx].areas.push({
                         x: Math.min(startX, e.clientX-r.left)/r.width,
@@ -159,19 +154,11 @@
             });
         }
 
-        // Quick Reply
-        function addQR(){ quickReplies.push({label:'按鈕',text:'回覆'}); renderQR(); }
-        function renderQR(){ 
-            const q=document.getElementById('qrList'); q.innerHTML='';
-            quickReplies.forEach((x,i)=> q.innerHTML+=`<div class="flex text-xs gap-1 items-center bg-white border p-1 rounded"><input value="${x.label}" onchange="quickReplies[${i}].label=this.value" class="w-12 border rounded px-1" placeholder="顯示"><input value="${x.text}" onchange="quickReplies[${i}].text=this.value" class="flex-1 border rounded px-1" placeholder="發送"><button onclick="quickReplies.splice(${i},1);renderQR()" class="text-red-500 font-bold px-1">✕</button></div>` )
-        }
-
         async function save() {
             const url = document.getElementById('workerUrl').value;
             const key = document.getElementById('keyword').value;
             if(!url || !key) return alert('資料不全');
 
-            // 轉換為 Flex Message
             const bubbles = cards.map(c => ({
                 type: "bubble",
                 body: {
@@ -186,7 +173,9 @@
                     ]
                 }
             }));
-            const payload = { mode: 'carousel', messages: [{ type: "flex", altText: "卡片選單", contents: { type: "carousel", contents: bubbles } }], quickReplies };
+            
+            // 移除了 quickReplies
+            const payload = { mode: 'carousel', messages: [{ type: "flex", altText: "卡片選單", contents: { type: "carousel", contents: bubbles } }] };
             
             try {
                 const res = await fetch(url+'/save', {
@@ -204,17 +193,13 @@
                 const res = await fetch(url+'/load', { method:'POST', body:JSON.stringify({password:'1234', keyword:key}) });
                 if(res.ok) {
                     const data = await res.json();
-                    quickReplies = data.quickReplies || [];
-                    // 解析
                     if(data.messages && data.messages[0].contents.type === 'carousel') {
                         cards = data.messages[0].contents.contents.map(b => {
-                            // 這裡簡化解析，實際上要解析百分比字串回數字，這裡略過反向解析的複雜度，建議使用者主要用來儲存
-                            // 若要完美讀取，建議改存 raw data 到 payload，這裡為了相容性先這樣
                             return { url: b.body.contents[0].url, areas: [] }; 
                         });
-                        alert('讀取成功 (注意：舊的熱區可能無法完美還原顯示，但功能正常)');
+                        alert('讀取成功 (注意：舊的熱區可能無法還原顯示，需重新繪製，但功能正常)');
                     }
-                    renderList(); renderQR(); selectCard(0);
+                    renderList(); selectCard(0);
                 } else alert('無資料');
             } catch(e) { alert('錯誤'); }
         }
