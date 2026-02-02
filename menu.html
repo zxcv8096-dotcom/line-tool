@@ -3,27 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE Bot 超級選單設定</title>
+    <title>LINE Bot 萬能編輯器</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; }
-        h2 { text-align: center; color: #1DB446; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; }
+        h2, h3 { text-align: center; color: #1DB446; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; color: #333; }
         input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         textarea { height: 80px; resize: vertical; }
+        
+        /* 卡片設定區塊 */
+        .carousel-item { border: 2px dashed #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: #fff; position: relative; }
+        .carousel-item h4 { margin-top: 0; color: #555; }
+        .del-item-btn { position: absolute; top: 10px; right: 10px; background: #ff4d4f; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        /* 紅色按鈕區塊 */
         .btn-group { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 8px; }
         .btn-group input { margin: 0; }
+        
         button { cursor: pointer; border: none; padding: 12px; border-radius: 8px; font-size: 16px; transition: 0.2s; width: 100%; }
-        .save-btn { background: #06c755; color: white; font-weight: bold; margin-top: 10px; }
+        .save-btn { background: #06c755; color: white; font-weight: bold; margin-top: 20px; font-size: 18px; }
         .save-btn:hover { background: #05b34c; }
         .add-btn { background: #333; color: white; margin-top: 10px; }
-        .del-btn { background: #ff4d4f; color: white; width: auto; padding: 8px 15px; font-size: 14px; }
-        #status { text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>🛠️ Bot 選單 DIY (進階版)</h2>
+    <h2>🛠️ Bot 萬能編輯器 (圖片卡片版)</h2>
 
     <div class="card">
         <label>1. Worker 網址</label>
@@ -33,30 +39,57 @@
     </div>
 
     <div class="card">
-        <label>3. 觸發關鍵字 (當使用者輸入...)</label>
-        <input type="text" id="triggerKeyword" placeholder="例如：發燒">
-
-        <label>🆕 3.5 機器人回覆內容 (文字訊息)</label>
-        <textarea id="replyText" placeholder="例如：這是有關發燒的資訊，請選擇您想了解的細節👇"></textarea>
-
-        <label>4. 設定紅色框框按鈕</label>
-        <div id="buttonsContainer"></div>
-        <button type="button" class="add-btn" onclick="addButton()">+ 新增按鈕</button>
+        <label>3. 觸發關鍵字</label>
+        <input type="text" id="triggerKeyword" placeholder="例如：優選產品">
+        
+        <label>4. 機器人回覆文字 (選填)</label>
+        <textarea id="replyText" placeholder="例如：這是我們為您挑選的產品..."></textarea>
     </div>
 
-    <button class="save-btn" onclick="saveSettings()">💾 儲存設定</button>
-    <p id="status"></p>
+    <div class="card">
+        <h3>🖼️ 5. 設定滑動圖片卡片 (Carousel)</h3>
+        <p style="color:gray; font-size:0.9em;">圖片網址必須是 https 開頭 (可以用 Imgur 圖床)</p>
+        <div id="carouselContainer"></div>
+        <button type="button" class="add-btn" onclick="addCard()">+ 新增一張卡片</button>
+    </div>
+
+    <div class="card">
+        <h3>🔴 6. 設定紅色框框按鈕 (Quick Reply)</h3>
+        <div id="buttonsContainer"></div>
+        <button type="button" class="add-btn" onclick="addButton()">+ 新增紅色按鈕</button>
+    </div>
+
+    <button class="save-btn" onclick="saveSettings()">💾 儲存所有設定</button>
+    <p id="status" style="text-align:center; margin-top:15px; font-weight:bold;"></p>
 
     <script>
-        window.onload = function() { addButton(); };
+        window.onload = function() { addCard(); addButton(); };
 
+        // 新增圖片卡片
+        function addCard() {
+            const div = document.createElement('div');
+            div.className = 'carousel-item';
+            div.innerHTML = `
+                <h4>📦 產品/圖片卡片</h4>
+                <button class="del-item-btn" onclick="this.parentElement.remove()">刪除</button>
+                <label>圖片網址 (Image URL):</label>
+                <input type="text" class="card-img" placeholder="https://...">
+                <label>點擊後前往的網站 (Link URL):</label>
+                <input type="text" class="card-link" placeholder="https://...">
+                <label>卡片標題 (選填):</label>
+                <input type="text" class="card-title" placeholder="例如：優質蛋白素">
+            `;
+            document.getElementById('carouselContainer').appendChild(div);
+        }
+
+        // 新增紅色按鈕
         function addButton() {
             const div = document.createElement('div');
             div.className = 'btn-group';
             div.innerHTML = `
-                <input type="text" class="btn-label" placeholder="顯示文字 (如:多喝水)">
-                <input type="text" class="btn-text" placeholder="發送文字 (如:我要多喝水)">
-                <button class="del-btn" onclick="this.parentElement.remove()">X</button>
+                <input type="text" class="btn-label" placeholder="按鈕文字 (如:看更多)">
+                <input type="text" class="btn-text" placeholder="發送文字 (如:更多資訊)">
+                <button style="width:auto; background:#ff4d4f; color:white;" onclick="this.parentElement.remove()">X</button>
             `;
             document.getElementById('buttonsContainer').appendChild(div);
         }
@@ -66,16 +99,24 @@
             if(workerUrl.endsWith('/')) workerUrl = workerUrl.slice(0, -1);
             
             const keyword = document.getElementById('triggerKeyword').value.trim();
-            const replyText = document.getElementById('replyText').value.trim(); // 取得自訂回覆
+            const replyText = document.getElementById('replyText').value.trim();
             const password = document.getElementById('password').value;
             const status = document.getElementById('status');
 
-            if (!workerUrl || !keyword || !replyText) {
-                status.innerText = "⚠️ 網址、關鍵字、回覆內容都要填喔！";
-                status.style.color = "red";
-                return;
+            if (!workerUrl || !keyword) {
+                status.innerText = "⚠️ 網址和關鍵字是必填的！"; status.style.color = "red"; return;
             }
 
+            // 收集卡片資料
+            const cards = [];
+            document.querySelectorAll('.carousel-item').forEach(item => {
+                const img = item.querySelector('.card-img').value.trim();
+                const link = item.querySelector('.card-link').value.trim();
+                const title = item.querySelector('.card-title').value.trim();
+                if(img && link) cards.push({ img, link, title });
+            });
+
+            // 收集紅色按鈕資料
             const buttons = [];
             document.querySelectorAll('.btn-group').forEach(group => {
                 const inputs = group.querySelectorAll('input');
@@ -84,25 +125,17 @@
                 if (label && text) buttons.push({ label, text });
             });
 
-            if (buttons.length === 0) {
-                status.innerText = "⚠️ 至少要設定一顆按鈕！";
-                status.style.color = "red";
-                return;
-            }
-
-            status.innerText = "⏳ 儲存中...";
-            status.style.color = "black";
+            status.innerText = "⏳ 儲存中..."; status.style.color = "black";
 
             try {
-                // 資料結構變了，多傳一個 replyText
                 const response = await fetch(workerUrl + '/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password, keyword, replyText, buttons })
+                    body: JSON.stringify({ password, keyword, replyText, cards, buttons })
                 });
 
                 if (response.ok) {
-                    status.innerText = `✅ 成功！去 LINE 輸入「${keyword}」看新效果！`;
+                    status.innerText = `✅ 設定成功！請去 LINE 輸入「${keyword}」測試！`;
                     status.style.color = "green";
                 } else {
                     status.innerText = "❌ 失敗：" + await response.text();
