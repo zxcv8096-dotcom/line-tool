@@ -10,18 +10,13 @@
 
     <div class="bg-white w-full max-w-lg rounded-xl shadow-lg overflow-hidden">
         <div class="bg-red-600 p-4 text-white flex justify-between items-center">
-            <h1 class="font-bold text-lg flex items-center gap-2">
-                <a href="index.html" class="opacity-80 hover:opacity-100">🔙</a> 
-                紅色框框設定器
-            </h1>
-            <div class="text-xs opacity-80">獨立功能版</div>
+            <h1 class="font-bold text-lg flex items-center gap-2"><a href="index.html" class="opacity-80 hover:opacity-100">🔙</a> 紅色框框設定器</h1>
         </div>
 
         <div class="p-6 space-y-6">
-            
             <div class="bg-slate-100 p-4 rounded-lg">
                 <label class="block text-xs font-bold text-slate-500 mb-1">Worker 網址</label>
-                <input type="text" id="workerUrl" class="w-full border p-2 rounded text-sm bg-white text-gray-600" placeholder="https://api..." readonly>
+                <input type="text" id="workerUrl" class="w-full border p-2 rounded text-sm bg-white text-gray-600" readonly>
             </div>
 
             <div class="space-y-4">
@@ -43,31 +38,66 @@
                         <label class="block text-sm font-bold text-red-600">🔴 紅色框框按鈕列表</label>
                         <button onclick="addBtn()" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 font-bold">+ 新增按鈕</button>
                     </div>
-                    <div class="text-[10px] text-gray-400 mb-2">
-                        💡 提示：在「發送內容」填入引流圖的關鍵字，按鈕就會彈出那張圖。
+                    <div class="flex items-center gap-2 bg-yellow-50 p-2 rounded text-xs mb-2">
+                        <span>📋 快速選擇目標:</span>
+                        <select id="targetSelect" class="border rounded p-1 flex-1" onchange="applyTarget()">
+                            <option value="">(載入中...請稍候)</option>
+                        </select>
+                        <button onclick="loadKeys()" class="text-blue-500 underline">重新整理</button>
                     </div>
-                    <div id="btnList" class="space-y-2 max-h-60 overflow-y-auto">
-                        </div>
+
+                    <div id="btnList" class="space-y-2 max-h-60 overflow-y-auto"></div>
                 </div>
             </div>
 
-            <button onclick="saveData()" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 shadow-md transition transform active:scale-95">
-                💾 儲存設定
-            </button>
-
+            <button onclick="saveData()" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 shadow-md transition transform active:scale-95">💾 儲存設定</button>
         </div>
     </div>
 
     <script>
-        // 自動讀取首頁存的網址
+        let availableKeys = [];
+
         window.onload = function() {
             const savedUrl = localStorage.getItem('line_worker_url');
-            if(savedUrl) {
-                document.getElementById('workerUrl').value = savedUrl;
-            } else {
-                alert("請先回首頁 (index.html) 輸入 Worker 網址！");
-            }
+            if(savedUrl) { document.getElementById('workerUrl').value = savedUrl; loadKeys(); }
+            else alert("請先回首頁 (index.html) 輸入 Worker 網址！");
             addBtn(); 
+        }
+
+        // ★ 新功能：從 Worker 抓取所有關鍵字 ★
+        async function loadKeys() {
+            const url = document.getElementById('workerUrl').value;
+            const sel = document.getElementById('targetSelect');
+            sel.innerHTML = '<option>載入中...</option>';
+            try {
+                const res = await fetch(url + '/list', { method: 'POST' }); // 呼叫 Worker 新增的 /list
+                if(res.ok) {
+                    availableKeys = await res.json();
+                    renderSelectOptions();
+                } else { sel.innerHTML = '<option>讀取失敗</option>'; }
+            } catch(e) { sel.innerHTML = '<option>連線錯誤</option>'; }
+        }
+
+        function renderSelectOptions() {
+            const sel = document.getElementById('targetSelect');
+            sel.innerHTML = '<option value="">▼ 選擇要彈出的引流圖/卡片...</option>';
+            availableKeys.forEach(k => {
+                sel.innerHTML += `<option value="${k}">${k}</option>`;
+            });
+        }
+
+        // 當使用者選了一個目標，自動填入最後一個按鈕的「發送」欄位
+        function applyTarget() {
+            const val = document.getElementById('targetSelect').value;
+            if(!val) return;
+            // 找到最後一個按鈕的 input
+            const inputs = document.querySelectorAll('.btn-text');
+            if(inputs.length > 0) {
+                inputs[inputs.length - 1].value = val;
+                // 自動幫他填顯示文字 (如果原本是空的)
+                const labelInput = inputs[inputs.length - 1].previousElementSibling.querySelector('input'); 
+                if(!labelInput.value) labelInput.value = val;
+            }
         }
 
         function addBtn(label='', text='') {
@@ -76,14 +106,8 @@
             div.className = "flex gap-2 items-center bg-slate-50 p-2 rounded border border-slate-200";
             div.innerHTML = `
                 <div class="flex-1 space-y-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-gray-500 w-12">按鈕名:</span>
-                        <input type="text" placeholder="顯示文字 (如: 產品介紹)" value="${label}" class="btn-label flex-1 border rounded px-2 py-1 text-sm focus:border-red-400 outline-none">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-red-500 w-12">觸發:</span>
-                        <input type="text" placeholder="對應的關鍵字 (如: product_map)" value="${text}" class="btn-text flex-1 border rounded px-2 py-1 text-sm focus:border-red-400 outline-none bg-red-50">
-                    </div>
+                    <div class="flex items-center gap-2"><span class="text-xs font-bold text-gray-500 w-12">按鈕名:</span><input type="text" placeholder="顯示文字" value="${label}" class="btn-label flex-1 border rounded px-2 py-1 text-sm focus:border-red-400 outline-none"></div>
+                    <div class="flex items-center gap-2"><span class="text-xs font-bold text-red-500 w-12">觸發:</span><input type="text" placeholder="發送內容" value="${text}" class="btn-text flex-1 border rounded px-2 py-1 text-sm focus:border-red-400 outline-none bg-red-50"></div>
                 </div>
                 <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 px-2 font-bold text-lg">✕</button>
             `;
@@ -91,56 +115,32 @@
         }
 
         async function saveData() {
-            const url = document.getElementById('workerUrl').value;
-            const key = document.getElementById('keyword').value;
-            const text = document.getElementById('replyText').value;
-            
+            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value; const text = document.getElementById('replyText').value;
             if(!url || !key) return alert("資料不完整");
-
             const btns = [];
             document.querySelectorAll('#btnList > div').forEach(div => {
-                const l = div.querySelector('.btn-label').value;
-                const t = div.querySelector('.btn-text').value;
+                const l = div.querySelector('.btn-label').value; const t = div.querySelector('.btn-text').value;
                 if(l && t) btns.push({ label: l, text: t });
             });
-
-            const payload = {
-                mode: 'text', 
-                replyText: text,
-                quickReplies: btns
-            };
-
+            const payload = { mode: 'text', replyText: text, quickReplies: btns };
             try {
-                const res = await fetch(url + '/save', {
-                    method: 'POST',
-                    body: JSON.stringify({ password: '1234', keyword: key, payload: payload })
-                });
+                const res = await fetch(url + '/save', { method: 'POST', body: JSON.stringify({ password: '1234', keyword: key, payload: payload }) });
                 if(res.ok) alert('儲存成功！'); else alert('儲存失敗');
             } catch(e) { alert('連線錯誤'); }
         }
 
         async function loadData() {
-            const url = document.getElementById('workerUrl').value;
-            const key = document.getElementById('keyword').value;
+            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value;
             if(!url || !key) return alert("請輸入關鍵字");
-
             try {
-                const res = await fetch(url + '/load', {
-                    method: 'POST',
-                    body: JSON.stringify({ password: '1234', keyword: key })
-                });
+                const res = await fetch(url + '/load', { method: 'POST', body: JSON.stringify({ password: '1234', keyword: key }) });
                 if(res.ok) {
-                    const data = await res.json(); 
+                    const data = await res.json();
                     document.getElementById('replyText').value = data.replyText || '';
-                    const list = document.getElementById('btnList');
-                    list.innerHTML = '';
-                    if(data.quickReplies) {
-                        data.quickReplies.forEach(b => addBtn(b.label, b.text));
-                    }
+                    document.getElementById('btnList').innerHTML = '';
+                    if(data.quickReplies) data.quickReplies.forEach(b => addBtn(b.label, b.text));
                     alert('讀取成功');
-                } else {
-                    alert('找不到此關鍵字資料');
-                }
+                } else alert('找不到此關鍵字');
             } catch(e) { alert('連線錯誤'); }
         }
     </script>
