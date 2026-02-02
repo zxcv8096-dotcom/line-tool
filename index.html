@@ -2,482 +2,378 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE 萬能編輯器 PRO - GAS 一鍵安裝版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE 萬能編輯器 (完整版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; overscroll-behavior: none; }
+        body { font-family: "Microsoft JhengHei", sans-serif; overscroll-behavior: none; }
         .canvas-scroll-container { border: 2px dashed #cbd5e1; background: #f8fafc radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; position: relative; display: flex; align-items: center; justify-content: center; overflow: auto; height: 100%; }
-        .canvas-content-wrapper { position: relative; transform-origin: center top; transition: width 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; text-shadow: 1px 1px 2px black; user-select: none; touch-action: none; z-index: 30; }
+        .area-box { position: absolute; border: 2px solid rgba(239,68,68,0.9); background: rgba(239,68,68,0.2); cursor: move; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; user-select: none; z-index: 30; }
         .area-box.selected { border-color: #f59e0b; background: rgba(245,158,11,0.3); z-index: 40; }
-        .ad-layer-img { position: absolute; object-fit: contain; pointer-events: none; z-index: 20; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .tab-btn { opacity: 0.6; border-bottom: 3px solid transparent; } .tab-btn.active { opacity: 1; border-bottom: 3px solid #1f2937; color: #1f2937; background: #f3f4f6; }
-        .flow-step-btn { background: white; border: 2px solid #e2e8f0; color: #64748b; transition: all 0.2s ease; position: relative; overflow: hidden; }
-        .flow-step-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
-        .flow-step-btn.active { background: #1f2937; border-color: #000; color: #fbbf24; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); transform: translateY(-1px); }
-        .step-badge { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; border-radius: 50%; }
-        .step-badge.has-data { background-color: #10b981; border: 1px solid white; }
-        .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all 0.2s; } .card-dot.active { background: #1f2937; transform: scale(1.3); border: 1px solid #fbbf24; }
-        .code-block-slim { background: #1e293b; color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.75rem; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .step-circle { width: 24px; height: 24px; background: #1f2937; color: #fbbf24; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; flex-shrink: 0; }
-        .phone-mockup { width: 300px; height: 580px; background: #fff; border-radius: 30px; border: 8px solid #1f2937; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; margin: 0 auto; transform: scale(0.95); transform-origin: top center; }
-        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 20px; background: #1f2937; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 50; }
-        .chat-bg { background-color: #849ebf; flex: 1; overflow-y: auto; padding: 40px 10px 10px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
-        .chat-row { display: flex; gap: 8px; align-items: flex-start; animation: fadeIn 0.3s ease; }
-        .chat-row.right { justify-content: flex-end; }
-        .chat-avatar { width: 36px; height: 36px; background-color: #fff; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .chat-bubble { max-width: 240px; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
-        .chat-bubble img { width: 100%; display: block; }
-        .chat-bubble.text { padding: 8px 12px; font-size: 14px; background: #92e3a9; border-radius: 15px; max-width: 200px; word-break: break-all; }
-        .carousel-track { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scroll-snap-type: x mandatory; max-width: 100%; }
-        .line-bubble { min-width: 240px; max-width: 240px; background: white; border-radius: 12px; overflow: hidden; scroll-snap-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
-        .bubble-hero { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; }
-        .bubble-body { padding: 12px; flex: 1; }
-        .bubble-title { font-weight: bold; font-size: 16px; color: #1e293b; margin-bottom: 4px; line-height: 1.2; }
-        .bubble-text { font-size: 12px; color: #64748b; line-height: 1.4; }
-        .bubble-footer { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 6px; }
-        .line-btn { display: block; width: 100%; text-align: center; padding: 8px 0; background: #eff6ff; color: #42659a; font-weight: bold; font-size: 12px; border-radius: 6px; cursor: pointer; transition: bg 0.2s; text-decoration: none; }
-        .line-btn:hover { background: #dbeafe; }
-        .hotspot-overlay { position: absolute; background: rgba(0, 0, 255, 0.1); cursor: pointer; border: 1px dashed rgba(255, 255, 255, 0.5); transition: background 0.2s; }
-        .hotspot-overlay:active { background: rgba(0, 0, 255, 0.3); }
-        .sim-hotspot { position: absolute; border: 1px dashed rgba(255, 0, 0, 0.5); background: rgba(255, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; color: red; font-size: 10px; font-weight: bold; }
-        .rich-menu-bar { background: #f8fafc; border-top: 1px solid #ddd; height: 180px; width: 100%; position: absolute; bottom: 0; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px; }
-        .rich-menu-bar img { width: 100%; height: 100%; object-fit: contain; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @media (min-width: 768px) { body { height: 100vh; overflow: hidden; } #main-layout { height: 100%; overflow: hidden; } }
-        #sidebarPanel { transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease; }
-        .sidebar-collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden; padding: 0 !important; opacity: 0; }
-        .code-modal-tab { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; font-weight: bold; font-size: 0.8rem; }
-        .code-modal-tab.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; }
+        .card-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; cursor: pointer; } .card-dot.active { background: #1f2937; transform: scale(1.3); border: 1px solid #fbbf24; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
-<body class="bg-slate-50 flex flex-col text-slate-800">
+<body class="bg-slate-50 flex flex-col h-screen overflow-hidden text-slate-800">
 
-    <div id="topSection" class="flex-shrink-0 bg-white shadow-sm z-30">
-        <header class="border-b border-slate-200">
-            <div class="max-w-full mx-auto px-3 h-14 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-yellow-400 text-lg shadow-lg shrink-0">🦁</div>
-                    <div>
-                        <h1 class="font-bold text-sm md:text-base tracking-wide text-slate-900 flex items-center flex-wrap gap-1">
-                            LINE 萬能編輯器 PRO
-                            <span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm">GAS安裝版</span>
-                        </h1>
-                    </div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="openModal('codeModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 animate-pulse">
-                        📤 取得程式碼
-                    </button>
-                    <button onclick="downloadJSON()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1.5 rounded-lg font-bold shadow-md transform transition active:scale-95 flex items-center gap-1 text-xs">
-                        💾 儲存
-                    </button>
-                </div>
+    <div class="bg-white shadow-sm z-30 border-b border-slate-200 shrink-0">
+        <div class="px-3 h-14 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🦁</span>
+                <h1 class="font-bold text-sm md:text-base">LINE 萬能編輯器 <span class="text-[10px] bg-indigo-600 text-white px-1 py-0.5 rounded">PRO</span></h1>
             </div>
-        </header>
-
-        <div class="border-b border-slate-200 bg-slate-50">
-            <div class="max-w-full mx-auto flex overflow-x-auto">
-                <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-1.5 font-bold text-xs md:text-sm transition whitespace-nowrap">🗺️ 引流圖</button>
-                <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-1.5 font-bold text-xs md:text-sm transition whitespace-nowrap">🎠 滑動卡片</button>
-                <button onclick="switchTab('flow')" id="tab-flow" class="tab-btn flex-1 py-1.5 font-bold text-xs md:text-sm transition whitespace-nowrap">🔗 導覽流程</button>
-                <button onclick="switchTab('richmenu')" id="tab-richmenu" class="tab-btn flex-1 py-1.5 font-bold text-xs md:text-sm transition bg-emerald-50 text-emerald-700 whitespace-nowrap">☰ 圖文選單</button>
+            
+            <div class="flex gap-2 items-center">
+                <input type="text" id="workerUrl" placeholder="Worker網址 (https://api...)" class="border border-slate-300 rounded px-2 py-1 text-xs w-32 md:w-48">
+                <input type="password" id="workerPwd" value="1234" class="border border-slate-300 rounded px-2 py-1 text-xs w-16 text-center">
+                <button onclick="loadFromKV()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1">📂 讀取</button>
+                <button onclick="saveToKV()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1">💾 儲存</button>
             </div>
+        </div>
+        <div class="flex border-t border-slate-100">
+            <button onclick="switchTab('imagemap')" id="tab-imagemap" class="tab-btn active flex-1 py-2 font-bold text-xs">🗺️ 引流圖 (Imagemap)</button>
+            <button onclick="switchTab('carousel')" id="tab-carousel" class="tab-btn flex-1 py-2 font-bold text-xs">🎠 滑動卡片 (Carousel)</button>
         </div>
     </div>
 
-    <div id="main-layout" class="flex flex-col md:flex-row flex-1 w-full bg-white relative">
-        <aside id="sidebarPanel" class="w-full md:w-[380px] border-b md:border-b-0 md:border-r border-slate-200 flex flex-col z-20 bg-white flex-shrink-0 max-h-[40vh] md:max-h-full overflow-hidden relative">
-            <div id="flowStepNav" class="hidden grid grid-cols-4 gap-2 p-2 bg-slate-100 border-b flex-shrink-0">
-                <button onclick="switchFlowStep(0)" id="flow-step-0" class="flow-step-btn active rounded py-2 text-[10px] font-bold text-center">Step 1<div class="step-badge" id="badge-0"></div></button>
-                <button onclick="switchFlowStep(1)" id="flow-step-1" class="flow-step-btn rounded py-2 text-[10px] font-bold text-center">Step 2<div class="step-badge" id="badge-1"></div></button>
-                <button onclick="switchFlowStep(2)" id="flow-step-2" class="flow-step-btn rounded py-2 text-[10px] font-bold text-center">Step 3<div class="step-badge" id="badge-2"></div></button>
-                <button onclick="switchFlowStep(3)" id="flow-step-3" class="flow-step-btn rounded py-2 text-[10px] font-bold text-center">Step 4<div class="step-badge" id="badge-3"></div></button>
+    <div class="flex flex-1 overflow-hidden">
+        
+        <aside class="w-[350px] border-r border-slate-200 bg-white flex flex-col z-20 overflow-y-auto custom-scrollbar p-3 gap-3 shadow-lg">
+            
+            <div class="bg-blue-50 rounded p-2 border border-blue-100 flex items-center gap-2">
+                <label class="font-bold text-blue-800 text-xs whitespace-nowrap">觸發關鍵字:</label>
+                <input type="text" id="triggerKeyword" value="選單" class="flex-1 p-1 border border-blue-200 rounded text-xs font-bold text-blue-700 h-7">
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
-                <div class="bg-yellow-50 p-2 rounded border border-yellow-200 shadow-sm">
-                    <label class="text-[10px] font-bold text-yellow-800 block mb-1">🔑 LINE Token (產生程式碼需要)</label>
-                    <input type="text" id="lineTokenInput" placeholder="請貼上 Channel Access Token..." class="w-full text-[10px] p-1.5 border border-yellow-300 rounded focus:outline-none focus:border-yellow-500 bg-white" oninput="updateGasCode(); saveProjectSilent();">
-                </div>
-                <div id="keywordBlock" class="bg-blue-50 rounded p-2 border border-blue-100 flex items-center gap-2">
-                    <label class="font-bold text-blue-800 text-xs whitespace-nowrap">關鍵字:</label>
-                    <input type="text" id="triggerKeyword" value="選單" class="flex-1 p-1 border border-blue-200 rounded text-xs font-bold text-blue-700 h-6" oninput="updateGasCode()">
-                </div>
-                <div id="flowHelpBtn" class="hidden flex gap-2">
-                    <button onclick="openModal('flowExplainModal')" class="flex-1 bg-rose-100 text-rose-700 border border-rose-200 py-1.5 rounded text-xs font-bold hover:bg-rose-200 transition">❓ 怎麼用？</button>
-                    <button onclick="openPreviewModal()" class="flex-1 bg-slate-800 text-yellow-400 border border-slate-900 py-1.5 rounded text-xs font-bold hover:bg-slate-700 transition shadow">👁️ 模擬預覽</button>
-                </div>
-                <div id="richMenuControls" class="hidden space-y-2 p-2 bg-emerald-50 rounded border border-emerald-100">
-                    <div class="text-xs font-bold text-emerald-800 mb-1 flex items-center justify-between">
-                         <span>✨ 自由排版模式</span>
-                         <button onclick="downloadCompositeImage()" class="bg-indigo-600 text-white px-2 py-0.5 rounded hover:bg-indigo-700 shadow-sm">⬇️ 下載合成圖片</button>
-                    </div>
-                    <div class="text-[10px] text-emerald-700 leading-relaxed">
-                        <p>1. 上傳底圖 (可用圖床或直接上傳)。</p>
-                        <p>2. 直接在右側畫布<b>「畫框框」</b>。</p>
-                        <p>3. 設定好後，點擊右上角<b>「📤 取得程式碼」</b>。</p>
-                        <p class="text-red-500 font-bold mt-1">※ 注意：若是用「GAS 安裝腳本」，圖片網址必須是公開網址 (Imgur)，GAS 才能讀取並上傳。</p>
+            <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
+                <div class="flex justify-between items-center">
+                    <label class="font-bold text-amber-800 text-xs">📦 卡片管理</label>
+                    <div class="flex gap-1">
+                        <button onclick="addCard()" class="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] hover:bg-amber-600 shadow">+新增</button>
+                        <button onclick="deleteCard()" class="text-red-500 text-[10px] hover:underline">刪除</button>
                     </div>
                 </div>
-                <div id="carouselControls" class="hidden space-y-2 p-2 bg-amber-50 rounded border border-amber-100">
-                    <div class="flex justify-between items-center">
-                        <label class="font-bold text-amber-800 text-xs">📦 卡片管理</label>
-                        <div class="flex gap-1">
-                            <button onclick="addCard()" class="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] hover:bg-amber-600 shadow">+新增</button>
-                            <button onclick="deleteCard()" class="text-red-500 text-[10px] hover:underline">刪除</button>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
-                    <button onclick="openPreviewModal()" class="w-full bg-slate-800 text-yellow-400 py-1.5 rounded font-bold text-xs shadow hover:bg-slate-700 transition flex items-center justify-center gap-2">👁️ 模擬預覽</button>
-                </div>
-                <div class="bg-slate-50 p-2 rounded border border-slate-200">
-                    <label class="block font-bold text-slate-700 text-[10px] mb-1" id="uploadLabel">1. 上傳底圖</label>
-                    <input type="file" id="imageInput" accept="image/*" class="block w-full text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:bg-white file:text-slate-700 hover:file:bg-slate-100"/>
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="text" id="imageUrl" placeholder="2. 貼上 https://...圖片網址 (GAS需用到)" class="flex-1 p-1.5 border border-slate-300 rounded text-[10px] font-mono" oninput="saveCurrentDataState()">
-                    <button onclick="openModal('imageHelpModal')" class="bg-gray-200 px-2 py-1 rounded text-[10px] hover:bg-gray-300 whitespace-nowrap">圖床?</button>
-                </div>
-                <div class="flex-1">
-                    <div class="flex justify-between items-center mb-1 border-b pb-1">
-                        <label class="font-bold text-slate-700 text-[10px]">3. 點擊區域 (自由調整)</label>
-                        <button onclick="deleteSelectedAreas()" class="text-[10px] text-red-500 hover:underline">刪除選取</button>
-                    </div>
-                    <div id="actionList" class="space-y-1 pb-4 text-[10px] text-slate-500 text-center">
-                        (請在右側畫布拖曳畫框)
-                    </div>
-                </div>
+                <div class="flex items-center gap-2 justify-center flex-wrap" id="cardDots"></div>
             </div>
+
+            <div class="bg-slate-50 p-3 rounded border border-slate-200 space-y-2">
+                <div class="flex justify-between">
+                    <label class="font-bold text-slate-700 text-xs">1. 上傳圖片 (存到 Worker)</label>
+                    <span id="uploadStatus" class="text-[10px] text-orange-500 font-bold"></span>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                <input type="text" id="imageUrl" placeholder="或是貼上圖片網址..." class="w-full p-1.5 border border-slate-300 rounded text-[10px]" onchange="updateImageFromUrl()">
+            </div>
+
+            <div class="flex-1 flex flex-col min-h-[150px]">
+                <div class="flex justify-between items-center mb-1 border-b pb-1">
+                    <label class="font-bold text-slate-700 text-xs">2. 畫面點擊區域 (畫格子)</label>
+                    <button onclick="deleteSelectedAreas()" class="text-[10px] text-red-500 hover:underline">刪除選取</button>
+                </div>
+                <div id="actionList" class="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar"></div>
+            </div>
+
+            <div class="bg-red-50 p-3 rounded border border-red-200 mt-2">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="font-bold text-red-800 text-xs">🔴 紅色框框按鈕 (Quick Reply)</label>
+                    <button onclick="addQuickReply()" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] hover:bg-red-600 shadow">+ 新增按鈕</button>
+                </div>
+                <div id="quickReplyList" class="space-y-2">
+                    </div>
+            </div>
+
         </aside>
 
-        <div class="absolute left-0 md:left-[380px] top-1/2 transform -translate-y-1/2 z-50 hidden md:block transition-all duration-300" id="toggleBtnWrapper">
-            <button onclick="toggleSidebar()" class="bg-white border border-slate-300 shadow-md rounded-r px-1 py-3 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 flex items-center justify-center"><span id="toggleIcon">◀</span></button>
-        </div>
-
-        <main class="flex-1 bg-slate-100 p-2 md:p-4 flex flex-col w-full md:w-auto overflow-hidden items-center justify-center">
-            <div id="canvasWrapper" class="relative shadow-xl bg-white rounded-lg overflow-hidden border border-slate-300 w-full h-full max-w-4xl flex flex-col">
-                <div class="bg-white border-b p-1.5 flex justify-between items-center flex-shrink-0">
-                    <span class="text-xs font-bold text-slate-500 pl-1">🔍 畫布</span>
-                    <div class="flex gap-1">
-                        <button onclick="adjustZoom(-10)" class="px-2 bg-slate-100 rounded text-xs">-</button>
-                        <span id="zoomDisplay" class="text-xs px-1">100%</span>
-                        <button onclick="adjustZoom(10)" class="px-2 bg-slate-100 rounded text-xs">+</button>
-                    </div>
-                </div>
-                <div id="canvasContainer" class="canvas-scroll-container custom-scrollbar">
-                    <div id="canvasContent" class="canvas-content-wrapper bg-white shadow-sm">
-                        <div id="placeholder" class="flex flex-col items-center justify-center h-full w-full text-slate-300 absolute inset-0 m-auto p-4 text-center">
-                            <span class="text-sm md:text-lg font-bold">請先上傳圖片<br>然後在這裡「畫格子」</span>
-                        </div>
-                        <img id="previewImage" class="hidden block select-none pointer-events-none" style="width: 100%; display: block;" />
-                        <div id="adLayer" class="absolute inset-0 pointer-events-none z-10"></div>
-                        <div id="drawLayer" class="absolute inset-0 cursor-crosshair hidden z-20"></div>
-                    </div>
-                </div>
+        <main class="flex-1 bg-slate-100 relative overflow-hidden flex flex-col">
+            <div class="absolute top-2 right-2 z-10 bg-white/80 backdrop-blur px-2 py-1 rounded shadow text-xs font-bold flex gap-2">
+                <button onclick="adjustZoom(-10)">-</button>
+                <span id="zoomDisplay">100%</span>
+                <button onclick="adjustZoom(10)">+</button>
             </div>
-            <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/90 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeModal('previewModal')">
-                <div class="relative w-full max-w-xs shrink-0">
-                    <div class="phone-mockup">
-                        <div class="phone-notch"></div>
-                        <div class="bg-gray-800 text-white text-xs text-center py-2 pt-6 flex justify-between px-4">
-                            <span>LINE</span>
-                            <span class="cursor-pointer hover:text-red-300" onclick="resetFlowSimulation()">🔄 重置</span>
-                        </div>
-                        <div id="simChatContainer" class="chat-bg custom-scrollbar"></div>
-                        <div id="richMenuPreview" class="rich-menu-bar hidden relative">圖文選單預覽區</div>
+            <div class="canvas-scroll-container flex-1" id="canvasContainer">
+                <div id="canvasContent" class="bg-white shadow-lg relative">
+                    <div id="placeholder" class="absolute inset-0 flex items-center justify-center text-slate-300 pointer-events-none">
+                        <span class="text-lg font-bold">請先上傳圖片</span>
                     </div>
+                    <img id="previewImage" class="block select-none pointer-events-none" style="max-width: none;" />
+                    <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
                 </div>
-                <button onclick="closeModal('previewModal')" class="mt-6 bg-white/10 text-white border border-white/20 px-8 py-3 rounded-full font-bold hover:bg-white/20 transition flex items-center gap-2 backdrop-blur-md">
-                    🚫 關閉預覽
-                </button>
             </div>
         </main>
     </div>
 
-    <input type="file" id="adImageUpload" accept="image/*" class="hidden">
-
-    <div id="codeModal" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full h-[85vh] flex flex-col overflow-hidden">
-            <div class="flex border-b bg-slate-100">
-                <div class="code-modal-tab active flex-1 text-center py-3" onclick="switchCodeTab('gas')" id="tabBtn-gas">🤖 GAS 機器人 (自動回覆)</div>
-                <div class="code-modal-tab flex-1 text-center py-3" onclick="switchCodeTab('install')" id="tabBtn-install">🚀 GAS 安裝腳本 (圖文選單)</div>
-                <div class="code-modal-tab flex-1 text-center py-3" onclick="switchCodeTab('rich')" id="tabBtn-rich">☰ 原始 JSON</div>
-                <button onclick="closeModal('codeModal')" class="px-4 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-            </div>
-            <div class="flex-1 overflow-hidden relative">
-                <div id="codeSection-gas" class="absolute inset-0 flex flex-col p-4">
-                    <div class="mb-2 text-xs text-slate-500 bg-blue-50 p-2 rounded border border-blue-100">
-                        <b>用途：</b> 用於 <code>doPost</code>，負責「引流圖」、「卡片」、「多層導覽」的觸發。
-                    </div>
-                    <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
-                        <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('gasCode')" class="text-xs text-white bg-indigo-600 px-2 py-1 rounded hover:bg-indigo-700">複製全部</button></div>
-                        <pre id="gasCode" class="flex-1 overflow-auto p-3 text-xs text-green-400 font-mono"></pre>
-                    </div>
-                </div>
-                <div id="codeSection-install" class="hidden absolute inset-0 flex flex-col p-4">
-                    <div class="mb-2 text-xs text-slate-500 bg-rose-50 p-2 rounded border border-rose-100">
-                        <b>用途：</b> 用於 <b>安裝圖文選單</b>。請將此代碼貼到 GAS，並執行 <code>installRichMenu()</code> 函式一次即可。<br>
-                        <b>注意：</b> 此腳本會自動下載您提供的「圖片網址」，並上傳到 LINE 伺服器，最後設為預設選單。
-                    </div>
-                    <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
-                        <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('installCode')" class="text-xs text-white bg-rose-600 px-2 py-1 rounded hover:bg-rose-700">複製安裝腳本</button></div>
-                        <pre id="installCode" class="flex-1 overflow-auto p-3 text-xs text-orange-300 font-mono"></pre>
-                    </div>
-                </div>
-                <div id="codeSection-rich" class="hidden absolute inset-0 flex flex-col p-4">
-                    <div class="mb-2 text-xs text-slate-500 bg-emerald-50 p-2 rounded border border-emerald-100">
-                        <b>用途：</b> 這是原始數據，給工程師或 Postman 使用。
-                    </div>
-                    <div class="flex-1 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 flex flex-col">
-                        <div class="bg-slate-800 px-3 py-1 flex justify-end"><button onclick="copyCode('richMenuCode')" class="text-xs text-white bg-emerald-600 px-2 py-1 rounded hover:bg-emerald-700">複製 JSON</button></div>
-                        <pre id="richMenuCode" class="flex-1 overflow-auto p-3 text-xs text-yellow-300 font-mono"></pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="imageHelpModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded p-6 relative max-w-sm"><button onclick="closeModal('imageHelpModal')" class="absolute top-2 right-2">✕</button><h3 class="font-bold mb-2">圖片網址？</h3><p class="text-sm">請使用 Imgur 上傳，並對圖片按右鍵「複製圖片位址」。<br><br><b>GAS 安裝重要提示：</b><br>因為 GAS 需要讀取圖片才能上傳給 LINE，所以請務必填寫有效的公開圖片連結 (Imgur)，不能只上傳本機檔案。</p></div></div>
-
     <script>
+        // --- 核心變數 ---
         let currentMode = 'imagemap';
         let currentCardIndex = 0;
-        let currentFlowStep = 0;
+        let scaleFactor = 1;
         let currentZoom = 100;
-        let projectId = Date.now().toString();
-        let isSidebarCollapsed = false;
-        let selectedAreaIndexForAd = -1;
+        let isDrawing = false, startX, startY;
+        let naturalWidth = 0, naturalHeight = 0;
 
+        // 資料結構
         let projectData = {
-            id: projectId, name: "未命名專案", token: "", mode: "imagemap",
-            imagemap: { imageUrl: "", localPreview: "", areas: [] },
-            richmenu: { imageUrl: "", localPreview: "", areas: [] }, 
-            carousel: [{ title: "", desc: "", imageUrl: "", localPreview: "", btns: [{label:"按鈕", text:"回覆"}], areas:[] }],
-            flow: [
-                { name: "Step 1", imageUrl: "", localPreview: "", areas: [], trigger: "開始導覽" },
-                { name: "Step 2", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_2__" },
-                { name: "Step 3", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_3__" },
-                { name: "Step 4", imageUrl: "", localPreview: "", areas: [], trigger: "__GOTO_STEP_4__" }
-            ]
+            mode: "imagemap",
+            keyword: "選單",
+            imagemap: { imageUrl: "", naturalWidth: 0, naturalHeight: 0, areas: [] },
+            carousel: [{ imageUrl: "", naturalWidth: 0, naturalHeight: 0, areas: [] }],
+            quickReplies: [] // 新增：紅色按鈕
         };
 
         const refs = {
-            imageInput: document.getElementById('imageInput'), imageUrl: document.getElementById('imageUrl'), previewImage: document.getElementById('previewImage'), drawLayer: document.getElementById('drawLayer'), adLayer: document.getElementById('adLayer'), actionList: document.getElementById('actionList'), placeholder: document.getElementById('placeholder'), triggerKeyword: document.getElementById('triggerKeyword'), canvasWrapper: document.getElementById('canvasWrapper'), lineTokenInput: document.getElementById('lineTokenInput'), sidebarPanel: document.getElementById('sidebarPanel'), toggleBtnWrapper: document.getElementById('toggleBtnWrapper'), toggleIcon: document.getElementById('toggleIcon'), uploadLabel: document.getElementById('uploadLabel'), simChatContainer: document.getElementById('simChatContainer'), richMenuPreview: document.getElementById('richMenuPreview'), adImageUpload: document.getElementById('adImageUpload')
+            imageInput: document.getElementById('imageInput'),
+            imageUrl: document.getElementById('imageUrl'),
+            previewImage: document.getElementById('previewImage'),
+            drawLayer: document.getElementById('drawLayer'),
+            actionList: document.getElementById('actionList'),
+            triggerKeyword: document.getElementById('triggerKeyword'),
+            workerUrl: document.getElementById('workerUrl'),
+            workerPwd: document.getElementById('workerPwd'),
+            uploadStatus: document.getElementById('uploadStatus'),
+            quickReplyList: document.getElementById('quickReplyList')
         };
-        
-        let isDrawing = false, startX, startY, naturalWidth = 0, naturalHeight = 0, scaleFactor = 1;
 
-        window.addEventListener('DOMContentLoaded', () => { updateUI(); updateGasCode(); updateStepBadges(); });
+        window.onload = () => { updateUI(); renderQuickReplies(); };
 
-        function toggleSidebar() { isSidebarCollapsed = !isSidebarCollapsed; refs.sidebarPanel.classList.toggle('sidebar-collapsed'); refs.toggleBtnWrapper.style.left = isSidebarCollapsed ? "0px" : "380px"; refs.toggleIcon.innerText = isSidebarCollapsed ? "▶" : "◀"; setTimeout(() => { updateScale(); }, 350); }
-        function saveProject() { _saveToLocal(); alert('已儲存！'); }
-        function saveProjectSilent() { _saveToLocal(); }
-        function _saveToLocal() { projectData.token = refs.lineTokenInput.value; }
-        function downloadJSON() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "line_project.json"); dl.click(); }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        
-        function switchCodeTab(tab) {
-            document.querySelectorAll('.code-modal-tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tabBtn-${tab}`).classList.add('active');
-            document.getElementById('codeSection-gas').classList.add('hidden');
-            document.getElementById('codeSection-install').classList.add('hidden');
-            document.getElementById('codeSection-rich').classList.add('hidden');
-            document.getElementById(`codeSection-${tab}`).classList.remove('hidden');
-        }
-
-        function triggerAdUpload(index) { selectedAreaIndexForAd = index; refs.adImageUpload.click(); }
-        refs.adImageUpload.addEventListener('change', function(e) {
-            const file = e.target.files[0]; if (!file || selectedAreaIndexForAd === -1) return;
+        // --- 上傳圖片 ---
+        refs.imageInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const url = refs.workerUrl.value.replace(/\/$/, '');
+            if (!url) { alert("請先填寫 Worker 網址！"); return; }
+            refs.uploadStatus.innerText = "⏳ 上傳中...";
             const reader = new FileReader();
-            reader.onload = function(evt) {
-                const data = getCurrentDataObj();
-                if (data.areas[selectedAreaIndexForAd]) { data.areas[selectedAreaIndexForAd].adImage = evt.target.result; renderAdLayer(); alert("廣告圖已貼上！\n請記得點擊上方「下載合成圖片」來獲取最終底圖。"); }
-                refs.adImageUpload.value = '';
-            }; reader.readAsDataURL(file);
+            reader.readAsDataURL(file);
+            reader.onload = async function() {
+                try {
+                    const res = await fetch(url + '/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: refs.workerPwd.value, image: reader.result })
+                    });
+                    if (res.ok) {
+                        const json = await res.json();
+                        getCurrentData().imageUrl = json.url;
+                        refs.imageUrl.value = json.url;
+                        refs.uploadStatus.innerText = "✅ 成功";
+                        loadImage(json.url);
+                    } else {
+                        alert("上傳失敗");
+                        refs.uploadStatus.innerText = "❌ 失敗";
+                    }
+                } catch (err) { alert("連線錯誤"); refs.uploadStatus.innerText = "❌ 錯誤"; }
+            };
         });
-        function renderAdLayer() {
-            const data = getCurrentDataObj(); refs.adLayer.innerHTML = ''; if (!data.areas) return;
-            data.areas.forEach(a => { if (a.adImage) { const img = document.createElement('img'); img.src = a.adImage; img.className = 'ad-layer-img'; img.style.left = (a.x * scaleFactor) + 'px'; img.style.top = (a.y * scaleFactor) + 'px'; img.style.width = (a.width * scaleFactor) + 'px'; img.style.height = (a.height * scaleFactor) + 'px'; refs.adLayer.appendChild(img); } });
-        }
-        function downloadCompositeImage() {
-            const data = getCurrentDataObj(); if (!data.localPreview && !data.imageUrl) { alert("沒有底圖可供合成"); return; }
-            const canvas = document.createElement('canvas'); canvas.width = naturalWidth; canvas.height = naturalHeight; const ctx = canvas.getContext('2d');
-            const baseImg = new Image(); baseImg.crossOrigin = "anonymous"; baseImg.src = data.localPreview || data.imageUrl;
-            baseImg.onload = () => {
-                ctx.drawImage(baseImg, 0, 0, naturalWidth, naturalHeight);
-                let loadedCount = 0; const ads = data.areas.filter(a => a.adImage);
-                if (ads.length === 0) { downloadCanvas(canvas, "composite_base.png"); return; }
-                ads.forEach(a => { const adImg = new Image(); adImg.src = a.adImage; adImg.onload = () => { ctx.drawImage(adImg, a.x, a.y, a.width, a.height); loadedCount++; if (loadedCount === ads.length) { downloadCanvas(canvas, "composite_richmenu.png"); } } });
-            };
-        }
-        function downloadCanvas(canvas, filename) { const link = document.createElement('a'); link.download = filename; link.href = canvas.toDataURL("image/png"); link.click(); }
 
-        function openPreviewModal() { document.getElementById('previewModal').classList.remove('hidden'); resetFlowSimulation(); }
-        function resetFlowSimulation() {
-            refs.simChatContainer.innerHTML = ''; refs.richMenuPreview.classList.add('hidden');
-            if(currentMode === 'flow') { addBotMessageFlow(0); } else if (currentMode === 'carousel') { renderCarouselSim(); } else if (currentMode === 'richmenu') { 
-                refs.simChatContainer.innerHTML = '<div class="text-center text-gray-400 mt-20 text-xs">圖文選單顯示於底部 ↓</div>'; refs.richMenuPreview.classList.remove('hidden');
-                const data = projectData.richmenu; const src = data.localPreview || data.imageUrl;
-                if(src) { let adsHtml = ''; const scale = 300 / naturalWidth; data.areas.forEach(a => { if(a.adImage) { adsHtml += `<img src="${a.adImage}" style="position:absolute; left:${a.x*scale}px; top:${a.y*scale}px; width:${a.width*scale}px; height:${a.height*scale}px; pointer-events:none;">`; } }); refs.richMenuPreview.innerHTML = `<img src="${src}" style="width:100%;">${adsHtml}`; } else { refs.richMenuPreview.innerHTML = '請先上傳圖片'; }
-            } else { addBotMessageImagemap(projectData.imagemap); }
+        // --- 儲存與讀取 ---
+        async function saveToKV() {
+            const url = refs.workerUrl.value.replace(/\/$/, '');
+            const keyword = refs.triggerKeyword.value.trim();
+            if (!url || !keyword) { alert("請填寫 Worker 網址與關鍵字"); return; }
+            projectData.keyword = keyword;
+            projectData.mode = currentMode;
+            try {
+                const res = await fetch(url + '/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: refs.workerPwd.value, keyword: keyword, ...projectData })
+                });
+                if (res.ok) alert("儲存成功！"); else alert("失敗: " + await res.text());
+            } catch (err) { alert("連線錯誤"); }
         }
-        function renderCarouselSim() {
-            const wrapper = document.createElement('div'); wrapper.className = 'bubble-container custom-scrollbar';
-            projectData.carousel.forEach((card, idx) => {
-                const img = card.localPreview || card.imageUrl || 'https://via.placeholder.com/240x160?text=No+Image'; let hot = ''; if(card.areas.length > 0) { card.areas.forEach(a => { const style = `left:${(a.x/naturalWidth*100)}%; top:${(a.y/naturalHeight*100)}%; width:${(a.width/naturalWidth*100)}%; height:${(a.height/naturalHeight*100)}%;`; hot += `<div class="hotspot-overlay" style="${style}" onclick="alert('點擊: ${a.text}')"></div>`; }); }
-                const bubble = document.createElement('div'); bubble.className = 'line-bubble'; if(idx === currentCardIndex) bubble.style.border = '2px solid #4f46e5';
-                bubble.innerHTML = `<div style="position:relative;"><img src="${img}" class="bubble-hero">${hot}</div><div class="carousel-body"><div class="font-bold text-sm mb-1">${card.title||'標題'}</div><div class="text-xs text-gray-500">${card.desc||'說明'}</div></div>`; wrapper.appendChild(bubble);
-            }); const row = document.createElement('div'); row.className = 'chat-row'; row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(wrapper); refs.simChatContainer.appendChild(row);
-        }
-        function addBotMessageFlow(stepIndex) {
-            if(stepIndex >= 4) return; const data = projectData.flow[stepIndex]; if(!data.imageUrl) return; const img = data.localPreview || data.imageUrl;
-            const row = document.createElement('div'); row.className = 'chat-row'; const bubble = document.createElement('div'); bubble.className = 'chat-bubble'; bubble.innerHTML = `<div style="position:relative;"><img src="${img}"><div id="overlay-${stepIndex}" style="position:absolute;inset:0;"></div></div>`;
-            const overlay = bubble.querySelector(`#overlay-${stepIndex}`); const baseW = 1040;
-            data.areas.forEach(a => { const div = document.createElement('div'); div.className = 'hotspot-overlay'; let baseH = (currentMode==='flow'&&currentFlowStep===stepIndex)?naturalHeight:1040; div.style.left = (a.x/baseW*100)+'%'; div.style.top = (a.y/baseH*100)+'%'; div.style.width = (a.width/baseW*100)+'%'; div.style.height = (a.height/baseH*100)+'%'; div.onclick = () => { if(a.type==='flow_next') { addUserMessage("點擊: "+a.text); setTimeout(()=>addBotMessageFlow(stepIndex+1),600); } else { alert(a.type==='uri'?'開連結':'文字: '+a.text); } }; overlay.appendChild(div); });
-            row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(bubble); refs.simChatContainer.appendChild(row); refs.simChatContainer.scrollTop = refs.simChatContainer.scrollHeight;
-        }
-        function addBotMessageImagemap(data) {
-            const img = data.localPreview || data.imageUrl; const row = document.createElement('div'); row.className = 'chat-row'; const bubble = document.createElement('div'); bubble.className = 'chat-bubble'; bubble.innerHTML = `<div style="position:relative;"><img src="${img}"><div id="img-overlay" style="position:absolute;inset:0;"></div></div>`; const overlay = bubble.querySelector('#img-overlay');
-            data.areas.forEach(a => { const div = document.createElement('div'); div.className = 'hotspot-overlay'; div.style.left=(a.x/1040*100)+'%'; div.style.top=(a.y/naturalHeight*100)+'%'; div.style.width=(a.width/1040*100)+'%'; div.style.height=(a.height/naturalHeight*100)+'%'; div.onclick=()=>alert(a.type==='uri'?'開連結':'文字: '+a.text); overlay.appendChild(div); });
-            row.innerHTML = `<div class="chat-avatar">🤖</div>`; row.appendChild(bubble); refs.simChatContainer.appendChild(row);
-        }
-        function addUserMessage(text) { const row = document.createElement('div'); row.className = 'chat-row right'; row.innerHTML = `<div class="chat-bubble text">${text}</div>`; refs.simChatContainer.appendChild(row); refs.simChatContainer.scrollTop = refs.simChatContainer.scrollHeight; }
 
-        function getCurrentDataObj() { if(currentMode === 'imagemap') return projectData.imagemap; if(currentMode === 'richmenu') return projectData.richmenu; if(currentMode === 'carousel') return projectData.carousel[currentCardIndex]; if(currentMode === 'flow') return projectData.flow[currentFlowStep]; }
+        async function loadFromKV() {
+            const url = refs.workerUrl.value.replace(/\/$/, '');
+            const keyword = refs.triggerKeyword.value.trim();
+            if (!url || !keyword) { alert("請填寫 Worker 網址與關鍵字"); return; }
+            try {
+                const res = await fetch(url + '/load', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: refs.workerPwd.value, keyword: keyword })
+                });
+                if (res.ok) {
+                    projectData = await res.json();
+                    if(!projectData.quickReplies) projectData.quickReplies = [];
+                    currentMode = projectData.mode || 'imagemap';
+                    switchTab(currentMode);
+                    renderQuickReplies();
+                    alert("讀取成功！");
+                } else alert("找不到資料");
+            } catch (err) { alert("連線錯誤"); }
+        }
+
+        // --- 介面邏輯 ---
+        function getCurrentData() {
+            if (currentMode === 'imagemap') return projectData.imagemap;
+            if (currentMode === 'carousel') return projectData.carousel[currentCardIndex];
+            return projectData.imagemap;
+        }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${mode}`).classList.add('active');
+            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel');
+            updateUI();
+        }
+
         function updateUI() {
-            const data = getCurrentDataObj(); refs.imageUrl.value = data.imageUrl || ""; const imgSource = data.localPreview || data.imageUrl;
-            refs.previewImage.classList.add('hidden'); refs.drawLayer.classList.add('hidden'); refs.placeholder.classList.remove('hidden');
-            if(imgSource) { refs.previewImage.src = imgSource; refs.previewImage.onload = function() { naturalWidth = this.naturalWidth; naturalHeight = this.naturalHeight; refs.previewImage.classList.remove('hidden'); refs.drawLayer.classList.remove('hidden'); refs.placeholder.classList.add('hidden'); updateScale(); renderAreas(); renderAdLayer(); renderActionList(); } } else { refs.previewImage.src = ""; refs.adLayer.innerHTML = ''; renderActionList(); }
-            document.getElementById('keywordBlock').classList.remove('hidden');
-            if(currentMode === 'flow') { if(currentFlowStep === 0) refs.triggerKeyword.value = data.trigger; document.getElementById('keywordBlock').classList.toggle('hidden', currentFlowStep > 0); } else if (currentMode === 'richmenu') { document.getElementById('keywordBlock').classList.add('hidden'); } else if (currentMode === 'carousel') { refs.triggerKeyword.value = "命盤"; } else { refs.triggerKeyword.value = "選單"; }
-            updateStepBadges();
-        }
-        function updateStepBadges() { if(currentMode !== 'flow') return; projectData.flow.forEach((step, i) => { const badge = document.getElementById(`badge-${i}`); if(step.imageUrl) badge.classList.add('has-data'); else badge.classList.remove('has-data'); }); }
-        function addCard() { if(projectData.carousel.length >= 10) return; projectData.carousel.push({ title:"", desc:"", imageUrl:"", localPreview:"", btns:[], areas:[] }); currentCardIndex = projectData.carousel.length - 1; updateUI(); renderDots(); }
-        function deleteCard() { if(projectData.carousel.length <= 1) return; projectData.carousel.splice(currentCardIndex, 1); currentCardIndex = Math.max(0, currentCardIndex - 1); updateUI(); renderDots(); }
-        function switchCard(idx) { currentCardIndex = idx; updateUI(); renderDots(); }
-        function renderDots() { const c = document.getElementById('cardDots'); c.innerHTML=''; document.getElementById('currentCardNum').innerText = currentCardIndex + 1; projectData.carousel.forEach((_, i) => { const d = document.createElement('div'); d.className = `card-dot ${i===currentCardIndex?'active':''}`; d.onclick=()=>switchCard(i); c.appendChild(d); }); }
-        function switchFlowStep(i) { currentFlowStep = i; document.querySelectorAll('.flow-step-btn').forEach(b => b.classList.remove('active')); document.getElementById(`flow-step-${i}`).classList.add('active'); refs.uploadLabel.innerText = `1. 上傳 Step ${i+1} 底圖`; updateUI(); }
-        function switchTab(mode) { 
-            projectData.mode = mode; currentMode = mode; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${mode}`).classList.add('active'); 
-            document.getElementById('carouselControls').classList.toggle('hidden', mode !== 'carousel'); document.getElementById('flowStepNav').classList.toggle('hidden', mode !== 'flow'); document.getElementById('flowHelpBtn').classList.toggle('hidden', mode !== 'flow'); document.getElementById('richMenuControls').classList.toggle('hidden', mode !== 'richmenu');
-            if(mode !== 'flow') refs.uploadLabel.innerText = "1. 上傳底圖"; updateUI(); updateGasCode(); 
-        }
-        refs.imageInput.addEventListener('change', function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(evt) { const data = getCurrentDataObj(); data.localPreview = evt.target.result; updateUI(); }; reader.readAsDataURL(file); });
-        function saveCurrentDataState() { getCurrentDataObj().imageUrl = refs.imageUrl.value; updateUI(); }
-        refs.drawLayer.addEventListener('mousedown', handleMouseDown); refs.drawLayer.addEventListener('mousemove', handleMouseMove); refs.drawLayer.addEventListener('mouseup', handleMouseUp);
-        function handleMouseDown(e) { if(!refs.previewImage.src) return; isDrawing=true; updateScale(); const r=refs.drawLayer.getBoundingClientRect(); startX=(e.clientX-r.left)/scaleFactor; startY=(e.clientY-r.top)/scaleFactor; currentBox=document.createElement('div'); currentBox.className='area-box'; currentBox.style.left=(startX*scaleFactor)+'px'; currentBox.style.top=(startY*scaleFactor)+'px'; refs.drawLayer.appendChild(currentBox); }
-        function handleMouseMove(e) { if(!isDrawing)return; const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); currentBox.style.width=(w*scaleFactor)+'px'; currentBox.style.height=(h*scaleFactor)+'px'; currentBox.style.left=(Math.min(startX,(e.clientX-r.left)/scaleFactor)*scaleFactor)+'px'; currentBox.style.top=(Math.min(startY,(e.clientY-r.top)/scaleFactor)*scaleFactor)+'px'; }
-        function handleMouseUp(e) { isDrawing=false; if(currentBox) currentBox.remove(); const r=refs.drawLayer.getBoundingClientRect(); const w=Math.abs((e.clientX-r.left)/scaleFactor-startX); const h=Math.abs((e.clientY-r.top)/scaleFactor-startY); if(w>20&&h>20){ const d=getCurrentDataObj(); let type='message', text=`關鍵字${d.areas.length+1}`; if(currentMode==='flow' && currentFlowStep<3) { type='flow_next'; text=projectData.flow[currentFlowStep+1].trigger; } d.areas.push({x:Math.min(startX,(e.clientX-r.left)/scaleFactor), y:Math.min(startY,(e.clientY-r.top)/scaleFactor), width:w, height:h, text:text, type:type, selected:false}); renderAreas(); renderActionList(); } }
-        function updateScale() { if(naturalWidth>0 && refs.previewImage.offsetWidth>0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth; }
-        function renderAreas() { const data = getCurrentDataObj(); refs.drawLayer.innerHTML = ''; data.areas.forEach((a, i) => { const el = document.createElement('div'); el.className = `area-box ${a.selected?'selected':''}`; el.style.left=(a.x*scaleFactor)+'px'; el.style.top=(a.y*scaleFactor)+'px'; el.style.width=(a.width*scaleFactor)+'px'; el.style.height=(a.height*scaleFactor)+'px'; el.innerText=i+1; el.onclick=(e)=>{e.stopPropagation(); toggleAreaSelection(i);}; if(a.type==='flow_next'){el.style.borderColor='#be123c';el.style.backgroundColor='rgba(190,18,60,0.2)';} refs.drawLayer.appendChild(el); }); }
-        
-        function renderActionList() { 
-            const data = getCurrentDataObj(); refs.actionList.innerHTML = ''; 
-            data.areas.forEach((a, i) => { 
-                const el = document.createElement('div'); el.className = `bg-white p-2 rounded border border-slate-200 text-xs flex flex-wrap gap-1 items-center ${a.selected?'bg-blue-50 border-blue-300':''}`; 
-                let flowOpt = (currentMode==='flow'&&currentFlowStep<3)?`<option value="flow_next" ${a.type==='flow_next'?'selected':''}>🔗 跳轉</option>`:'';
-                let switchOpt = (currentMode==='richmenu')?`<option value="richmenuswitch" ${a.type==='richmenuswitch'?'selected':''}>🔄 切換選單</option>`:'';
-                let ph = "關鍵字/連結"; let inputClass = "border-slate-300";
-                if(a.type === 'uri') { ph = "輸入網址 (https://...)"; inputClass="border-blue-400 text-blue-700"; }
-                else if(a.type === 'message') { ph = "輸入用戶點擊後的文字"; }
-                else if(a.type === 'richmenuswitch') { ph = "輸入 Rich Menu Alias ID"; inputClass="border-orange-300 bg-orange-50"; }
-                el.innerHTML = `<div class="flex items-center gap-1 w-full"><span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span><select onchange="updateArea(${i}, 'type', this.value)" class="border rounded w-20"><option value="message" ${a.type==='message'?'selected':''}>文字</option><option value="uri" ${a.type==='uri'?'selected':''}>連結</option>${flowOpt}${switchOpt}</select><input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 min-w-0 ${inputClass}" placeholder="${ph}"><button onclick="removeArea(${i})" class="text-red-500 px-1">✕</button></div><div class="w-full flex justify-end mt-1"><button onclick="triggerAdUpload(${i})" class="text-[10px] ${a.adImage?'text-green-600 font-bold':'text-slate-400'} border px-1 rounded hover:bg-slate-50">${a.adImage ? '✅ 已貼圖' : '🖼️ 貼廣告'}</button></div>`; refs.actionList.appendChild(el); 
-            }); 
+            const data = getCurrentData();
+            refs.imageUrl.value = data.imageUrl || "";
+            if (data.imageUrl) loadImage(data.imageUrl);
+            else {
+                refs.previewImage.src = "";
+                refs.previewImage.style.display = 'none';
+                document.getElementById('placeholder').style.display = 'flex';
+                renderAreas();
+                renderActionList();
+            }
+            if (currentMode === 'carousel') renderDots();
         }
 
-        function updateArea(i, f, v) { const d = getCurrentDataObj(); d.areas[i][f] = v; if(v==='flow_next') d.areas[i].text = projectData.flow[currentFlowStep+1].trigger; renderAreas(); renderActionList(); }
-        function removeArea(i) { getCurrentDataObj().areas.splice(i, 1); renderAreas(); renderActionList(); renderAdLayer(); }
-        function toggleAreaSelection(i) { const d=getCurrentDataObj(); d.areas[i].selected=!d.areas[i].selected; renderAreas(); renderActionList(); }
-        function deleteSelectedAreas() { const d=getCurrentDataObj(); d.areas=d.areas.filter(a=>!a.selected); renderAreas(); renderActionList(); renderAdLayer(); }
-        function toggleSelectAll(checked) { const d=getCurrentDataObj(); d.areas.forEach(a=>a.selected=checked); renderAreas(); renderActionList(); }
-        function adjustZoom(delta) { currentZoom = Math.max(10, currentZoom+delta); document.getElementById('zoomDisplay').innerText = currentZoom+'%'; refs.previewImage.style.width = currentZoom+'%'; setTimeout(()=>{updateScale(); renderAreas(); renderAdLayer()},0); }
-        function resetZoom() { currentZoom = 100; adjustZoom(0); }
-
-        function generateImagemapJson(data) { const scale = (naturalWidth&&naturalWidth!==1040)?1040/naturalWidth:1; return { "type": "imagemap", "baseUrl": data.imageUrl, "altText": "選單", "baseSize": { "width": 1040, "height": Math.round((naturalHeight||1040)*scale) }, "actions": data.areas.map(a => ({ "type": a.type==='uri'?'uri':'message', "text": a.type!=='uri'?a.text:undefined, "linkUri": a.type==='uri'?a.text:undefined, "area": { x: Math.round(a.x*scale), y: Math.round(a.y*scale), width: Math.round(a.width*scale), height: Math.round(a.height*scale) } })) }; }
-        function generateFlexCarouselJson(cardsData) { const bubbles = cardsData.map(card => { const imgUrl = card.imageUrl || "https://via.placeholder.com/1040x1040"; const clickAreas = card.areas.map(a => { const lp = (a.x/naturalWidth*100).toFixed(4)+'%', tp = (a.y/naturalHeight*100).toFixed(4)+'%', wp = (a.width/naturalWidth*100).toFixed(4)+'%', hp = (a.height/naturalHeight*100).toFixed(4)+'%'; return { "type": "box", "layout": "vertical", "position": "absolute", "offsetStart": lp, "offsetTop": tp, "width": wp, "height": hp, "action": { "type": a.type==='uri'?'uri':'message', "label": "action", "text": a.type!=='uri'?a.text:undefined, "uri": a.type==='uri'?a.text:undefined } }; }); return { "type": "bubble", "body": { "type": "box", "layout": "overlap", "paddingAll": "0px", "contents": [ { "type": "image", "url": imgUrl, "size": "full", "aspectMode": "cover" }, ...clickAreas ] } }; }); return { "type": "flex", "altText": "選單", "contents": { "type": "carousel", "contents": bubbles } }; }
-
-        function updateGasCode() {
-            const token = refs.lineTokenInput.value || '請換成你的LINE_TOKEN';
-            
-            // Rich Menu Data
-            const richData = projectData.richmenu;
-            let richAreas = richData.areas.map(a => {
-                let action = {};
-                if(a.type === 'uri') { action = { type: 'uri', uri: a.text }; }
-                else if(a.type === 'richmenuswitch') { action = { type: 'richmenuswitch', richMenuAliasId: a.text, data: 'action=switch' }; }
-                else { action = { type: 'message', text: a.text }; }
-                return { bounds: { x: Math.round(a.x), y: Math.round(a.y), width: Math.round(a.width), height: Math.round(a.height) }, action: action };
-            });
-
-            // 1. GAS Robot Code (doPost)
-            let flowMapStr = "";
-            if(currentMode === 'flow') { projectData.flow.forEach(step => { if(!step.imageUrl) return; flowMapStr += `  "${step.trigger}": ${JSON.stringify(generateImagemapJson(step), null, 2)},\n`; }); } 
-            else if (currentMode === 'imagemap' && projectData.imagemap.imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateImagemapJson(projectData.imagemap), null, 2)}`; }
-            else if (currentMode === 'carousel' && projectData.carousel[0].imageUrl) { flowMapStr = `  "${refs.triggerKeyword.value}": ${JSON.stringify(generateFlexCarouselJson(projectData.carousel), null, 2)}`; }
-            const gasCode = `const CHANNEL_ACCESS_TOKEN = '${token}'; \nconst flowMap = {\n${flowMapStr}\n};\nfunction doPost(e) {\n  try {\n    const msg = JSON.parse(e.postData.contents);\n    const replyToken = msg.events[0].replyToken;\n    const userMessage = msg.events[0].message.text;\n    if (flowMap[userMessage]) {\n      UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {\n        'headers': { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },\n        'method': 'post',\n        'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': [flowMap[userMessage]] }),\n      });\n    }\n  } catch (error) {}\n  return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);\n}`;
-            document.getElementById('gasCode').innerText = gasCode;
-
-            // 2. Installer Script
-            const richObj = {
-                size: { width: naturalWidth || 2500, height: naturalHeight || 1686 },
-                selected: true,
-                name: "我的圖文選單",
-                chatBarText: "開啟選單",
-                areas: richAreas
+        function loadImage(url) {
+            refs.previewImage.src = url;
+            refs.previewImage.style.display = 'block';
+            document.getElementById('placeholder').style.display = 'none';
+            refs.previewImage.onload = function() {
+                naturalWidth = this.naturalWidth;
+                naturalHeight = this.naturalHeight;
+                getCurrentData().naturalWidth = naturalWidth;
+                getCurrentData().naturalHeight = naturalHeight;
+                updateScale();
+                renderAreas();
+                renderActionList();
             };
-            const imageUrl = richData.imageUrl || 'YOUR_IMAGE_URL';
-            const installCode = `// 🚀 圖文選單一鍵安裝腳本
-// 1. 請確保 'imageUrl' 是公開可存取的 (如 Imgur)
-// 2. 貼到 GAS 後，請手動執行 'installRichMenu' 函式
-const RICH_MENU_TOKEN = '${token}';
-const RICH_MENU_IMAGE = '${imageUrl}';
-
-function installRichMenu() {
-  const menuData = ${JSON.stringify(richObj, null, 2)};
-  
-  // 1. 建立選單物件
-  const createOpt = {
-    method: 'post',
-    headers: { 'Authorization': 'Bearer ' + RICH_MENU_TOKEN, 'Content-Type': 'application/json' },
-    payload: JSON.stringify(menuData)
-  };
-  const createRes = UrlFetchApp.fetch('https://api.line.me/v2/bot/richmenu', createOpt);
-  const richMenuId = JSON.parse(createRes.getContentText()).richMenuId;
-  Logger.log('1. 選單建立成功 ID: ' + richMenuId);
-
-  // 2. 下載並上傳圖片
-  if (RICH_MENU_IMAGE.startsWith('http')) {
-    const blob = UrlFetchApp.fetch(RICH_MENU_IMAGE).getBlob();
-    const uploadOpt = {
-      method: 'post',
-      headers: { 'Authorization': 'Bearer ' + RICH_MENU_TOKEN, 'Content-Type': blob.getContentType() },
-      payload: blob
-    };
-    UrlFetchApp.fetch('https://api-data.line.me/v2/bot/richmenu/' + richMenuId + '/content', uploadOpt);
-    Logger.log('2. 圖片上傳成功');
-  } else {
-    Logger.log('⚠ 跳過圖片上傳 (無有效網址)');
-  }
-
-  // 3. 設為預設選單
-  const defaultOpt = {
-    method: 'post',
-    headers: { 'Authorization': 'Bearer ' + RICH_MENU_TOKEN }
-  };
-  UrlFetchApp.fetch('https://api.line.me/v2/bot/user/all/richmenu/' + richMenuId, defaultOpt);
-  Logger.log('3. 已設為預設選單！請在手機上查看。');
-}`;
-            document.getElementById('installCode').innerText = installCode;
-
-            // 3. Raw JSON
-            document.getElementById('richMenuCode').innerText = JSON.stringify(richObj, null, 2);
         }
-        function copyCode(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert('複製成功！'); }
+
+        // --- 畫布與區域 ---
+        refs.drawLayer.addEventListener('mousedown', (e) => {
+            if (!refs.previewImage.src) return;
+            isDrawing = true;
+            updateScale();
+            const r = refs.drawLayer.getBoundingClientRect();
+            startX = (e.clientX - r.left) / scaleFactor;
+            startY = (e.clientY - r.top) / scaleFactor;
+            const box = document.createElement('div');
+            box.className = 'area-box';
+            box.id = 'currentDraw';
+            box.style.left = (startX * scaleFactor) + 'px';
+            box.style.top = (startY * scaleFactor) + 'px';
+            refs.drawLayer.appendChild(box);
+        });
+
+        refs.drawLayer.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const r = refs.drawLayer.getBoundingClientRect();
+            const mouseX = (e.clientX - r.left) / scaleFactor;
+            const mouseY = (e.clientY - r.top) / scaleFactor;
+            const w = Math.abs(mouseX - startX);
+            const h = Math.abs(mouseY - startY);
+            const x = Math.min(startX, mouseX);
+            const y = Math.min(startY, mouseY);
+            const box = document.getElementById('currentDraw');
+            box.style.width = (w * scaleFactor) + 'px';
+            box.style.height = (h * scaleFactor) + 'px';
+            box.style.left = (x * scaleFactor) + 'px';
+            box.style.top = (y * scaleFactor) + 'px';
+        });
+
+        refs.drawLayer.addEventListener('mouseup', (e) => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            const box = document.getElementById('currentDraw');
+            if (box) box.remove();
+            const r = refs.drawLayer.getBoundingClientRect();
+            const mouseX = (e.clientX - r.left) / scaleFactor;
+            const mouseY = (e.clientY - r.top) / scaleFactor;
+            const w = Math.abs(mouseX - startX);
+            const h = Math.abs(mouseY - startY);
+            if (w > 20 && h > 20) {
+                getCurrentData().areas.push({
+                    x: Math.min(startX, mouseX), y: Math.min(startY, mouseY),
+                    width: w, height: h, type: 'message', text: `選項`
+                });
+                renderAreas(); renderActionList();
+            }
+        });
+
+        function updateScale() {
+            if (naturalWidth > 0 && refs.previewImage.offsetWidth > 0) scaleFactor = refs.previewImage.offsetWidth / naturalWidth;
+        }
+
+        function renderAreas() {
+            const data = getCurrentData();
+            refs.drawLayer.innerHTML = '';
+            data.areas.forEach((a, i) => {
+                const el = document.createElement('div');
+                el.className = `area-box ${a.selected ? 'selected' : ''}`;
+                el.style.left = (a.x * scaleFactor) + 'px';
+                el.style.top = (a.y * scaleFactor) + 'px';
+                el.style.width = (a.width * scaleFactor) + 'px';
+                el.style.height = (a.height * scaleFactor) + 'px';
+                el.innerText = i + 1;
+                el.onclick = (e) => { e.stopPropagation(); toggleAreaSelection(i); };
+                refs.drawLayer.appendChild(el);
+            });
+        }
+
+        function renderActionList() {
+            const data = getCurrentData();
+            refs.actionList.innerHTML = '';
+            data.areas.forEach((a, i) => {
+                const row = document.createElement('div');
+                row.className = `p-2 rounded border border-slate-200 text-xs flex gap-2 items-center mb-1 ${a.selected ? 'bg-blue-50 border-blue-300' : 'bg-white'}`;
+                row.innerHTML = `
+                    <span class="bg-slate-700 text-white w-4 h-4 flex items-center justify-center rounded shrink-0">${i+1}</span>
+                    <select onchange="updateArea(${i}, 'type', this.value)" class="border rounded px-1 py-1"><option value="message" ${a.type==='message'?'selected':''}>文字</option><option value="uri" ${a.type==='uri'?'selected':''}>連結</option></select>
+                    <input value="${a.text||''}" onchange="updateArea(${i}, 'text', this.value)" class="border rounded flex-1 px-1 py-1 min-w-0" placeholder="內容">
+                    <button onclick="removeArea(${i})" class="text-red-500 font-bold px-1">✕</button>
+                `;
+                refs.actionList.appendChild(row);
+            });
+        }
+
+        // --- 🔴 Quick Reply 邏輯 ---
+        function addQuickReply() {
+            projectData.quickReplies.push({ label: "", text: "" });
+            renderQuickReplies();
+        }
+        function updateQuickReply(i, key, val) {
+            projectData.quickReplies[i][key] = val;
+        }
+        function removeQuickReply(i) {
+            projectData.quickReplies.splice(i, 1);
+            renderQuickReplies();
+        }
+        function renderQuickReplies() {
+            const list = refs.quickReplyList;
+            list.innerHTML = "";
+            projectData.quickReplies.forEach((q, i) => {
+                const div = document.createElement('div');
+                div.className = "flex gap-1 items-center bg-white p-1 rounded border border-red-100";
+                div.innerHTML = `
+                    <input type="text" placeholder="顯示文字" value="${q.label}" class="border rounded px-1 py-1 text-xs w-1/3" onchange="updateQuickReply(${i}, 'label', this.value)">
+                    <input type="text" placeholder="發送文字" value="${q.text}" class="border rounded px-1 py-1 text-xs flex-1" onchange="updateQuickReply(${i}, 'text', this.value)">
+                    <button onclick="removeQuickReply(${i})" class="text-red-500 font-bold px-1">✕</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // --- 輔助函式 ---
+        function updateArea(i, f, v) { getCurrentData().areas[i][f] = v; renderAreas(); }
+        function removeArea(i) { getCurrentData().areas.splice(i, 1); renderAreas(); renderActionList(); }
+        function toggleAreaSelection(i) { getCurrentData().areas[i].selected = !getCurrentData().areas[i].selected; renderAreas(); renderActionList(); }
+        function deleteSelectedAreas() { const d=getCurrentData(); d.areas=d.areas.filter(a=>!a.selected); renderAreas(); renderActionList(); }
+        function adjustZoom(d) { currentZoom = Math.max(10, currentZoom + d); document.getElementById('zoomDisplay').innerText = currentZoom + '%'; refs.previewImage.style.width = currentZoom + '%'; setTimeout(() => { updateScale(); renderAreas(); }, 0); }
+        
+        // Carousel Funcs
+        function addCard() { projectData.carousel.push({ imageUrl:"", areas:[] }); currentCardIndex = projectData.carousel.length-1; updateUI(); }
+        function deleteCard() { if(projectData.carousel.length>1) { projectData.carousel.splice(currentCardIndex,1); currentCardIndex=Math.max(0, currentCardIndex-1); updateUI(); } }
+        function switchCard(i) { currentCardIndex = i; updateUI(); }
+        function renderDots() { const c=document.getElementById('cardDots'); c.innerHTML=''; projectData.carousel.forEach((_,i)=>{ const d=document.createElement('div'); d.className=`card-dot ${i===currentCardIndex?'active':''}`; d.onclick=()=>switchCard(i); c.appendChild(d); }); }
     </script>
 </body>
 </html>
