@@ -1,109 +1,135 @@
-// worker.js - 結合後台管理的 LINE Bot
+// worker.js - 終極版 (支援文字 + 圖片卡片 + 紅色按鈕)
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // --- 1. 處理跨網域 (CORS) ---
-    // 這段是為了讓你的 admin.html 可以順利連線到這裡
+    // 1. CORS 設定
     if (request.method === "OPTIONS") {
       return new Response(null, {
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         },
       });
     }
 
-    // --- 2. 儲存設定的 API (給 admin.html 用) ---
+    // 2. 儲存 API
     if (url.pathname === '/save' && request.method === 'POST') {
       try {
         const data = await request.json();
-        
-        // 簡單驗證密碼 (預設 1234)
-        if (data.password !== "1234") {
-           return new Response("密碼錯誤", { status: 403, headers: corsHeaders() });
-        }
+        if (data.password !== "1234") return new Response("密碼錯誤", { status: 403, headers: corsHeaders() });
 
-        // 存入 Cloudflare KV (使用你的 'DB' 綁定)
-        // Key 是關鍵字，Value 是按鈕設定
-        await env.DB.put(data.keyword, JSON.stringify(data.buttons));
-
-        return new Response("儲存成功！", { status: 200, headers: corsHeaders() });
+        // 存入所有資料 (文字、卡片、按鈕)
+        await env.DB.put(data.keyword, JSON.stringify(data));
+        return new Response("儲存成功", { status: 200, headers: corsHeaders() });
       } catch (e) {
-        return new Response("儲存失敗: " + e.message, { status: 500, headers: corsHeaders() });
+        return new Response("錯誤: " + e.message, { status: 500, headers: corsHeaders() });
       }
     }
 
-    // --- 3. LINE Webhook (處理訊息) ---
+    // 3. LINE Webhook
     if (request.method === 'POST') {
       try {
         const body = await request.json();
         const events = body.events;
-        
         for (const event of events) {
-          // 只處理文字訊息
           if (event.type === 'message' && event.message.type === 'text') {
             await handleMessage(event, env);
           }
         }
         return new Response('OK', { status: 200 });
-      } catch (e) {
-        return new Response('Error: ' + e.message, { status: 500 });
-      }
+      } catch (e) { return new Response('Error', { status: 500 }); }
     }
 
-    return new Response('Bot is running!', { status: 200 });
+    return new Response('API Running', { status: 200 });
   },
 };
 
-// 輔助函式：CORS 表頭
 function corsHeaders() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Content-Type": "text/plain;charset=UTF-8"
-  };
+  return { "Access-Control-Allow-Origin": "*", "Content-Type": "text/plain" };
 }
 
-// 處理訊息的核心邏輯
 async function handleMessage(event, env) {
   const userText = event.message.text.trim();
-
-  // 1. 去 KV 資料庫找有沒有符合的關鍵字
-  const storedData = await env.DB.get(userText);
+  const storedData = await env.DB.get(userText); 
 
   if (storedData) {
-    // 2. 如果有找到，就產生 Quick Reply
-    const buttons = JSON.parse(storedData);
-    
-    const quickReplyItems = buttons.map(btn => ({
-      type: "action",
-      action: {
-        type: "message",
-        label: btn.label.substring(0, 20), // 標籤限制 20 字
-        text: btn.text
-      }
-    }));
+    const data = JSON.parse(storedData);
+    const messages = [];
 
-    // 準備回覆內容
-    const replyPayload = {
-      replyToken: event.replyToken,
-      messages: [{
-        type: "text",
-        text: `【${userText}】相關選單：`, // 主訊息文字
-        quickReply: { items: quickReplyItems }
-      }]
-    };
+    // --- 1. 準備文字訊息 ---
+    if (data.replyText) {
+      messages.push({ type: "text", text: data.replyText });
+    }
+
+    // --- 2. 準備圖片卡片 (Flex Message Carousel) ---
+    if (data.cards && data.cards.length > 0) {
+      const bubbles = data.cards.map(card => ({
+        type: "bubble",
+        size: "micro", // 卡片大小
+        hero: {
+          type: "image",
+          url: card.img,
+          size: "full",
+          aspectMode: "cover",
+          aspectRatio: "320:213", // 圖片比例
+          action: { type: "uri", uri: card.link } // 點圖片開啟連結
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: card.title || "點擊查看詳情",
+              weight: "bold",
+              size: "xs",
+              wrap: true
+            }
+          ],
+          paddingAll: "sm"
+        },
+        action: { type: "uri", uri: card.link } // 點整張卡都開啟連結
+      }));
+
+      messages.push({
+        type: "flex",
+        altText: "查看推薦清單",
+        contents: {
+          type: "carousel",
+          contents: bubbles
+        }
+      });
+    }
+
+    // --- 3. 準備紅色按鈕 (Quick Reply) ---
+    // LINE 規定 Quick Reply 必須掛在「最後一則」訊息上
+    if (data.buttons && data.buttons.length > 0 && messages.length > 0) {
+      const lastMsgIndex = messages.length - 1;
+      messages[lastMsgIndex].quickReply = {
+        items: data.buttons.map(btn => ({
+          type: "action",
+          action: { type: "message", label: btn.label.substring(0, 20), text: btn.text }
+        }))
+      };
+    }
+
+    // 如果沒有任何訊息就不發送
+    if (messages.length === 0) return;
 
     // 發送給 LINE
     await fetch('https://api.line.me/v2/bot/message/reply', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${env.CHANNEL_ACCESS_TOKEN}` // 記得去 Cloudflare 設定這個變數
+        'Authorization': `Bearer ${env.CHANNEL_ACCESS_TOKEN}`
       },
-      body: JSON.stringify(replyPayload)
+      body: JSON.stringify({
+        replyToken: event.replyToken,
+        messages: messages
+      })
     });
   }
 }
