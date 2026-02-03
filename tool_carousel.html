@@ -1,186 +1,292 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <title>滑動卡片編輯器 (Imgur版)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>.area-box { position: absolute; border: 2px solid red; background: rgba(255,0,0,0.2); cursor: pointer; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center; }</style>
+<meta charset="UTF-8">
+<title>滑動卡片編輯器 (Imgur 穩定版)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.area-box{
+  position:absolute;
+  border:2px solid red;
+  background:rgba(255,0,0,.25);
+  color:white;
+  font-weight:bold;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+}
+</style>
 </head>
-<body class="bg-slate-100 flex flex-col h-screen text-slate-800">
-    <div class="bg-white shadow p-4 z-10 flex justify-between items-center">
-        <h1 class="font-bold text-xl text-amber-600 flex items-center gap-2">
-            <a href="index.html" class="text-2xl hover:bg-slate-50 rounded px-1">🔙</a> 滑動卡片編輯器
-        </h1>
-        <div class="flex gap-2 text-sm">
-            <input id="workerUrl" placeholder="Worker網址" class="border px-2 rounded w-48 bg-yellow-50">
-            <input id="keyword" placeholder="設定此卡片的關鍵字" class="border px-2 rounded font-bold w-40 border-amber-500">
-            <button onclick="load()" class="bg-gray-500 text-white px-3 rounded hover:bg-gray-600">讀取</button>
-            <button onclick="save()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700">儲存</button>
-            <button onclick="resetImgur()" class="text-xs text-gray-400 underline ml-2">重設 ID</button>
-        </div>
+
+<body class="bg-slate-100 flex flex-col h-screen">
+
+<!-- ===== Header ===== -->
+<div class="bg-white shadow p-4 flex justify-between items-center">
+  <h1 class="font-bold text-xl text-amber-600">滑動卡片編輯器</h1>
+  <div class="flex gap-2 text-sm">
+    <input id="workerUrl" placeholder="https://xxxx.workers.dev"
+      class="border px-2 rounded w-56 bg-yellow-50">
+    <input id="keyword" placeholder="觸發關鍵字"
+      class="border px-2 rounded w-40 font-bold border-amber-500">
+    <button onclick="load()" class="bg-gray-500 text-white px-3 rounded">讀取</button>
+    <button onclick="save()" class="bg-green-600 text-white px-3 rounded">儲存</button>
+  </div>
+</div>
+
+<div class="flex flex-1 overflow-hidden">
+
+<!-- ===== 左側卡片列表 ===== -->
+<div class="w-72 bg-white border-r p-4 overflow-y-auto">
+  <button onclick="addCard()"
+    class="w-full mb-3 py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded">
+    + 新增卡片
+  </button>
+  <div id="cardList" class="space-y-2"></div>
+</div>
+
+<!-- ===== 編輯區 ===== -->
+<div class="flex-1 bg-slate-200 flex justify-center items-start p-8 relative overflow-auto">
+  <div id="editor" class="hidden bg-white shadow rounded w-[320px]">
+    <div class="relative">
+      <img id="preview" class="w-full h-[220px] object-cover bg-gray-100">
+      <button onclick="uploadImg(currentIdx,this)"
+        class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+        上傳圖片
+      </button>
+      <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
     </div>
+    <div class="p-2 text-xs text-gray-500 text-center">在圖片上拖曳設定點擊區</div>
+  </div>
+  <div id="emptyState" class="text-gray-400 mt-20">← 請先新增卡片</div>
+</div>
 
-    <div class="flex flex-1 overflow-hidden">
-        <div class="w-72 bg-white border-r p-4 overflow-y-auto flex flex-col gap-2">
-            <div class="bg-amber-50 p-2 rounded text-xs text-amber-800 mb-2">
-                <strong>⚡ 穩定模式：</strong><br>使用 Imgur 伺服器，上傳成功率 100%。
-            </div>
-            <h3 class="font-bold mb-2">卡片清單</h3>
-            <div id="cardList" class="space-y-2"></div>
-            <button onclick="addCard()" class="w-full mt-2 py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded hover:bg-amber-50">+ 新增卡片</button>
-        </div>
-        
-        <div class="flex-1 bg-slate-200 p-8 flex justify-center overflow-auto relative items-start">
-            <div id="editor" class="hidden bg-white shadow-xl rounded-lg overflow-hidden w-[320px] flex-shrink-0 self-start">
-                <div class="relative group">
-                    <img id="preview" class="w-full h-[220px] object-cover bg-gray-100">
-                    <button onclick="uploadImg(currentIdx, this)" class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">📷 上傳到 Imgur</button>
-                    <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
-                </div>
-                <div class="p-4 bg-gray-50 text-center">
-                    <p class="text-xs text-gray-500">👇 在圖片上拖曳畫框設定點擊</p>
-                </div>
-            </div>
-            <div id="emptyState" class="text-slate-400 mt-20 flex flex-col items-center">
-                <span class="text-4xl mb-2">👈</span><span>請從左側新增或選擇卡片</span>
-            </div>
-        </div>
-    </div>
-    <input type="file" id="fileInput" hidden>
+</div>
 
-    <script>
-        let cards = []; let currentIdx = -1; let isDrawing=false, startX, startY;
+<input type="file" id="fileInput" hidden>
 
-        window.onload = function() {
-            const savedUrl = localStorage.getItem('line_worker_url');
-            if(savedUrl) document.getElementById('workerUrl').value = savedUrl;
-        }
+<script>
+/* ================= 工具 ================= */
+function normalizeWorkerUrl(raw){
+  if(!raw) return '';
+  let s = raw.trim();
+  if(!/^https?:\/\//i.test(s)) s = 'https://' + s;
+  return s.replace(/\/+$/,'');
+}
 
-        function addCard() { cards.push({url:'', areas:[]}); renderList(); selectCard(cards.length-1); }
-        
-        function renderList() {
-            const c=document.getElementById('cardList'); c.innerHTML='';
-            cards.forEach((card,i)=>{
-                c.innerHTML += `
-                <div class="p-3 border rounded transition ${i===currentIdx?'bg-amber-50 border-amber-500 shadow-sm':'hover:bg-gray-50'}">
-                    <div class="flex justify-between items-center mb-2" onclick="selectCard(${i})">
-                        <span class="font-bold text-sm cursor-pointer">卡片 ${i+1}</span>
-                        <button onclick="cards.splice(${i},1);renderList();selectCard(-1);" class="text-red-400 font-bold px-1">✕</button>
-                    </div>
-                    ${card.url ? `<img src="${card.url}" class="w-full h-16 object-cover rounded mb-2 border">` : '<div class="w-full h-16 bg-gray-100 text-xs flex items-center justify-center text-gray-400 mb-2">無圖片</div>'}
-                    <button onclick="uploadImg(${i}, this)" class="w-full bg-amber-500 text-white text-xs py-1 rounded hover:bg-amber-600">上傳圖片</button>
-                </div>`;
-            });
-        }
+async function postJSON(url,data){
+  const res = await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
+  });
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error(`HTTP ${res.status}\n${t}`);
+  }
+  const ct = res.headers.get('content-type')||'';
+  return ct.includes('json') ? res.json() : res.text();
+}
 
-        function selectCard(i) {
-            currentIdx = i;
-            const div = document.getElementById('editor'); const img = document.getElementById('preview'); const empty = document.getElementById('emptyState');
-            if(i===-1 || !cards[i]) { div.classList.add('hidden'); empty.classList.remove('hidden'); return; }
-            div.classList.remove('hidden'); empty.classList.add('hidden');
-            img.src = cards[i].url || 'https://via.placeholder.com/320x220?text=Upload+to+Imgur';
-            renderAreas();
-        }
+/* ================= 狀態 ================= */
+let cards=[], currentIdx=-1;
+let isDrawing=false,startX,startY;
 
-        // ★★★ Imgur 上傳 ★★★
-        function getImgurClientId() {
-            let id = localStorage.getItem('imgur_client_id');
-            if (!id) {
-                id = prompt("請輸入 Imgur Client ID (測試用: 546c25a59c58ad7)", "546c25a59c58ad7");
-                if (id) localStorage.setItem('imgur_client_id', id);
-            }
-            return id;
-        }
-        function resetImgur() { localStorage.removeItem('imgur_client_id'); alert("已重置"); }
+/* ================= 初始化 ================= */
+window.onload=()=>{
+  const u=localStorage.getItem('line_worker_url');
+  if(u) document.getElementById('workerUrl').value=u;
+};
 
-        function uploadImg(idx, btn) {
-            const clientId = getImgurClientId();
-            if (!clientId) return alert("未輸入 ID");
+/* ================= 卡片 ================= */
+function addCard(){
+  cards.push({url:'',areas:[]});
+  renderList();
+  selectCard(cards.length-1);
+}
 
-            document.getElementById('fileInput').onchange = async(e)=>{
-                const file=e.target.files[0]; if(!file) return;
-                const oldText = btn ? btn.innerText : 'Upload';
-                if(btn) btn.innerText = "⏳ 上傳中...";
+function renderList(){
+  const c=document.getElementById('cardList');
+  c.innerHTML='';
+  cards.forEach((card,i)=>{
+    c.innerHTML+=`
+    <div class="p-2 border rounded ${i===currentIdx?'bg-amber-50 border-amber-500':''}">
+      <div class="flex justify-between mb-1">
+        <span onclick="selectCard(${i})" class="font-bold cursor-pointer">卡片 ${i+1}</span>
+        <button onclick="cards.splice(${i},1);renderList();selectCard(-1)" class="text-red-500">✕</button>
+      </div>
+      ${card.url
+        ? `<img src="${card.url}" class="w-full h-16 object-cover rounded mb-1">`
+        : `<div class="h-16 bg-gray-100 text-xs flex items-center justify-center">無圖片</div>`
+      }
+      <button onclick="uploadImg(${i},this)"
+        class="w-full bg-amber-500 text-white text-xs py-1 rounded">
+        上傳圖片
+      </button>
+    </div>`;
+  });
+}
 
-                const formData = new FormData();
-                formData.append('image', file);
+function selectCard(i){
+  currentIdx=i;
+  const ed=document.getElementById('editor');
+  const em=document.getElementById('emptyState');
+  if(i<0||!cards[i]){
+    ed.classList.add('hidden');
+    em.classList.remove('hidden');
+    return;
+  }
+  ed.classList.remove('hidden');
+  em.classList.add('hidden');
+  document.getElementById('preview').src =
+    cards[i].url || 'https://via.placeholder.com/320x220?text=Upload';
+  renderAreas();
+}
 
-                try {
-                    const res = await fetch('https://api.imgur.com/3/image', {
-                        method:'POST',
-                        headers: { 'Authorization': 'Client-ID ' + clientId },
-                        body: formData
-                    });
-                    const json=await res.json();
-                    
-                    if(json.success) {
-                        cards[idx].url = json.data.link;
-                        renderList(); selectCard(idx);
-                    } else alert('上傳失敗');
-                } catch(e) { console.error(e); alert('上傳錯誤'); }
-                if(btn) btn.innerText = oldText;
-            };
-            document.getElementById('fileInput').click();
-        }
+/* ================= Imgur ================= */
+function getImgurClientId(){
+  let id=localStorage.getItem('imgur_client_id');
+  if(!id){
+    id=prompt('Imgur Client ID','546c25a59c58ad7');
+    if(id) localStorage.setItem('imgur_client_id',id);
+  }
+  return id;
+}
 
-        const layer = document.getElementById('drawLayer');
-        layer.onmousedown = e => { isDrawing=true; const r=layer.getBoundingClientRect(); startX=e.clientX-r.left; startY=e.clientY-r.top; }
-        layer.onmouseup = e => {
-            if(!isDrawing) return; isDrawing=false;
-            const r=layer.getBoundingClientRect();
-            const w=Math.abs(e.clientX-r.left-startX); const h=Math.abs(e.clientY-r.top-startY);
-            if(w>10&&h>10) {
-                const type = prompt("類型? (text=文字, link=網頁)", "text");
-                const txt = prompt("內容? (關鍵字 或 網址)");
-                if(txt) {
-                    cards[currentIdx].areas.push({
-                        x: Math.min(startX, e.clientX-r.left)/r.width,
-                        y: Math.min(startY, e.clientY-r.top)/r.height,
-                        w: w/r.width, h: h/r.height,
-                        text: txt, type: type==='link'?'uri':'message'
-                    });
-                    renderAreas();
-                }
-            }
-        }
-        function renderAreas() {
-            layer.innerHTML=''; if(currentIdx===-1) return;
-            cards[currentIdx].areas.forEach((a,i)=>{
-                const d=document.createElement('div'); d.className='area-box';
-                d.style.left=(a.x*100)+'%'; d.style.top=(a.y*100)+'%'; d.style.width=(a.w*100)+'%'; d.style.height=(a.h*100)+'%';
-                d.innerText=i+1;
-                d.onclick=e=>{e.stopPropagation(); if(confirm('刪除?')) { cards[currentIdx].areas.splice(i,1); renderAreas(); } }
-                layer.appendChild(d);
-            });
-        }
+function uploadImg(idx,btn){
+  const cid=getImgurClientId();
+  if(!cid) return;
+  fileInput.onchange=async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const fd=new FormData(); fd.append('image',f);
+    btn.innerText='上傳中...';
+    const r=await fetch('https://api.imgur.com/3/image',{
+      method:'POST',
+      headers:{Authorization:'Client-ID '+cid},
+      body:fd
+    });
+    const j=await r.json();
+    if(j.success){
+      cards[idx].url=j.data.link;
+      renderList(); selectCard(idx);
+    }else alert('Imgur 上傳失敗');
+    btn.innerText='上傳圖片';
+  };
+  fileInput.click();
+}
 
-        async function save() {
-            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value;
-            if(!url || !key) return alert('資料不全');
-            const bubbles = cards.map(c => ({
-                type: "bubble", body: { type: "box", layout: "overlap", paddingAll: "0px", contents: [{ type: "image", url: c.url, size: "full", aspectMode: "cover" }, ...c.areas.map(a => ({ type: "box", layout: "vertical", position: "absolute", offsetStart: (a.x*100)+'%', offsetTop: (a.y*100)+'%', width: (a.w*100)+'%', height: (a.h*100)+'%', action: { type: a.type, label: 'action', text: a.type==='message'?a.text:undefined, uri: a.type==='uri'?a.text:undefined } }))] }
-            }));
-            const payload = { mode: 'carousel', messages: [{ type: "flex", altText: "卡片選單", contents: { type: "carousel", contents: bubbles } }] };
-            try {
-                const res = await fetch(url+'/save', { method:'POST', body:JSON.stringify({password:'1234', keyword:key, payload}) });
-                if(res.ok) alert('儲存成功！'); else alert('失敗');
-            } catch(e) { alert('連線錯誤'); }
-        }
+/* ================= 畫區 ================= */
+const layer=document.getElementById('drawLayer');
+layer.onmousedown=e=>{
+  isDrawing=true;
+  const r=layer.getBoundingClientRect();
+  startX=e.clientX-r.left;
+  startY=e.clientY-r.top;
+};
+layer.onmouseup=e=>{
+  if(!isDrawing) return;
+  isDrawing=false;
+  const r=layer.getBoundingClientRect();
+  const w=Math.abs(e.clientX-r.left-startX);
+  const h=Math.abs(e.clientY-r.top-startY);
+  if(w<10||h<10) return;
+  const type=prompt('text 或 link','text');
+  const txt=prompt('內容');
+  if(!txt) return;
+  cards[currentIdx].areas.push({
+    x:Math.min(startX,e.clientX-r.left)/r.width,
+    y:Math.min(startY,e.clientY-r.top)/r.height,
+    w:w/r.width,h:h/r.height,
+    type:type==='link'?'uri':'message',
+    text:txt
+  });
+  renderAreas();
+};
 
-        async function load() {
-            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value;
-            try {
-                const res = await fetch(url+'/load', { method:'POST', body:JSON.stringify({password:'1234', keyword:key}) });
-                if(res.ok) {
-                    const data = await res.json();
-                    if(data.messages && data.messages[0].contents.type === 'carousel') {
-                        cards = data.messages[0].contents.contents.map(b => ({ url: b.body.contents[0].url, areas: [] }));
-                        alert('讀取成功');
-                    }
-                    renderList(); selectCard(0);
-                } else alert('無資料');
-            } catch(e) { alert('錯誤'); }
-        }
-    </script>
+function renderAreas(){
+  layer.innerHTML='';
+  if(currentIdx<0) return;
+  cards[currentIdx].areas.forEach((a,i)=>{
+    const d=document.createElement('div');
+    d.className='area-box';
+    d.style.left=a.x*100+'%';
+    d.style.top=a.y*100+'%';
+    d.style.width=a.w*100+'%';
+    d.style.height=a.h*100+'%';
+    d.innerText=i+1;
+    d.onclick=e=>{
+      e.stopPropagation();
+      if(confirm('刪除?')){
+        cards[currentIdx].areas.splice(i,1);
+        renderAreas();
+      }
+    };
+    layer.appendChild(d);
+  });
+}
+
+/* ================= 儲存 / 讀取 ================= */
+async function save(){
+  const raw=document.getElementById('workerUrl').value;
+  const key=document.getElementById('keyword').value;
+  const url=normalizeWorkerUrl(raw);
+  if(!url||!key) return alert('資料不全');
+  localStorage.setItem('line_worker_url',url);
+
+  const bubbles=cards.map(c=>({
+    type:'bubble',
+    body:{
+      type:'box',layout:'overlap',paddingAll:'0px',
+      contents:[
+        {type:'image',url:c.url,size:'full',aspectMode:'cover'},
+        ...c.areas.map(a=>({
+          type:'box',layout:'vertical',position:'absolute',
+          offsetStart:a.x*100+'%',offsetTop:a.y*100+'%',
+          width:a.w*100+'%',height:a.h*100+'%',
+          action:{
+            type:a.type,label:'action',
+            text:a.type==='message'?a.text:undefined,
+            uri:a.type==='uri'?a.text:undefined
+          }
+        }))
+      ]
+    }
+  }));
+
+  try{
+    await postJSON(url+'/save',{
+      password:'1234',
+      keyword:key,
+      payload:{
+        mode:'carousel',
+        messages:[{type:'flex',altText:'卡片選單',
+          contents:{type:'carousel',contents:bubbles}}]
+      }
+    });
+    alert('儲存成功');
+  }catch(e){
+    alert('失敗：\n'+e.message);
+  }
+}
+
+async function load(){
+  const raw=document.getElementById('workerUrl').value;
+  const key=document.getElementById('keyword').value;
+  const url=normalizeWorkerUrl(raw);
+  if(!url||!key) return alert('資料不全');
+
+  try{
+    const data=await postJSON(url+'/load',{password:'1234',keyword:key});
+    const obj=typeof data==='string'?JSON.parse(data):data;
+    cards=obj.messages[0].contents.contents.map(b=>({
+      url:b.body.contents[0].url,areas:[]
+    }));
+    renderList(); selectCard(0);
+    alert('讀取成功');
+  }catch(e){
+    alert('失敗：\n'+e.message);
+  }
+}
+</script>
 </body>
 </html>
