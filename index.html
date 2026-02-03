@@ -44,7 +44,8 @@
 
         <div class="grid grid-cols-2 gap-4">
             <!-- 新增：LIFF 手機預覽抽屜版 -->
-            <a href="liff_popup_imagemap.html"
+            <a href="javascript:void(0)"
+               onclick="openTool('liff_popup_imagemap.html')"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-blue-700 p-4 text-white shadow-lg transition hover:scale-105">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">📱</span>
@@ -56,7 +57,8 @@
             </a>
 
             <!-- 原本：引流圖工具 -->
-            <a href="tool_imagemap.html"
+            <a href="javascript:void(0)"
+               onclick="openTool('tool_imagemap.html')"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white shadow-lg transition hover:scale-105">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">🗺️</span>
@@ -67,7 +69,8 @@
                 </div>
             </a>
 
-            <a href="tool_carousel.html"
+            <a href="javascript:void(0)"
+               onclick="openTool('tool_carousel.html')"
                class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 p-3 text-white shadow-lg transition hover:scale-105">
                 <div class="text-left">
                     <span class="text-2xl block mb-1">🎠</span>
@@ -76,7 +79,8 @@
                 </div>
             </a>
 
-            <a href="tool_flow.html"
+            <a href="javascript:void(0)"
+               onclick="openTool('tool_flow.html')"
                class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white shadow-lg transition hover:scale-105">
                 <div class="text-left">
                     <span class="text-2xl block mb-1">🔀</span>
@@ -85,7 +89,9 @@
                 </div>
             </a>
 
-            <a href="tool_quickreply.html"
+            <!-- ✅ 原本名稱就是 tool_quickreply.html -->
+            <a href="javascript:void(0)"
+               onclick="openTool('tool_quickreply.html')"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-red-500 to-rose-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-red-300">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">🔴</span>
@@ -115,6 +121,21 @@
 
         function saveLiffId(val) {
             localStorage.setItem('line_liff_id', (val || '').trim());
+        }
+
+        // ✅ 新增：所有工具入口先檢查 Worker URL
+        function openTool(page) {
+            const url = (localStorage.getItem('line_worker_url') || '').trim();
+            if (!url) {
+                alert('請先在首頁輸入 Worker 網址，才能進入工具頁！');
+                document.getElementById('globalWorkerUrl').focus();
+                return;
+            }
+            // 順便把當下 input 再存一次（避免使用者只打在框裡沒觸發儲存）
+            const inputVal = (document.getElementById('globalWorkerUrl').value || '').trim();
+            if (inputVal) localStorage.setItem('line_worker_url', inputVal);
+
+            window.location.href = page;
         }
 
         async function copyLiffUrl() {
