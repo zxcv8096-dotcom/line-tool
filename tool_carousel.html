@@ -2,74 +2,143 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>滑動卡片編輯器 (R2版)</title>
+<title>滑動卡片編輯器 (R2 壓縮版)</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-.area-box{
-  position:absolute;
-  border:2px solid red;
-  background:rgba(255,0,0,.25);
-  color:white;
-  font-weight:bold;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  cursor:pointer;
-}
+  .area-box{
+    position:absolute;
+    border:2px solid rgba(255,0,0,.9);
+    background:rgba(255,0,0,.25);
+    color:white;
+    font-weight:800;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    user-select:none;
+    text-shadow:0 1px 2px rgba(0,0,0,.9);
+  }
+  .draw-rect{
+    position:absolute;
+    border:2px dashed rgba(0,0,0,.6);
+    background:rgba(0,0,0,.10);
+    pointer-events:none;
+  }
 </style>
 </head>
 
-<body class="bg-slate-100 flex flex-col h-screen">
+<body class="bg-slate-100 flex flex-col h-screen text-slate-800">
+  <!-- Header -->
+  <div class="bg-white shadow p-4 flex justify-between items-center">
+    <h1 class="font-bold text-xl text-amber-600 flex items-center gap-2">
+      <a href="index.html" class="text-2xl hover:bg-slate-50 rounded px-1">🔙</a>
+      滑動卡片編輯器 (R2 壓縮版)
+    </h1>
 
-<div class="bg-white shadow p-4 flex justify-between items-center">
-  <h1 class="font-bold text-xl text-amber-600">滑動卡片編輯器 (R2)</h1>
-  <div class="flex gap-2 text-sm">
-    <input id="workerUrl" placeholder="https://xxxx.workers.dev"
-      class="border px-2 rounded w-56 bg-yellow-50">
-    <input id="keyword" placeholder="觸發關鍵字"
-      class="border px-2 rounded w-40 font-bold border-amber-500">
-    <button onclick="load()" class="bg-gray-500 text-white px-3 rounded">讀取</button>
-    <button onclick="save()" class="bg-green-600 text-white px-3 rounded">儲存</button>
-  </div>
-</div>
-
-<div class="flex flex-1 overflow-hidden">
-
-  <div class="w-72 bg-white border-r p-4 overflow-y-auto">
-    <button onclick="addCard()"
-      class="w-full mb-3 py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded">
-      + 新增卡片
-    </button>
-    <div id="cardList" class="space-y-2"></div>
-  </div>
-
-  <div class="flex-1 bg-slate-200 flex justify-center items-start p-8 relative overflow-auto">
-    <div id="editor" class="hidden bg-white shadow rounded w-[320px]">
-      <div class="relative">
-        <img id="preview" class="w-full h-[220px] object-cover bg-gray-100">
-        <button onclick="uploadImg(currentIdx,this)"
-          class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-          上傳圖片到 R2
-        </button>
-        <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
-      </div>
-      <div class="p-2 text-xs text-gray-500 text-center">在圖片上拖曳設定點擊區</div>
+    <div class="flex gap-2 text-sm items-center">
+      <input id="workerUrl" placeholder="https://xxxx.workers.dev"
+        class="border px-2 rounded w-60 bg-yellow-50">
+      <input id="keyword" placeholder="觸發關鍵字"
+        class="border px-2 rounded font-bold w-44 border-amber-500">
+      <button onclick="load()" class="bg-gray-500 text-white px-3 rounded hover:bg-gray-600">讀取</button>
+      <button onclick="save()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700">儲存</button>
     </div>
-    <div id="emptyState" class="text-gray-400 mt-20">← 請先新增卡片</div>
   </div>
 
-</div>
+  <div class="flex flex-1 overflow-hidden">
+    <!-- 左側：卡片清單 -->
+    <div class="w-72 bg-white border-r p-4 overflow-y-auto flex flex-col gap-3">
+      <div class="bg-amber-50 p-2 rounded text-xs text-amber-800">
+        <strong>操作：</strong><br>
+        1. 新增卡片 → 上傳圖片（會自動壓縮）<br>
+        2. 在圖片上拖曳畫框（不限數量）<br>
+        3. 右側清單填入「關鍵字或網址」
+      </div>
+      <button onclick="addCard()"
+        class="w-full py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded hover:bg-amber-50">
+        + 新增卡片
+      </button>
+      <div id="cardList" class="space-y-2"></div>
+    </div>
 
-<input type="file" id="fileInput" accept="image/*" hidden>
+    <!-- 中間：圖片編輯 -->
+    <div class="flex-1 bg-slate-200 p-6 flex justify-center overflow-auto relative items-start">
+      <div id="editorWrap" class="hidden w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
+        <!-- 左：區塊輸入清單 -->
+        <div class="bg-white rounded-lg shadow p-4 h-fit">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-bold text-slate-700">框框設定</div>
+            <button onclick="clearAreas()" class="text-xs text-red-600 underline">清空本卡全部框</button>
+          </div>
+
+          <div class="border rounded p-3 mb-3 bg-slate-50">
+            <div class="font-bold text-xs text-slate-600 mb-2">圖片壓縮設定（上傳時生效）</div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <label class="flex flex-col gap-1">
+                <span class="text-slate-500">最大寬</span>
+                <select id="maxWidth" class="border rounded px-2 py-1">
+                  <option value="960">960</option>
+                  <option value="1280" selected>1280</option>
+                  <option value="1600">1600</option>
+                  <option value="2048">2048</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-slate-500">格式</span>
+                <select id="outFormat" class="border rounded px-2 py-1">
+                  <option value="image/webp" selected>WebP（推薦）</option>
+                  <option value="image/jpeg">JPEG</option>
+                  <option value="image/png">PNG（不建議）</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-1 col-span-2">
+                <span class="text-slate-500">品質（0.5～0.95）</span>
+                <input id="quality" type="range" min="0.5" max="0.95" step="0.01" value="0.82">
+                <div class="text-right text-[11px] text-slate-500">目前：<span id="qVal">0.82</span></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="text-xs text-slate-500 mb-2">
+            你可以一直畫框；每畫一個就會新增一條設定。
+          </div>
+
+          <div id="areaList" class="space-y-2"></div>
+        </div>
+
+        <!-- 右：圖片畫框區 -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="relative group">
+            <img id="preview" class="w-full h-[520px] object-cover bg-gray-100">
+            <button onclick="uploadImg(currentIdx, this)"
+              class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+              📷 上傳圖片到 R2（壓縮）
+            </button>
+            <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
+          </div>
+          <div class="p-3 bg-gray-50 text-center text-xs text-gray-600">
+            在圖片上「按住拖曳」畫框。點紅框可刪除。
+          </div>
+        </div>
+      </div>
+
+      <div id="emptyState" class="text-slate-400 mt-20 flex flex-col items-center">
+        <span class="text-4xl mb-2">👈</span>
+        <span>請從左側新增或選擇卡片</span>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" hidden>
 
 <script>
+/* ---------- 共用工具 ---------- */
 function normalizeWorkerUrl(raw){
   if(!raw) return '';
   let s = raw.trim();
   if(!/^https?:\/\//i.test(s)) s = 'https://' + s;
   return s.replace(/\/+$/,'');
 }
-
 async function postJSON(url,data){
   const res = await fetch(url,{
     method:'POST',
@@ -83,11 +152,9 @@ async function postJSON(url,data){
   const ct = res.headers.get('content-type')||'';
   return ct.includes('json') ? res.json() : res.text();
 }
-
-async function uploadToR2(workerBaseUrl, file){
+async function uploadToR2(workerBaseUrl, fileBlob, filename){
   const form = new FormData();
-  form.append('file', file);
-
+  form.append('file', fileBlob, filename || 'image.webp');
   const res = await fetch(workerBaseUrl + '/upload', { method:'POST', body: form });
   if(!res.ok){
     const t = await res.text().catch(()=> '');
@@ -98,204 +165,424 @@ async function uploadToR2(workerBaseUrl, file){
   return j.url;
 }
 
-/* state */
-let cards=[], currentIdx=-1;
-let isDrawing=false,startX,startY;
+/* ---------- 壓縮 ---------- */
+async function compressImage(file, {maxWidth, mime, quality}){
+  // PNG 也可輸出，但通常不會變小；預設用 webp/jpg
+  const img = await createImageBitmap(file);
+  const scale = Math.min(1, maxWidth / img.width);
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
 
-window.onload=()=>{
-  const u=localStorage.getItem('line_worker_url');
-  if(u) document.getElementById('workerUrl').value=u;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const outBlob = await new Promise((resolve) => {
+    if (mime === 'image/png') {
+      canvas.toBlob(resolve, mime); // png 不吃 quality
+    } else {
+      canvas.toBlob(resolve, mime, quality);
+    }
+  });
+
+  if(!outBlob) throw new Error('壓縮失敗（toBlob 回傳空）');
+
+  const ext = (mime === 'image/webp') ? 'webp' : (mime === 'image/jpeg') ? 'jpg' : 'png';
+  const safeName = (file.name || 'image').replace(/\.[^/.]+$/, '');
+  return { blob: outBlob, filename: `${safeName}.${ext}`, w, h };
+}
+
+/* ---------- 狀態 ---------- */
+let cards = []; // {url:'', areas:[{x,y,w,h,type,text}]}
+let currentIdx = -1;
+
+window.onload = () => {
+  const savedUrl = localStorage.getItem('line_worker_url');
+  if(savedUrl) document.getElementById('workerUrl').value = savedUrl;
+
+  const q = document.getElementById('quality');
+  const qVal = document.getElementById('qVal');
+  q.addEventListener('input', () => qVal.textContent = q.value);
 };
 
+/* ---------- 卡片 ---------- */
 function addCard(){
-  cards.push({url:'',areas:[]});
+  cards.push({ url:'', areas:[] });
   renderList();
-  selectCard(cards.length-1);
+  selectCard(cards.length - 1);
 }
-
 function renderList(){
-  const c=document.getElementById('cardList');
-  c.innerHTML='';
-  cards.forEach((card,i)=>{
-    c.innerHTML+=`
-    <div class="p-2 border rounded ${i===currentIdx?'bg-amber-50 border-amber-500':''}">
-      <div class="flex justify-between mb-1">
-        <span onclick="selectCard(${i})" class="font-bold cursor-pointer">卡片 ${i+1}</span>
-        <button onclick="cards.splice(${i},1);renderList();selectCard(-1)" class="text-red-500">✕</button>
+  const c = document.getElementById('cardList');
+  c.innerHTML = '';
+  cards.forEach((card, i) => {
+    const selected = i === currentIdx;
+    c.innerHTML += `
+      <div class="p-3 border rounded transition ${selected?'bg-amber-50 border-amber-500 shadow-sm':'hover:bg-gray-50'}">
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-bold text-sm cursor-pointer" onclick="selectCard(${i})">卡片 ${i+1}</span>
+          <button class="text-red-500 font-bold px-1"
+            onclick="event.stopPropagation();cards.splice(${i},1);renderList();selectCard(${Math.max(-1, i-1)});">✕</button>
+        </div>
+        ${card.url
+          ? `<img src="${card.url}" class="w-full h-16 object-cover rounded mb-2 border">`
+          : `<div class="w-full h-16 bg-gray-100 text-xs flex items-center justify-center text-gray-400 mb-2">無圖片</div>`
+        }
+        <button onclick="uploadImg(${i}, this)" class="w-full bg-amber-500 text-white text-xs py-1 rounded hover:bg-amber-600">
+          上傳圖片到 R2（壓縮）
+        </button>
+        <div class="mt-1 text-[10px] text-gray-500 text-right">熱區: ${card.areas.length}</div>
       </div>
-      ${card.url
-        ? `<img src="${card.url}" class="w-full h-16 object-cover rounded mb-1">`
-        : `<div class="h-16 bg-gray-100 text-xs flex items-center justify-center">無圖片</div>`
-      }
-      <button onclick="uploadImg(${i},this)"
-        class="w-full bg-amber-500 text-white text-xs py-1 rounded">
-        上傳圖片到 R2
-      </button>
-    </div>`;
+    `;
   });
 }
-
 function selectCard(i){
-  currentIdx=i;
-  const ed=document.getElementById('editor');
-  const em=document.getElementById('emptyState');
-  if(i<0||!cards[i]){
-    ed.classList.add('hidden');
-    em.classList.remove('hidden');
+  currentIdx = i;
+
+  const wrap = document.getElementById('editorWrap');
+  const empty = document.getElementById('emptyState');
+  if(i === -1 || !cards[i]){
+    wrap.classList.add('hidden');
+    empty.classList.remove('hidden');
     return;
   }
-  ed.classList.remove('hidden');
-  em.classList.add('hidden');
-  document.getElementById('preview').src =
-    cards[i].url || 'https://via.placeholder.com/320x220?text=Upload';
+  wrap.classList.remove('hidden');
+  empty.classList.add('hidden');
+
+  document.getElementById('preview').src = cards[i].url || 'https://via.placeholder.com/1200x800?text=Upload';
   renderAreas();
+  renderAreaList();
+}
+function clearAreas(){
+  if(currentIdx < 0) return;
+  if(confirm('確定清空本卡全部框？')){
+    cards[currentIdx].areas = [];
+    renderAreas();
+    renderAreaList();
+    renderList();
+  }
 }
 
-/* upload */
+/* ---------- 上傳（壓縮後送 Worker→R2） ---------- */
 function uploadImg(idx, btn){
-  const raw=document.getElementById('workerUrl').value;
+  const raw = document.getElementById('workerUrl').value;
   const base = normalizeWorkerUrl(raw);
-  if(!base) return alert('請先填 WorkerUrl');
-
+  if(!base) return alert('請先填 WorkerUrl（https://xxx.workers.dev）');
   localStorage.setItem('line_worker_url', base);
 
   const input = document.getElementById('fileInput');
   input.value = '';
   input.onchange = async (e) => {
-    const f = e.target.files[0];
-    if(!f) return;
+    const file = e.target.files[0];
+    if(!file) return;
 
-    const old = btn.innerText;
-    btn.innerText = '⏳ 上傳中...';
+    const oldText = btn.innerText;
+    btn.innerText = '⏳ 壓縮+上傳中...';
     btn.disabled = true;
 
     try{
-      const url = await uploadToR2(base, f);
+      const maxWidth = parseInt(document.getElementById('maxWidth').value, 10);
+      const mime = document.getElementById('outFormat').value;
+      const quality = parseFloat(document.getElementById('quality').value);
+
+      const { blob, filename } = await compressImage(file, { maxWidth, mime, quality });
+      const url = await uploadToR2(base, blob, filename);
+
       cards[idx].url = url;
-      renderList(); selectCard(idx);
+      cards[idx].areas = []; // 換圖後清空熱區（避免對不上）
+      renderList();
+      selectCard(idx);
     }catch(err){
       alert('上傳失敗：\n' + err.message);
     }
 
-    btn.innerText = old;
+    btn.innerText = oldText;
     btn.disabled = false;
   };
   input.click();
 }
 
-/* draw */
-const layer=document.getElementById('drawLayer');
-layer.onmousedown=e=>{
-  isDrawing=true;
-  const r=layer.getBoundingClientRect();
-  startX=e.clientX-r.left;
-  startY=e.clientY-r.top;
-};
-layer.onmouseup=e=>{
+/* ---------- 畫框（比例） + 預覽框 ---------- */
+const layer = document.getElementById('drawLayer');
+let isDrawing = false;
+let sx = 0, sy = 0;
+let previewRect = null;
+
+layer.addEventListener('mousedown', (e) => {
+  if(currentIdx < 0) return;
+  const r = layer.getBoundingClientRect();
+  isDrawing = true;
+  sx = e.clientX - r.left;
+  sy = e.clientY - r.top;
+
+  previewRect = document.createElement('div');
+  previewRect.className = 'draw-rect';
+  previewRect.style.left = sx + 'px';
+  previewRect.style.top = sy + 'px';
+  previewRect.style.width = '0px';
+  previewRect.style.height = '0px';
+  layer.appendChild(previewRect);
+});
+
+layer.addEventListener('mousemove', (e) => {
+  if(!isDrawing || !previewRect) return;
+  const r = layer.getBoundingClientRect();
+  const cx = e.clientX - r.left;
+  const cy = e.clientY - r.top;
+
+  const x = Math.min(sx, cx);
+  const y = Math.min(sy, cy);
+  const w = Math.abs(cx - sx);
+  const h = Math.abs(cy - sy);
+
+  previewRect.style.left = x + 'px';
+  previewRect.style.top = y + 'px';
+  previewRect.style.width = w + 'px';
+  previewRect.style.height = h + 'px';
+});
+
+layer.addEventListener('mouseup', (e) => {
   if(!isDrawing) return;
-  isDrawing=false;
-  const r=layer.getBoundingClientRect();
-  const w=Math.abs(e.clientX-r.left-startX);
-  const h=Math.abs(e.clientY-r.top-startY);
-  if(w<10||h<10) return;
+  isDrawing = false;
 
-  const type=prompt('text 或 link','text');
-  const txt=prompt('內容');
-  if(!txt) return;
+  const r = layer.getBoundingClientRect();
+  const ex = e.clientX - r.left;
+  const ey = e.clientY - r.top;
 
-  cards[currentIdx].areas.push({
-    x:Math.min(startX,e.clientX-r.left)/r.width,
-    y:Math.min(startY,e.clientY-r.top)/r.height,
-    w:w/r.width,h:h/r.height,
-    type:type==='link'?'uri':'message',
-    text:txt
-  });
+  const x = Math.min(sx, ex);
+  const y = Math.min(sy, ey);
+  const w = Math.abs(ex - sx);
+  const h = Math.abs(ey - sy);
+
+  if(previewRect){
+    previewRect.remove();
+    previewRect = null;
+  }
+
+  if(w < 12 || h < 12) return;
+  if(!cards[currentIdx].url) return alert('請先上傳圖片（R2）再畫框');
+
+  // 存比例座標（0~1）
+  const area = {
+    x: x / r.width,
+    y: y / r.height,
+    w: w / r.width,
+    h: h / r.height,
+    type: 'message',
+    text: ''
+  };
+
+  cards[currentIdx].areas.push(area);
   renderAreas();
-};
+  renderAreaList();
+  renderList();
+});
 
 function renderAreas(){
-  layer.innerHTML='';
-  if(currentIdx<0) return;
-  cards[currentIdx].areas.forEach((a,i)=>{
-    const d=document.createElement('div');
-    d.className='area-box';
-    d.style.left=a.x*100+'%';
-    d.style.top=a.y*100+'%';
-    d.style.width=a.w*100+'%';
-    d.style.height=a.h*100+'%';
-    d.innerText=i+1;
-    d.onclick=e=>{
+  layer.querySelectorAll('.area-box').forEach(el => el.remove());
+  if(currentIdx < 0) return;
+
+  const areas = cards[currentIdx].areas;
+  areas.forEach((a, i) => {
+    const d = document.createElement('div');
+    d.className = 'area-box';
+    d.style.left = (a.x * 100) + '%';
+    d.style.top = (a.y * 100) + '%';
+    d.style.width = (a.w * 100) + '%';
+    d.style.height = (a.h * 100) + '%';
+    d.innerText = i + 1;
+    d.onclick = (e) => {
       e.stopPropagation();
-      if(confirm('刪除?')){
-        cards[currentIdx].areas.splice(i,1);
+      if(confirm(`刪除框 ${i+1}？`)){
+        cards[currentIdx].areas.splice(i, 1);
         renderAreas();
+        renderAreaList();
+        renderList();
       }
     };
     layer.appendChild(d);
   });
 }
 
-/* save/load */
+/* ---------- 右側清單：輸入 keyword/url ---------- */
+function renderAreaList(){
+  const box = document.getElementById('areaList');
+  box.innerHTML = '';
+  if(currentIdx < 0) return;
+
+  const areas = cards[currentIdx].areas;
+
+  if(areas.length === 0){
+    box.innerHTML = `<div class="text-xs text-slate-400">目前沒有框，去圖片上拖曳畫框。</div>`;
+    return;
+  }
+
+  areas.forEach((a, i) => {
+    const typeLabel = a.type === 'uri' ? '開網頁' : '發文字';
+    const placeholder = a.type === 'uri' ? '貼網址 https://...' : '填入關鍵字（訊息）';
+
+    const row = document.createElement('div');
+    row.className = 'border rounded p-2 bg-white';
+    row.innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-bold text-sm">框 ${i+1}</div>
+        <button class="text-xs text-red-600 underline">刪除</button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 text-xs">
+        <label class="col-span-1 flex flex-col gap-1">
+          <span class="text-slate-500">動作</span>
+          <select class="border rounded px-2 py-1">
+            <option value="message" ${a.type==='message'?'selected':''}>發文字</option>
+            <option value="uri" ${a.type==='uri'?'selected':''}>開網頁</option>
+          </select>
+        </label>
+
+        <label class="col-span-2 flex flex-col gap-1">
+          <span class="text-slate-500">內容</span>
+          <input class="border rounded px-2 py-1" value="${escapeHtml(a.text||'')}" placeholder="${placeholder}">
+        </label>
+      </div>
+
+      <div class="text-[11px] text-slate-400 mt-2">目前：${typeLabel}</div>
+    `;
+
+    const delBtn = row.querySelector('button');
+    const sel = row.querySelector('select');
+    const input = row.querySelector('input');
+
+    delBtn.onclick = () => {
+      if(confirm(`刪除框 ${i+1}？`)){
+        cards[currentIdx].areas.splice(i, 1);
+        renderAreas(); renderAreaList(); renderList();
+      }
+    };
+
+    sel.onchange = () => {
+      a.type = sel.value;
+      input.placeholder = a.type === 'uri' ? '貼網址 https://...' : '填入關鍵字（訊息）';
+      renderAreaList(); // 讓下面文字更新
+    };
+
+    input.oninput = () => {
+      a.text = input.value;
+    };
+
+    box.appendChild(row);
+  });
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
+/* ---------- save/load ---------- */
 async function save(){
-  const raw=document.getElementById('workerUrl').value;
-  const key=document.getElementById('keyword').value.trim();
-  const base=normalizeWorkerUrl(raw);
-  if(!base||!key) return alert('資料不全');
+  const raw = document.getElementById('workerUrl').value;
+  const key = document.getElementById('keyword').value.trim();
+  const base = normalizeWorkerUrl(raw);
+
+  if(!base || !key) return alert('資料不全（WorkerUrl / 關鍵字）');
   localStorage.setItem('line_worker_url', base);
 
-  const bubbles=cards.map(c=>({
-    type:'bubble',
-    body:{
-      type:'box',layout:'overlap',paddingAll:'0px',
-      contents:[
-        {type:'image',url:c.url,size:'full',aspectMode:'cover'},
-        ...c.areas.map(a=>({
-          type:'box',layout:'vertical',position:'absolute',
-          offsetStart:a.x*100+'%',offsetTop:a.y*100+'%',
-          width:a.w*100+'%',height:a.h*100+'%',
-          action:{
-            type:a.type,label:'action',
-            text:a.type==='message'?a.text:undefined,
-            uri:a.type==='uri'?a.text:undefined
+  // 驗證：每張卡都要有圖
+  if(cards.length === 0) return alert('至少新增一張卡片');
+  if(cards.some(c => !c.url)) return alert('有卡片沒有圖片，請先上傳');
+  // 驗證：每個框要有內容
+  const bad = cards.some(c => c.areas.some(a => !String(a.text||'').trim()));
+  if(bad) return alert('有框沒有填內容（關鍵字或網址）');
+
+  const bubbles = cards.map(c => ({
+    type: "bubble",
+    body: {
+      type: "box",
+      layout: "overlap",
+      paddingAll: "0px",
+      contents: [
+        { type: "image", url: c.url, size: "full", aspectMode: "cover" },
+        ...c.areas.map(a => ({
+          type: "box",
+          layout: "vertical",
+          position: "absolute",
+          offsetStart: (a.x * 100) + '%',
+          offsetTop: (a.y * 100) + '%',
+          width: (a.w * 100) + '%',
+          height: (a.h * 100) + '%',
+          action: {
+            type: a.type,
+            label: "action",
+            text: a.type === "message" ? a.text : undefined,
+            uri: a.type === "uri" ? a.text : undefined
           }
         }))
       ]
     }
   }));
 
+  const payload = {
+    mode: 'carousel',
+    messages: [{
+      type: "flex",
+      altText: "卡片選單",
+      contents: { type: "carousel", contents: bubbles }
+    }]
+  };
+
   try{
-    await postJSON(base+'/save',{
-      password:'1234',
-      keyword:key,
-      payload:{
-        mode:'carousel',
-        messages:[{type:'flex',altText:'卡片選單',
-          contents:{type:'carousel',contents:bubbles}}]
-      }
-    });
-    alert('儲存成功');
+    await postJSON(base + '/save', { password:'1234', keyword:key, payload });
+    alert('儲存成功！');
   }catch(e){
-    alert('失敗：\n'+e.message);
+    alert('儲存失敗：\n' + e.message);
   }
 }
 
 async function load(){
-  const raw=document.getElementById('workerUrl').value;
-  const key=document.getElementById('keyword').value.trim();
-  const base=normalizeWorkerUrl(raw);
-  if(!base||!key) return alert('資料不全');
+  const raw = document.getElementById('workerUrl').value;
+  const key = document.getElementById('keyword').value.trim();
+  const base = normalizeWorkerUrl(raw);
+
+  if(!base || !key) return alert('資料不全（WorkerUrl / 關鍵字）');
   localStorage.setItem('line_worker_url', base);
 
   try{
-    const data=await postJSON(base+'/load',{password:'1234',keyword:key});
-    const obj=typeof data==='string'?JSON.parse(data):data;
-    cards=obj.messages[0].contents.contents.map(b=>({
-      url:b.body.contents[0].url, areas:[]
-    }));
-    renderList(); selectCard(0);
-    alert('讀取成功');
+    const data = await postJSON(base + '/load', { password:'1234', keyword:key });
+    const obj = (typeof data === 'string') ? JSON.parse(data) : data;
+
+    if(obj?.messages?.[0]?.contents?.type !== 'carousel'){
+      return alert('讀到資料但不是 carousel 格式');
+    }
+
+    // 注意：從 LINE Flex 的 overlay action 讀回來時，我們能取到 uri/text
+    cards = obj.messages[0].contents.contents.map(b => {
+      const imgUrl = b.body.contents?.[0]?.url || '';
+      const overlays = (b.body.contents || []).slice(1);
+
+      const areas = overlays.map(o => {
+        const action = o.action || {};
+        const type = action.type || 'message';
+        const text = (type === 'message') ? (action.text || '') : (action.uri || '');
+        const x = parseFloat(String(o.offsetStart||'0').replace('%',''))/100;
+        const y = parseFloat(String(o.offsetTop||'0').replace('%',''))/100;
+        const w = parseFloat(String(o.width||'0').replace('%',''))/100;
+        const h = parseFloat(String(o.height||'0').replace('%',''))/100;
+
+        return { x,y,w,h,type, text };
+      });
+
+      return { url: imgUrl, areas };
+    });
+
+    renderList();
+    selectCard(cards.length ? 0 : -1);
+    alert('讀取成功！');
   }catch(e){
-    alert('失敗：\n'+e.message);
+    alert('讀取失敗：\n' + e.message);
   }
 }
 </script>
