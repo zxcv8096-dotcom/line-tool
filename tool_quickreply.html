@@ -57,25 +57,54 @@
     <script>
         let availableKeys = [];
 
-        window.onload = function() {
-            const savedUrl = localStorage.getItem('line_worker_url');
-            if(savedUrl) { document.getElementById('workerUrl').value = savedUrl; loadKeys(); }
-            else alert("請先回首頁 (index.html) 輸入 Worker 網址！");
-            addBtn(); 
+        function normUrl(u){
+            return (u || '').trim().replace(/\/+$/, '');
         }
 
-        // ★ 新功能：從 Worker 抓取所有關鍵字 ★
+        function getWorkerUrl(){
+            return normUrl(document.getElementById('workerUrl').value);
+        }
+
+        async function postJSON(url, data){
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data || {})
+            });
+            return res;
+        }
+
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('line_worker_url');
+            if(savedUrl) {
+                document.getElementById('workerUrl').value = normUrl(savedUrl);
+                loadKeys();
+            } else {
+                alert("請先回首頁 (index.html) 輸入 Worker 網址！");
+                window.location.href = 'index.html';
+                return;
+            }
+            addBtn();
+        }
+
+        // ★ 從 Worker 抓取所有關鍵字 ★
         async function loadKeys() {
-            const url = document.getElementById('workerUrl').value;
+            const url = getWorkerUrl();
             const sel = document.getElementById('targetSelect');
             sel.innerHTML = '<option>載入中...</option>';
             try {
-                const res = await fetch(url + '/list', { method: 'POST' }); // 呼叫 Worker 新增的 /list
+                const res = await postJSON(url + '/list', {}); // ✅ 送空JSON
                 if(res.ok) {
                     availableKeys = await res.json();
                     renderSelectOptions();
-                } else { sel.innerHTML = '<option>讀取失敗</option>'; }
-            } catch(e) { sel.innerHTML = '<option>連線錯誤</option>'; }
+                } else {
+                    sel.innerHTML = '<option>讀取失敗</option>';
+                }
+            } catch(e) {
+                alert('連線錯誤：' + e.message);
+                console.error(e);
+                sel.innerHTML = '<option>連線錯誤</option>';
+            }
         }
 
         function renderSelectOptions() {
@@ -90,12 +119,10 @@
         function applyTarget() {
             const val = document.getElementById('targetSelect').value;
             if(!val) return;
-            // 找到最後一個按鈕的 input
             const inputs = document.querySelectorAll('.btn-text');
             if(inputs.length > 0) {
                 inputs[inputs.length - 1].value = val;
-                // 自動幫他填顯示文字 (如果原本是空的)
-                const labelInput = inputs[inputs.length - 1].previousElementSibling.querySelector('input'); 
+                const labelInput = inputs[inputs.length - 1].previousElementSibling.querySelector('input');
                 if(!labelInput.value) labelInput.value = val;
             }
         }
@@ -115,33 +142,49 @@
         }
 
         async function saveData() {
-            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value; const text = document.getElementById('replyText').value;
+            const url = getWorkerUrl();
+            const key = (document.getElementById('keyword').value || '').trim();
+            const text = (document.getElementById('replyText').value || '').trim();
             if(!url || !key) return alert("資料不完整");
+
             const btns = [];
             document.querySelectorAll('#btnList > div').forEach(div => {
-                const l = div.querySelector('.btn-label').value; const t = div.querySelector('.btn-text').value;
+                const l = (div.querySelector('.btn-label').value || '').trim();
+                const t = (div.querySelector('.btn-text').value || '').trim();
                 if(l && t) btns.push({ label: l, text: t });
             });
+
             const payload = { mode: 'text', replyText: text, quickReplies: btns };
+
             try {
-                const res = await fetch(url + '/save', { method: 'POST', body: JSON.stringify({ password: '1234', keyword: key, payload: payload }) });
+                const res = await postJSON(url + '/save', { password: '1234', keyword: key, payload });
                 if(res.ok) alert('儲存成功！'); else alert('儲存失敗');
-            } catch(e) { alert('連線錯誤'); }
+            } catch(e) {
+                alert('連線錯誤：' + e.message);
+                console.error(e);
+            }
         }
 
         async function loadData() {
-            const url = document.getElementById('workerUrl').value; const key = document.getElementById('keyword').value;
+            const url = getWorkerUrl();
+            const key = (document.getElementById('keyword').value || '').trim();
             if(!url || !key) return alert("請輸入關鍵字");
+
             try {
-                const res = await fetch(url + '/load', { method: 'POST', body: JSON.stringify({ password: '1234', keyword: key }) });
+                const res = await postJSON(url + '/load', { password: '1234', keyword: key });
                 if(res.ok) {
                     const data = await res.json();
                     document.getElementById('replyText').value = data.replyText || '';
                     document.getElementById('btnList').innerHTML = '';
                     if(data.quickReplies) data.quickReplies.forEach(b => addBtn(b.label, b.text));
                     alert('讀取成功');
-                } else alert('找不到此關鍵字');
-            } catch(e) { alert('連線錯誤'); }
+                } else {
+                    alert('找不到此關鍵字');
+                }
+            } catch(e) {
+                alert('連線錯誤：' + e.message);
+                console.error(e);
+            }
         }
     </script>
 </body>
