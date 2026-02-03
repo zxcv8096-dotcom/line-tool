@@ -23,7 +23,7 @@
             <p class="text-[10px] text-green-600" id="statusMsg">在此輸入一次，所有工具自動填入 👌</p>
         </div>
 
-        <!-- (可選) LIFF 快速連結工具：如果你不需要，可整段刪除 -->
+        <!-- (可選) LIFF 快速連結工具：不需要可刪 -->
         <div class="mb-6 bg-slate-50 p-4 rounded-lg text-left border">
             <div class="flex items-center justify-between">
                 <label class="block text-xs font-bold text-slate-500">LIFF 入口網址（可選）</label>
@@ -44,7 +44,7 @@
 
         <div class="grid grid-cols-2 gap-4">
             <!-- 新增：LIFF 手機預覽抽屜版 -->
-            <a href="tool_liff_imagemap.html"
+            <a href="liff_popup_imagemap.html"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-blue-700 p-4 text-white shadow-lg transition hover:scale-105">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">📱</span>
@@ -101,7 +101,6 @@
     </div>
 
     <script>
-        // 頁面載入：讀取 Worker URL + LIFF ID
         window.onload = function() {
             const saved = localStorage.getItem('line_worker_url');
             if(saved) document.getElementById('globalWorkerUrl').value = saved;
@@ -110,17 +109,14 @@
             if(savedLiff) document.getElementById('liffIdInput').value = savedLiff;
         }
 
-        // 輸入 Worker URL：儲存
         function saveUrl(val) {
             localStorage.setItem('line_worker_url', (val || '').trim());
         }
 
-        // (可選) 儲存 LIFF ID
         function saveLiffId(val) {
             localStorage.setItem('line_liff_id', (val || '').trim());
         }
 
-        // (可選) 複製 LIFF URL
         async function copyLiffUrl() {
             const id = (document.getElementById('liffIdInput').value || '').trim();
             if(!id) return alert('請先貼上 LIFF ID');
@@ -129,7 +125,6 @@
                 await navigator.clipboard.writeText(url);
                 alert('已複製：\n' + url);
             }catch(e){
-                // fallback
                 prompt('複製這段網址：', url);
             }
         }
