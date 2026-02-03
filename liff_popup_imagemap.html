@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LINE OA 彈窗熱區編輯器 (LIFF)</title>
+  <title>LINE OA 彈窗熱區編輯器 (LIFF + 手機預覽抽屜)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
@@ -26,21 +26,33 @@
       background:rgba(0,0,0,.10);
       pointer-events:none;
     }
+    .preview-hotspot{
+      position:absolute;
+      border:2px solid rgba(255,0,0,.85);
+      background:rgba(255,0,0,.10);
+      pointer-events:none;
+    }
   </style>
 </head>
 
 <body class="bg-slate-100 min-h-screen text-slate-800">
-  <div class="bg-white shadow p-4 sticky top-0 z-10">
+  <!-- Header / Controls -->
+  <div class="bg-white shadow p-4 sticky top-0 z-20">
     <div class="flex items-start justify-between gap-3">
       <div>
         <div class="font-bold text-lg text-blue-700">LINE OA 彈窗熱區編輯器（LIFF）</div>
         <div class="text-xs text-slate-500 mt-1">
-          流程：上傳圖片 → 拖曳畫框 → 每個框填「要送出的關鍵字」→ 儲存 → 用戶輸入觸發關鍵字收到圖，點框就會自動送關鍵字
+          上傳圖片 → 拖曳畫框 → 每個框填「要送出的關鍵字」→ 儲存。底下可「手機預覽（可收放）」。
         </div>
       </div>
-      <button id="btnClose" class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="closeLiff()">
-        關閉
-      </button>
+      <div class="flex gap-2">
+        <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreviewDrawer(true)">
+          📱預覽
+        </button>
+        <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900" onclick="closeLiff()">
+          關閉
+        </button>
+      </div>
     </div>
 
     <div class="mt-3 grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2">
@@ -50,7 +62,7 @@
         placeholder="觸發關鍵字（使用者輸入這句會出現這張圖）" />
     </div>
 
-    <div class="mt-2 grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr] gap-2">
+    <div class="mt-2 grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr] gap-2">
       <div class="border rounded p-2 bg-slate-50">
         <div class="text-xs font-bold text-slate-600 mb-2">圖片壓縮</div>
         <div class="grid grid-cols-2 gap-2 text-xs">
@@ -106,30 +118,39 @@
 
       <div class="border rounded p-2 bg-slate-50">
         <div class="text-xs font-bold text-slate-600 mb-2">LIFF / 使用者</div>
-        <div class="text-xs text-slate-600">
+        <div class="text-xs text-slate-600 space-y-1">
           <div>LIFF：<span id="liffState" class="font-bold">-</span></div>
           <div>使用者：<span id="userName" class="font-bold">-</span></div>
+          <div class="text-[11px] text-slate-500">提示：預覽抽屜可收放，不影響畫框操作。</div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="p-4 grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
-    <!-- 左：框清單 -->
+  <!-- Main -->
+  <div class="p-4 grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 pb-32">
+    <!-- Left: area list -->
     <div class="bg-white rounded-lg shadow p-4 h-fit">
       <div class="flex items-center justify-between mb-2">
-        <div class="font-bold text-slate-700">框框設定（點框也可刪除）</div>
+        <div class="font-bold text-slate-700">框框設定（點紅框也可刪除）</div>
         <div class="text-xs text-slate-500">不限數量</div>
       </div>
       <div class="text-xs text-slate-500 mb-3">
-        每個框的「內容」就是：用戶點下去會送出的文字（用來觸發你的自動回覆）。
+        每個框的「內容」＝使用者點到時自動送出的文字（用來觸發你的自動回覆）。
       </div>
 
       <div id="areaList" class="space-y-2"></div>
       <div id="areaEmpty" class="text-xs text-slate-400">目前沒有框，去右邊圖片上拖曳畫框。</div>
+
+      <div class="mt-4 border-t pt-3">
+        <button class="w-full px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
+          onclick="togglePreviewDrawer(true)">
+          📱 打開手機預覽抽屜
+        </button>
+      </div>
     </div>
 
-    <!-- 右：畫布 -->
+    <!-- Right: canvas -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
       <div class="relative">
         <img id="preview" class="w-full h-[520px] object-contain bg-gray-100" alt="">
@@ -143,20 +164,90 @@
 
   <input type="file" id="fileInput" accept="image/*" hidden>
 
+  <!-- Preview Drawer (collapsible bottom sheet) -->
+  <div id="drawerOverlay" class="fixed inset-0 bg-black/40 hidden z-30" onclick="togglePreviewDrawer(false)"></div>
+
+  <div id="previewDrawer"
+       class="fixed left-0 right-0 bottom-0 z-40 translate-y-full transition-transform duration-300 ease-out">
+    <div class="mx-auto max-w-4xl">
+      <div class="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b">
+          <div class="font-bold text-slate-700">📱 手機彈窗預覽（可收放）</div>
+          <div class="flex items-center gap-2">
+            <label class="flex items-center gap-2 text-xs text-slate-600">
+              <input id="showHotspots" type="checkbox" checked>
+              顯示熱區框
+            </label>
+            <button class="px-3 py-1.5 rounded bg-slate-200 text-slate-700 text-sm hover:bg-slate-300"
+              onclick="togglePreviewDrawer(false)">
+              收起
+            </button>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-50">
+          <!-- Fake phone frame -->
+          <div class="mx-auto w-[360px] max-w-full">
+            <div class="rounded-[26px] border-4 border-slate-900 bg-slate-900 p-2">
+              <div class="rounded-[20px] bg-white overflow-hidden">
+                <div class="bg-slate-100 text-xs text-slate-600 px-3 py-2 border-b flex items-center justify-between">
+                  <span>LINE 聊天內尺寸感</span>
+                  <button class="text-[11px] px-2 py-1 rounded bg-white border hover:bg-slate-50"
+                          onclick="sendPreviewToMe()">
+                    直接送到我測試
+                  </button>
+                </div>
+
+                <div class="p-3">
+                  <div class="mx-auto w-[320px] max-w-full">
+                    <div class="text-[11px] text-slate-500 mb-2">
+                      點熱區會提示送出的關鍵字（模擬用戶點選）
+                    </div>
+
+                    <div class="relative rounded-lg overflow-hidden border bg-white">
+                      <img id="phoneImg" class="w-full h-[220px] object-cover bg-gray-100">
+                      <div id="phoneHotspots" class="absolute inset-0"></div>
+                    </div>
+
+                    <div class="mt-2 text-[11px] text-slate-500">
+                      * 這是預覽「聊天泡泡寬度感」，實際會因手機略有差異
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 flex gap-2">
+              <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
+                onclick="togglePreviewDrawer(false)">
+                收起預覽
+              </button>
+              <button class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                onclick="refreshPhonePreview()">
+                重新渲染
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-4 py-3 bg-white border-t text-xs text-slate-500">
+          提示：你畫框或改文字後，抽屜會自動更新；如果沒更新就按「重新渲染」。
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* ===================== 你只要改這裡 ===================== */
-const LIFF_ID = "2009037126-AD8Dolxb"; // ← 換成你的 LIFF ID
+const LIFF_ID = "2009037126-AD8Dolxb";
 /* ======================================================= */
 
 let isReady = false;
-let config = {
-  imageUrl: "",
-  areas: [] // {x,y,w,h,text}
-};
+let config = { imageUrl: "", areas: [] }; // {x,y,w,h,text}
 
 const $ = (id) => document.getElementById(id);
-
 $("quality").addEventListener("input", () => $("qVal").textContent = $("quality").value);
+$("showHotspots").addEventListener("change", () => refreshPhonePreview());
 
 /* ---------- 共用 ---------- */
 function normalizeWorkerUrl(raw){
@@ -165,6 +256,7 @@ function normalizeWorkerUrl(raw){
   if(!/^https?:\/\//i.test(s)) s = "https://" + s;
   return s.replace(/\/+$/,'');
 }
+function setStatus(msg){ $("status").textContent = "狀態：" + msg; }
 
 async function postJSON(url, data){
   const res = await fetch(url, {
@@ -193,10 +285,6 @@ async function uploadToR2(workerBaseUrl, fileBlob, filename){
   return j.url;
 }
 
-function setStatus(msg){
-  $("status").textContent = "狀態：" + msg;
-}
-
 /* ---------- 壓縮 ---------- */
 async function compressImage(file, {maxSide, mime, quality, cropSquare}){
   const img = await createImageBitmap(file);
@@ -209,10 +297,8 @@ async function compressImage(file, {maxSide, mime, quality, cropSquare}){
     sw = side; sh = side;
   }
 
-  // 依長邊縮放
   const longSide = Math.max(sw, sh);
   const scale = Math.min(1, maxSide / longSide);
-
   const w = Math.max(1, Math.round(sw * scale));
   const h = Math.max(1, Math.round(sh * scale));
 
@@ -221,9 +307,7 @@ async function compressImage(file, {maxSide, mime, quality, cropSquare}){
   const ctx = canvas.getContext("2d", { alpha: true });
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
 
-  const outBlob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, mime, quality);
-  });
+  const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
   if(!outBlob) throw new Error("壓縮失敗（toBlob 空）");
 
   const ext = (mime === "image/webp") ? "webp" : "jpg";
@@ -286,19 +370,13 @@ layer.addEventListener("mouseup", (e) => {
   if(previewRect){ previewRect.remove(); previewRect = null; }
   if(w < 14 || h < 14) return;
 
-  config.areas.push({
-    x: x / r.width,
-    y: y / r.height,
-    w: w / r.width,
-    h: h / r.height,
-    text: ""
-  });
-
+  config.areas.push({ x: x/r.width, y: y/r.height, w: w/r.width, h: h/r.height, text: "" });
   renderAreas();
   renderAreaList();
+  refreshPhonePreview();
 });
 
-/* ---------- 渲染紅框 ---------- */
+/* ---------- 渲染紅框（編輯區） ---------- */
 function renderAreas(){
   layer.querySelectorAll(".area-box").forEach(el => el.remove());
   config.areas.forEach((a, i) => {
@@ -316,9 +394,9 @@ function renderAreas(){
         config.areas.splice(i,1);
         renderAreas();
         renderAreaList();
+        refreshPhonePreview();
       }
     };
-
     layer.appendChild(d);
   });
 }
@@ -349,7 +427,7 @@ function renderAreaList(){
       </div>
       <div class="text-xs text-slate-500 mb-1">點此框送出文字：</div>
       <input class="w-full border rounded px-2 py-2 text-sm font-bold"
-        placeholder="例如：A1 / 產品介紹 / 報名 / 連結 等等"
+        placeholder="例如：MENU_SHOP / MENU_CALENDAR / MENU_NUTRITION"
         value="${escapeHtml(a.text)}">
     `;
 
@@ -361,9 +439,13 @@ function renderAreaList(){
         config.areas.splice(i,1);
         renderAreas();
         renderAreaList();
+        refreshPhonePreview();
       }
     };
-    input.oninput = () => a.text = input.value;
+    input.oninput = () => {
+      a.text = input.value;
+      refreshPhonePreview();
+    };
 
     list.appendChild(row);
   });
@@ -374,10 +456,11 @@ function clearAreas(){
     config.areas = [];
     renderAreas();
     renderAreaList();
+    refreshPhonePreview();
   }
 }
 
-/* ---------- 圖片上傳（R2） ---------- */
+/* ---------- 上傳（R2） ---------- */
 async function pickAndUpload(){
   const base = normalizeWorkerUrl($("workerUrl").value);
   if(!base) return alert("請先填 Worker URL");
@@ -390,7 +473,6 @@ async function pickAndUpload(){
     if(!file) return;
 
     setStatus("壓縮+上傳中...");
-
     try{
       const maxSide = parseInt($("maxSide").value, 10);
       const mime = $("outFormat").value;
@@ -401,12 +483,16 @@ async function pickAndUpload(){
       const url = await uploadToR2(base, blob, filename);
 
       config.imageUrl = url;
-      config.areas = []; // 換圖清空框
+      config.areas = [];
       $("preview").src = url;
 
       renderAreas();
       renderAreaList();
+      refreshPhonePreview();
+
       setStatus("上傳完成 ✅");
+      // 上傳後自動打開預覽抽屜
+      togglePreviewDrawer(true);
     }catch(err){
       setStatus("上傳失敗");
       alert("上傳失敗：\n" + err.message);
@@ -415,20 +501,19 @@ async function pickAndUpload(){
   input.click();
 }
 
-/* ---------- 產出 imagemap（點框送 message） ---------- */
-function buildImagemapMessage(){
+/* ---------- 產出 imagemap message（全部 message action） ---------- */
+async function buildImagemapMessage(){
   if(!config.imageUrl) throw new Error("尚未上傳圖片");
   if(config.areas.length === 0) throw new Error("尚未畫框");
   if(config.areas.some(a => !String(a.text||"").trim())) throw new Error("有框沒有填內容");
 
-  // imagemap 必須 baseSize 固定一套 px。這裡用 1040 寬、依比例高度。
-  // 我們用 JS 讀圖片自然尺寸來算比例高度（若失敗就用 1040）。
   return new Promise((resolve, reject) => {
     const im = new Image();
     im.onload = () => {
       const baseW = 1040;
       const ratio = im.naturalHeight / im.naturalWidth;
-      const baseH = Math.max(1040, Math.round(baseW * ratio)); // 高度至少 1040，避免太扁
+      const baseH = Math.max(1040, Math.round(baseW * ratio));
+
       const actions = config.areas.map(a => ({
         type: "message",
         text: a.text,
@@ -453,20 +538,16 @@ function buildImagemapMessage(){
   });
 }
 
-/* ---------- 儲存/讀取（存到你的 Worker KV） ---------- */
+/* ---------- 存/讀 ---------- */
 async function saveConfig(){
   const base = normalizeWorkerUrl($("workerUrl").value);
   const keyword = $("triggerKeyword").value.trim();
   if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
-
   localStorage.setItem("line_worker_url", base);
 
   try{
     const msg = await buildImagemapMessage();
-
-    // 存成：mode=imagemap，messages=[imagemap]
     const payload = { mode: "imagemap", messages: [msg] };
-
     await postJSON(base + "/save", { password:"1234", keyword, payload });
     setStatus("儲存成功 ✅");
     alert("儲存成功！\n使用者輸入觸發關鍵字：「" + keyword + "」就會出現這張圖。");
@@ -480,7 +561,6 @@ async function loadConfig(){
   const base = normalizeWorkerUrl($("workerUrl").value);
   const keyword = $("triggerKeyword").value.trim();
   if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
-
   localStorage.setItem("line_worker_url", base);
 
   try{
@@ -506,14 +586,17 @@ async function loadConfig(){
 
     renderAreas();
     renderAreaList();
+    refreshPhonePreview();
+
     setStatus("讀取成功 ✅");
+    togglePreviewDrawer(true);
   }catch(e){
     setStatus("讀取失敗");
     alert("讀取失敗：\n" + e.message);
   }
 }
 
-/* ---------- 送到我測試（LIFF sendMessages） ---------- */
+/* ---------- LIFF：送測試訊息 ---------- */
 async function sendTestToMe(){
   if(!isReady) return alert("LIFF 尚未初始化完成");
   if(!liff.isInClient()) return alert("請在 LINE 內開啟（彈窗）才可送測試訊息");
@@ -525,6 +608,72 @@ async function sendTestToMe(){
   }catch(e){
     alert("送測試失敗：\n" + e.message);
   }
+}
+async function sendPreviewToMe(){
+  // 抽屜裡的按鈕：同 sendTestToMe
+  return sendTestToMe();
+}
+
+/* ---------- 預覽抽屜：開/關 + 渲染 ---------- */
+function togglePreviewDrawer(open){
+  const overlay = $("drawerOverlay");
+  const drawer = $("previewDrawer");
+
+  if(open){
+    overlay.classList.remove("hidden");
+    drawer.classList.remove("translate-y-full");
+    refreshPhonePreview();
+  }else{
+    overlay.classList.add("hidden");
+    drawer.classList.add("translate-y-full");
+  }
+}
+
+function refreshPhonePreview(){
+  const img = $("phoneImg");
+  const wrap = $("phoneHotspots");
+
+  if(!config.imageUrl){
+    img.src = "";
+    wrap.innerHTML = "";
+    return;
+  }
+
+  img.src = config.imageUrl;
+  wrap.innerHTML = "";
+
+  // 等圖片渲染後再算座標
+  requestAnimationFrame(() => {
+    const show = $("showHotspots").checked;
+    const r = wrap.getBoundingClientRect();
+    if(!r.width || !r.height) return;
+
+    config.areas.forEach((a, i) => {
+      if(show){
+        const box = document.createElement("div");
+        box.className = "preview-hotspot";
+        box.style.left = (a.x * r.width) + "px";
+        box.style.top = (a.y * r.height) + "px";
+        box.style.width = (a.w * r.width) + "px";
+        box.style.height = (a.h * r.height) + "px";
+        wrap.appendChild(box);
+      }
+
+      // 可點擊模擬
+      const btn = document.createElement("button");
+      btn.style.position = "absolute";
+      btn.style.left = (a.x*100) + "%";
+      btn.style.top = (a.y*100) + "%";
+      btn.style.width = (a.w*100) + "%";
+      btn.style.height = (a.h*100) + "%";
+      btn.style.background = "transparent";
+      btn.onclick = () => {
+        const t = (a.text || "").trim();
+        alert(`熱區 ${i+1}\n將送出：${t || "（尚未填）"}`);
+      };
+      wrap.appendChild(btn);
+    });
+  });
 }
 
 /* ---------- LIFF 初始化 / 關閉 ---------- */
@@ -558,14 +707,12 @@ async function initLIFF(){
 }
 
 function closeLiff(){
-  // 在 LINE 內彈窗可直接關閉
-  if(window.liff && liff.isInClient()){
-    liff.closeWindow();
-  }else{
-    window.close();
-  }
+  if(window.liff && liff.isInClient()) liff.closeWindow();
+  else window.close();
 }
 
+/* ---------- 自動：圖片載入完也更新預覽 ---------- */
+$("preview").addEventListener("load", () => refreshPhonePreview());
 initLIFF();
 </script>
 </body>
