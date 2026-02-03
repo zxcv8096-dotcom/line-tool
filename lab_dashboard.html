@@ -7,102 +7,120 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }
+    .card { background: white; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+    .toolCard{
+      text-align:left; background:#f8fafc; border:1px solid #e2e8f0;
+      border-radius:16px; padding:14px; transition:.15s;
+    }
+    .toolCard:hover{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+    .badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid; }
+    .badge-db { background: #eff6ff; color:#1d4ed8; border-color:#dbeafe; }
+    .badge-replies { background: #fffbeb; color:#b45309; border-color:#fef3c7; }
+    .btn { font-weight: 800; border-radius: 14px; padding: 10px 14px; }
+    .btnDark { background:#0f172a; color:#fff; }
+    .btnDark:hover { background:#000; }
+    .btnGreen { background:#059669; color:#fff; }
+    .btnGreen:hover { background:#047857; }
+    .btnRed { background:#e11d48; color:#fff; }
+    .btnRed:hover { background:#be123c; }
+    .btnGhost { background:#fff; border:1px solid #e2e8f0; }
+    .btnGhost:hover { background:#f1f5f9; }
   </style>
 </head>
+
 <body class="min-h-screen p-4 text-slate-800">
   <div class="max-w-5xl mx-auto space-y-4">
 
     <!-- Header -->
-    <div class="bg-white rounded-2xl shadow p-6">
+    <div class="card p-6">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <div class="text-4xl">🧪</div>
-          <h1 class="text-2xl font-extrabold mt-2">LINE OA 自製功能實驗室（總覽＋控管）</h1>
+          <div class="text-5xl">🧪</div>
+          <h1 class="text-2xl font-extrabold mt-2">LINE OA 自製功能實驗室（總覽 / 控管）</h1>
           <p class="text-sm text-slate-500 mt-1">
-            你做過的所有自製功能 + 所有 KV 內的關鍵字資料（包含你忘記做在哪裡的）。
+            你所有自製功能的「研發管理頁」。同時列出 KV 裡所有關鍵字資料（包含你忘了在哪做的）。
           </p>
         </div>
         <div class="text-right">
-          <a href="index.html" class="inline-block px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black">
-            回首頁
-          </a>
+          <a href="index.html" class="btn btnDark inline-block">回首頁</a>
         </div>
       </div>
 
       <!-- Worker URL -->
       <div class="mt-4 bg-slate-100 rounded-xl p-4">
-        <label class="block text-xs font-bold text-slate-600 mb-1">Worker 網址（必填，跨設備共用同一份雲端 KV）</label>
-        <div class="flex gap-2">
+        <label class="block text-xs font-bold text-slate-600 mb-1">Worker 網址（必填）</label>
+        <div class="flex flex-col sm:flex-row gap-2">
           <input id="workerUrl" placeholder="https://api.xxx.workers.dev"
                  class="flex-1 border rounded-xl p-2 text-sm bg-white"
                  oninput="saveWorkerUrl(this.value)">
-          <button class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700"
-                  onclick="reloadAll()">載入所有資料</button>
+          <button class="btn btnGreen" onclick="reloadAll()">載入所有資料</button>
         </div>
         <div class="mt-2 text-[12px] text-slate-600">
-          你現在設定為「無密碼」，所以只要知道 Worker URL 就能改資料（你接受這個方式我就照做）。
+          注意：你目前 Worker 是「無密碼管理」，知道 Worker URL 的人就能改你的資料（你接受這個模式才用）。
         </div>
       </div>
+
+      <!-- Status -->
+      <div id="status" class="mt-3 text-sm"></div>
     </div>
 
     <!-- Tools -->
-    <div class="bg-white rounded-2xl shadow p-6">
-      <h2 class="font-extrabold text-lg mb-3">你目前的工具（固定入口）</h2>
+    <div class="card p-6">
+      <h2 class="font-extrabold text-lg mb-3">固定工具入口（你首頁那幾個）</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
-        <button class="toolCard" onclick="openTool('liff_popup_imagemap.html')">
+        <button class="toolCard" onclick="go('liff_popup_imagemap.html')">
           <div class="text-3xl">📱</div>
           <div class="font-bold mt-1">手機預覽引流圖（LIFF 彈窗）</div>
-          <div class="text-xs text-slate-500">抽屜預覽 / 畫框不限 / R2</div>
+          <div class="text-xs text-slate-500">抽屜預覽 / 畫框不限 / 上傳到 R2</div>
         </button>
 
-        <button class="toolCard" onclick="openTool('tool_imagemap.html')">
+        <button class="toolCard" onclick="go('tool_imagemap.html')">
           <div class="text-3xl">🗺️</div>
           <div class="font-bold mt-1">引流圖工具</div>
           <div class="text-xs text-slate-500">大圖點擊、多圖回覆</div>
         </button>
 
-        <button class="toolCard" onclick="openTool('tool_carousel.html')">
+        <button class="toolCard" onclick="go('tool_carousel.html')">
           <div class="text-3xl">🎠</div>
           <div class="font-bold mt-1">滑動卡片</div>
           <div class="text-xs text-slate-500">多圖輪播</div>
         </button>
 
-        <button class="toolCard" onclick="openTool('tool_flow.html')">
+        <button class="toolCard" onclick="go('tool_flow.html')">
           <div class="text-3xl">🔀</div>
           <div class="font-bold mt-1">見證流程</div>
           <div class="text-xs text-slate-500">連續跳轉</div>
         </button>
 
-        <button class="toolCard ring-2 ring-rose-200" onclick="openTool('tool_quickreply.html')">
+        <button class="toolCard ring-2 ring-rose-200" onclick="go('tool_quickreply.html')">
           <div class="text-3xl">🔴</div>
           <div class="font-bold mt-1">紅色框框 Quick Reply</div>
           <div class="text-xs text-slate-500">文字 + 底部浮動按鈕</div>
         </button>
 
       </div>
-      <style>
-        .toolCard{
-          text-align:left; background:#f8fafc; border:1px solid #e2e8f0;
-          border-radius:16px; padding:14px; transition:.15s;
-        }
-        .toolCard:hover{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.08); }
-      </style>
+      <div class="text-[12px] text-slate-500 mt-3">
+        這些入口只負責打開你 GitHub Pages 的工具頁；資料的讀寫都走 Worker KV。
+      </div>
     </div>
 
     <!-- KV Explorer -->
-    <div class="bg-white rounded-2xl shadow p-6 space-y-3">
-      <div class="flex items-center justify-between gap-3">
+    <div class="card p-6 space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 class="font-extrabold text-lg">雲端資料庫探索（你忘了在哪做的都會出現）</h2>
-          <div class="text-xs text-slate-500">會同時列出 DB 與 REPLIES 兩個 KV namespace（如果你的 Worker 有綁 REPLIES）。</div>
+          <h2 class="font-extrabold text-lg">雲端資料庫探索（DB + REPLIES）</h2>
+          <div class="text-xs text-slate-500">
+            會列出你 KV 裡所有 keyword；你可以搜尋、預覽內容、刪除清理。
+          </div>
         </div>
-        <button class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-black"
-                onclick="reloadAll()">重新整理</button>
+        <div class="flex gap-2">
+          <button class="btn btnGhost" onclick="reloadAll()">重新整理</button>
+        </div>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2">
-        <input id="search" placeholder="搜尋關鍵字（例如：營養 / 連線錯誤 / 選單）"
+        <input id="search" placeholder="搜尋 keyword（例如：選單 / 營養 / 產品 / 卡片）"
                class="flex-1 border rounded-xl p-2 text-sm"
                oninput="renderList()">
         <select id="nsFilter" class="border rounded-xl p-2 text-sm" onchange="renderList()">
@@ -114,8 +132,15 @@
 
       <div id="stats" class="text-[12px] text-slate-500"></div>
       <div id="list" class="space-y-2"></div>
+
+      <div class="mt-2 text-[12px] text-slate-500">
+        若你看不到任何資料：通常是 Worker URL 不對、或 Worker 尚未加上 <span class="font-bold">/listAll /loadAny /deleteAny</span>。
+      </div>
     </div>
 
+    <div class="text-center text-[12px] text-slate-400 mt-2">
+      Powered by GitHub Pages + Cloudflare Workers (KV/R2)
+    </div>
   </div>
 
   <!-- Modal -->
@@ -125,27 +150,44 @@
         <div class="font-bold" id="modalTitle">內容預覽</div>
         <button class="opacity-80 hover:opacity-100" onclick="closeModal()">✕</button>
       </div>
-      <div class="p-4">
+      <div class="p-4 space-y-3">
+        <div class="flex flex-wrap gap-2 items-center">
+          <span id="modalBadge" class="badge badge-db">DB</span>
+          <span class="text-[12px] text-slate-500">（這裡只預覽，不會修改內容）</span>
+        </div>
         <pre id="modalBody" class="text-xs bg-slate-50 border rounded-xl p-3 overflow-auto max-h-[60vh]"></pre>
       </div>
     </div>
   </div>
 
 <script>
-  // ====== storage ======
+  // ====== Storage Keys ======
   const WORKER_KEY = 'line_worker_url';
+
+  // ====== State ======
+  let ALL_KEYS = []; // [{ ns:'DB'|'REPLIES', key:string }]
 
   window.onload = () => {
     const saved = localStorage.getItem(WORKER_KEY);
-    if(saved) document.getElementById('workerUrl').value = saved;
+    if (saved) document.getElementById('workerUrl').value = saved;
+
+    // 進來先不自動載入，避免沒填 URL 就一直報錯
   };
+
+  function setStatus(msg, type='info'){
+    const el = document.getElementById('status');
+    const cls = type==='ok' ? 'text-emerald-700' : type==='err' ? 'text-rose-700' : 'text-slate-600';
+    el.className = `mt-3 text-sm ${cls}`;
+    el.textContent = msg;
+  }
 
   function saveWorkerUrl(v){
     localStorage.setItem(WORKER_KEY, (v||'').trim());
   }
 
-  function mustWorker(){
-    const w = (document.getElementById('workerUrl').value || '').trim().replace(/\/+$/, '');
+  function getWorker(){
+    let w = (document.getElementById('workerUrl').value || '').trim();
+    w = w.replace(/\/+$/, '');
     if(!w){
       alert('請先輸入 Worker 網址');
       document.getElementById('workerUrl').focus();
@@ -155,13 +197,12 @@
     return w;
   }
 
-  function openTool(page){
-    const w = mustWorker();
+  function go(page){
+    const w = getWorker();
     if(!w) return;
     window.location.href = page;
   }
 
-  // ====== API ======
   async function postJSON(fullUrl, data){
     const res = await fetch(fullUrl, {
       method:'POST',
@@ -172,51 +213,54 @@
     return {res, out};
   }
 
-  // ====== Data ======
-  let ALL_KEYS = []; // { ns:'DB'|'REPLIES', key:string }
-
+  // ====== Load All Keys ======
   async function reloadAll(){
-    const w = mustWorker();
+    const w = getWorker();
     if(!w) return;
 
+    setStatus('載入中…', 'info');
     ALL_KEYS = [];
     document.getElementById('list').innerHTML = '<div class="text-slate-400 text-sm">載入中...</div>';
 
-    // 1) listAll（新版 worker）如果沒有就 fallback 舊版 /list
-    let result = null;
+    // 1) 新版：/listAll
     try{
       const r = await postJSON(w + '/listAll', {});
-      if(r.res.ok && r.out && r.out.ok) result = r.out;
-    }catch(e){}
-
-    if(result){
-      const db = Array.isArray(result.db) ? result.db : [];
-      const rep = Array.isArray(result.replies) ? result.replies : [];
-      ALL_KEYS = [
-        ...db.map(k => ({ns:'DB', key:k})),
-        ...rep.map(k => ({ns:'REPLIES', key:k}))
-      ];
-      renderList();
-      return;
+      if(r.res.ok && r.out && r.out.ok){
+        const db = Array.isArray(r.out.db) ? r.out.db : [];
+        const rep = Array.isArray(r.out.replies) ? r.out.replies : [];
+        ALL_KEYS = [
+          ...db.map(k => ({ns:'DB', key:k})),
+          ...rep.map(k => ({ns:'REPLIES', key:k}))
+        ];
+        setStatus(`載入成功：DB ${db.length} 筆 / REPLIES ${rep.length} 筆`, 'ok');
+        renderList();
+        return;
+      }
+    }catch(e){
+      // continue fallback
     }
 
-    // fallback: 舊 worker 只有 /list（回 ok+keywords）
+    // 2) fallback：舊版只有 /list（DB）
     try{
       const r = await postJSON(w + '/list', {});
       const keywords = (r.out && r.out.keywords) ? r.out.keywords : [];
       ALL_KEYS = keywords.map(k => ({ns:'DB', key:k}));
+      setStatus(`載入成功（舊模式）：DB ${keywords.length} 筆。建議你更新 Worker 支援 /listAll /loadAny /deleteAny。`, 'ok');
       renderList();
+      return;
     }catch(e){
-      document.getElementById('list').innerHTML = '<div class="text-rose-600 text-sm">讀取失敗：' + e.message + '</div>';
+      setStatus('載入失敗：請確認 Worker URL 正確、且 Worker 有開 CORS。', 'err');
+      document.getElementById('list').innerHTML =
+        '<div class="text-rose-600 text-sm">載入失敗：' + escapeHtml(e.message) + '</div>';
     }
   }
 
+  // ====== Render List ======
   function renderList(){
     const q = (document.getElementById('search').value || '').trim().toLowerCase();
     const ns = document.getElementById('nsFilter').value;
 
     let rows = ALL_KEYS.slice();
-
     if(ns !== 'ALL') rows = rows.filter(x => x.ns === ns);
     if(q) rows = rows.filter(x => x.key.toLowerCase().includes(q));
 
@@ -232,65 +276,70 @@
     }
 
     rows.forEach(x=>{
-      const badge = x.ns === 'DB'
-        ? '<span class="text-[11px] px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">DB</span>'
-        : '<span class="text-[11px] px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">REPLIES</span>';
+      const badgeClass = x.ns === 'DB' ? 'badge-db' : 'badge-replies';
+      const badgeText = x.ns === 'DB' ? 'DB' : 'REPLIES';
 
       list.innerHTML += `
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border rounded-2xl p-3 bg-slate-50">
           <div class="flex items-center gap-2 min-w-0">
-            ${badge}
+            <span class="badge ${badgeClass}">${badgeText}</span>
             <div class="font-bold truncate">${escapeHtml(x.key)}</div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button class="px-3 py-2 rounded-xl bg-white border text-sm font-bold hover:bg-slate-100"
-                    onclick="previewKey('${x.ns}','${escapeJs(x.key)}')">預覽</button>
-            <button class="px-3 py-2 rounded-xl bg-rose-600 text-white text-sm font-bold hover:bg-rose-700"
-                    onclick="deleteKey('${x.ns}','${escapeJs(x.key)}')">刪除</button>
+            <button class="btn btnGhost" onclick="previewKey('${x.ns}','${escapeJs(x.key)}')">預覽</button>
+            <button class="btn btnRed" onclick="deleteKey('${x.ns}','${escapeJs(x.key)}')">刪除</button>
           </div>
         </div>
       `;
     });
   }
 
+  // ====== Preview / Delete ======
   async function previewKey(ns, key){
-    const w = mustWorker();
+    const w = getWorker();
     if(!w) return;
 
-    // 新版 worker：/loadAny
+    // 新版：/loadAny
     try{
       const r = await postJSON(w + '/loadAny', { namespace: ns, keyword: key });
       if(r.res.ok && r.out && r.out.ok){
-        showModal(`${ns} / ${key}`, JSON.stringify(r.out.payload, null, 2));
+        const payload = r.out.payload;
+        const text = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+        showModal(ns, key, text);
+        return;
+      }else{
+        // 若 worker 回傳 ok:false
+        const err = r.out && r.out.error ? r.out.error : '讀取失敗';
+        alert(err);
         return;
       }
-    }catch(e){}
+    }catch(e){
+      // fallback
+    }
 
-    // fallback 舊版：/load 只支援 DB
+    // fallback：舊 /load 只支援 DB（且舊版你之前有密碼）
     if(ns !== 'DB'){
-      alert('你的 Worker 還沒支援 REPLIES 的讀取（需要更新 worker.js）');
+      alert('你的 Worker 尚未支援讀取 REPLIES（請更新 worker.js 加上 /loadAny）');
       return;
     }
 
     try{
-      const r = await postJSON(w + '/load', { keyword: key, password: "1234" }); // 舊版需要密碼
+      const r = await postJSON(w + '/load', { keyword: key });
       if(r.res.ok && r.out){
-        showModal(`${ns} / ${key}`, JSON.stringify(r.out, null, 2));
-      }else{
-        alert('讀取失敗');
+        showModal(ns, key, JSON.stringify(r.out, null, 2));
+        return;
       }
-    }catch(e){
-      alert('讀取失敗：' + e.message);
-    }
+    }catch(e){}
+
+    alert('讀取失敗：請更新 Worker 支援 /loadAny');
   }
 
   async function deleteKey(ns, key){
-    const w = mustWorker();
+    const w = getWorker();
     if(!w) return;
 
     if(!confirm(`確定刪除？\n${ns} / ${key}\n刪了就不能復原`)) return;
 
-    // 新版 worker：/deleteAny
     try{
       const r = await postJSON(w + '/deleteAny', { namespace: ns, keyword: key });
       if(r.res.ok && r.out && r.out.ok){
@@ -298,27 +347,41 @@
         renderList();
         alert('已刪除');
         return;
+      }else{
+        const err = r.out && r.out.error ? r.out.error : '刪除失敗';
+        alert(err);
+        return;
       }
-    }catch(e){}
-
-    alert('刪除失敗：你的 Worker 可能還沒更新到支援 deleteAny');
+    }catch(e){
+      alert('刪除失敗：你的 Worker 可能還沒支援 /deleteAny');
+    }
   }
 
-  function showModal(title, body){
-    document.getElementById('modalTitle').textContent = title;
+  // ====== Modal ======
+  function showModal(ns, key, body){
+    document.getElementById('modalTitle').textContent = `${key}`;
+    const badge = document.getElementById('modalBadge');
+    badge.textContent = ns === 'DB' ? 'DB' : 'REPLIES';
+    badge.className = 'badge ' + (ns === 'DB' ? 'badge-db' : 'badge-replies');
+
     document.getElementById('modalBody').textContent = body;
+
     const m = document.getElementById('modal');
     m.classList.remove('hidden');
     m.classList.add('flex');
   }
+
   function closeModal(){
     const m = document.getElementById('modal');
     m.classList.add('hidden');
     m.classList.remove('flex');
   }
 
+  // ====== Escape Helpers ======
   function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    return String(s).replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[m]));
   }
   function escapeJs(s){
     return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
