@@ -2,8 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>引流圖編輯器 (壓縮版)</title>
+    <title>引流圖編輯器 (Imgur版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .area-box { position: absolute; border: 2px solid rgba(255, 0, 0, 0.8); background: rgba(255, 0, 0, 0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px black; }
@@ -16,20 +15,20 @@
         </h1>
         <div class="flex gap-2">
             <input type="text" id="workerUrl" placeholder="Worker 網址..." class="border rounded px-2 text-sm w-48 bg-yellow-50">
-            <input type="text" id="triggerKeyword" placeholder="設定本圖關鍵字" class="border rounded px-2 text-sm font-bold w-40 border-blue-500">
+            <input type="text" id="triggerKeyword" placeholder="設定本圖關鍵字" class="border rounded px-2 text-sm font-bold w-32 border-blue-500">
             <button onclick="loadSettings()" class="bg-gray-500 text-white px-3 rounded text-sm hover:bg-gray-600">讀取</button>
             <button onclick="saveSettings()" class="bg-green-600 text-white px-3 rounded text-sm hover:bg-green-700">儲存</button>
+            <button onclick="resetImgur()" class="text-xs text-gray-400 underline ml-2">重設 Imgur ID</button>
         </div>
     </div>
 
     <div class="flex flex-1 overflow-hidden w-full">
         <div class="w-72 bg-white border-r overflow-y-auto p-4 flex flex-col gap-4">
             <div class="bg-blue-50 p-2 rounded text-xs text-blue-700">
-                <strong>💡 穩定模式：</strong><br>圖片會自動壓縮至適合 LINE 的大小，確保上傳成功。
+                <strong>⚡ 極速模式：</strong><br>圖片將上傳至 Imgur 伺服器。<br>穩定、快速、不斷線。
             </div>
-            <h3 class="font-bold text-sm">圖片清單</h3>
+            <button onclick="addImageBlock()" class="w-full py-3 border-2 border-dashed border-blue-300 text-blue-500 rounded font-bold hover:bg-blue-50">+ 新增圖片</button>
             <div id="imageList" class="space-y-4"></div>
-            <button onclick="addImageBlock()" class="w-full py-2 border-2 border-dashed border-blue-300 text-blue-500 rounded hover:bg-blue-50">+ 新增圖片</button>
         </div>
 
         <div class="flex-1 bg-slate-200 relative overflow-auto flex justify-center p-8">
@@ -38,7 +37,7 @@
                 <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
             </div>
             <div id="emptyState" class="text-slate-400 mt-20 flex flex-col items-center">
-                <span class="text-4xl mb-2">👈</span><span>請從左側新增圖片</span>
+                <span class="text-6xl mb-4">👈</span><span>請從左側新增圖片</span>
             </div>
         </div>
     </div>
@@ -62,7 +61,7 @@
                 div.innerHTML = `
                     <div class="flex justify-between mb-2"><span class="font-bold text-xs">圖片 ${idx + 1}</span><button onclick="images.splice(${idx},1);renderImageList();selectImage(-1)" class="text-red-500 text-xs">✕</button></div>
                     ${img.url ? `<img src="${img.url}" class="w-full h-24 object-cover rounded mb-2 border">` : '<div class="w-full h-20 bg-gray-100 flex items-center justify-center text-xs text-gray-400">無圖片</div>'}
-                    <button onclick="triggerUpload(${idx}, this)" class="w-full bg-blue-500 text-white text-xs py-1 rounded hover:bg-blue-600">上傳圖片</button>
+                    <button onclick="triggerUpload(${idx}, this)" class="w-full bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700 font-bold">上傳到 Imgur</button>
                     <div class="mt-1 text-[10px] text-gray-500 text-right">熱區: ${img.areas.length}</div>
                 `;
                 div.onclick = (e) => { if(!e.target.tagName.match(/BUTTON|INPUT/)) selectImage(idx); };
@@ -83,76 +82,50 @@
             } else { canvas.classList.add('hidden'); document.getElementById('emptyState').classList.remove('hidden'); }
         }
 
-        // ★★★ 核心：壓縮與上傳 ★★★
+        // ★★★ Imgur 上傳核心 ★★★
+        function getImgurClientId() {
+            let id = localStorage.getItem('imgur_client_id');
+            if (!id) {
+                id = prompt("請輸入 Imgur Client ID (第一次使用需輸入)\n公開測試用 ID: 546c25a59c58ad7", "546c25a59c58ad7");
+                if (id) localStorage.setItem('imgur_client_id', id);
+            }
+            return id;
+        }
+        function resetImgur() { localStorage.removeItem('imgur_client_id'); alert("已重置，下次上傳時會重新詢問。"); }
+
         function triggerUpload(idx, btn) {
-            const url = document.getElementById('workerUrl').value;
-            if (!url) return alert('請先輸入 Worker 網址');
+            const clientId = getImgurClientId();
+            if (!clientId) return alert("未輸入 Client ID，無法上傳");
 
             document.getElementById('fileInput').onchange = async (e) => {
                 const file = e.target.files[0]; if (!file) return;
-                const oldText = btn.innerText; btn.innerText = "⏳ 壓縮上傳中...";
+                const oldText = btn.innerText; btn.innerText = "⏳ 上傳中..."; btn.disabled = true;
+
+                const formData = new FormData();
+                formData.append('image', file);
 
                 try {
-                    // 1. 前端壓縮 (Canvas Resize)
-                    const compressedBase64 = await compressImage(file);
-                    
-                    // 2. 上傳 Base64 字符串
-                    const res = await fetch(url + '/upload', {
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ password: '1234', image: compressedBase64 }) 
+                    const res = await fetch('https://api.imgur.com/3/image', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Client-ID ' + clientId },
+                        body: formData
                     });
-
-                    if (res.ok) {
-                        const json = await res.json();
-                        images[idx].url = json.url;
+                    const json = await res.json();
+                    
+                    if (json.success) {
+                        images[idx].url = json.data.link; // 取得 Imgur 網址
                         renderImageList(); selectImage(idx);
-                    } else { alert('上傳失敗: ' + await res.text()); }
-                } catch(e) { 
-                    console.error(e);
-                    alert('發生錯誤: ' + e.message); 
-                }
-                btn.innerText = oldText;
+                    } else {
+                        alert('上傳失敗: ' + (json.data.error || '未知錯誤'));
+                        if(json.status === 429) alert("上傳太頻繁，請稍後再試");
+                    }
+                } catch(e) { alert('連線錯誤'); }
+                btn.innerText = oldText; btn.disabled = false;
             };
             document.getElementById('fileInput').click();
         }
 
-        // 圖片壓縮函式
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        // LINE Imagemap 標準寬度 1040
-                        const MAX_WIDTH = 1040;
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // 轉成 JPEG, 品質 0.8
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                        resolve(dataUrl);
-                    };
-                    img.onerror = reject;
-                };
-                reader.onerror = reject;
-            });
-        }
-
-        // 畫框與其他邏輯維持不變
+        // 畫框框邏輯
         const layer = document.getElementById('drawLayer');
         layer.onmousedown = (e) => {
             if (currentImgIndex === -1) return; isDrawing = true;
@@ -165,9 +138,9 @@
             const endX = (e.clientX - rect.left) * scale; const endY = (e.clientY - rect.top) * scale;
             const w = Math.abs(endX - startX); const h = Math.abs(endY - startY);
             if (w > 20 && h > 20) {
-                const type = prompt("點擊後動作? (text=發文字, link=開網頁)", "text");
+                const type = prompt("動作? (text=發文字, link=開網頁)", "text");
                 if(!type) return;
-                const content = prompt("內容? (例如: '產品介紹' 或 'https://...')");
+                const content = prompt("內容? (關鍵字 或 網址)");
                 if (content) {
                     images[currentImgIndex].areas.push({ x: Math.min(startX, endX), y: Math.min(startY, endY), width: w, height: h, type: type === 'link' ? 'uri' : 'message', text: content });
                     renderAreas(); renderImageList();
@@ -204,6 +177,7 @@
                     area: { x: a.x * (1040/img.width), y: a.y * (1040/img.width), width: a.width * (1040/img.width), height: a.height * (1040/img.width) }
                 }))
             }));
+            
             try {
                 const res = await fetch(url + '/save', { method: 'POST', body: JSON.stringify({ password: '1234', keyword, payload: { mode: 'imagemap', messages } }) });
                 if(res.ok) alert('儲存成功！'); else alert('失敗');
