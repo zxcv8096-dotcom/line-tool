@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LINE OA 自製功能實驗室</title>
+  <title>LINE OA 自製功能實驗室（總覽＋控管）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }
@@ -13,10 +13,14 @@
       border-radius:16px; padding:14px; transition:.15s;
     }
     .toolCard:hover{ transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.08); }
-    .badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid; }
-    .badge-db { background: #eff6ff; color:#1d4ed8; border-color:#dbeafe; }
-    .badge-replies { background: #fffbeb; color:#b45309; border-color:#fef3c7; }
-    .btn { font-weight: 800; border-radius: 14px; padding: 10px 14px; }
+    .badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid; font-weight: 900; }
+    .badge-db { background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
+    .badge-replies { background:#fffbeb; color:#b45309; border-color:#fef3c7; }
+    .badge-active { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+    .badge-testing { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+    .badge-deprecated { background:#f1f5f9; color:#475569; border-color:#e2e8f0; text-decoration: line-through; }
+    .badge-unknown { background:#fafafa; color:#525252; border-color:#e5e5e5; }
+    .btn { font-weight: 900; border-radius: 14px; padding: 10px 14px; }
     .btnDark { background:#0f172a; color:#fff; }
     .btnDark:hover { background:#000; }
     .btnGreen { background:#059669; color:#fff; }
@@ -25,6 +29,8 @@
     .btnRed:hover { background:#be123c; }
     .btnGhost { background:#fff; border:1px solid #e2e8f0; }
     .btnGhost:hover { background:#f1f5f9; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .small { font-size: 12px; }
   </style>
 </head>
 
@@ -36,9 +42,9 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <div class="text-5xl">🧪</div>
-          <h1 class="text-2xl font-extrabold mt-2">LINE OA 自製功能實驗室（總覽 / 控管）</h1>
+          <h1 class="text-2xl font-extrabold mt-2">LINE OA 自製功能實驗室（總覽＋控管）</h1>
           <p class="text-sm text-slate-500 mt-1">
-            你所有自製功能的「研發管理頁」。同時列出 KV 裡所有關鍵字資料（包含你忘了在哪做的）。
+            可依「功能 / 狀態」篩選你做過的所有資料；支援預覽、刪除、快速跳回工具頁。
           </p>
         </div>
         <div class="text-right">
@@ -54,19 +60,19 @@
                  class="flex-1 border rounded-xl p-2 text-sm bg-white"
                  oninput="saveWorkerUrl(this.value)">
           <button class="btn btnGreen" onclick="reloadAll()">載入所有資料</button>
+          <button class="btn btnGhost" onclick="ping()">測試連線</button>
         </div>
         <div class="mt-2 text-[12px] text-slate-600">
-          注意：你目前 Worker 是「無密碼管理」，知道 Worker URL 的人就能改你的資料（你接受這個模式才用）。
+          建議 Worker 支援：<span class="mono">/listMeta /loadAny /deleteAny</span>（這頁才能完整分類＆控管）。
         </div>
       </div>
 
-      <!-- Status -->
-      <div id="status" class="mt-3 text-sm"></div>
+      <div id="status" class="mt-3 text-sm text-slate-600"></div>
     </div>
 
     <!-- Tools -->
     <div class="card p-6">
-      <h2 class="font-extrabold text-lg mb-3">固定工具入口（你首頁那幾個）</h2>
+      <h2 class="font-extrabold text-lg mb-3">固定工具入口</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
         <button class="toolCard" onclick="go('liff_popup_imagemap.html')">
@@ -100,45 +106,75 @@
         </button>
 
       </div>
+
       <div class="text-[12px] text-slate-500 mt-3">
-        這些入口只負責打開你 GitHub Pages 的工具頁；資料的讀寫都走 Worker KV。
+        工具頁是 GitHub Pages；資料都在 Worker KV → 同一個 Worker URL 就能跨設備同步。
       </div>
     </div>
 
-    <!-- KV Explorer -->
+    <!-- Explorer -->
     <div class="card p-6 space-y-3">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 class="font-extrabold text-lg">雲端資料庫探索（DB + REPLIES）</h2>
+          <h2 class="font-extrabold text-lg">資料總覽（可篩選）</h2>
           <div class="text-xs text-slate-500">
-            會列出你 KV 裡所有 keyword；你可以搜尋、預覽內容、刪除清理。
+            建議用「功能」先縮小，再用「狀態」/「關鍵字」查。
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
+          <button class="btn btnGhost" onclick="resetFilters()">重置篩選</button>
           <button class="btn btnGhost" onclick="reloadAll()">重新整理</button>
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-2">
-        <input id="search" placeholder="搜尋 keyword（例如：選單 / 營養 / 產品 / 卡片）"
-               class="flex-1 border rounded-xl p-2 text-sm"
+      <!-- Filters -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+        <input id="search" placeholder="搜尋 keyword（例如：選單 / 產品 / 卡片）"
+               class="border rounded-xl p-2 text-sm"
                oninput="renderList()">
+
         <select id="nsFilter" class="border rounded-xl p-2 text-sm" onchange="renderList()">
           <option value="ALL">全部 namespace</option>
           <option value="DB">DB（BOT_DATA）</option>
           <option value="REPLIES">REPLIES（replies）</option>
         </select>
+
+        <select id="featureFilter" class="border rounded-xl p-2 text-sm" onchange="renderList()">
+          <option value="ALL">全部功能</option>
+          <option value="quickreply">🔴 quickreply</option>
+          <option value="imagemap">🗺️ imagemap</option>
+          <option value="carousel">🎠 carousel</option>
+          <option value="flow">🔀 flow</option>
+          <option value="liff_preview">📱 liff_preview</option>
+          <option value="other">🧩 other</option>
+          <option value="unknown">❓ unknown</option>
+        </select>
+
+        <select id="statusFilter" class="border rounded-xl p-2 text-sm" onchange="renderList()">
+          <option value="ALL">全部狀態</option>
+          <option value="active">✅ active</option>
+          <option value="testing">🧪 testing</option>
+          <option value="deprecated">🗑️ deprecated</option>
+          <option value="unknown">❓ unknown</option>
+        </select>
+
+        <label class="flex items-center gap-2 bg-slate-50 border rounded-xl p-2 text-sm">
+          <input id="hideDeprecated" type="checkbox" class="scale-110" onchange="renderList()">
+          <span class="font-bold text-slate-600">隱藏 deprecated</span>
+        </label>
       </div>
 
       <div id="stats" class="text-[12px] text-slate-500"></div>
       <div id="list" class="space-y-2"></div>
 
-      <div class="mt-2 text-[12px] text-slate-500">
-        若你看不到任何資料：通常是 Worker URL 不對、或 Worker 尚未加上 <span class="font-bold">/listAll /loadAny /deleteAny</span>。
+      <div class="text-[12px] text-slate-500">
+        若你希望「更精準的功能分類」：請讓你的工具在儲存時寫入
+        <span class="mono">payload.meta.feature / payload.meta.status</span>，
+        或由 Worker 在 /save 時自動補 meta（你之前要的做法）。
       </div>
     </div>
 
-    <div class="text-center text-[12px] text-slate-400 mt-2">
+    <div class="text-center text-[12px] text-slate-400">
       Powered by GitHub Pages + Cloudflare Workers (KV/R2)
     </div>
   </div>
@@ -152,38 +188,34 @@
       </div>
       <div class="p-4 space-y-3">
         <div class="flex flex-wrap gap-2 items-center">
-          <span id="modalBadge" class="badge badge-db">DB</span>
-          <span class="text-[12px] text-slate-500">（這裡只預覽，不會修改內容）</span>
+          <span id="modalNs" class="badge badge-db">DB</span>
+          <span id="modalFeature" class="badge badge-unknown">feature: unknown</span>
+          <span id="modalStatus" class="badge badge-unknown">status: unknown</span>
+          <span id="modalUpdated" class="text-[12px] text-slate-500"></span>
         </div>
-        <pre id="modalBody" class="text-xs bg-slate-50 border rounded-xl p-3 overflow-auto max-h-[60vh]"></pre>
+        <pre id="modalBody" class="text-xs bg-slate-50 border rounded-xl p-3 overflow-auto max-h-[60vh] mono"></pre>
       </div>
     </div>
   </div>
 
 <script>
-  // ====== Storage Keys ======
   const WORKER_KEY = 'line_worker_url';
-
-  // ====== State ======
-  let ALL_KEYS = []; // [{ ns:'DB'|'REPLIES', key:string }]
+  let ITEMS = []; // {namespace,key,feature,status,updatedAt,note}
 
   window.onload = () => {
     const saved = localStorage.getItem(WORKER_KEY);
     if (saved) document.getElementById('workerUrl').value = saved;
-
-    // 進來先不自動載入，避免沒填 URL 就一直報錯
+    setStatus('請先輸入 Worker URL，按「載入所有資料」。', 'info');
   };
 
-  function setStatus(msg, type='info'){
+  function setStatus(msg, type='info') {
     const el = document.getElementById('status');
     const cls = type==='ok' ? 'text-emerald-700' : type==='err' ? 'text-rose-700' : 'text-slate-600';
     el.className = `mt-3 text-sm ${cls}`;
     el.textContent = msg;
   }
 
-  function saveWorkerUrl(v){
-    localStorage.setItem(WORKER_KEY, (v||'').trim());
-  }
+  function saveWorkerUrl(v){ localStorage.setItem(WORKER_KEY, (v||'').trim()); }
 
   function getWorker(){
     let w = (document.getElementById('workerUrl').value || '').trim();
@@ -213,26 +245,52 @@
     return {res, out};
   }
 
-  // ====== Load All Keys ======
+  async function ping(){
+    const w = getWorker();
+    if(!w) return;
+    try{
+      const res = await fetch(w + '/health', { method:'GET' });
+      if(res.ok){
+        setStatus('連線成功：/health OK', 'ok');
+      } else {
+        setStatus('連線失敗：/health 不是 200（請確認 Worker）', 'err');
+      }
+    }catch(e){
+      setStatus('連線失敗：' + (e.message || e), 'err');
+    }
+  }
+
+  function resetFilters(){
+    document.getElementById('search').value = '';
+    document.getElementById('nsFilter').value = 'ALL';
+    document.getElementById('featureFilter').value = 'ALL';
+    document.getElementById('statusFilter').value = 'ALL';
+    document.getElementById('hideDeprecated').checked = false;
+    renderList();
+  }
+
   async function reloadAll(){
     const w = getWorker();
     if(!w) return;
 
     setStatus('載入中…', 'info');
-    ALL_KEYS = [];
+    ITEMS = [];
     document.getElementById('list').innerHTML = '<div class="text-slate-400 text-sm">載入中...</div>';
 
-    // 1) 新版：/listAll
+    // 1) 優先用 /listMeta（可直接分類）
     try{
-      const r = await postJSON(w + '/listAll', {});
-      if(r.res.ok && r.out && r.out.ok){
-        const db = Array.isArray(r.out.db) ? r.out.db : [];
-        const rep = Array.isArray(r.out.replies) ? r.out.replies : [];
-        ALL_KEYS = [
-          ...db.map(k => ({ns:'DB', key:k})),
-          ...rep.map(k => ({ns:'REPLIES', key:k}))
-        ];
-        setStatus(`載入成功：DB ${db.length} 筆 / REPLIES ${rep.length} 筆`, 'ok');
+      const r = await postJSON(w + '/listMeta', {});
+      if(r.res.ok && r.out && r.out.ok && Array.isArray(r.out.items)){
+        ITEMS = r.out.items.map(x => ({
+          namespace: String(x.namespace || 'DB').toUpperCase(),
+          key: String(x.key || ''),
+          feature: String(x.feature || 'unknown'),
+          status: String(x.status || 'unknown'),
+          updatedAt: Number(x.updatedAt || 0) || 0,
+          note: String(x.note || '')
+        })).filter(x => x.key);
+
+        setStatus(`載入成功：共 ${ITEMS.length} 筆（/listMeta）`, 'ok');
         renderList();
         return;
       }
@@ -240,32 +298,62 @@
       // continue fallback
     }
 
-    // 2) fallback：舊版只有 /list（DB）
+    // 2) fallback：/listAll（只能拿 key，功能未知）
+    try{
+      const r = await postJSON(w + '/listAll', {});
+      if(r.res.ok && r.out && r.out.ok){
+        const db = Array.isArray(r.out.db) ? r.out.db : [];
+        const rep = Array.isArray(r.out.replies) ? r.out.replies : [];
+        ITEMS = [
+          ...db.map(k => ({namespace:'DB', key:String(k), feature:'unknown', status:'unknown', updatedAt:0, note:''})),
+          ...rep.map(k => ({namespace:'REPLIES', key:String(k), feature:'unknown', status:'unknown', updatedAt:0, note:''}))
+        ].filter(x => x.key);
+
+        setStatus(`載入成功：共 ${ITEMS.length} 筆（/listAll fallback；功能=unknown）`, 'ok');
+        renderList();
+        return;
+      }
+    }catch(e){
+      // continue fallback
+    }
+
+    // 3) fallback：舊版只有 /list（DB）
     try{
       const r = await postJSON(w + '/list', {});
       const keywords = (r.out && r.out.keywords) ? r.out.keywords : [];
-      ALL_KEYS = keywords.map(k => ({ns:'DB', key:k}));
-      setStatus(`載入成功（舊模式）：DB ${keywords.length} 筆。建議你更新 Worker 支援 /listAll /loadAny /deleteAny。`, 'ok');
+      ITEMS = keywords.map(k => ({namespace:'DB', key:String(k), feature:'unknown', status:'unknown', updatedAt:0, note:''}));
+
+      setStatus(`載入成功：DB ${ITEMS.length} 筆（舊版 /list；功能=unknown）`, 'ok');
       renderList();
       return;
     }catch(e){
-      setStatus('載入失敗：請確認 Worker URL 正確、且 Worker 有開 CORS。', 'err');
+      setStatus('載入失敗：請確認 Worker URL、以及 Worker 有開 CORS。', 'err');
       document.getElementById('list').innerHTML =
-        '<div class="text-rose-600 text-sm">載入失敗：' + escapeHtml(e.message) + '</div>';
+        '<div class="text-rose-600 text-sm">載入失敗：' + escapeHtml(e.message || e) + '</div>';
     }
   }
 
-  // ====== Render List ======
   function renderList(){
     const q = (document.getElementById('search').value || '').trim().toLowerCase();
     const ns = document.getElementById('nsFilter').value;
+    const feat = document.getElementById('featureFilter').value;
+    const st = document.getElementById('statusFilter').value;
+    const hideDep = document.getElementById('hideDeprecated').checked;
 
-    let rows = ALL_KEYS.slice();
-    if(ns !== 'ALL') rows = rows.filter(x => x.ns === ns);
-    if(q) rows = rows.filter(x => x.key.toLowerCase().includes(q));
+    let rows = ITEMS.slice();
 
-    document.getElementById('stats').textContent =
-      `共 ${ALL_KEYS.length} 筆（目前顯示 ${rows.length} 筆）`;
+    if(ns !== 'ALL') rows = rows.filter(x => x.namespace === ns);
+    if(feat !== 'ALL') rows = rows.filter(x => x.feature === feat);
+    if(st !== 'ALL') rows = rows.filter(x => x.status === st);
+    if(hideDep) rows = rows.filter(x => x.status !== 'deprecated');
+    if(q) rows = rows.filter(x =>
+      x.key.toLowerCase().includes(q) ||
+      (x.note || '').toLowerCase().includes(q) ||
+      (x.feature || '').toLowerCase().includes(q)
+    );
+
+    const total = ITEMS.length;
+    document.getElementById('stats').textContent = `共 ${total} 筆（目前顯示 ${rows.length} 筆）`;
 
     const list = document.getElementById('list');
     list.innerHTML = '';
@@ -275,40 +363,94 @@
       return;
     }
 
+    // 排序：active > testing > unknown > deprecated，接著 feature，再 key
+    const rank = { active:0, testing:1, unknown:2, deprecated:3 };
+    rows.sort((a,b)=>{
+      const ra = rank[a.status] ?? 9;
+      const rb = rank[b.status] ?? 9;
+      if(ra !== rb) return ra - rb;
+      const fa = (a.feature||'unknown');
+      const fb = (b.feature||'unknown');
+      if(fa !== fb) return fa.localeCompare(fb, 'zh-Hant');
+      return (a.key||'').localeCompare((b.key||''), 'zh-Hant');
+    });
+
     rows.forEach(x=>{
-      const badgeClass = x.ns === 'DB' ? 'badge-db' : 'badge-replies';
-      const badgeText = x.ns === 'DB' ? 'DB' : 'REPLIES';
+      const nsBadge = x.namespace === 'DB'
+        ? `<span class="badge badge-db">DB</span>`
+        : `<span class="badge badge-replies">REPLIES</span>`;
+
+      const stBadge = statusBadge(x.status);
+      const featBadge = `<span class="badge badge-unknown">feature: ${escapeHtml(x.feature || 'unknown')}</span>`;
+
+      const updated = x.updatedAt ? `更新：${fmtTime(x.updatedAt)}` : '';
 
       list.innerHTML += `
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border rounded-2xl p-3 bg-slate-50">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="badge ${badgeClass}">${badgeText}</span>
-            <div class="font-bold truncate">${escapeHtml(x.key)}</div>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button class="btn btnGhost" onclick="previewKey('${x.ns}','${escapeJs(x.key)}')">預覽</button>
-            <button class="btn btnRed" onclick="deleteKey('${x.ns}','${escapeJs(x.key)}')">刪除</button>
+        <div class="flex flex-col gap-2 border rounded-2xl p-3 bg-slate-50">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                ${nsBadge}
+                ${stBadge}
+                ${featBadge}
+                <div class="font-black truncate">${escapeHtml(x.key)}</div>
+              </div>
+              <div class="text-[12px] text-slate-500 mt-1">
+                ${escapeHtml(x.note || '')}
+                ${updated ? ` <span class="ml-2">${updated}</span>` : ''}
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button class="btn btnGhost small" onclick="previewKey('${x.namespace}','${escapeJs(x.key)}')">預覽</button>
+              <button class="btn btnRed small" onclick="deleteKey('${x.namespace}','${escapeJs(x.key)}')">刪除</button>
+            </div>
           </div>
         </div>
       `;
     });
   }
 
-  // ====== Preview / Delete ======
+  function statusBadge(status){
+    const s = (status || 'unknown');
+    if(s === 'active') return `<span class="badge badge-active">✅ active</span>`;
+    if(s === 'testing') return `<span class="badge badge-testing">🧪 testing</span>`;
+    if(s === 'deprecated') return `<span class="badge badge-deprecated">🗑️ deprecated</span>`;
+    return `<span class="badge badge-unknown">❓ unknown</span>`;
+  }
+
+  function fmtTime(ts){
+    try{
+      const d = new Date(ts);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const da = String(d.getDate()).padStart(2,'0');
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      return `${y}-${m}-${da} ${hh}:${mm}`;
+    }catch{
+      return '';
+    }
+  }
+
   async function previewKey(ns, key){
     const w = getWorker();
     if(!w) return;
 
-    // 新版：/loadAny
+    // 先從 ITEMS 找 meta 顯示
+    const row = ITEMS.find(x => x.namespace === ns && x.key === key);
+    const feature = row?.feature || 'unknown';
+    const status = row?.status || 'unknown';
+    const updatedAt = row?.updatedAt || 0;
+
+    // 優先：/loadAny
     try{
       const r = await postJSON(w + '/loadAny', { namespace: ns, keyword: key });
       if(r.res.ok && r.out && r.out.ok){
         const payload = r.out.payload;
         const text = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
-        showModal(ns, key, text);
+        showModal(ns, feature, status, key, updatedAt, text);
         return;
-      }else{
-        // 若 worker 回傳 ok:false
+      } else {
         const err = r.out && r.out.error ? r.out.error : '讀取失敗';
         alert(err);
         return;
@@ -317,16 +459,15 @@
       // fallback
     }
 
-    // fallback：舊 /load 只支援 DB（且舊版你之前有密碼）
+    // fallback：舊 /load（只支援 DB）
     if(ns !== 'DB'){
-      alert('你的 Worker 尚未支援讀取 REPLIES（請更新 worker.js 加上 /loadAny）');
+      alert('你的 Worker 尚未支援 /loadAny（REPLIES 無法讀取）。請更新 Worker。');
       return;
     }
-
     try{
       const r = await postJSON(w + '/load', { keyword: key });
       if(r.res.ok && r.out){
-        showModal(ns, key, JSON.stringify(r.out, null, 2));
+        showModal(ns, feature, status, key, updatedAt, JSON.stringify(r.out, null, 2));
         return;
       }
     }catch(e){}
@@ -343,11 +484,11 @@
     try{
       const r = await postJSON(w + '/deleteAny', { namespace: ns, keyword: key });
       if(r.res.ok && r.out && r.out.ok){
-        ALL_KEYS = ALL_KEYS.filter(x => !(x.ns===ns && x.key===key));
+        ITEMS = ITEMS.filter(x => !(x.namespace===ns && x.key===key));
         renderList();
         alert('已刪除');
         return;
-      }else{
+      } else {
         const err = r.out && r.out.error ? r.out.error : '刪除失敗';
         alert(err);
         return;
@@ -357,12 +498,32 @@
     }
   }
 
-  // ====== Modal ======
-  function showModal(ns, key, body){
-    document.getElementById('modalTitle').textContent = `${key}`;
-    const badge = document.getElementById('modalBadge');
-    badge.textContent = ns === 'DB' ? 'DB' : 'REPLIES';
-    badge.className = 'badge ' + (ns === 'DB' ? 'badge-db' : 'badge-replies');
+  function showModal(ns, feature, status, key, updatedAt, body){
+    document.getElementById('modalTitle').textContent = key;
+
+    const nsEl = document.getElementById('modalNs');
+    if(ns === 'DB'){
+      nsEl.textContent = 'DB';
+      nsEl.className = 'badge badge-db';
+    }else{
+      nsEl.textContent = 'REPLIES';
+      nsEl.className = 'badge badge-replies';
+    }
+
+    const featEl = document.getElementById('modalFeature');
+    featEl.textContent = `feature: ${feature || 'unknown'}`;
+    featEl.className = 'badge badge-unknown';
+
+    const stEl = document.getElementById('modalStatus');
+    stEl.className = 'badge ' + (
+      status === 'active' ? 'badge-active' :
+      status === 'testing' ? 'badge-testing' :
+      status === 'deprecated' ? 'badge-deprecated' :
+      'badge-unknown'
+    );
+    stEl.textContent = `status: ${status || 'unknown'}`;
+
+    document.getElementById('modalUpdated').textContent = updatedAt ? `更新：${fmtTime(updatedAt)}` : '';
 
     document.getElementById('modalBody').textContent = body;
 
@@ -377,7 +538,6 @@
     m.classList.remove('flex');
   }
 
-  // ====== Escape Helpers ======
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
