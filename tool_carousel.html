@@ -2,13 +2,13 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>滑動卡片編輯器 (R2 壓縮版)</title>
+<title>滑動卡片編輯器 (R2 壓縮 + 手機預覽版)</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   .area-box{
     position:absolute;
     border:2px solid rgba(255,0,0,.9);
-    background:rgba(255,0,0,.25);
+    background:rgba(255,0,0,.18);
     color:white;
     font-weight:800;
     display:flex;
@@ -24,15 +24,20 @@
     background:rgba(0,0,0,.10);
     pointer-events:none;
   }
+  .hotspot-preview{
+    position:absolute;
+    border:2px solid rgba(255, 0, 0, .85);
+    background:rgba(255,0,0,.12);
+    pointer-events:none;
+  }
 </style>
 </head>
 
 <body class="bg-slate-100 flex flex-col h-screen text-slate-800">
-  <!-- Header -->
   <div class="bg-white shadow p-4 flex justify-between items-center">
     <h1 class="font-bold text-xl text-amber-600 flex items-center gap-2">
       <a href="index.html" class="text-2xl hover:bg-slate-50 rounded px-1">🔙</a>
-      滑動卡片編輯器 (R2 壓縮版)
+      滑動卡片編輯器 (R2 壓縮 + 手機預覽)
     </h1>
 
     <div class="flex gap-2 text-sm items-center">
@@ -42,6 +47,7 @@
         class="border px-2 rounded font-bold w-44 border-amber-500">
       <button onclick="load()" class="bg-gray-500 text-white px-3 rounded hover:bg-gray-600">讀取</button>
       <button onclick="save()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700">儲存</button>
+      <button onclick="openPhonePreview()" class="bg-black text-white px-3 rounded hover:bg-slate-900">📱手機預覽</button>
     </div>
   </div>
 
@@ -50,39 +56,55 @@
     <div class="w-72 bg-white border-r p-4 overflow-y-auto flex flex-col gap-3">
       <div class="bg-amber-50 p-2 rounded text-xs text-amber-800">
         <strong>操作：</strong><br>
-        1. 新增卡片 → 上傳圖片（會自動壓縮）<br>
-        2. 在圖片上拖曳畫框（不限數量）<br>
-        3. 右側清單填入「關鍵字或網址」
+        1) 新增卡片→上傳（自動壓縮）<br>
+        2) 圖上拖曳畫框（不限數量）<br>
+        3) 右側填「關鍵字/網址」<br>
+        4) 點「📱手機預覽」看實機手感
       </div>
+
       <button onclick="addCard()"
         class="w-full py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded hover:bg-amber-50">
         + 新增卡片
       </button>
+
       <div id="cardList" class="space-y-2"></div>
     </div>
 
-    <!-- 中間：圖片編輯 -->
+    <!-- 中間：編輯 -->
     <div class="flex-1 bg-slate-200 p-6 flex justify-center overflow-auto relative items-start">
-      <div id="editorWrap" class="hidden w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
-        <!-- 左：區塊輸入清單 -->
+      <div id="editorWrap" class="hidden w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
+        <!-- 左：框清單 & 壓縮設定 -->
         <div class="bg-white rounded-lg shadow p-4 h-fit">
           <div class="flex items-center justify-between mb-2">
             <div class="font-bold text-slate-700">框框設定</div>
             <button onclick="clearAreas()" class="text-xs text-red-600 underline">清空本卡全部框</button>
           </div>
 
+          <!-- 壓縮設定 -->
           <div class="border rounded p-3 mb-3 bg-slate-50">
-            <div class="font-bold text-xs text-slate-600 mb-2">圖片壓縮設定（上傳時生效）</div>
+            <div class="font-bold text-xs text-slate-600 mb-2">圖片尺寸/壓縮（上傳時生效）</div>
+
             <div class="grid grid-cols-2 gap-2 text-xs">
-              <label class="flex flex-col gap-1">
-                <span class="text-slate-500">最大寬</span>
-                <select id="maxWidth" class="border rounded px-2 py-1">
-                  <option value="960">960</option>
-                  <option value="1280" selected>1280</option>
-                  <option value="1600">1600</option>
-                  <option value="2048">2048</option>
+              <label class="flex flex-col gap-1 col-span-2">
+                <span class="text-slate-500">尺寸模式</span>
+                <select id="sizeMode" class="border rounded px-2 py-1">
+                  <option value="line">LINE 建議（長邊 1280）</option>
+                  <option value="hd">清晰（長邊 1600）</option>
+                  <option value="small">省空間（長邊 960）</option>
+                  <option value="custom">自選尺寸（寬/高上限）</option>
                 </select>
               </label>
+
+              <label id="customWWrap" class="flex flex-col gap-1 hidden">
+                <span class="text-slate-500">最大寬(px)</span>
+                <input id="customW" type="number" value="1280" min="320" max="4096" class="border rounded px-2 py-1">
+              </label>
+
+              <label id="customHWrap" class="flex flex-col gap-1 hidden">
+                <span class="text-slate-500">最大高(px)</span>
+                <input id="customH" type="number" value="1280" min="320" max="4096" class="border rounded px-2 py-1">
+              </label>
+
               <label class="flex flex-col gap-1">
                 <span class="text-slate-500">格式</span>
                 <select id="outFormat" class="border rounded px-2 py-1">
@@ -91,33 +113,43 @@
                   <option value="image/png">PNG（不建議）</option>
                 </select>
               </label>
-              <label class="flex flex-col gap-1 col-span-2">
-                <span class="text-slate-500">品質（0.5～0.95）</span>
-                <input id="quality" type="range" min="0.5" max="0.95" step="0.01" value="0.82">
+
+              <label class="flex flex-col gap-1">
+                <span class="text-slate-500">品質</span>
+                <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
                 <div class="text-right text-[11px] text-slate-500">目前：<span id="qVal">0.82</span></div>
               </label>
+
+              <label class="flex items-center gap-2 col-span-2 mt-1">
+                <input id="cropSquare" type="checkbox" class="scale-110">
+                <span class="text-slate-600">裁切成正方形（適合某些封面風格，滑動卡片可選用）</span>
+              </label>
+
+              <div class="col-span-2 text-[11px] text-slate-500">
+                * 上傳時會再自動限制：長寬都不會超過你目前螢幕可見大小（避免壓太大看不到）
+              </div>
             </div>
           </div>
 
           <div class="text-xs text-slate-500 mb-2">
-            你可以一直畫框；每畫一個就會新增一條設定。
+            每畫一個框就會新增一條設定（不限數量）。
           </div>
 
           <div id="areaList" class="space-y-2"></div>
         </div>
 
-        <!-- 右：圖片畫框區 -->
+        <!-- 右：圖片畫框 -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
           <div class="relative group">
-            <img id="preview" class="w-full h-[520px] object-cover bg-gray-100">
+            <img id="preview" class="w-full h-[560px] object-cover bg-gray-100">
             <button onclick="uploadImg(currentIdx, this)"
               class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-              📷 上傳圖片到 R2（壓縮）
+              📷 上傳到 R2（壓縮）
             </button>
             <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
           </div>
           <div class="p-3 bg-gray-50 text-center text-xs text-gray-600">
-            在圖片上「按住拖曳」畫框。點紅框可刪除。
+            在圖片上按住拖曳畫框。點紅框可刪除。
           </div>
         </div>
       </div>
@@ -131,7 +163,73 @@
 
   <input type="file" id="fileInput" accept="image/*" hidden>
 
+  <!-- 手機預覽 Modal -->
+  <div id="phoneModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl w-[360px] max-w-[92vw] overflow-hidden">
+      <div class="flex items-center justify-between p-3 border-b">
+        <div class="font-bold text-slate-700">手機預覽（滑動卡片）</div>
+        <button onclick="closePhonePreview()" class="text-slate-500 hover:text-slate-900">✕</button>
+      </div>
+
+      <div class="p-3">
+        <!-- 假手機框 -->
+        <div class="mx-auto rounded-[28px] border-4 border-slate-900 bg-slate-900 p-2">
+          <div class="rounded-[22px] bg-white overflow-hidden">
+            <div class="bg-slate-100 text-xs text-slate-600 px-3 py-2 border-b">
+              LINE 預覽（點熱區會提示動作）
+            </div>
+
+            <div class="p-3">
+              <!-- 類似 LINE 聊天內 flex 的寬 -->
+              <div class="mx-auto w-[320px] max-w-full">
+                <div class="flex items-center justify-between mb-2">
+                  <button onclick="prevPhoneCard()" class="px-2 py-1 text-xs bg-slate-200 rounded">←</button>
+                  <div class="text-xs text-slate-600">
+                    第 <span id="phoneIdx">1</span> / <span id="phoneTotal">1</span> 張
+                  </div>
+                  <button onclick="nextPhoneCard()" class="px-2 py-1 text-xs bg-slate-200 rounded">→</button>
+                </div>
+
+                <div class="relative rounded-lg overflow-hidden border bg-white">
+                  <img id="phoneImg" class="w-full h-[220px] object-cover bg-gray-100">
+                  <div id="phoneHotspots" class="absolute inset-0"></div>
+                </div>
+
+                <div class="mt-2 text-[11px] text-slate-500">
+                  * 這是「在手機聊天中看到的大小感」，實際會因手機螢幕略有差異
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center gap-2">
+          <label class="flex items-center gap-2 text-xs text-slate-600">
+            <input id="showHotspots" type="checkbox" checked>
+            顯示熱區框
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
+/* ---------- UI 綁定 ---------- */
+const sizeModeEl = document.getElementById('sizeMode');
+const customWWrap = document.getElementById('customWWrap');
+const customHWrap = document.getElementById('customHWrap');
+
+sizeModeEl.addEventListener('change', () => {
+  const v = sizeModeEl.value;
+  const show = (v === 'custom');
+  customWWrap.classList.toggle('hidden', !show);
+  customHWrap.classList.toggle('hidden', !show);
+});
+
+const q = document.getElementById('quality');
+const qVal = document.getElementById('qVal');
+q.addEventListener('input', () => qVal.textContent = q.value);
+
 /* ---------- 共用工具 ---------- */
 function normalizeWorkerUrl(raw){
   if(!raw) return '';
@@ -164,30 +262,68 @@ async function uploadToR2(workerBaseUrl, fileBlob, filename){
   if(!j.ok || !j.url) throw new Error('上傳回傳格式不對');
   return j.url;
 }
+function escapeHtml(str){
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
 
-/* ---------- 壓縮 ---------- */
-async function compressImage(file, {maxWidth, mime, quality}){
-  // PNG 也可輸出，但通常不會變小；預設用 webp/jpg
+/* ---------- 壓縮/裁切 ---------- */
+function getTargetMaxWH(){
+  // 依模式給長邊上限
+  const mode = document.getElementById('sizeMode').value;
+  let maxW = 1280, maxH = 1280;
+
+  if(mode === 'line'){ maxW = 1280; maxH = 1280; }
+  if(mode === 'hd'){ maxW = 1600; maxH = 1600; }
+  if(mode === 'small'){ maxW = 960; maxH = 960; }
+  if(mode === 'custom'){
+    maxW = parseInt(document.getElementById('customW').value || '1280', 10);
+    maxH = parseInt(document.getElementById('customH').value || '1280', 10);
+  }
+
+  // 限制：不超過使用者「目前可視大小」（以 devicePixelRatio 算）
+  const dpr = window.devicePixelRatio || 1;
+  // 用編輯區預覽圖的顯示大小作為上限更準
+  const preview = document.getElementById('preview');
+  const vw = Math.max(320, Math.floor(preview.clientWidth * dpr));
+  const vh = Math.max(320, Math.floor(preview.clientHeight * dpr));
+
+  maxW = Math.min(maxW, vw);
+  maxH = Math.min(maxH, vh);
+
+  return { maxW, maxH };
+}
+
+async function compressImage(file, {maxW, maxH, mime, quality, cropSquare}){
   const img = await createImageBitmap(file);
-  const scale = Math.min(1, maxWidth / img.width);
-  const w = Math.round(img.width * scale);
-  const h = Math.round(img.height * scale);
+
+  // 裁切成正方形（中心裁切）
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if(cropSquare){
+    const side = Math.min(img.width, img.height);
+    sx = Math.floor((img.width - side) / 2);
+    sy = Math.floor((img.height - side) / 2);
+    sw = side; sh = side;
+  }
+
+  const scale = Math.min(1, maxW / sw, maxH / sh);
+  const w = Math.max(1, Math.round(sw * scale));
+  const h = Math.max(1, Math.round(sh * scale));
 
   const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d', { alpha: true });
-  ctx.drawImage(img, 0, 0, w, h);
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
 
   const outBlob = await new Promise((resolve) => {
-    if (mime === 'image/png') {
-      canvas.toBlob(resolve, mime); // png 不吃 quality
-    } else {
-      canvas.toBlob(resolve, mime, quality);
-    }
+    if(mime === 'image/png') canvas.toBlob(resolve, mime);
+    else canvas.toBlob(resolve, mime, quality);
   });
-
-  if(!outBlob) throw new Error('壓縮失敗（toBlob 回傳空）');
+  if(!outBlob) throw new Error('壓縮失敗（toBlob 空）');
 
   const ext = (mime === 'image/webp') ? 'webp' : (mime === 'image/jpeg') ? 'jpg' : 'png';
   const safeName = (file.name || 'image').replace(/\.[^/.]+$/, '');
@@ -195,16 +331,12 @@ async function compressImage(file, {maxWidth, mime, quality}){
 }
 
 /* ---------- 狀態 ---------- */
-let cards = []; // {url:'', areas:[{x,y,w,h,type,text}]}
+let cards = [];
 let currentIdx = -1;
 
 window.onload = () => {
   const savedUrl = localStorage.getItem('line_worker_url');
   if(savedUrl) document.getElementById('workerUrl').value = savedUrl;
-
-  const q = document.getElementById('quality');
-  const qVal = document.getElementById('qVal');
-  q.addEventListener('input', () => qVal.textContent = q.value);
 };
 
 /* ---------- 卡片 ---------- */
@@ -230,7 +362,7 @@ function renderList(){
           : `<div class="w-full h-16 bg-gray-100 text-xs flex items-center justify-center text-gray-400 mb-2">無圖片</div>`
         }
         <button onclick="uploadImg(${i}, this)" class="w-full bg-amber-500 text-white text-xs py-1 rounded hover:bg-amber-600">
-          上傳圖片到 R2（壓縮）
+          上傳到 R2（壓縮）
         </button>
         <div class="mt-1 text-[10px] text-gray-500 text-right">熱區: ${card.areas.length}</div>
       </div>
@@ -239,9 +371,9 @@ function renderList(){
 }
 function selectCard(i){
   currentIdx = i;
-
   const wrap = document.getElementById('editorWrap');
   const empty = document.getElementById('emptyState');
+
   if(i === -1 || !cards[i]){
     wrap.classList.add('hidden');
     empty.classList.remove('hidden');
@@ -258,13 +390,11 @@ function clearAreas(){
   if(currentIdx < 0) return;
   if(confirm('確定清空本卡全部框？')){
     cards[currentIdx].areas = [];
-    renderAreas();
-    renderAreaList();
-    renderList();
+    renderAreas(); renderAreaList(); renderList();
   }
 }
 
-/* ---------- 上傳（壓縮後送 Worker→R2） ---------- */
+/* ---------- 上傳（壓縮→R2） ---------- */
 function uploadImg(idx, btn){
   const raw = document.getElementById('workerUrl').value;
   const base = normalizeWorkerUrl(raw);
@@ -282,15 +412,16 @@ function uploadImg(idx, btn){
     btn.disabled = true;
 
     try{
-      const maxWidth = parseInt(document.getElementById('maxWidth').value, 10);
       const mime = document.getElementById('outFormat').value;
       const quality = parseFloat(document.getElementById('quality').value);
+      const cropSquare = document.getElementById('cropSquare').checked;
+      const { maxW, maxH } = getTargetMaxWH();
 
-      const { blob, filename } = await compressImage(file, { maxWidth, mime, quality });
+      const { blob, filename } = await compressImage(file, { maxW, maxH, mime, quality, cropSquare });
       const url = await uploadToR2(base, blob, filename);
 
       cards[idx].url = url;
-      cards[idx].areas = []; // 換圖後清空熱區（避免對不上）
+      cards[idx].areas = []; // 換圖清空熱區
       renderList();
       selectCard(idx);
     }catch(err){
@@ -303,7 +434,7 @@ function uploadImg(idx, btn){
   input.click();
 }
 
-/* ---------- 畫框（比例） + 預覽框 ---------- */
+/* ---------- 畫框（比例）+ 預覽框 ---------- */
 const layer = document.getElementById('drawLayer');
 let isDrawing = false;
 let sx = 0, sy = 0;
@@ -311,6 +442,8 @@ let previewRect = null;
 
 layer.addEventListener('mousedown', (e) => {
   if(currentIdx < 0) return;
+  if(!cards[currentIdx].url) return alert('請先上傳圖片（R2）再畫框');
+
   const r = layer.getBoundingClientRect();
   isDrawing = true;
   sx = e.clientX - r.left;
@@ -355,73 +488,54 @@ layer.addEventListener('mouseup', (e) => {
   const w = Math.abs(ex - sx);
   const h = Math.abs(ey - sy);
 
-  if(previewRect){
-    previewRect.remove();
-    previewRect = null;
-  }
-
+  if(previewRect){ previewRect.remove(); previewRect = null; }
   if(w < 12 || h < 12) return;
-  if(!cards[currentIdx].url) return alert('請先上傳圖片（R2）再畫框');
 
-  // 存比例座標（0~1）
-  const area = {
-    x: x / r.width,
-    y: y / r.height,
-    w: w / r.width,
-    h: h / r.height,
-    type: 'message',
-    text: ''
-  };
+  cards[currentIdx].areas.push({
+    x: x / r.width, y: y / r.height,
+    w: w / r.width, h: h / r.height,
+    type: 'message', text: ''
+  });
 
-  cards[currentIdx].areas.push(area);
-  renderAreas();
-  renderAreaList();
-  renderList();
+  renderAreas(); renderAreaList(); renderList();
 });
 
 function renderAreas(){
   layer.querySelectorAll('.area-box').forEach(el => el.remove());
   if(currentIdx < 0) return;
 
-  const areas = cards[currentIdx].areas;
-  areas.forEach((a, i) => {
+  cards[currentIdx].areas.forEach((a, i) => {
     const d = document.createElement('div');
     d.className = 'area-box';
-    d.style.left = (a.x * 100) + '%';
-    d.style.top = (a.y * 100) + '%';
-    d.style.width = (a.w * 100) + '%';
-    d.style.height = (a.h * 100) + '%';
-    d.innerText = i + 1;
+    d.style.left = (a.x*100)+'%';
+    d.style.top = (a.y*100)+'%';
+    d.style.width = (a.w*100)+'%';
+    d.style.height = (a.h*100)+'%';
+    d.innerText = i+1;
     d.onclick = (e) => {
       e.stopPropagation();
       if(confirm(`刪除框 ${i+1}？`)){
-        cards[currentIdx].areas.splice(i, 1);
-        renderAreas();
-        renderAreaList();
-        renderList();
+        cards[currentIdx].areas.splice(i,1);
+        renderAreas(); renderAreaList(); renderList();
       }
     };
     layer.appendChild(d);
   });
 }
 
-/* ---------- 右側清單：輸入 keyword/url ---------- */
+/* ---------- 右側框清單 ---------- */
 function renderAreaList(){
   const box = document.getElementById('areaList');
   box.innerHTML = '';
   if(currentIdx < 0) return;
 
   const areas = cards[currentIdx].areas;
-
   if(areas.length === 0){
     box.innerHTML = `<div class="text-xs text-slate-400">目前沒有框，去圖片上拖曳畫框。</div>`;
     return;
   }
 
   areas.forEach((a, i) => {
-    const typeLabel = a.type === 'uri' ? '開網頁' : '發文字';
-    const placeholder = a.type === 'uri' ? '貼網址 https://...' : '填入關鍵字（訊息）';
-
     const row = document.createElement('div');
     row.className = 'border rounded p-2 bg-white';
     row.innerHTML = `
@@ -441,11 +555,10 @@ function renderAreaList(){
 
         <label class="col-span-2 flex flex-col gap-1">
           <span class="text-slate-500">內容</span>
-          <input class="border rounded px-2 py-1" value="${escapeHtml(a.text||'')}" placeholder="${placeholder}">
+          <input class="border rounded px-2 py-1" value="${escapeHtml(a.text||'')}"
+            placeholder="${a.type==='uri'?'貼網址 https://...':'填入關鍵字（訊息）'}">
         </label>
       </div>
-
-      <div class="text-[11px] text-slate-400 mt-2">目前：${typeLabel}</div>
     `;
 
     const delBtn = row.querySelector('button');
@@ -458,28 +571,14 @@ function renderAreaList(){
         renderAreas(); renderAreaList(); renderList();
       }
     };
-
     sel.onchange = () => {
       a.type = sel.value;
       input.placeholder = a.type === 'uri' ? '貼網址 https://...' : '填入關鍵字（訊息）';
-      renderAreaList(); // 讓下面文字更新
     };
-
-    input.oninput = () => {
-      a.text = input.value;
-    };
+    input.oninput = () => a.text = input.value;
 
     box.appendChild(row);
   });
-}
-
-function escapeHtml(str){
-  return String(str)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
 }
 
 /* ---------- save/load ---------- */
@@ -487,16 +586,12 @@ async function save(){
   const raw = document.getElementById('workerUrl').value;
   const key = document.getElementById('keyword').value.trim();
   const base = normalizeWorkerUrl(raw);
-
   if(!base || !key) return alert('資料不全（WorkerUrl / 關鍵字）');
   localStorage.setItem('line_worker_url', base);
 
-  // 驗證：每張卡都要有圖
   if(cards.length === 0) return alert('至少新增一張卡片');
   if(cards.some(c => !c.url)) return alert('有卡片沒有圖片，請先上傳');
-  // 驗證：每個框要有內容
-  const bad = cards.some(c => c.areas.some(a => !String(a.text||'').trim()));
-  if(bad) return alert('有框沒有填內容（關鍵字或網址）');
+  if(cards.some(c => c.areas.some(a => !String(a.text||'').trim()))) return alert('有框沒有填內容（關鍵字或網址）');
 
   const bubbles = cards.map(c => ({
     type: "bubble",
@@ -546,7 +641,6 @@ async function load(){
   const raw = document.getElementById('workerUrl').value;
   const key = document.getElementById('keyword').value.trim();
   const base = normalizeWorkerUrl(raw);
-
   if(!base || !key) return alert('資料不全（WorkerUrl / 關鍵字）');
   localStorage.setItem('line_worker_url', base);
 
@@ -558,7 +652,6 @@ async function load(){
       return alert('讀到資料但不是 carousel 格式');
     }
 
-    // 注意：從 LINE Flex 的 overlay action 讀回來時，我們能取到 uri/text
     cards = obj.messages[0].contents.contents.map(b => {
       const imgUrl = b.body.contents?.[0]?.url || '';
       const overlays = (b.body.contents || []).slice(1);
@@ -571,8 +664,7 @@ async function load(){
         const y = parseFloat(String(o.offsetTop||'0').replace('%',''))/100;
         const w = parseFloat(String(o.width||'0').replace('%',''))/100;
         const h = parseFloat(String(o.height||'0').replace('%',''))/100;
-
-        return { x,y,w,h,type, text };
+        return { x,y,w,h,type,text };
       });
 
       return { url: imgUrl, areas };
@@ -584,6 +676,76 @@ async function load(){
   }catch(e){
     alert('讀取失敗：\n' + e.message);
   }
+}
+
+/* ---------- 手機預覽 ---------- */
+let phoneIndex = 0;
+
+function openPhonePreview(){
+  if(cards.length === 0) return alert('沒有卡片可預覽');
+  if(cards.some(c => !c.url)) return alert('有卡片尚未上傳圖片');
+  document.getElementById('phoneModal').classList.remove('hidden');
+  document.getElementById('phoneModal').classList.add('flex');
+  phoneIndex = Math.min(phoneIndex, cards.length-1);
+  renderPhone();
+}
+function closePhonePreview(){
+  document.getElementById('phoneModal').classList.add('hidden');
+  document.getElementById('phoneModal').classList.remove('flex');
+}
+function prevPhoneCard(){
+  phoneIndex = (phoneIndex - 1 + cards.length) % cards.length;
+  renderPhone();
+}
+function nextPhoneCard(){
+  phoneIndex = (phoneIndex + 1) % cards.length;
+  renderPhone();
+}
+
+document.getElementById('showHotspots').addEventListener('change', renderPhone);
+
+function renderPhone(){
+  const total = cards.length;
+  document.getElementById('phoneIdx').textContent = String(phoneIndex+1);
+  document.getElementById('phoneTotal').textContent = String(total);
+
+  const card = cards[phoneIndex];
+  document.getElementById('phoneImg').src = card.url;
+
+  const wrap = document.getElementById('phoneHotspots');
+  wrap.innerHTML = '';
+
+  const show = document.getElementById('showHotspots').checked;
+
+  // 以手機預覽容器的實際大小計算
+  requestAnimationFrame(() => {
+    const rect = wrap.getBoundingClientRect();
+    card.areas.forEach((a, i) => {
+      if(show){
+        const box = document.createElement('div');
+        box.className = 'hotspot-preview';
+        box.style.left = (a.x*rect.width) + 'px';
+        box.style.top = (a.y*rect.height) + 'px';
+        box.style.width = (a.w*rect.width) + 'px';
+        box.style.height = (a.h*rect.height) + 'px';
+        wrap.appendChild(box);
+      }
+
+      // 可點擊模擬
+      const btn = document.createElement('button');
+      btn.style.position = 'absolute';
+      btn.style.left = (a.x*100)+'%';
+      btn.style.top = (a.y*100)+'%';
+      btn.style.width = (a.w*100)+'%';
+      btn.style.height = (a.h*100)+'%';
+      btn.style.background = 'transparent';
+      btn.onclick = () => {
+        const act = a.type === 'uri' ? `開網頁：${a.text}` : `發文字：${a.text}`;
+        alert(`熱區 ${i+1}\n${act}`);
+      };
+      wrap.appendChild(btn);
+    });
+  });
 }
 </script>
 </body>
