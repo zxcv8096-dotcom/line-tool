@@ -5,21 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LINE Bot 萬能控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }</style>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }
+    </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
         <div class="text-6xl mb-4">🦁</div>
         <h1 class="text-2xl font-bold text-slate-800 mb-2">LINE Bot 萬能控制台</h1>
-        
+
         <div class="mb-6 bg-slate-100 p-4 rounded-lg text-left">
             <label class="block text-xs font-bold text-slate-500 mb-1">Worker 網址 (自動記憶)</label>
-            <input id="globalWorkerUrl" placeholder="https://api.xxx.workers.dev" class="w-full border p-2 rounded text-sm mb-2" oninput="saveUrl(this.value)">
+            <input id="globalWorkerUrl"
+                   placeholder="https://api.xxx.workers.dev"
+                   class="w-full border p-2 rounded text-sm mb-2"
+                   oninput="saveUrl(this.value)">
             <p class="text-[10px] text-green-600" id="statusMsg">在此輸入一次，所有工具自動填入 👌</p>
         </div>
 
+        <!-- (可選) LIFF 快速連結工具：如果你不需要，可整段刪除 -->
+        <div class="mb-6 bg-slate-50 p-4 rounded-lg text-left border">
+            <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-slate-500">LIFF 入口網址（可選）</label>
+                <span class="text-[10px] text-slate-400">複製貼到 Rich Menu / Flex</span>
+            </div>
+            <div class="mt-2 flex gap-2">
+                <input id="liffIdInput"
+                       placeholder="貼上你的 LIFF ID"
+                       class="flex-1 border p-2 rounded text-sm"
+                       oninput="saveLiffId(this.value)">
+                <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
+                        onclick="copyLiffUrl()">複製</button>
+            </div>
+            <div class="mt-2 text-[10px] text-slate-500">
+                會複製：<span class="font-bold">https://liff.line.me/&lt;LIFF_ID&gt;</span>
+            </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
-            <a href="tool_imagemap.html" class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white shadow-lg transition hover:scale-105">
+            <!-- 新增：LIFF 手機預覽抽屜版 -->
+            <a href="tool_liff_imagemap.html"
+               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-blue-700 p-4 text-white shadow-lg transition hover:scale-105">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📱</span>
+                    <div class="text-left">
+                        <h3 class="font-bold">手機預覽引流圖（LIFF 彈窗）</h3>
+                        <p class="text-[10px] opacity-90">可收放抽屜預覽 / 畫框不限數量 / 上傳到 R2</p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 原本：引流圖工具 -->
+            <a href="tool_imagemap.html"
+               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white shadow-lg transition hover:scale-105">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">🗺️</span>
                     <div class="text-left">
@@ -29,7 +67,8 @@
                 </div>
             </a>
 
-            <a href="tool_carousel.html" class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 p-3 text-white shadow-lg transition hover:scale-105">
+            <a href="tool_carousel.html"
+               class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 p-3 text-white shadow-lg transition hover:scale-105">
                 <div class="text-left">
                     <span class="text-2xl block mb-1">🎠</span>
                     <h3 class="font-bold text-sm">滑動卡片</h3>
@@ -37,15 +76,17 @@
                 </div>
             </a>
 
-            <a href="tool_flow.html" class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white shadow-lg transition hover:scale-105">
+            <a href="tool_flow.html"
+               class="col-span-1 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white shadow-lg transition hover:scale-105">
                 <div class="text-left">
                     <span class="text-2xl block mb-1">🔀</span>
                     <h3 class="font-bold text-sm">見證流程</h3>
                     <p class="text-[10px] opacity-90">連續跳轉</p>
                 </div>
             </a>
-            
-            <a href="tool_quickreply.html" class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-red-500 to-rose-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-red-300">
+
+            <a href="tool_quickreply.html"
+               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-red-500 to-rose-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-red-300">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">🔴</span>
                     <div class="text-left">
@@ -55,19 +96,42 @@
                 </div>
             </a>
         </div>
-        
+
         <div class="mt-8 text-xs text-slate-400">Powered by Cloudflare Workers & KV</div>
     </div>
 
     <script>
-        // 頁面載入時，讀取網址
+        // 頁面載入：讀取 Worker URL + LIFF ID
         window.onload = function() {
             const saved = localStorage.getItem('line_worker_url');
             if(saved) document.getElementById('globalWorkerUrl').value = saved;
+
+            const savedLiff = localStorage.getItem('line_liff_id');
+            if(savedLiff) document.getElementById('liffIdInput').value = savedLiff;
         }
-        // 輸入時，儲存網址
+
+        // 輸入 Worker URL：儲存
         function saveUrl(val) {
-            localStorage.setItem('line_worker_url', val);
+            localStorage.setItem('line_worker_url', (val || '').trim());
+        }
+
+        // (可選) 儲存 LIFF ID
+        function saveLiffId(val) {
+            localStorage.setItem('line_liff_id', (val || '').trim());
+        }
+
+        // (可選) 複製 LIFF URL
+        async function copyLiffUrl() {
+            const id = (document.getElementById('liffIdInput').value || '').trim();
+            if(!id) return alert('請先貼上 LIFF ID');
+            const url = 'https://liff.line.me/' + id;
+            try{
+                await navigator.clipboard.writeText(url);
+                alert('已複製：\n' + url);
+            }catch(e){
+                // fallback
+                prompt('複製這段網址：', url);
+            }
         }
     </script>
 </body>
