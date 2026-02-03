@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>資料標記器（功能/狀態/備註）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }
+    .card { background: white; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+    .btn { font-weight: 900; border-radius: 14px; padding: 10px 14px; }
+    .btnDark { background:#0f172a; color:#fff; }
+    .btnDark:hover { background:#000; }
+    .btnGreen { background:#059669; color:#fff; }
+    .btnGreen:hover { background:#047857; }
+    .btnGhost { background:#fff; border:1px solid #e2e8f0; }
+    .btnGhost:hover { background:#f1f5f9; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid; font-weight: 900; }
+    .badge-db { background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
+    .badge-replies { background:#fffbeb; color:#b45309; border-color:#fef3c7; }
+  </style>
+</head>
+
+<body class="min-h-screen p-4 text-slate-800">
+  <div class="max-w-5xl mx-auto space-y-4">
+
+    <div class="card p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <div class="text-5xl">🏷️</div>
+          <h1 class="text-2xl font-extrabold mt-2">資料標記器（功能 / 狀態 / 備註）</h1>
+          <p class="text-sm text-slate-500 mt-1">
+            專門用來把舊資料從 unknown 變成可篩選（quickreply / imagemap / carousel / flow...）。
+          </p>
+        </div>
+        <div class="text-right flex gap-2">
+          <a href="index.html" class="btn btnDark inline-block">回首頁</a>
+          <a href="lab_dashboard.html" class="btn btnGhost inline-block">去實驗室</a>
+        </div>
+      </div>
+
+      <div class="mt-4 bg-slate-100 rounded-xl p-4">
+        <label class="block text-xs font-bold text-slate-600 mb-1">Worker 網址</label>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="workerUrl" placeholder="https://api.xxx.workers.dev"
+                 class="flex-1 border rounded-xl p-2 text-sm bg-white"
+                 oninput="saveWorkerUrl(this.value)">
+          <button class="btn btnGreen" onclick="reloadKeys()">載入清單</button>
+          <button class="btn btnGhost" onclick="ping()">測試連線</button>
+        </div>
+        <div class="mt-2 text-[12px] text-slate-600">
+          需要 Worker 支援：<span class="mono">/loadAny</span>、<span class="mono">/save</span>（DB）、以及最好有 <span class="mono">/listMeta</span>。
+        </div>
+      </div>
+
+      <div id="status" class="mt-3 text-sm text-slate-600"></div>
+    </div>
+
+    <div class="card p-6 space-y-3">
+      <div class="flex flex-col lg:flex-row gap-3">
+        <div class="flex-1 space-y-2">
+          <div class="flex gap-2">
+            <input id="search" class="w-full border rounded-xl p-2 text-sm" placeholder="搜尋 key（例如：選單/產品/流程/卡片）" oninput="renderList()">
+            <select id="nsFilter" class="border rounded-xl p-2 text-sm" onchange="renderList()">
+              <option value="ALL">全部</option>
+              <option value="DB">DB</option>
+              <option value="REPLIES">REPLIES</option>
+            </select>
+          </div>
+
+          <div id="list" class="space-y-2 max-h-[520px] overflow-auto pr-1"></div>
+          <div id="stats" class="text-[12px] text-slate-500"></div>
+        </div>
+
+        <div class="w-full lg:w-[420px] space-y-3">
+          <div class="bg-slate-50 border rounded-2xl p-4">
+            <div class="font-extrabold text-slate-800">目前選取</div>
+            <div class="mt-2 text-sm">
+              <div class="flex items-center gap-2">
+                <span id="selNsBadge" class="badge badge-db">DB</span>
+                <div id="selKey" class="font-black break-all">（尚未選取）</div>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">功能 feature</label>
+                <select id="metaFeature" class="w-full border rounded-xl p-2 text-sm">
+                  <option value="quickreply">quickreply（紅框）</option>
+                  <option value="imagemap">imagemap（引流圖）</option>
+                  <option value="carousel">carousel（輪播卡）</option>
+                  <option value="flow">flow（流程）</option>
+                  <option value="liff_preview">liff_preview（LIFF 預覽）</option>
+                  <option value="other">other（其他）</option>
+                  <option value="unknown">unknown（未分類）</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">狀態 status</label>
+                <select id="metaStatus" class="w-full border rounded-xl p-2 text-sm">
+                  <option value="active">active（正式使用）</option>
+                  <option value="testing">testing（測試中）</option>
+                  <option value="deprecated">deprecated（已棄用）</option>
+                  <option value="unknown">unknown</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">備註 note（可空）</label>
+                <input id="metaNote" class="w-full border rounded-xl p-2 text-sm" placeholder="例如：主選單/產品導購/健康引流...">
+              </div>
+
+              <button class="btn btnGreen w-full" onclick="saveMeta()">儲存標記</button>
+              <button class="btn btnGhost w-full" onclick="preview()">預覽 JSON</button>
+            </div>
+
+            <div class="mt-3 text-[12px] text-slate-500">
+              儲存會把你原本 payload 保留，只新增/更新 <span class="mono">payload.meta</span>。
+            </div>
+          </div>
+
+          <div class="bg-white border rounded-2xl p-4">
+            <div class="font-extrabold">預覽</div>
+            <pre id="previewBox" class="mt-2 text-xs bg-slate-50 border rounded-xl p-3 max-h-[280px] overflow-auto mono"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center text-[12px] text-slate-400">
+      Powered by GitHub Pages + Cloudflare Workers
+    </div>
+  </div>
+
+<script>
+  const WORKER_KEY = 'line_worker_url';
+  let ITEMS = [];      // {namespace,key,feature,status,updatedAt,note}
+  let SELECTED = null; // {namespace,key,payload}
+
+  window.onload = () => {
+    const saved = localStorage.getItem(WORKER_KEY);
+    if (saved) document.getElementById('workerUrl').value = saved;
+    setStatus('輸入 Worker URL → 點「載入清單」', 'info');
+  };
+
+  function setStatus(msg, type='info') {
+    const el = document.getElementById('status');
+    const cls = type==='ok' ? 'text-emerald-700' : type==='err' ? 'text-rose-700' : 'text-slate-600';
+    el.className = `mt-3 text-sm ${cls}`;
+    el.textContent = msg;
+  }
+
+  function saveWorkerUrl(v){ localStorage.setItem(WORKER_KEY, (v||'').trim()); }
+
+  function getWorker(){
+    let w = (document.getElementById('workerUrl').value || '').trim();
+    w = w.replace(/\/+$/, '');
+    if(!w){
+      alert('請先輸入 Worker 網址');
+      document.getElementById('workerUrl').focus();
+      return null;
+    }
+    saveWorkerUrl(w);
+    return w;
+  }
+
+  async function postJSON(fullUrl, data){
+    const res = await fetch(fullUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data || {})
+    });
+    const out = await res.json().catch(()=>null);
+    return {res, out};
+  }
+
+  async function ping(){
+    const w = getWorker();
+    if(!w) return;
+    try{
+      const res = await fetch(w + '/health', { method:'GET' });
+      if(res.ok) setStatus('連線成功：/health OK', 'ok');
+      else setStatus('連線失敗：/health 非 200', 'err');
+    }catch(e){
+      setStatus('連線失敗：' + (e.message || e), 'err');
+    }
+  }
+
+  async function reloadKeys(){
+    const w = getWorker();
+    if(!w) return;
+
+    setStatus('載入中…', 'info');
+    ITEMS = [];
+    SELECTED = null;
+    document.getElementById('previewBox').textContent = '';
+    document.getElementById('selKey').textContent = '（尚未選取）';
+
+    // 1) /listMeta
+    try{
+      const r = await postJSON(w + '/listMeta', {});
+      if(r.res.ok && r.out?.ok && Array.isArray(r.out.items)){
+        ITEMS = r.out.items.map(x => ({
+          namespace: String(x.namespace||'DB').toUpperCase(),
+          key: String(x.key||''),
+          feature: String(x.feature||'unknown'),
+          status: String(x.status||'unknown'),
+          updatedAt: Number(x.updatedAt||0)||0,
+          note: String(x.note||'')
+        })).filter(x=>x.key);
+        setStatus(`載入成功：${ITEMS.length} 筆（/listMeta）`, 'ok');
+        renderList();
+        return;
+      }
+    }catch(e){}
+
+    // 2) /listAll fallback
+    try{
+      const r = await postJSON(w + '/listAll', {});
+      if(r.res.ok && r.out?.ok){
+        const db = Array.isArray(r.out.db) ? r.out.db : [];
+        const rep = Array.isArray(r.out.replies) ? r.out.replies : [];
+        ITEMS = [
+          ...db.map(k => ({namespace:'DB', key:String(k), feature:'unknown', status:'unknown', updatedAt:0, note:''})),
+          ...rep.map(k => ({namespace:'REPLIES', key:String(k), feature:'unknown', status:'unknown', updatedAt:0, note:''}))
+        ].filter(x=>x.key);
+        setStatus(`載入成功：${ITEMS.length} 筆（/listAll；feature/status=unknown）`, 'ok');
+        renderList();
+        return;
+      }
+    }catch(e){}
+
+    // 3) /list fallback (DB only)
+    try{
+      const r = await postJSON(w + '/list', {});
+      const keywords = r.out?.keywords || [];
+      ITEMS = keywords.map(k => ({namespace:'DB', key:String(k), feature:'unknown', status:'unknown', updatedAt:0, note:''}));
+      setStatus(`載入成功：DB ${ITEMS.length} 筆（/list；feature/status=unknown）`, 'ok');
+      renderList();
+      return;
+    }catch(e){
+      setStatus('載入失敗：請確認 Worker URL / CORS / API 是否存在', 'err');
+    }
+  }
+
+  function renderList(){
+    const q = (document.getElementById('search').value || '').trim().toLowerCase();
+    const ns = document.getElementById('nsFilter').value;
+
+    let rows = ITEMS.slice();
+    if(ns !== 'ALL') rows = rows.filter(x => x.namespace === ns);
+    if(q) rows = rows.filter(x =>
+      x.key.toLowerCase().includes(q) ||
+      (x.note||'').toLowerCase().includes(q) ||
+      (x.feature||'').toLowerCase().includes(q)
+    );
+
+    rows.sort((a,b)=>(a.namespace+":"+a.key).localeCompare(b.namespace+":"+b.key, 'zh-Hant'));
+
+    document.getElementById('stats').textContent = `共 ${ITEMS.length} 筆（目前顯示 ${rows.length} 筆）`;
+
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    if(!rows.length){
+      list.innerHTML = '<div class="text-slate-400 text-sm">沒有資料</div>';
+      return;
+    }
+
+    rows.forEach(x=>{
+      const nsBadge = x.namespace === 'DB'
+        ? `<span class="badge badge-db">DB</span>`
+        : `<span class="badge badge-replies">REPLIES</span>`;
+
+      const line = `
+        <button class="w-full text-left border rounded-2xl p-3 bg-slate-50 hover:bg-slate-100"
+                onclick="selectKey('${x.namespace}','${escapeJs(x.key)}')">
+          <div class="flex items-center gap-2">
+            ${nsBadge}
+            <div class="font-black truncate">${escapeHtml(x.key)}</div>
+          </div>
+          <div class="text-[12px] text-slate-500 mt-1">
+            feature: <span class="font-bold">${escapeHtml(x.feature||'unknown')}</span> /
+            status: <span class="font-bold">${escapeHtml(x.status||'unknown')}</span>
+            ${x.note ? ` / note: ${escapeHtml(x.note)}` : ``}
+          </div>
+        </button>
+      `;
+      list.innerHTML += line;
+    });
+  }
+
+  async function selectKey(namespace, key){
+    const w = getWorker();
+    if(!w) return;
+
+    // badge
+    const nsBadge = document.getElementById('selNsBadge');
+    if(namespace === 'DB'){
+      nsBadge.textContent = 'DB';
+      nsBadge.className = 'badge badge-db';
+    }else{
+      nsBadge.textContent = 'REPLIES';
+      nsBadge.className = 'badge badge-replies';
+    }
+    document.getElementById('selKey').textContent = key;
+
+    // loadAny
+    setStatus(`讀取 ${namespace}/${key}…`, 'info');
+    const r = await postJSON(w + '/loadAny', { namespace: namespace, keyword: key });
+    if(!r.res.ok || !r.out?.ok){
+      setStatus('讀取失敗：' + (r.out?.error || r.res.status), 'err');
+      return;
+    }
+
+    const payload = r.out.payload;
+    SELECTED = { namespace, key, payload };
+
+    // 先從 payload.meta 取值
+    const meta = (payload && typeof payload === 'object' && payload.meta) ? payload.meta : {};
+    document.getElementById('metaFeature').value = meta.feature || 'unknown';
+    document.getElementById('metaStatus').value = meta.status || 'unknown';
+    document.getElementById('metaNote').value = meta.note || '';
+
+    document.getElementById('previewBox').textContent = JSON.stringify(payload, null, 2);
+    setStatus('讀取成功，可直接修改 feature/status/note 後按「儲存標記」', 'ok');
+  }
+
+  async function preview(){
+    if(!SELECTED){
+      alert('請先從左邊選一筆資料');
+      return;
+    }
+    document.getElementById('previewBox').textContent = JSON.stringify(SELECTED.payload, null, 2);
+  }
+
+  async function saveMeta(){
+    if(!SELECTED){
+      alert('請先從左邊選一筆資料');
+      return;
+    }
+    const w = getWorker();
+    if(!w) return;
+
+    const feature = document.getElementById('metaFeature').value || 'unknown';
+    const status = document.getElementById('metaStatus').value || 'unknown';
+    const note = (document.getElementById('metaNote').value || '').trim();
+
+    // merge meta
+    let payload = SELECTED.payload;
+    if(!payload || typeof payload !== 'object') payload = { value: payload };
+    payload.meta = (payload.meta && typeof payload.meta === 'object') ? payload.meta : {};
+    payload.meta.feature = feature;
+    payload.meta.status = status;
+    payload.meta.note = note;
+    payload.meta.createdFrom = payload.meta.createdFrom || 'tool_meta_editor';
+    payload.meta.updatedAt = Date.now();
+
+    // 寫回：DB 用 /save；REPLIES 目前 worker.js 沒有 /saveReplies
+    // 所以：REPLIES 用 deleteAny + putAny 會更好，但你 worker.js 沒有 putAny
+    // → 這裡先處理 DB；REPLIES 會提示你加 putAny（下一步我會直接給你 worker.js 更新）
+    if(SELECTED.namespace !== 'DB'){
+      alert('你目前 Worker 沒有提供「寫入 REPLIES」的 API。\n下一步我會幫你在 worker.js 加：/putAny（DB/REPLIES 都可寫）。');
+      return;
+    }
+
+    setStatus('儲存中…', 'info');
+    const r = await postJSON(w + '/save', { keyword: SELECTED.key, payload });
+    if(r.res.ok && r.out && r.out.ok !== false){
+      // 更新 ITEMS 內的 meta 方便 UI 立即刷新
+      const idx = ITEMS.findIndex(x => x.namespace==='DB' && x.key===SELECTED.key);
+      if(idx >= 0){
+        ITEMS[idx].feature = feature;
+        ITEMS[idx].status = status;
+        ITEMS[idx].note = note;
+        ITEMS[idx].updatedAt = payload.meta.updatedAt;
+      }
+      SELECTED.payload = payload;
+      document.getElementById('previewBox').textContent = JSON.stringify(payload, null, 2);
+      renderList();
+      setStatus('儲存成功 ✅', 'ok');
+      alert('儲存成功');
+      return;
+    }
+    setStatus('儲存失敗：' + (r.out?.error || r.res.status), 'err');
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[m]));
+  }
+  function escapeJs(s){
+    return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  }
+</script>
+</body>
+</html>
