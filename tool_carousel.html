@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>滑動卡片編輯器 (Imgur 穩定版)</title>
+<title>滑動卡片編輯器 (R2版)</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 .area-box{
@@ -21,9 +21,8 @@
 
 <body class="bg-slate-100 flex flex-col h-screen">
 
-<!-- ===== Header ===== -->
 <div class="bg-white shadow p-4 flex justify-between items-center">
-  <h1 class="font-bold text-xl text-amber-600">滑動卡片編輯器</h1>
+  <h1 class="font-bold text-xl text-amber-600">滑動卡片編輯器 (R2)</h1>
   <div class="flex gap-2 text-sm">
     <input id="workerUrl" placeholder="https://xxxx.workers.dev"
       class="border px-2 rounded w-56 bg-yellow-50">
@@ -36,37 +35,34 @@
 
 <div class="flex flex-1 overflow-hidden">
 
-<!-- ===== 左側卡片列表 ===== -->
-<div class="w-72 bg-white border-r p-4 overflow-y-auto">
-  <button onclick="addCard()"
-    class="w-full mb-3 py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded">
-    + 新增卡片
-  </button>
-  <div id="cardList" class="space-y-2"></div>
-</div>
-
-<!-- ===== 編輯區 ===== -->
-<div class="flex-1 bg-slate-200 flex justify-center items-start p-8 relative overflow-auto">
-  <div id="editor" class="hidden bg-white shadow rounded w-[320px]">
-    <div class="relative">
-      <img id="preview" class="w-full h-[220px] object-cover bg-gray-100">
-      <button onclick="uploadImg(currentIdx,this)"
-        class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-        上傳圖片
-      </button>
-      <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
-    </div>
-    <div class="p-2 text-xs text-gray-500 text-center">在圖片上拖曳設定點擊區</div>
+  <div class="w-72 bg-white border-r p-4 overflow-y-auto">
+    <button onclick="addCard()"
+      class="w-full mb-3 py-2 border-dashed border-2 border-amber-400 text-amber-600 rounded">
+      + 新增卡片
+    </button>
+    <div id="cardList" class="space-y-2"></div>
   </div>
-  <div id="emptyState" class="text-gray-400 mt-20">← 請先新增卡片</div>
-</div>
+
+  <div class="flex-1 bg-slate-200 flex justify-center items-start p-8 relative overflow-auto">
+    <div id="editor" class="hidden bg-white shadow rounded w-[320px]">
+      <div class="relative">
+        <img id="preview" class="w-full h-[220px] object-cover bg-gray-100">
+        <button onclick="uploadImg(currentIdx,this)"
+          class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+          上傳圖片到 R2
+        </button>
+        <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
+      </div>
+      <div class="p-2 text-xs text-gray-500 text-center">在圖片上拖曳設定點擊區</div>
+    </div>
+    <div id="emptyState" class="text-gray-400 mt-20">← 請先新增卡片</div>
+  </div>
 
 </div>
 
-<input type="file" id="fileInput" hidden>
+<input type="file" id="fileInput" accept="image/*" hidden>
 
 <script>
-/* ================= 工具 ================= */
 function normalizeWorkerUrl(raw){
   if(!raw) return '';
   let s = raw.trim();
@@ -81,24 +77,36 @@ async function postJSON(url,data){
     body:JSON.stringify(data)
   });
   if(!res.ok){
-    const t = await res.text();
+    const t = await res.text().catch(()=> '');
     throw new Error(`HTTP ${res.status}\n${t}`);
   }
   const ct = res.headers.get('content-type')||'';
   return ct.includes('json') ? res.json() : res.text();
 }
 
-/* ================= 狀態 ================= */
+async function uploadToR2(workerBaseUrl, file){
+  const form = new FormData();
+  form.append('file', file);
+
+  const res = await fetch(workerBaseUrl + '/upload', { method:'POST', body: form });
+  if(!res.ok){
+    const t = await res.text().catch(()=> '');
+    throw new Error(`HTTP ${res.status}\n${t}`);
+  }
+  const j = await res.json();
+  if(!j.ok || !j.url) throw new Error('上傳回傳格式不對');
+  return j.url;
+}
+
+/* state */
 let cards=[], currentIdx=-1;
 let isDrawing=false,startX,startY;
 
-/* ================= 初始化 ================= */
 window.onload=()=>{
   const u=localStorage.getItem('line_worker_url');
   if(u) document.getElementById('workerUrl').value=u;
 };
 
-/* ================= 卡片 ================= */
 function addCard(){
   cards.push({url:'',areas:[]});
   renderList();
@@ -121,7 +129,7 @@ function renderList(){
       }
       <button onclick="uploadImg(${i},this)"
         class="w-full bg-amber-500 text-white text-xs py-1 rounded">
-        上傳圖片
+        上傳圖片到 R2
       </button>
     </div>`;
   });
@@ -143,39 +151,39 @@ function selectCard(i){
   renderAreas();
 }
 
-/* ================= Imgur ================= */
-function getImgurClientId(){
-  let id=localStorage.getItem('imgur_client_id');
-  if(!id){
-    id=prompt('Imgur Client ID','546c25a59c58ad7');
-    if(id) localStorage.setItem('imgur_client_id',id);
-  }
-  return id;
-}
+/* upload */
+function uploadImg(idx, btn){
+  const raw=document.getElementById('workerUrl').value;
+  const base = normalizeWorkerUrl(raw);
+  if(!base) return alert('請先填 WorkerUrl');
 
-function uploadImg(idx,btn){
-  const cid=getImgurClientId();
-  if(!cid) return;
-  fileInput.onchange=async e=>{
-    const f=e.target.files[0]; if(!f) return;
-    const fd=new FormData(); fd.append('image',f);
-    btn.innerText='上傳中...';
-    const r=await fetch('https://api.imgur.com/3/image',{
-      method:'POST',
-      headers:{Authorization:'Client-ID '+cid},
-      body:fd
-    });
-    const j=await r.json();
-    if(j.success){
-      cards[idx].url=j.data.link;
+  localStorage.setItem('line_worker_url', base);
+
+  const input = document.getElementById('fileInput');
+  input.value = '';
+  input.onchange = async (e) => {
+    const f = e.target.files[0];
+    if(!f) return;
+
+    const old = btn.innerText;
+    btn.innerText = '⏳ 上傳中...';
+    btn.disabled = true;
+
+    try{
+      const url = await uploadToR2(base, f);
+      cards[idx].url = url;
       renderList(); selectCard(idx);
-    }else alert('Imgur 上傳失敗');
-    btn.innerText='上傳圖片';
+    }catch(err){
+      alert('上傳失敗：\n' + err.message);
+    }
+
+    btn.innerText = old;
+    btn.disabled = false;
   };
-  fileInput.click();
+  input.click();
 }
 
-/* ================= 畫區 ================= */
+/* draw */
 const layer=document.getElementById('drawLayer');
 layer.onmousedown=e=>{
   isDrawing=true;
@@ -190,9 +198,11 @@ layer.onmouseup=e=>{
   const w=Math.abs(e.clientX-r.left-startX);
   const h=Math.abs(e.clientY-r.top-startY);
   if(w<10||h<10) return;
+
   const type=prompt('text 或 link','text');
   const txt=prompt('內容');
   if(!txt) return;
+
   cards[currentIdx].areas.push({
     x:Math.min(startX,e.clientX-r.left)/r.width,
     y:Math.min(startY,e.clientY-r.top)/r.height,
@@ -225,13 +235,13 @@ function renderAreas(){
   });
 }
 
-/* ================= 儲存 / 讀取 ================= */
+/* save/load */
 async function save(){
   const raw=document.getElementById('workerUrl').value;
-  const key=document.getElementById('keyword').value;
-  const url=normalizeWorkerUrl(raw);
-  if(!url||!key) return alert('資料不全');
-  localStorage.setItem('line_worker_url',url);
+  const key=document.getElementById('keyword').value.trim();
+  const base=normalizeWorkerUrl(raw);
+  if(!base||!key) return alert('資料不全');
+  localStorage.setItem('line_worker_url', base);
 
   const bubbles=cards.map(c=>({
     type:'bubble',
@@ -254,7 +264,7 @@ async function save(){
   }));
 
   try{
-    await postJSON(url+'/save',{
+    await postJSON(base+'/save',{
       password:'1234',
       keyword:key,
       payload:{
@@ -271,15 +281,16 @@ async function save(){
 
 async function load(){
   const raw=document.getElementById('workerUrl').value;
-  const key=document.getElementById('keyword').value;
-  const url=normalizeWorkerUrl(raw);
-  if(!url||!key) return alert('資料不全');
+  const key=document.getElementById('keyword').value.trim();
+  const base=normalizeWorkerUrl(raw);
+  if(!base||!key) return alert('資料不全');
+  localStorage.setItem('line_worker_url', base);
 
   try{
-    const data=await postJSON(url+'/load',{password:'1234',keyword:key});
+    const data=await postJSON(base+'/load',{password:'1234',keyword:key});
     const obj=typeof data==='string'?JSON.parse(data):data;
     cards=obj.messages[0].contents.contents.map(b=>({
-      url:b.body.contents[0].url,areas:[]
+      url:b.body.contents[0].url, areas:[]
     }));
     renderList(); selectCard(0);
     alert('讀取成功');
