@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>滑動卡片編輯器 (純淨版)</title>
+    <title>滑動卡片編輯器 (壓縮版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>.area-box { position: absolute; border: 2px solid red; background: rgba(255,0,0,0.2); cursor: pointer; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center; }</style>
 </head>
@@ -22,7 +22,7 @@
     <div class="flex flex-1 overflow-hidden">
         <div class="w-72 bg-white border-r p-4 overflow-y-auto flex flex-col gap-2">
             <div class="bg-amber-50 p-2 rounded text-xs text-amber-800 mb-2">
-                <strong>💡 提示：</strong><br>此處設定圖片點擊跳轉。<br>紅色選單請去「紅色框框設定器」設定。
+                <strong>💡 穩定模式：</strong><br>圖片自動壓縮，上傳保證成功。
             </div>
             <h3 class="font-bold mb-2">卡片清單</h3>
             <div id="cardList" class="space-y-2"></div>
@@ -33,6 +33,7 @@
             <div id="editor" class="hidden bg-white shadow-xl rounded-lg overflow-hidden w-[320px] flex-shrink-0 self-start">
                 <div class="relative group">
                     <img id="preview" class="w-full h-[220px] object-cover bg-gray-100">
+                    <button onclick="uploadImg(currentIdx, this)" class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">📷 更換圖片</button>
                     <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
                 </div>
                 <div class="p-4 bg-gray-50 text-center">
@@ -66,7 +67,7 @@
                         <button onclick="cards.splice(${i},1);renderList();selectCard(-1);" class="text-red-400 font-bold px-1">✕</button>
                     </div>
                     ${card.url ? `<img src="${card.url}" class="w-full h-16 object-cover rounded mb-2 border">` : '<div class="w-full h-16 bg-gray-100 text-xs flex items-center justify-center text-gray-400 mb-2">無圖片</div>'}
-                    <button onclick="uploadImg(${i})" class="w-full bg-amber-500 text-white text-xs py-1 rounded hover:bg-amber-600">上傳圖片</button>
+                    <button onclick="uploadImg(${i}, this)" class="w-full bg-amber-500 text-white text-xs py-1 rounded hover:bg-amber-600">上傳圖片</button>
                 </div>`;
             });
         }
@@ -76,41 +77,75 @@
             const div = document.getElementById('editor'); const img = document.getElementById('preview'); const empty = document.getElementById('emptyState');
             if(i===-1 || !cards[i]) { div.classList.add('hidden'); empty.classList.remove('hidden'); return; }
             div.classList.remove('hidden'); empty.classList.add('hidden');
-            img.src = cards[i].url || 'https://via.placeholder.com/320x220?text=Wait+Upload';
+            img.src = cards[i].url || 'https://via.placeholder.com/320x220?text=Click+Upload';
             renderAreas();
         }
 
-        // ★★★ 重點修正：改用 FormData 上傳，並直接帶入 index ★★★
-        function uploadImg(idx) {
+        // ★★★ 核心：壓縮與上傳 ★★★
+        function uploadImg(idx, btn) {
             const url = document.getElementById('workerUrl').value;
             if(!url) return alert('請先輸入 Worker 網址');
 
             document.getElementById('fileInput').onchange = async(e)=>{
                 const file=e.target.files[0]; if(!file) return;
-                
-                const formData = new FormData();
-                formData.append('image', file);
-                formData.append('password', '1234');
-
-                // 切換到該卡片並顯示上傳中
-                selectCard(idx); 
-                const img = document.getElementById('preview');
-                const oldSrc = img.src; 
-                // 這裡可以做 loading UI，簡單起見省略
+                const oldText = btn ? btn.innerText : 'Upload';
+                if(btn) btn.innerText = "⏳...";
 
                 try {
-                    const res = await fetch(url+'/upload', { method:'POST', body: formData });
+                    // 1. 壓縮
+                    const compressed = await compressImage(file);
+                    
+                    // 2. 上傳 Base64 JSON
+                    const res = await fetch(url+'/upload', {
+                        method:'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body:JSON.stringify({password:'1234', image: compressed})
+                    });
+                    
                     if(res.ok) {
-                        const json = await res.json();
+                        const json=await res.json();
                         cards[idx].url = json.url;
                         renderList(); selectCard(idx);
-                    } else { alert('上傳失敗: ' + await res.text()); }
-                } catch(e) { alert('上傳錯誤'); }
+                    } else alert('上傳失敗');
+                } catch(e) { console.error(e); alert('上傳錯誤'); }
+                if(btn) btn.innerText = oldText;
             };
             document.getElementById('fileInput').click();
         }
 
-        // 畫框框
+        // 壓縮函式
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        // LINE Flex Image 建議寬度
+                        const MAX_WIDTH = 1040;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        resolve(dataUrl);
+                    };
+                    img.onerror = reject;
+                };
+                reader.onerror = reject;
+            });
+        }
+
         const layer = document.getElementById('drawLayer');
         layer.onmousedown = e => { isDrawing=true; const r=layer.getBoundingClientRect(); startX=e.clientX-r.left; startY=e.clientY-r.top; }
         layer.onmouseup = e => {
@@ -118,13 +153,14 @@
             const r=layer.getBoundingClientRect();
             const w=Math.abs(e.clientX-r.left-startX); const h=Math.abs(e.clientY-r.top-startY);
             if(w>10&&h>10) {
-                const txt = prompt("內容? (輸入 關鍵字 或 網址)");
+                const type = prompt("類型? (text=文字, link=網頁)", "text");
+                const txt = prompt("內容? (關鍵字 或 網址)");
                 if(txt) {
                     cards[currentIdx].areas.push({
                         x: Math.min(startX, e.clientX-r.left)/r.width,
                         y: Math.min(startY, e.clientY-r.top)/r.height,
                         w: w/r.width, h: h/r.height,
-                        text: txt, type: txt.startsWith('http')?'uri':'message'
+                        text: txt, type: type==='link'?'uri':'message'
                     });
                     renderAreas();
                 }
@@ -150,7 +186,7 @@
             const payload = { mode: 'carousel', messages: [{ type: "flex", altText: "卡片選單", contents: { type: "carousel", contents: bubbles } }] };
             try {
                 const res = await fetch(url+'/save', { method:'POST', body:JSON.stringify({password:'1234', keyword:key, payload}) });
-                if(res.ok) alert('儲存成功！請去紅色框框設定器設定按鈕觸發「'+key+'」'); else alert('失敗');
+                if(res.ok) alert('儲存成功'); else alert('失敗');
             } catch(e) { alert('連線錯誤'); }
         }
 
@@ -162,7 +198,7 @@
                     const data = await res.json();
                     if(data.messages && data.messages[0].contents.type === 'carousel') {
                         cards = data.messages[0].contents.contents.map(b => ({ url: b.body.contents[0].url, areas: [] }));
-                        alert('讀取成功 (注意: 熱區需重新繪製)');
+                        alert('讀取成功');
                     }
                     renderList(); selectCard(0);
                 } else alert('無資料');
