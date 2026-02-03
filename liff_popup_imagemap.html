@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LINE OA 彈窗熱區編輯器 (LIFF)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    .area-box{
+      position:absolute;
+      border:2px solid rgba(255,0,0,.85);
+      background:rgba(255,0,0,.18);
+      color:white;
+      font-weight:800;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      cursor:pointer;
+      user-select:none;
+      text-shadow:0 1px 2px rgba(0,0,0,.9);
+    }
+    .draw-rect{
+      position:absolute;
+      border:2px dashed rgba(0,0,0,.6);
+      background:rgba(0,0,0,.10);
+      pointer-events:none;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen text-slate-800">
+  <div class="bg-white shadow p-4 sticky top-0 z-10">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="font-bold text-lg text-blue-700">LINE OA 彈窗熱區編輯器（LIFF）</div>
+        <div class="text-xs text-slate-500 mt-1">
+          流程：上傳圖片 → 拖曳畫框 → 每個框填「要送出的關鍵字」→ 儲存 → 用戶輸入觸發關鍵字收到圖，點框就會自動送關鍵字
+        </div>
+      </div>
+      <button id="btnClose" class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="closeLiff()">
+        關閉
+      </button>
+    </div>
+
+    <div class="mt-3 grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2">
+      <input id="workerUrl" class="border rounded px-3 py-2 bg-yellow-50 text-sm"
+        placeholder="Worker URL（https://xxx.workers.dev）" />
+      <input id="triggerKeyword" class="border rounded px-3 py-2 text-sm font-bold border-blue-500"
+        placeholder="觸發關鍵字（使用者輸入這句會出現這張圖）" />
+    </div>
+
+    <div class="mt-2 grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr] gap-2">
+      <div class="border rounded p-2 bg-slate-50">
+        <div class="text-xs font-bold text-slate-600 mb-2">圖片壓縮</div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <label class="flex flex-col gap-1">
+            <span class="text-slate-500">長邊上限</span>
+            <select id="maxSide" class="border rounded px-2 py-1">
+              <option value="960">960（省空間）</option>
+              <option value="1280" selected>1280（LINE 建議）</option>
+              <option value="1600">1600（更清晰）</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-slate-500">格式</span>
+            <select id="outFormat" class="border rounded px-2 py-1">
+              <option value="image/webp" selected>WebP（推薦）</option>
+              <option value="image/jpeg">JPEG</option>
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-1 col-span-2">
+            <span class="text-slate-500">品質 <span id="qVal">0.82</span></span>
+            <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
+          </label>
+
+          <label class="flex items-center gap-2 col-span-2">
+            <input id="cropSquare" type="checkbox" class="scale-110">
+            <span class="text-slate-600">裁切正方形（常用）</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="border rounded p-2 bg-slate-50">
+        <div class="text-xs font-bold text-slate-600 mb-2">操作</div>
+        <div class="flex flex-wrap gap-2">
+          <button class="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700" onclick="pickAndUpload()">
+            上傳圖片到 R2
+          </button>
+          <button class="px-3 py-2 rounded bg-gray-600 text-white text-sm hover:bg-gray-700" onclick="loadConfig()">
+            讀取
+          </button>
+          <button class="px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700" onclick="saveConfig()">
+            儲存
+          </button>
+          <button class="px-3 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700" onclick="clearAreas()">
+            清空框
+          </button>
+          <button class="px-3 py-2 rounded bg-black text-white text-sm hover:bg-slate-900" onclick="sendTestToMe()">
+            送到我測試
+          </button>
+        </div>
+        <div id="status" class="text-xs text-slate-500 mt-2">狀態：未初始化</div>
+      </div>
+
+      <div class="border rounded p-2 bg-slate-50">
+        <div class="text-xs font-bold text-slate-600 mb-2">LIFF / 使用者</div>
+        <div class="text-xs text-slate-600">
+          <div>LIFF：<span id="liffState" class="font-bold">-</span></div>
+          <div>使用者：<span id="userName" class="font-bold">-</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4 grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
+    <!-- 左：框清單 -->
+    <div class="bg-white rounded-lg shadow p-4 h-fit">
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-bold text-slate-700">框框設定（點框也可刪除）</div>
+        <div class="text-xs text-slate-500">不限數量</div>
+      </div>
+      <div class="text-xs text-slate-500 mb-3">
+        每個框的「內容」就是：用戶點下去會送出的文字（用來觸發你的自動回覆）。
+      </div>
+
+      <div id="areaList" class="space-y-2"></div>
+      <div id="areaEmpty" class="text-xs text-slate-400">目前沒有框，去右邊圖片上拖曳畫框。</div>
+    </div>
+
+    <!-- 右：畫布 -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="relative">
+        <img id="preview" class="w-full h-[520px] object-contain bg-gray-100" alt="">
+        <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
+      </div>
+      <div class="p-3 bg-gray-50 text-center text-xs text-gray-600">
+        在圖片上按住拖曳畫框。點紅框可刪除。
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" hidden>
+
+<script>
+/* ===================== 你只要改這裡 ===================== */
+const LIFF_ID = "LIFF_ID_HERE"; // ← 換成你的 LIFF ID
+/* ======================================================= */
+
+let isReady = false;
+let config = {
+  imageUrl: "",
+  areas: [] // {x,y,w,h,text}
+};
+
+const $ = (id) => document.getElementById(id);
+
+$("quality").addEventListener("input", () => $("qVal").textContent = $("quality").value);
+
+/* ---------- 共用 ---------- */
+function normalizeWorkerUrl(raw){
+  if(!raw) return "";
+  let s = raw.trim();
+  if(!/^https?:\/\//i.test(s)) s = "https://" + s;
+  return s.replace(/\/+$/,'');
+}
+
+async function postJSON(url, data){
+  const res = await fetch(url, {
+    method:"POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(data)
+  });
+  if(!res.ok){
+    const t = await res.text().catch(()=> "");
+    throw new Error(`HTTP ${res.status}\n${t}`);
+  }
+  const ct = res.headers.get("content-type") || "";
+  return ct.includes("json") ? res.json() : res.text();
+}
+
+async function uploadToR2(workerBaseUrl, fileBlob, filename){
+  const form = new FormData();
+  form.append("file", fileBlob, filename || "image.webp");
+  const res = await fetch(workerBaseUrl + "/upload", { method:"POST", body: form });
+  if(!res.ok){
+    const t = await res.text().catch(()=> "");
+    throw new Error(`HTTP ${res.status}\n${t}`);
+  }
+  const j = await res.json();
+  if(!j.ok || !j.url) throw new Error("上傳回傳格式不對");
+  return j.url;
+}
+
+function setStatus(msg){
+  $("status").textContent = "狀態：" + msg;
+}
+
+/* ---------- 壓縮 ---------- */
+async function compressImage(file, {maxSide, mime, quality, cropSquare}){
+  const img = await createImageBitmap(file);
+
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if(cropSquare){
+    const side = Math.min(img.width, img.height);
+    sx = Math.floor((img.width - side) / 2);
+    sy = Math.floor((img.height - side) / 2);
+    sw = side; sh = side;
+  }
+
+  // 依長邊縮放
+  const longSide = Math.max(sw, sh);
+  const scale = Math.min(1, maxSide / longSide);
+
+  const w = Math.max(1, Math.round(sw * scale));
+  const h = Math.max(1, Math.round(sh * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d", { alpha: true });
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+
+  const outBlob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, mime, quality);
+  });
+  if(!outBlob) throw new Error("壓縮失敗（toBlob 空）");
+
+  const ext = (mime === "image/webp") ? "webp" : "jpg";
+  const safeName = (file.name || "image").replace(/\.[^/.]+$/, "");
+  return { blob: outBlob, filename: `${safeName}.${ext}` };
+}
+
+/* ---------- 畫框 ---------- */
+const layer = $("drawLayer");
+let isDrawing = false;
+let sx = 0, sy = 0;
+let previewRect = null;
+
+layer.addEventListener("mousedown", (e) => {
+  if(!config.imageUrl) return alert("請先上傳圖片");
+  const r = layer.getBoundingClientRect();
+  isDrawing = true;
+  sx = e.clientX - r.left;
+  sy = e.clientY - r.top;
+
+  previewRect = document.createElement("div");
+  previewRect.className = "draw-rect";
+  previewRect.style.left = sx + "px";
+  previewRect.style.top = sy + "px";
+  previewRect.style.width = "0px";
+  previewRect.style.height = "0px";
+  layer.appendChild(previewRect);
+});
+
+layer.addEventListener("mousemove", (e) => {
+  if(!isDrawing || !previewRect) return;
+  const r = layer.getBoundingClientRect();
+  const cx = e.clientX - r.left;
+  const cy = e.clientY - r.top;
+
+  const x = Math.min(sx, cx);
+  const y = Math.min(sy, cy);
+  const w = Math.abs(cx - sx);
+  const h = Math.abs(cy - sy);
+
+  previewRect.style.left = x + "px";
+  previewRect.style.top = y + "px";
+  previewRect.style.width = w + "px";
+  previewRect.style.height = h + "px";
+});
+
+layer.addEventListener("mouseup", (e) => {
+  if(!isDrawing) return;
+  isDrawing = false;
+
+  const r = layer.getBoundingClientRect();
+  const ex = e.clientX - r.left;
+  const ey = e.clientY - r.top;
+
+  const x = Math.min(sx, ex);
+  const y = Math.min(sy, ey);
+  const w = Math.abs(ex - sx);
+  const h = Math.abs(ey - sy);
+
+  if(previewRect){ previewRect.remove(); previewRect = null; }
+  if(w < 14 || h < 14) return;
+
+  config.areas.push({
+    x: x / r.width,
+    y: y / r.height,
+    w: w / r.width,
+    h: h / r.height,
+    text: ""
+  });
+
+  renderAreas();
+  renderAreaList();
+});
+
+/* ---------- 渲染紅框 ---------- */
+function renderAreas(){
+  layer.querySelectorAll(".area-box").forEach(el => el.remove());
+  config.areas.forEach((a, i) => {
+    const d = document.createElement("div");
+    d.className = "area-box";
+    d.style.left = (a.x*100) + "%";
+    d.style.top = (a.y*100) + "%";
+    d.style.width = (a.w*100) + "%";
+    d.style.height = (a.h*100) + "%";
+    d.textContent = (i+1);
+
+    d.onclick = (ev) => {
+      ev.stopPropagation();
+      if(confirm(`刪除框 ${i+1}？`)){
+        config.areas.splice(i,1);
+        renderAreas();
+        renderAreaList();
+      }
+    };
+
+    layer.appendChild(d);
+  });
+}
+
+/* ---------- 左側框清單 ---------- */
+function escapeHtml(str){
+  return String(str||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function renderAreaList(){
+  const list = $("areaList");
+  list.innerHTML = "";
+
+  $("areaEmpty").classList.toggle("hidden", config.areas.length !== 0);
+
+  config.areas.forEach((a, i) => {
+    const row = document.createElement("div");
+    row.className = "border rounded p-2 bg-white";
+    row.innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-bold text-sm">框 ${i+1}</div>
+        <button class="text-xs text-red-600 underline">刪除</button>
+      </div>
+      <div class="text-xs text-slate-500 mb-1">點此框送出文字：</div>
+      <input class="w-full border rounded px-2 py-2 text-sm font-bold"
+        placeholder="例如：A1 / 產品介紹 / 報名 / 連結 等等"
+        value="${escapeHtml(a.text)}">
+    `;
+
+    const del = row.querySelector("button");
+    const input = row.querySelector("input");
+
+    del.onclick = () => {
+      if(confirm(`刪除框 ${i+1}？`)){
+        config.areas.splice(i,1);
+        renderAreas();
+        renderAreaList();
+      }
+    };
+    input.oninput = () => a.text = input.value;
+
+    list.appendChild(row);
+  });
+}
+
+function clearAreas(){
+  if(confirm("確定清空全部框？")){
+    config.areas = [];
+    renderAreas();
+    renderAreaList();
+  }
+}
+
+/* ---------- 圖片上傳（R2） ---------- */
+async function pickAndUpload(){
+  const base = normalizeWorkerUrl($("workerUrl").value);
+  if(!base) return alert("請先填 Worker URL");
+  localStorage.setItem("line_worker_url", base);
+
+  const input = $("fileInput");
+  input.value = "";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    setStatus("壓縮+上傳中...");
+
+    try{
+      const maxSide = parseInt($("maxSide").value, 10);
+      const mime = $("outFormat").value;
+      const quality = parseFloat($("quality").value);
+      const cropSquare = $("cropSquare").checked;
+
+      const { blob, filename } = await compressImage(file, {maxSide, mime, quality, cropSquare});
+      const url = await uploadToR2(base, blob, filename);
+
+      config.imageUrl = url;
+      config.areas = []; // 換圖清空框
+      $("preview").src = url;
+
+      renderAreas();
+      renderAreaList();
+      setStatus("上傳完成 ✅");
+    }catch(err){
+      setStatus("上傳失敗");
+      alert("上傳失敗：\n" + err.message);
+    }
+  };
+  input.click();
+}
+
+/* ---------- 產出 imagemap（點框送 message） ---------- */
+function buildImagemapMessage(){
+  if(!config.imageUrl) throw new Error("尚未上傳圖片");
+  if(config.areas.length === 0) throw new Error("尚未畫框");
+  if(config.areas.some(a => !String(a.text||"").trim())) throw new Error("有框沒有填內容");
+
+  // imagemap 必須 baseSize 固定一套 px。這裡用 1040 寬、依比例高度。
+  // 我們用 JS 讀圖片自然尺寸來算比例高度（若失敗就用 1040）。
+  return new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => {
+      const baseW = 1040;
+      const ratio = im.naturalHeight / im.naturalWidth;
+      const baseH = Math.max(1040, Math.round(baseW * ratio)); // 高度至少 1040，避免太扁
+      const actions = config.areas.map(a => ({
+        type: "message",
+        text: a.text,
+        area: {
+          x: Math.round(a.x * baseW),
+          y: Math.round(a.y * baseH),
+          width: Math.round(a.w * baseW),
+          height: Math.round(a.h * baseH)
+        }
+      }));
+
+      resolve({
+        type: "imagemap",
+        baseUrl: config.imageUrl,
+        altText: "請點選",
+        baseSize: { width: baseW, height: baseH },
+        actions
+      });
+    };
+    im.onerror = () => reject(new Error("讀取圖片尺寸失敗，請確認圖片 URL 可公開存取"));
+    im.src = config.imageUrl;
+  });
+}
+
+/* ---------- 儲存/讀取（存到你的 Worker KV） ---------- */
+async function saveConfig(){
+  const base = normalizeWorkerUrl($("workerUrl").value);
+  const keyword = $("triggerKeyword").value.trim();
+  if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
+
+  localStorage.setItem("line_worker_url", base);
+
+  try{
+    const msg = await buildImagemapMessage();
+
+    // 存成：mode=imagemap，messages=[imagemap]
+    const payload = { mode: "imagemap", messages: [msg] };
+
+    await postJSON(base + "/save", { password:"1234", keyword, payload });
+    setStatus("儲存成功 ✅");
+    alert("儲存成功！\n使用者輸入觸發關鍵字：「" + keyword + "」就會出現這張圖。");
+  }catch(e){
+    setStatus("儲存失敗");
+    alert("儲存失敗：\n" + e.message);
+  }
+}
+
+async function loadConfig(){
+  const base = normalizeWorkerUrl($("workerUrl").value);
+  const keyword = $("triggerKeyword").value.trim();
+  if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
+
+  localStorage.setItem("line_worker_url", base);
+
+  try{
+    const data = await postJSON(base + "/load", { password:"1234", keyword });
+    const obj = (typeof data === "string") ? JSON.parse(data) : data;
+
+    if(obj.mode !== "imagemap" || !obj.messages?.[0]) throw new Error("不是 imagemap 格式");
+    const m = obj.messages[0];
+
+    config.imageUrl = m.baseUrl;
+    $("preview").src = config.imageUrl;
+
+    const bw = m.baseSize?.width || 1040;
+    const bh = m.baseSize?.height || 1040;
+
+    config.areas = (m.actions || []).map(a => ({
+      x: (a.area?.x || 0) / bw,
+      y: (a.area?.y || 0) / bh,
+      w: (a.area?.width || 0) / bw,
+      h: (a.area?.height || 0) / bh,
+      text: a.text || ""
+    }));
+
+    renderAreas();
+    renderAreaList();
+    setStatus("讀取成功 ✅");
+  }catch(e){
+    setStatus("讀取失敗");
+    alert("讀取失敗：\n" + e.message);
+  }
+}
+
+/* ---------- 送到我測試（LIFF sendMessages） ---------- */
+async function sendTestToMe(){
+  if(!isReady) return alert("LIFF 尚未初始化完成");
+  if(!liff.isInClient()) return alert("請在 LINE 內開啟（彈窗）才可送測試訊息");
+
+  try{
+    const msg = await buildImagemapMessage();
+    await liff.sendMessages([msg]);
+    alert("已把 imagemap 送到你目前的聊天室 ✅\n你可以直接點框測試是否會送出關鍵字。");
+  }catch(e){
+    alert("送測試失敗：\n" + e.message);
+  }
+}
+
+/* ---------- LIFF 初始化 / 關閉 ---------- */
+async function initLIFF(){
+  try{
+    $("liffState").textContent = "初始化中...";
+    await liff.init({ liffId: LIFF_ID });
+
+    if(!liff.isLoggedIn()){
+      $("liffState").textContent = "需要登入";
+      liff.login();
+      return;
+    }
+
+    $("liffState").textContent = liff.isInClient() ? "LINE 內（彈窗）" : "外部瀏覽器";
+    if(liff.getProfile){
+      const p = await liff.getProfile();
+      $("userName").textContent = p.displayName || "-";
+    }
+
+    const savedUrl = localStorage.getItem("line_worker_url");
+    if(savedUrl) $("workerUrl").value = savedUrl;
+
+    isReady = true;
+    setStatus("就緒 ✅（可上傳、畫框、儲存）");
+  }catch(e){
+    $("liffState").textContent = "初始化失敗";
+    setStatus("初始化失敗");
+    alert("LIFF 初始化失敗：\n" + e.message + "\n\n請確認你已把 LIFF_ID 換成正確的。");
+  }
+}
+
+function closeLiff(){
+  // 在 LINE 內彈窗可直接關閉
+  if(window.liff && liff.isInClient()){
+    liff.closeWindow();
+  }else{
+    window.close();
+  }
+}
+
+initLIFF();
+</script>
+</body>
+</html>
