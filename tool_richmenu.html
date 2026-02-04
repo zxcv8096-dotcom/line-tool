@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rich Menu 編輯器（2500×1686 / Canva 介面版）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    :root{ --rail-w:76px; --panel-w:380px; }
+    body{ user-select:none; }
+    input, textarea, select, button { user-select:auto; }
+
+    .checker{
+      background-image:
+        linear-gradient(45deg, rgba(0,0,0,.04) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(0,0,0,.04) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0,0,0,.04) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(0,0,0,.04) 75%);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
+    }
+
+    .artboard{
+      position:absolute;
+      left:50%; top:50%;
+      transform: translate(-50%, -50%);
+      background:#fff;
+      border:1px solid rgba(15,23,42,.18);
+      box-shadow: 0 12px 30px rgba(0,0,0,.12);
+      border-radius: 14px;
+      overflow:hidden;
+    }
+
+    .img-layer{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      cursor: default;
+      background:#f8fafc;
+    }
+    .img-layer img{
+      position:absolute;
+      left:50%; top:50%;
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
+      max-width:none;
+      max-height:none;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    .hotspot{
+      position:absolute;
+      border:2px solid rgba(239,68,68,.95);
+      background: rgba(239,68,68,.18);
+      border-radius: 10px;
+      color:white;
+      font-weight:800;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-shadow:0 1px 2px rgba(0,0,0,.85);
+      cursor:pointer;
+    }
+    .hotspot.selected{
+      border-color: rgba(59,130,246,.95);
+      background: rgba(59,130,246,.16);
+    }
+
+    .handle{
+      position:absolute;
+      width:10px; height:10px;
+      background:#fff;
+      border:2px solid rgba(59,130,246,.95);
+      border-radius: 4px;
+      box-shadow:0 1px 3px rgba(0,0,0,.25);
+      z-index: 10;
+    }
+    .handle.nw{ left:-6px; top:-6px; cursor:nwse-resize; }
+    .handle.ne{ right:-6px; top:-6px; cursor:nesw-resize; }
+    .handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
+    .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
+
+    .draw-rect{
+      position:absolute;
+      border:2px dashed rgba(2,6,23,.55);
+      background: rgba(2,6,23,.12);
+      border-radius: 10px;
+      pointer-events:none;
+    }
+
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      border:1px solid rgba(0,0,0,.18);
+      padding:2px 6px;
+      border-radius:6px;
+      background:#fff;
+      font-size: 11px;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 overflow-hidden">
+
+<script>
+/* ✅ 仍然維持你原本的 localStorage key，不改串聯 */
+const LS_WORKER = "line_worker_url";
+const LS_LIFF   = "line_liff_id";
+
+/* ✅ 你若要固定 LIFF_ID 可在這裡填；沒填就自動吃首頁存的 line_liff_id */
+let LIFF_ID = "";
+</script>
+
+<!-- Top bar -->
+<div class="h-14 bg-white border-b flex items-center justify-between px-3">
+  <div class="flex items-center gap-3">
+    <div class="font-extrabold text-indigo-700">Rich Menu 編輯器（2500×1686 / Canva 介面版）</div>
+    <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+      <span>空白鍵拖曳平移</span><span>｜</span>
+      <span>Ctrl+滾輪縮放畫面</span><span>｜</span>
+      <span>Alt+滾輪縮放圖片（裁切模式）</span><span>｜</span>
+      <span>Ctrl+Z / Ctrl+Y Undo/Redo</span><span>｜</span>
+      <span>Delete 刪除框</span>
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreview(true)">📱 預覽</button>
+    <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900" onclick="goHome()">回首頁</button>
+  </div>
+</div>
+
+<div class="h-[calc(100vh-56px)] flex">
+
+  <!-- Left rail -->
+  <div id="rail" class="w-[76px] bg-white border-r flex flex-col items-center py-3 gap-2">
+    <button class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl hover:bg-black"
+            title="收合/展開左邊欄位" onclick="togglePanel()">☰</button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="熱區編輯模式" onclick="setMode('hotspot')">🔲</button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="裁切模式（拖圖片決定裁切位置）" onclick="setMode('crop')">✂️</button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="Fit" onclick="fitToScreen()">📐</button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="重置視角" onclick="resetView()">🔁</button>
+  </div>
+
+  <!-- Left panel -->
+  <div id="panel" class="w-[380px] bg-white border-r overflow-y-auto">
+    <div class="p-4 space-y-4">
+
+      <!-- 基本設定 -->
+      <div class="rounded-xl border p-3 bg-slate-50">
+        <div class="font-bold text-sm mb-2">基本設定（不改你網址串聯）</div>
+
+        <label class="text-xs text-slate-500">Worker URL（從首頁自動帶入）</label>
+        <input id="workerUrl" class="mt-1 w-full border rounded px-3 py-2 bg-yellow-50 text-sm"
+               placeholder="https://api.xxx.workers.dev" />
+
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          <div>
+            <label class="text-xs text-slate-500">觸發關鍵字（KV key）</label>
+            <input id="keyword" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold border-indigo-500"
+                   placeholder="例如：RM_MAIN" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-500">檔案名稱（=選單名稱 chatBarText）</label>
+            <input id="fileName" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
+                   placeholder="例如：主選單" />
+          </div>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          會存到 <span class="kbd">payload.meta.name</span>，並且自動同步成 Rich Menu 的 <span class="kbd">chatBarText</span>（底部顯示文字）。
+        </div>
+
+        <div id="status" class="mt-2 text-xs text-slate-500">狀態：未初始化</div>
+      </div>
+
+      <!-- 切換選單 -->
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2 flex items-center justify-between">
+          <span>切換 / 再編輯（已儲存的選單）</span>
+          <button class="text-xs underline text-slate-500" onclick="refreshSavedList()">刷新</button>
+        </div>
+
+        <select id="savedSelect" class="w-full border rounded px-3 py-2 text-sm">
+          <option value="">（先按刷新）</option>
+        </select>
+
+        <div class="mt-2 flex gap-2">
+          <button class="flex-1 px-3 py-2 rounded bg-slate-200 text-slate-700 text-sm hover:bg-slate-300" onclick="loadSelectedSaved()">
+            載入所選
+          </button>
+          <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreview(true)">
+            預覽
+          </button>
+        </div>
+
+        <div class="mt-2 text-[11px] text-slate-500">
+          這裡是讀你 KV 內 <span class="kbd">mode=richmenu</span> 的資料（需要 Worker 有 <span class="kbd">/rm/listSaved</span>）。
+        </div>
+      </div>
+
+      <!-- 圖片 -->
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2">圖片（Rich Menu 必須 JPEG/PNG）</div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <label class="flex flex-col gap-1 col-span-2">
+            <span class="text-slate-500">品質 <span id="qVal">0.88</span>（固定輸出 JPEG）</span>
+            <input id="quality" type="range" min="0.65" max="0.95" step="0.01" value="0.88">
+          </label>
+        </div>
+
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button class="px-3 py-2 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700" onclick="pickImage()">
+            選擇圖片
+          </button>
+          <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="exportCropAndUpload()">
+            依裁切輸出 2500×1686 並上傳
+          </button>
+          <button class="px-3 py-2 rounded bg-slate-600 text-white text-sm hover:bg-slate-700" onclick="clearAll()">
+            清空
+          </button>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          流程：選擇圖片 → 進裁切模式拖位置/縮放 → 「依裁切輸出並上傳」→ 再畫熱區 → 儲存。
+        </div>
+      </div>
+
+      <!-- 熱區 -->
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2 flex items-center justify-between">
+          <span>熱區清單</span>
+          <span id="hsCount" class="text-xs text-slate-500">0</span>
+        </div>
+
+        <div id="areaEmpty" class="text-xs text-slate-400">尚未新增熱區。用滑鼠在白色底框內拖曳即可新增。</div>
+        <div id="areaList" class="space-y-2"></div>
+
+        <div class="mt-3 flex gap-2">
+          <button class="flex-1 px-3 py-2 rounded bg-gray-600 text-white text-sm hover:bg-gray-700" onclick="loadKV()">
+            讀取
+          </button>
+          <button class="flex-1 px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700" onclick="saveKV()">
+            儲存
+          </button>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          熱區「內容」＝你要送出的文字（message action）。
+        </div>
+      </div>
+
+      <!-- LIFF -->
+      <div class="rounded-xl border p-3 bg-slate-50">
+        <div class="font-bold text-sm mb-2">LIFF / 使用者（測試用）</div>
+        <div class="text-xs text-slate-600 space-y-1">
+          <div>LIFF：<span id="liffState" class="font-bold">-</span></div>
+          <div>使用者：<span id="userName" class="font-bold">-</span></div>
+          <div>userId：<span id="userId" class="font-bold">-</span></div>
+        </div>
+
+        <div class="mt-3 flex gap-2">
+          <button class="flex-1 px-3 py-2 rounded bg-black text-white text-sm hover:bg-slate-900" onclick="sendTestToMe()">
+            送測試訊息（只測 action 文字）
+          </button>
+          <button class="flex-1 px-3 py-2 rounded bg-slate-200 text-slate-700 text-sm hover:bg-slate-300" onclick="togglePreview(true)">
+            預覽抽屜
+          </button>
+        </div>
+
+        <div class="mt-2 text-[11px] text-slate-500">
+          Rich Menu 真正「套到聊天室底部」需要 Bot API 建立/上傳/套用（你 Worker 可再加 /rm/publish /rm/linkMe）。
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 pb-10">Powered by Cloudflare Workers & KV / R2</div>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div class="flex-1 relative checker overflow-hidden" id="workspace">
+    <div class="absolute top-3 right-3 z-20 flex items-center gap-2 bg-white/90 backdrop-blur border rounded-xl px-2 py-1 shadow">
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1.1)">＋</button>
+      <div class="w-16 text-center text-sm font-bold" id="zoomLabel">100%</div>
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1/1.1)">－</button>
+      <button class="px-2 py-1 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="fitToScreen()">Fit</button>
+    </div>
+
+    <div id="stage" class="absolute inset-0">
+      <div id="artboard" class="artboard">
+        <div id="imgLayer" class="img-layer">
+          <img id="img" alt="">
+          <div id="safe" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+        <div id="hotspotLayer" class="absolute inset-0"></div>
+        <div id="drawLayer" class="absolute inset-0"></div>
+      </div>
+    </div>
+
+    <div class="absolute left-3 bottom-3 z-20 bg-white/90 backdrop-blur border rounded-xl px-3 py-2 shadow text-xs text-slate-600">
+      <div class="font-bold mb-1">操作提示</div>
+      <div class="space-y-1">
+        <div>• 熱區模式：底框內拖曳新增；點框選取；拖移／拉角縮放；<span class="kbd">Delete</span> 刪除</div>
+        <div>• 裁切模式：拖動圖片決定位置；<span class="kbd">Alt</span>+滾輪縮放圖片</div>
+        <div>• 視角：<span class="kbd">空白鍵</span> 按住拖曳平移；<span class="kbd">Ctrl</span>+滾輪縮放畫面</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Drawer -->
+<div id="drawerOverlay" class="fixed inset-0 bg-black/40 hidden z-40" onclick="togglePreview(false)"></div>
+<div id="previewDrawer" class="fixed left-0 right-0 bottom-0 z-50 translate-y-full transition-transform duration-300 ease-out">
+  <div class="mx-auto max-w-4xl">
+    <div class="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <div class="font-bold text-slate-700">📱 Rich Menu 預覽（示意）</div>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 text-xs text-slate-600">
+            <input id="showHotspots" type="checkbox" checked> 顯示熱區框
+          </label>
+          <button class="px-3 py-1.5 rounded bg-slate-200 text-slate-700 text-sm hover:bg-slate-300" onclick="togglePreview(false)">收起</button>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50">
+        <div class="mx-auto w-[390px] max-w-full">
+          <div class="rounded-[26px] border-4 border-slate-900 bg-slate-900 p-2">
+            <div class="rounded-[20px] bg-white overflow-hidden">
+              <div class="bg-slate-100 text-xs text-slate-600 px-3 py-2 border-b flex items-center justify-between">
+                <span id="chatBarTextPreview">選單</span>
+                <span class="text-[11px] text-slate-500">（僅示意）</span>
+              </div>
+              <div class="p-3">
+                <div class="relative rounded-lg overflow-hidden border bg-white">
+                  <img id="phoneImg" class="w-full h-[230px] object-cover bg-gray-100">
+                  <div id="phoneHotspots" class="absolute inset-0"></div>
+                </div>
+                <div class="mt-2 text-[11px] text-slate-500">點熱區會顯示「將送出文字」</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 flex gap-2">
+            <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreview(false)">收起</button>
+            <button class="flex-1 px-3 py-2 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700" onclick="refreshPhonePreview()">重新渲染</button>
+          </div>
+        </div>
+      </div>
+      <div class="px-4 py-3 bg-white border-t text-xs text-slate-500">
+        chatBarText（底部顯示文字）會跟「檔案名稱」同步。
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+
+<script>
+/* ========= DOM ========= */
+const $ = (id)=>document.getElementById(id);
+
+const workerUrlEl = $("workerUrl");
+const keywordEl   = $("keyword");
+const fileNameEl  = $("fileName");
+const statusEl    = $("status");
+
+const liffStateEl = $("liffState");
+const userNameEl  = $("userName");
+const userIdEl    = $("userId");
+
+const panelEl     = $("panel");
+const workspaceEl = $("workspace");
+const stageEl     = $("stage");
+
+const artboardEl  = $("artboard");
+const imgLayerEl  = $("imgLayer");
+const imgEl       = $("img");
+const safeEl      = $("safe");
+
+const hotspotLayerEl = $("hotspotLayer");
+const drawLayerEl    = $("drawLayer");
+const areaListEl     = $("areaList");
+const areaEmptyEl    = $("areaEmpty");
+const hsCountEl      = $("hsCount");
+const zoomLabelEl    = $("zoomLabel");
+
+$("quality").addEventListener("input", ()=> $("qVal").textContent = $("quality").value);
+$("showHotspots").addEventListener("change", ()=> refreshPhonePreview());
+
+function setStatus(msg){ statusEl.textContent = "狀態：" + msg; }
+function normalizeWorkerUrl(raw){
+  let s = (raw||"").trim();
+  if(!s) return "";
+  if(!/^https?:\/\//i.test(s)) s = "https://" + s;
+  return s.replace(/\/+$/,'');
+}
+async function postJSON(url, data){
+  const res = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data) });
+  const t = await res.text();
+  let j = t;
+  try{ j = JSON.parse(t); }catch{}
+  if(!res.ok) throw new Error(`HTTP ${res.status}\n${t}`);
+  return j;
+}
+async function uploadToR2(workerBaseUrl, blob, filename){
+  const form = new FormData();
+  form.append("file", blob, filename || "richmenu.jpg");
+  const res = await fetch(workerBaseUrl + "/upload", { method:"POST", body: form });
+  const t = await res.text();
+  let j = t;
+  try{ j = JSON.parse(t); }catch{}
+  if(!res.ok) throw new Error(`HTTP ${res.status}\n${t}`);
+  if(!j.ok || !j.url) throw new Error("上傳回傳格式不對");
+  return j.url;
+}
+function escapeHtml(str){
+  return String(str||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+/* ========= state ========= */
+const BASE_W = 2500;
+const BASE_H = 1686;
+
+let state = {
+  meta: { name:"" },
+  keyword: "",
+  imageUrl: "",
+  crop: { tx:0, ty:0, s:1 },
+  mode: "hotspot",
+  hotspots: [],
+  selectedId: null
+};
+
+/* ========= history ========= */
+let history = [];
+let historyIndex = -1;
+function snap(){
+  return JSON.parse(JSON.stringify({
+    meta: state.meta,
+    keyword: state.keyword,
+    imageUrl: state.imageUrl,
+    crop: state.crop,
+    mode: state.mode,
+    hotspots: state.hotspots,
+    selectedId: state.selectedId
+  }));
+}
+function pushHistory(){
+  history = history.slice(0, historyIndex+1);
+  history.push(snap());
+  historyIndex++;
+}
+function applySnap(s){
+  state.meta = s.meta;
+  state.keyword = s.keyword;
+  state.imageUrl = s.imageUrl;
+  state.crop = s.crop;
+  state.mode = s.mode;
+  state.hotspots = s.hotspots;
+  state.selectedId = s.selectedId;
+
+  keywordEl.value = state.keyword || "";
+  fileNameEl.value = state.meta?.name || "";
+  imgEl.src = state.imageUrl || "";
+
+  applyCropTransform();
+  renderAll();
+  renderModeBadge();
+}
+function undo(){ if(historyIndex<=0) return; historyIndex--; applySnap(history[historyIndex]); }
+function redo(){ if(historyIndex>=history.length-1) return; historyIndex++; applySnap(history[historyIndex]); }
+
+/* ========= view (pan/zoom) ========= */
+let view = { x:0, y:0, z:1 };
+function updateStageTransform(){
+  stageEl.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.z})`;
+  zoomLabelEl.textContent = Math.round(view.z*100) + "%";
+}
+function resetView(){ view={x:0,y:0,z:1}; updateStageTransform(); }
+function zoomBy(factor, cx=null, cy=null){
+  const oldZ=view.z;
+  const newZ=Math.min(4, Math.max(0.2, oldZ*factor));
+  if(cx!=null && cy!=null){
+    const rect=workspaceEl.getBoundingClientRect();
+    const ax=cx-rect.left, ay=cy-rect.top;
+    const dx=ax-(rect.width/2), dy=ay-(rect.height/2);
+    view.x=(view.x-dx)*(newZ/oldZ)+dx;
+    view.y=(view.y-dy)*(newZ/oldZ)+dy;
+  }
+  view.z=newZ; updateStageTransform();
+}
+function fitToScreen(){
+  const wr=workspaceEl.getBoundingClientRect();
+  const pad=140;
+  const maxW=Math.max(200, wr.width-pad);
+  const maxH=Math.max(200, wr.height-pad);
+  const z=Math.min(3, Math.max(0.12, Math.min(maxW/BASE_W, maxH/BASE_H)));
+  view={x:0,y:0,z}; updateStageTransform();
+}
+
+/* ========= panel ========= */
+let panelCollapsed=false;
+function togglePanel(){ panelCollapsed=!panelCollapsed; panelEl.classList.toggle("hidden", panelCollapsed); }
+
+/* ========= artboard size fixed ========= */
+function applyArtboardSize(){
+  artboardEl.style.width = BASE_W + "px";
+  artboardEl.style.height = BASE_H + "px";
+  // safe guide
+  safeEl.innerHTML="";
+  const m=24;
+  const box=document.createElement("div");
+  box.style.position="absolute";
+  box.style.left=m+"px"; box.style.top=m+"px";
+  box.style.right=m+"px"; box.style.bottom=m+"px";
+  box.style.border="2px dashed rgba(15,23,42,.20)";
+  box.style.borderRadius="12px";
+  safeEl.appendChild(box);
+}
+
+/* ========= mode ========= */
+function setMode(mode){
+  state.mode=mode;
+  imgLayerEl.style.cursor = (mode==="crop") ? "grab" : "default";
+  pushHistory();
+  renderModeBadge();
+}
+function renderModeBadge(){
+  setStatus(state.mode==="crop"
+    ? "裁切模式：拖圖片決定裁切位置（Alt+滾輪縮放圖片）"
+    : "熱區模式：拖曳新增框；選取框可拖移/拉角縮放");
+}
+
+/* ========= crop ========= */
+function applyCropTransform(){
+  const t=state.crop;
+  imgEl.style.transform = `translate(calc(-50% + ${t.tx}px), calc(-50% + ${t.ty}px)) scale(${t.s})`;
+}
+
+/* ========= hotspots ========= */
+function uid(){ return "hs_"+Math.random().toString(16).slice(2)+"_"+Date.now().toString(16); }
+function selectHotspot(id){ state.selectedId=id; renderHotspots(); renderList(); }
+function addHotspot(nx,ny,nw,nh){
+  const id=uid();
+  state.hotspots.push({id,x:nx,y:ny,w:nw,h:nh,text:""});
+  state.selectedId=id;
+  pushHistory(); renderAll();
+}
+function deleteSelected(){
+  if(!state.selectedId) return;
+  const i=state.hotspots.findIndex(h=>h.id===state.selectedId);
+  if(i>=0){
+    state.hotspots.splice(i,1);
+    state.selectedId=null;
+    pushHistory(); renderAll();
+  }
+}
+
+function renderHotspots(){
+  hotspotLayerEl.innerHTML="";
+  state.hotspots.forEach((h,idx)=>{
+    const d=document.createElement("div");
+    d.className="hotspot"+(h.id===state.selectedId?" selected":"");
+    d.style.left=(h.x*100)+"%";
+    d.style.top=(h.y*100)+"%";
+    d.style.width=(h.w*100)+"%";
+    d.style.height=(h.h*100)+"%";
+    d.textContent=(idx+1);
+
+    d.addEventListener("mousedown",(ev)=>{
+      ev.stopPropagation();
+      if(state.mode!=="hotspot") return;
+      selectHotspot(h.id);
+      beginDragHotspot(ev,h.id,"move");
+    });
+    d.addEventListener("click",(ev)=>{ ev.stopPropagation(); selectHotspot(h.id); });
+
+    if(h.id===state.selectedId && state.mode==="hotspot"){
+      ["nw","ne","sw","se"].forEach(pos=>{
+        const hd=document.createElement("div");
+        hd.className="handle "+pos;
+        hd.addEventListener("mousedown",(ev)=>{ ev.stopPropagation(); beginDragHotspot(ev,h.id,pos); });
+        d.appendChild(hd);
+      });
+    }
+    hotspotLayerEl.appendChild(d);
+  });
+  hsCountEl.textContent=state.hotspots.length+" 個";
+}
+
+function renderList(){
+  areaListEl.innerHTML="";
+  areaEmptyEl.classList.toggle("hidden", state.hotspots.length!==0);
+
+  state.hotspots.forEach((h,idx)=>{
+    const row=document.createElement("div");
+    row.className="border rounded-lg p-2 bg-white";
+    const selected=(h.id===state.selectedId);
+
+    row.innerHTML=`
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-bold text-sm ${selected?'text-indigo-700':'text-slate-700'}">框 ${idx+1}</div>
+        <div class="flex items-center gap-2">
+          <button class="text-xs ${selected?'text-indigo-700':'text-slate-500'} underline">選取</button>
+          <button class="text-xs text-red-600 underline">刪除</button>
+        </div>
+      </div>
+      <div class="text-xs text-slate-500 mb-1">點此框送出文字：</div>
+      <input class="w-full border rounded px-2 py-2 text-sm font-bold"
+        placeholder="例如：MENU_SHOP / MENU_CALENDAR / MENU_NUTRITION"
+        value="${escapeHtml(h.text)}">
+    `;
+
+    const btnSelect=row.querySelectorAll("button")[0];
+    const btnDel=row.querySelectorAll("button")[1];
+    const input=row.querySelector("input");
+
+    btnSelect.onclick=()=>selectHotspot(h.id);
+    btnDel.onclick=()=>{
+      if(confirm(`刪除框 ${idx+1}？`)){
+        const i=state.hotspots.findIndex(x=>x.id===h.id);
+        if(i>=0){
+          state.hotspots.splice(i,1);
+          if(state.selectedId===h.id) state.selectedId=null;
+          pushHistory(); renderAll();
+        }
+      }
+    };
+    input.oninput=()=>{ h.text=input.value; refreshPhonePreview(); };
+    input.onblur=()=>pushHistory();
+
+    areaListEl.appendChild(row);
+  });
+}
+
+function renderAll(){
+  applyCropTransform();
+  renderHotspots();
+  renderList();
+  refreshPhonePreview();
+}
+
+/* ========= drawing new rect ========= */
+let drawing=false;
+let drawStart={x:0,y:0};
+let drawRectEl=null;
+
+function getPointInArtboard(ev){
+  const r=artboardEl.getBoundingClientRect();
+  return { px: ev.clientX-r.left, py: ev.clientY-r.top, r };
+}
+
+drawLayerEl.addEventListener("mousedown",(ev)=>{
+  if(state.mode!=="hotspot") return;
+  if(!state.imageUrl) return alert("請先選擇圖片並輸出上傳");
+  const p=getPointInArtboard(ev);
+  drawing=true;
+  drawStart={x:p.px,y:p.py};
+
+  drawRectEl=document.createElement("div");
+  drawRectEl.className="draw-rect";
+  drawRectEl.style.left=drawStart.x+"px";
+  drawRectEl.style.top=drawStart.y+"px";
+  drawRectEl.style.width="0px";
+  drawRectEl.style.height="0px";
+  drawLayerEl.appendChild(drawRectEl);
+
+  state.selectedId=null;
+  renderHotspots();
+});
+
+window.addEventListener("mousemove",(ev)=>{
+  if(!drawing || !drawRectEl) return;
+  const r=artboardEl.getBoundingClientRect();
+  const cx=ev.clientX-r.left;
+  const cy=ev.clientY-r.top;
+  const x=Math.min(drawStart.x,cx);
+  const y=Math.min(drawStart.y,cy);
+  const w=Math.abs(cx-drawStart.x);
+  const h=Math.abs(cy-drawStart.y);
+  drawRectEl.style.left=x+"px";
+  drawRectEl.style.top=y+"px";
+  drawRectEl.style.width=w+"px";
+  drawRectEl.style.height=h+"px";
+});
+
+window.addEventListener("mouseup",()=>{
+  if(!drawing) return;
+  drawing=false;
+  if(!drawRectEl) return;
+
+  const rect=drawRectEl.getBoundingClientRect();
+  drawRectEl.remove(); drawRectEl=null;
+
+  const ab=artboardEl.getBoundingClientRect();
+  const x=rect.left-ab.left;
+  const y=rect.top-ab.top;
+  const w=rect.width;
+  const h=rect.height;
+
+  if(w<24 || h<24) return;
+
+  addHotspot(x/ab.width, y/ab.height, w/ab.width, h/ab.height);
+});
+
+/* ========= drag/resize hotspot ========= */
+let drag=null;
+function beginDragHotspot(ev,id,kind){
+  const h=state.hotspots.find(x=>x.id===id);
+  if(!h) return;
+  const ab=artboardEl.getBoundingClientRect();
+  drag={id,kind,ab,startMouse:{x:ev.clientX,y:ev.clientY},startBox:{x:h.x,y:h.y,w:h.w,h:h.h}};
+  window.addEventListener("mousemove",onDragHotspot);
+  window.addEventListener("mouseup",endDragHotspot,{once:true});
+}
+function onDragHotspot(ev){
+  if(!drag) return;
+  const h=state.hotspots.find(x=>x.id===drag.id);
+  if(!h) return;
+
+  const dx=(ev.clientX-drag.startMouse.x)/drag.ab.width;
+  const dy=(ev.clientY-drag.startMouse.y)/drag.ab.height;
+
+  let nx=drag.startBox.x, ny=drag.startBox.y, nw=drag.startBox.w, nh=drag.startBox.h;
+  const min=0.02;
+
+  if(drag.kind==="move"){
+    nx=drag.startBox.x+dx;
+    ny=drag.startBox.y+dy;
+  }else{
+    if(drag.kind.includes("n")){ ny=drag.startBox.y+dy; nh=drag.startBox.h-dy; }
+    if(drag.kind.includes("s")){ nh=drag.startBox.h+dy; }
+    if(drag.kind.includes("w")){ nx=drag.startBox.x+dx; nw=drag.startBox.w-dx; }
+    if(drag.kind.includes("e")){ nw=drag.startBox.w+dx; }
+  }
+
+  nw=Math.max(min,nw); nh=Math.max(min,nh);
+  nx=Math.min(1-nw, Math.max(0,nx));
+  ny=Math.min(1-nh, Math.max(0,ny));
+
+  h.x=nx; h.y=ny; h.w=nw; h.h=nh;
+  renderHotspots(); refreshPhonePreview();
+}
+function endDragHotspot(){
+  window.removeEventListener("mousemove",onDragHotspot);
+  drag=null;
+  pushHistory(); renderList();
+}
+
+/* ========= crop drag image ========= */
+let cropDrag=null;
+imgLayerEl.addEventListener("mousedown",(ev)=>{
+  if(state.mode!=="crop") return;
+  if(!state.imageUrl) return;
+  cropDrag={startMouse:{x:ev.clientX,y:ev.clientY},start:{tx:state.crop.tx,ty:state.crop.ty}};
+  imgLayerEl.style.cursor="grabbing";
+  window.addEventListener("mousemove",onCropDrag);
+  window.addEventListener("mouseup",endCropDrag,{once:true});
+});
+function onCropDrag(ev){
+  if(!cropDrag) return;
+  const dx=ev.clientX-cropDrag.startMouse.x;
+  const dy=ev.clientY-cropDrag.startMouse.y;
+  state.crop.tx=cropDrag.start.tx+dx;
+  state.crop.ty=cropDrag.start.ty+dy;
+  applyCropTransform();
+}
+function endCropDrag(){
+  window.removeEventListener("mousemove",onCropDrag);
+  imgLayerEl.style.cursor="grab";
+  cropDrag=null;
+  pushHistory();
+}
+
+/* ========= pan/zoom ========= */
+let isSpaceDown=false;
+let panning=false;
+let panStart={x:0,y:0,vx:0,vy:0};
+
+window.addEventListener("keydown",(ev)=>{
+  if(ev.code==="Space"){ isSpaceDown=true; ev.preventDefault(); }
+
+  if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase()==="z"){ ev.preventDefault(); undo(); return; }
+  if((ev.ctrlKey && ev.key.toLowerCase()==="y") || (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase()==="z")){
+    ev.preventDefault(); redo(); return;
+  }
+  if(ev.key==="Delete"){ ev.preventDefault(); deleteSelected(); }
+  if(ev.key==="Escape"){ state.selectedId=null; renderHotspots(); renderList(); }
+});
+window.addEventListener("keyup",(ev)=>{ if(ev.code==="Space") isSpaceDown=false; });
+
+workspaceEl.addEventListener("mousedown",(ev)=>{
+  if(isSpaceDown && ev.button===0){
+    panning=true;
+    panStart={x:ev.clientX,y:ev.clientY,vx:view.x,vy:view.y};
+    window.addEventListener("mousemove",onPanMove);
+    window.addEventListener("mouseup",endPan,{once:true});
+  }
+});
+function onPanMove(ev){
+  if(!panning) return;
+  view.x=panStart.vx+(ev.clientX-panStart.x);
+  view.y=panStart.vy+(ev.clientY-panStart.y);
+  updateStageTransform();
+}
+function endPan(){
+  window.removeEventListener("mousemove",onPanMove);
+  panning=false;
+}
+
+workspaceEl.addEventListener("wheel",(ev)=>{
+  if(ev.ctrlKey){
+    ev.preventDefault();
+    const factor=ev.deltaY<0?1.08:1/1.08;
+    zoomBy(factor,ev.clientX,ev.clientY);
+    return;
+  }
+  // crop mode image zoom: Alt+wheel
+  if(state.mode==="crop" && ev.altKey){
+    ev.preventDefault();
+    const factor=ev.deltaY<0?1.06:1/1.06;
+    state.crop.s=Math.min(6, Math.max(0.2, state.crop.s*factor));
+    applyCropTransform();
+    pushHistory();
+    return;
+  }
+},{passive:false});
+
+/* ========= preview ========= */
+function togglePreview(open){
+  const overlay=$("drawerOverlay");
+  const drawer=$("previewDrawer");
+  if(open){
+    overlay.classList.remove("hidden");
+    drawer.classList.remove("translate-y-full");
+    refreshPhonePreview();
+  }else{
+    overlay.classList.add("hidden");
+    drawer.classList.add("translate-y-full");
+  }
+}
+function refreshPhonePreview(){
+  const img=$("phoneImg");
+  const wrap=$("phoneHotspots");
+  $("chatBarTextPreview").textContent = (state.meta?.name || "選單").slice(0,14);
+
+  if(!state.imageUrl){
+    img.src=""; wrap.innerHTML=""; return;
+  }
+  img.src=state.imageUrl;
+  wrap.innerHTML="";
+
+  requestAnimationFrame(()=>{
+    const show=$("showHotspots").checked;
+    const r=wrap.getBoundingClientRect();
+    if(!r.width || !r.height) return;
+
+    state.hotspots.forEach((h,i)=>{
+      if(show){
+        const box=document.createElement("div");
+        box.style.position="absolute";
+        box.style.left=(h.x*r.width)+"px";
+        box.style.top=(h.y*r.height)+"px";
+        box.style.width=(h.w*r.width)+"px";
+        box.style.height=(h.h*r.height)+"px";
+        box.style.border="2px solid rgba(239,68,68,.9)";
+        box.style.background="rgba(239,68,68,.10)";
+        box.style.borderRadius="10px";
+        wrap.appendChild(box);
+      }
+      const btn=document.createElement("button");
+      btn.style.position="absolute";
+      btn.style.left=(h.x*100)+"%";
+      btn.style.top=(h.y*100)+"%";
+      btn.style.width=(h.w*100)+"%";
+      btn.style.height=(h.h*100)+"%";
+      btn.style.background="transparent";
+      btn.onclick=()=>{
+        const t=(h.text||"").trim();
+        alert(`熱區 ${i+1}\n將送出：${t||"（尚未填）"}`);
+      };
+      wrap.appendChild(btn);
+    });
+  });
+}
+
+/* ========= image pick + export crop to 2500x1686 ========= */
+let sourceFile=null;
+
+async function pickImage(){
+  const input=$("fileInput");
+  input.value="";
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];
+    if(!file) return;
+    sourceFile=file;
+
+    // show local preview first
+    const url=URL.createObjectURL(file);
+    state.imageUrl=url;
+    imgEl.src=url;
+    state.crop={tx:0,ty:0,s:1};
+    state.hotspots=[];
+    state.selectedId=null;
+    pushHistory();
+    renderAll();
+    fitToScreen();
+    setStatus("已選擇圖片（請進裁切模式調整，然後輸出上傳）");
+  };
+  input.click();
+}
+
+async function exportCropAndUpload(){
+  const base=normalizeWorkerUrl(workerUrlEl.value);
+  if(!base) return alert("Worker URL 空白（請回首頁先填一次）");
+  if(!state.imageUrl) return alert("沒有圖片");
+  localStorage.setItem(LS_WORKER, base);
+
+  try{
+    setStatus("輸出 2500×1686 + 上傳中...");
+
+    // load image from current imageUrl (blob url or remote)
+    const im = await new Promise((resolve,reject)=>{
+      const x=new Image();
+      x.crossOrigin="anonymous";
+      x.onload=()=>resolve(x);
+      x.onerror=()=>reject(new Error("圖片載入失敗（可能 CORS / blob 失效）"));
+      x.src=state.imageUrl;
+    });
+
+    const W=BASE_W, H=BASE_H;
+    const canvas=document.createElement("canvas");
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext("2d");
+
+    // white bg
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(0,0,W,H);
+
+    // cover scale
+    const sCover=Math.max(W/im.naturalWidth, H/im.naturalHeight);
+    const s=sCover*state.crop.s;
+
+    const dw=im.naturalWidth*s;
+    const dh=im.naturalHeight*s;
+
+    const cx=W/2+state.crop.tx;
+    const cy=H/2+state.crop.ty;
+    const dx=cx-dw/2;
+    const dy=cy-dh/2;
+
+    ctx.drawImage(im, dx, dy, dw, dh);
+
+    // Rich Menu: JPEG only
+    const q=parseFloat($("quality").value);
+    const outBlob=await new Promise(res=>canvas.toBlob(res,"image/jpeg",q));
+    if(!outBlob) throw new Error("輸出失敗（toBlob 空）");
+
+    const filename = `richmenu_${Date.now()}_${W}x${H}.jpg`;
+    const url = await uploadToR2(base, outBlob, filename);
+
+    // replace imageUrl to R2 public URL, reset crop (baked)
+    state.imageUrl=url;
+    imgEl.src=url;
+    state.crop={tx:0,ty:0,s:1};
+    applyCropTransform();
+
+    pushHistory();
+    renderAll();
+    setStatus("上傳完成 ✅（已是 2500×1686 JPEG，可直接畫熱區/儲存）");
+    togglePreview(true);
+
+  }catch(err){
+    setStatus("輸出/上傳失敗");
+    alert("輸出/上傳失敗：\n"+err.message);
+  }
+}
+
+/* ========= KV save/load (use your existing /save /load) ========= */
+function buildRichMenuPayload(){
+  if(!state.imageUrl) throw new Error("尚未有圖片（請先輸出上傳）");
+  if(state.hotspots.length===0) throw new Error("尚未新增熱區");
+  if(state.hotspots.some(h=>!String(h.text||"").trim())) throw new Error("有熱區沒有填內容");
+
+  const chatBarText = (state.meta?.name || "選單").slice(0,14);
+
+  const areas = state.hotspots.map(h=>({
+    bounds:{
+      x: Math.round(h.x*BASE_W),
+      y: Math.round(h.y*BASE_H),
+      width: Math.round(h.w*BASE_W),
+      height: Math.round(h.h*BASE_H)
+    },
+    action:{
+      type:"message",
+      text: h.text.trim()
+    }
+  }));
+
+  const richMenu = {
+    size:{ width: BASE_W, height: BASE_H },
+    selected: true,
+    name: (state.meta?.name || "RichMenu").slice(0,300),
+    chatBarText,
+    areas
+  };
+
+  return {
+    mode:"richmenu",
+    meta:{ name: state.meta?.name || "" },
+    imageUrl: state.imageUrl,
+    richMenu
+  };
+}
+
+async function saveKV(){
+  const base=normalizeWorkerUrl(workerUrlEl.value);
+  const keyword=(keywordEl.value||"").trim();
+  const name=(fileNameEl.value||"").trim();
+
+  if(!base || !keyword) return alert("請確認 Worker URL + 觸發關鍵字");
+  localStorage.setItem(LS_WORKER, base);
+
+  try{
+    state.keyword=keyword;
+    state.meta.name=name;
+
+    const payload = buildRichMenuPayload();
+    await postJSON(base+"/save", { keyword, payload });
+
+    pushHistory();
+    setStatus("儲存成功 ✅（KV 已存 richmenu）");
+    alert("儲存成功！\nKV key："+keyword+"\nchatBarText（底部文字）："+(payload.richMenu.chatBarText));
+    refreshSavedList();
+  }catch(e){
+    setStatus("儲存失敗");
+    alert("儲存失敗：\n"+e.message);
+  }
+}
+
+async function loadKV(){
+  const base=normalizeWorkerUrl(workerUrlEl.value);
+  const keyword=(keywordEl.value||"").trim();
+  if(!base || !keyword) return alert("請確認 Worker URL + 觸發關鍵字");
+  localStorage.setItem(LS_WORKER, base);
+
+  try{
+    const data=await postJSON(base+"/load", { keyword });
+    const obj=(typeof data==="string")?JSON.parse(data):data;
+    if(!obj || obj.mode!=="richmenu" || !obj.richMenu) throw new Error("這筆不是 richmenu 格式");
+
+    state.keyword=keyword;
+    state.meta=obj.meta||{name:""};
+    state.imageUrl=obj.imageUrl||"";
+    state.crop={tx:0,ty:0,s:1};
+
+    const rm=obj.richMenu;
+    const areas=rm.areas||[];
+    state.hotspots = areas.map(a=>({
+      id: uid(),
+      x: (a.bounds?.x||0)/BASE_W,
+      y: (a.bounds?.y||0)/BASE_H,
+      w: (a.bounds?.width||0)/BASE_W,
+      h: (a.bounds?.height||0)/BASE_H,
+      text: a.action?.text || ""
+    }));
+    state.selectedId=state.hotspots[0]?.id || null;
+
+    fileNameEl.value=state.meta?.name||"";
+    imgEl.src=state.imageUrl||"";
+
+    pushHistory();
+    renderAll();
+    fitToScreen();
+    togglePreview(true);
+    setStatus("讀取成功 ✅");
+
+  }catch(e){
+    setStatus("讀取失敗");
+    alert("讀取失敗：\n"+e.message);
+  }
+}
+
+/* ========= saved list (requires Worker /rm/listSaved) ========= */
+async function refreshSavedList(){
+  const base=normalizeWorkerUrl(workerUrlEl.value);
+  if(!base) return;
+  try{
+    const j=await postJSON(base+"/rm/listSaved", {});
+    const sel=$("savedSelect");
+    sel.innerHTML = `<option value="">（選擇已儲存的 Rich Menu）</option>`;
+    (j.items||[]).forEach(it=>{
+      const opt=document.createElement("option");
+      opt.value=it.key;
+      const name=it.name || "";
+      opt.textContent = `${it.key}${name?("｜"+name):""}`;
+      sel.appendChild(opt);
+    });
+  }catch(e){
+    // 不擋主流程
+    console.log(e);
+  }
+}
+function loadSelectedSaved(){
+  const key=$("savedSelect").value;
+  if(!key) return alert("請先選一個");
+  keywordEl.value=key;
+  loadKV();
+}
+
+/* ========= clear ========= */
+function clearAll(){
+  if(!confirm("確定清空圖片 + 全部熱區？")) return;
+  state.imageUrl="";
+  imgEl.src="";
+  state.hotspots=[];
+  state.selectedId=null;
+  state.crop={tx:0,ty:0,s:1};
+  pushHistory();
+  renderAll();
+  setStatus("已清空");
+}
+
+/* ========= LIFF (optional) ========= */
+let isReady=false;
+async function initLIFF(){
+  try{
+    const fromLS=(localStorage.getItem(LS_LIFF)||"").trim();
+    if(!LIFF_ID) LIFF_ID = fromLS;
+
+    if(!LIFF_ID){
+      liffStateEl.textContent="未設定（可忽略）";
+      userNameEl.textContent="-";
+      userIdEl.textContent="-";
+      return;
+    }
+
+    liffStateEl.textContent="初始化中...";
+    await liff.init({ liffId: LIFF_ID });
+
+    if(!liff.isLoggedIn()){
+      liffStateEl.textContent="需要登入";
+      liff.login();
+      return;
+    }
+
+    liffStateEl.textContent = liff.isInClient() ? "LINE 內" : "外部瀏覽器";
+    const p=await liff.getProfile();
+    userNameEl.textContent=p.displayName||"-";
+    userIdEl.textContent=p.userId||"-";
+    isReady=true;
+  }catch(e){
+    liffStateEl.textContent="初始化失敗";
+    console.log(e);
+  }
+}
+
+async function sendTestToMe(){
+  if(!isReady) return alert("LIFF 尚未可用（你可忽略這功能）");
+  if(!liff.isInClient()) return alert("請在 LINE 內開啟才可送測試訊息");
+  if(state.hotspots.length===0) return alert("沒有熱區可測");
+  if(state.hotspots.some(h=>!String(h.text||"").trim())) return alert("有熱區沒填文字");
+
+  // 送一個簡單訊息列出熱區文字（測 action 內容）
+  const lines = state.hotspots.map((h,i)=>`#${i+1} ${h.text.trim()}`);
+  await liff.sendMessages([{ type:"text", text:"RichMenu 熱區文字（測試）\n"+lines.join("\n") }]);
+  alert("已送到聊天室 ✅");
+}
+
+/* ========= navigation ========= */
+function goHome(){ window.location.href = "index.html"; }
+
+/* ========= init ========= */
+keywordEl.addEventListener("input", ()=>{ state.keyword=(keywordEl.value||"").trim(); });
+fileNameEl.addEventListener("input", ()=>{
+  state.meta.name=fileNameEl.value;
+  refreshPhonePreview();
+});
+
+window.addEventListener("load", ()=>{
+  // ✅ 自動帶入 Worker URL：跟你首頁一致
+  const w=(localStorage.getItem(LS_WORKER)||"").trim();
+  if(w) workerUrlEl.value=w;
+
+  applyArtboardSize();
+  fitToScreen();
+  pushHistory();
+  renderModeBadge();
+  renderAll();
+  refreshSavedList();
+  initLIFF();
+  setStatus("就緒 ✅（2500×1686）");
+});
+</script>
+
+</body>
+</html>
