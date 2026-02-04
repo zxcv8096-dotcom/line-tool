@@ -6,15 +6,8 @@
   <title>六宮格選單</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{
-      --rail-w: 168px;
-      --panel-w: 360px;
-      --preview-w: 360px;
-    }
     body{ user-select:none; }
     input, textarea, select, button { user-select:auto; }
-
-    /* 工作區棋盤背景 */
     .checker{
       background-image:
         linear-gradient(45deg, rgba(0,0,0,.04) 25%, transparent 25%),
@@ -24,8 +17,6 @@
       background-size: 28px 28px;
       background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
     }
-
-    /* Artboard（Rich Menu 尺寸固定 2500×1686） */
     .artboard{
       position:absolute;
       left:50%; top:50%;
@@ -36,27 +27,18 @@
       border-radius: 14px;
       overflow:hidden;
     }
-
-    /* 圖片層（裁切時拖動） */
-    .img-layer{
-      position:absolute; inset:0;
-      overflow:hidden;
-      background:#f8fafc;
-    }
-    .img-layer.crop{ cursor: grab; }
-    .img-layer.crop:active{ cursor: grabbing; }
-
+    .img-layer{ position:absolute; inset:0; overflow:hidden; background:#f8fafc; }
+    .img-layer.crop{ cursor:grab; }
+    .img-layer.crop:active{ cursor:grabbing; }
     .img-layer img{
       position:absolute;
       left:50%; top:50%;
-      transform-origin: center center;
+      transform-origin:center;
       max-width:none;
       max-height:none;
       pointer-events:none;
       user-select:none;
     }
-
-    /* 熱區框 */
     .hotspot{
       position:absolute;
       border:2px solid rgba(239,68,68,.95);
@@ -65,65 +47,51 @@
       color:white;
       font-weight:800;
       font-size:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display:flex; align-items:center; justify-content:center;
       text-shadow:0 1px 2px rgba(0,0,0,.85);
       cursor:pointer;
-      box-sizing: border-box;
+      box-sizing:border-box;
     }
     .hotspot.selected{
       border-color: rgba(59,130,246,.95);
       background: rgba(59,130,246,.16);
     }
-
-    /* 拉角 handle */
     .handle{
       position:absolute;
       width:12px; height:12px;
       background:#fff;
       border:2px solid rgba(59,130,246,.95);
-      border-radius: 4px;
+      border-radius:4px;
       box-shadow:0 1px 3px rgba(0,0,0,.25);
-      z-index: 10;
-      box-sizing: border-box;
+      z-index:10;
+      box-sizing:border-box;
     }
     .handle.nw{ left:-7px; top:-7px; cursor:nwse-resize; }
     .handle.ne{ right:-7px; top:-7px; cursor:nesw-resize; }
     .handle.sw{ left:-7px; bottom:-7px; cursor:nesw-resize; }
     .handle.se{ right:-7px; bottom:-7px; cursor:nwse-resize; }
-
-    /* 拖曳新框預覽 */
     .draw-rect{
       position:absolute;
       border:2px dashed rgba(2,6,23,.55);
       background: rgba(2,6,23,.10);
-      border-radius: 10px;
+      border-radius:10px;
       pointer-events:none;
-      box-sizing: border-box;
+      box-sizing:border-box;
     }
-
-    /* 預覽右側（可收合） */
-    .preview-collapsed{
-      width: 44px !important;
-    }
+    .preview-collapsed{ width:44px!important; }
   </style>
 </head>
 
 <body class="bg-slate-100 text-slate-800 overflow-hidden">
 
-<!-- Top bar -->
 <div class="h-14 bg-white border-b flex items-center justify-between px-3">
   <div class="flex items-center gap-3">
     <div class="font-extrabold text-blue-700 text-lg">六宮格選單</div>
     <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-      <span>Ctrl+滾輪：縮放畫面</span>
-      <span>｜</span>
-      <span>空白鍵拖曳：平移</span>
-      <span>｜</span>
-      <span>Ctrl+Z / Ctrl+Y：復原 / 重做</span>
-      <span>｜</span>
-      <span>Delete：刪除選取框</span>
+      <span>Ctrl+滾輪：縮放畫面</span><span>｜</span>
+      <span>空白鍵拖曳：平移</span><span>｜</span>
+      <span>Ctrl+Z / Ctrl+Y：復原 / 重做</span><span>｜</span>
+      <span>Delete：刪除框</span>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -131,46 +99,10 @@
   </div>
 </div>
 
-<!-- Main -->
 <div class="h-[calc(100vh-56px)] flex">
 
-  <!-- Left rail (有名稱) -->
-  <div id="rail" class="w-[168px] bg-white border-r p-3 space-y-2">
-    <button class="w-full px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-black flex items-center justify-between"
-            onclick="togglePanel()">
-      <span class="font-bold">工具</span>
-      <span>☰</span>
-    </button>
-
-    <div class="space-y-2">
-      <button class="w-full px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-between"
-              onclick="setMode('hotspot')">
-        <span class="font-bold">畫框</span><span>🔲</span>
-      </button>
-
-      <button class="w-full px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-between"
-              onclick="setMode('crop')">
-        <span class="font-bold">裁切</span><span>✂️</span>
-      </button>
-
-      <button class="w-full px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-between"
-              onclick="resetView()">
-        <span class="font-bold">重置視角</span><span>🔁</span>
-      </button>
-
-      <button class="w-full px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-between"
-              onclick="clearAll()">
-        <span class="font-bold text-red-700">清空</span><span>🧹</span>
-      </button>
-    </div>
-
-    <div class="pt-2 border-t text-xs text-slate-500">
-      狀態：<span id="statusText" class="font-bold text-slate-700">就緒</span>
-    </div>
-  </div>
-
-  <!-- Left panel -->
-  <div id="panel" class="w-[360px] bg-white border-r overflow-y-auto">
+  <!-- Left -->
+  <div class="w-[360px] bg-white border-r overflow-y-auto">
     <div class="p-4 space-y-4">
 
       <div class="rounded-xl border p-3 bg-slate-50">
@@ -182,122 +114,155 @@
 
         <div class="grid grid-cols-2 gap-2 mt-2">
           <div>
-            <label class="text-xs text-slate-500">觸發關鍵字</label>
-            <input id="triggerKeyword" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold border-blue-500"
-                   placeholder="例如：MENU_MAIN" />
+            <label class="text-xs text-slate-500">觸發關鍵字（存 KV 用）</label>
+            <input id="keyword" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold border-blue-500"
+                   placeholder="例如：RM_HOME_CFG" />
           </div>
           <div>
-            <label class="text-xs text-slate-500">檔案名稱（也當作選單名稱）</label>
-            <input id="fileName" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
-                   placeholder="例如：2026-02 六宮格主選單" />
+            <label class="text-xs text-slate-500">選單名稱（LINE 顯示名）</label>
+            <input id="menuName" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
+                   placeholder="例如：首頁選單" />
           </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          <div>
+            <label class="text-xs text-slate-500">此選單 aliasId</label>
+            <input id="aliasId" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
+                   placeholder="例如：home / menu_shop" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-500">首頁 aliasId</label>
+            <input id="homeAliasId" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
+                   placeholder="例如：home" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          <div>
+            <label class="text-xs text-slate-500">Chat Bar 文字</label>
+            <input id="chatBarText" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
+                   placeholder="例如：選單" value="選單" />
+          </div>
+          <div class="flex items-end gap-2">
+            <label class="flex items-center gap-2 text-xs text-slate-600">
+              <input id="setHome" type="checkbox" class="scale-110">
+              設為首頁（全體預設）
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          <div>狀態：<span id="status" class="font-bold">就緒</span></div>
+        </div>
+
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <button class="px-3 py-2 rounded bg-gray-600 text-white text-sm hover:bg-gray-700" onclick="loadCfg()">讀取</button>
+          <button class="px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700" onclick="saveCfg()">儲存</button>
         </div>
       </div>
 
       <div class="rounded-xl border p-3">
         <div class="font-bold text-sm mb-2">圖片</div>
-
-        <div class="text-xs text-slate-500 mb-2">
-          匯入後會自動以 <b>2500×1686</b> 作為底框（Rich Menu 尺寸）。
-        </div>
-
         <div class="flex gap-2">
-          <button id="btnImport"
-                  class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                  onclick="pickAndUpload()">
-            匯入圖片
-          </button>
-
+          <button id="btnImport" class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                  onclick="importImage()">匯入圖片</button>
           <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
-                  onclick="exportCropAndUpload()">
-            輸出上傳
-          </button>
+                  onclick="export2500x1686()">輸出上傳</button>
         </div>
-
         <div class="mt-2 text-xs text-slate-500">
-          裁切模式下：拖圖片移動；<b>Alt + 滾輪</b> 放大縮小圖片（也可 Ctrl+Z/ Ctrl+Y）。
+          裁切模式：拖圖片移動；Alt+滾輪縮放圖片（可 Ctrl+Z/ Ctrl+Y）
         </div>
       </div>
 
       <div class="rounded-xl border p-3">
         <div class="font-bold text-sm mb-2 flex items-center justify-between">
-          <span>熱區清單</span>
-          <span id="hsCount" class="text-xs text-slate-500">0</span>
+          <span>熱區</span>
+          <span id="count" class="text-xs text-slate-500">0</span>
         </div>
 
-        <div id="areaEmpty" class="text-xs text-slate-400">尚未新增熱區</div>
-        <div id="areaList" class="space-y-2"></div>
+        <div id="empty" class="text-xs text-slate-400">尚未新增熱區</div>
+        <div id="list" class="space-y-2"></div>
 
         <div class="mt-3 grid grid-cols-2 gap-2">
-          <button class="px-3 py-2 rounded bg-gray-600 text-white text-sm hover:bg-gray-700" onclick="loadConfig()">讀取</button>
-          <button class="px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700" onclick="saveConfig()">儲存</button>
+          <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900" onclick="setMode('hotspot')">畫框</button>
+          <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900" onclick="setMode('crop')">裁切</button>
+        </div>
+      </div>
+
+      <div class="rounded-xl border p-3 bg-slate-50">
+        <div class="font-bold text-sm mb-2">發布到 LINE OA</div>
+
+        <button class="w-full px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                onclick="publishToLine()">
+          一鍵發布（建立 Rich Menu + 上傳圖片 + 綁 alias）
+        </button>
+
+        <button class="w-full mt-2 px-3 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700"
+                onclick="refreshAliases()">
+          重新抓 alias 清單
+        </button>
+
+        <label class="text-xs text-slate-500 mt-3 block">快速切換查看（alias 清單）</label>
+        <select id="aliasList" class="mt-1 w-full border rounded px-2 py-2 text-sm" onchange="fillAliasFromSelect()">
+          <option value="">（尚未載入）</option>
+        </select>
+
+        <div class="mt-2 text-xs text-slate-500">
+          回首頁：把某一格的「送出文字」填成 <b>__HOME__</b>（會切回首頁 alias）
         </div>
       </div>
 
       <div class="text-xs text-slate-400 pb-10">
-        * Ctrl+Z / Ctrl+Y 可復原/重做所有操作（畫框 / 文字 / 裁切 / 刪除 / 匯入 / 輸出）。
+        Ctrl+Z / Ctrl+Y：匯入、裁切、拖曳、縮放、刪除、改文字，都可復原/重做
       </div>
+
     </div>
   </div>
 
   <!-- Workspace -->
   <div class="flex-1 relative checker overflow-hidden" id="workspace">
-
-    <!-- zoom HUD -->
     <div class="absolute top-3 right-3 z-20 flex items-center gap-2 bg-white/90 backdrop-blur border rounded-xl px-2 py-1 shadow">
-      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1.1)">＋</button>
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoom(1.1)">＋</button>
       <div class="w-16 text-center text-sm font-bold" id="zoomLabel">100%</div>
-      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1/1.1)">－</button>
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoom(1/1.1)">－</button>
     </div>
 
-    <!-- stage (pan/zoom transform) -->
     <div id="stage" class="absolute inset-0">
-
       <div id="artboard" class="artboard">
         <div id="imgLayer" class="img-layer">
           <img id="img" alt="">
-          <!-- safety overlay -->
           <div id="safety" class="absolute inset-0 pointer-events-none"></div>
         </div>
-
         <div id="hotspotLayer" class="absolute inset-0"></div>
         <div id="drawLayer" class="absolute inset-0"></div>
       </div>
-
     </div>
   </div>
 
-  <!-- Right preview (auto show + collapsible) -->
+  <!-- Right preview -->
   <div id="previewPanel" class="w-[360px] bg-white border-l relative transition-all duration-200">
     <button class="absolute -left-4 top-6 w-8 h-10 rounded-l-xl bg-slate-900 text-white shadow hover:bg-black"
-            onclick="togglePreviewPanel()"
-            title="收合/展開預覽">
+            onclick="togglePreview()">
       ⇄
     </button>
-
     <div id="previewInner" class="h-full p-4">
       <div class="font-bold text-sm mb-2">預覽</div>
-
       <div class="mx-auto w-[320px] max-w-full">
         <div class="rounded-[22px] border-4 border-slate-900 bg-slate-900 p-2">
           <div class="rounded-[16px] bg-white overflow-hidden">
             <div class="bg-slate-100 text-xs text-slate-600 px-3 py-2 border-b">Rich Menu 預覽</div>
             <div class="p-2">
               <div class="relative rounded-lg overflow-hidden border bg-white">
-                <img id="previewImg" class="w-full h-[210px] object-cover bg-gray-100" alt="">
-                <div id="previewHotspots" class="absolute inset-0"></div>
+                <img id="pimg" class="w-full h-[210px] object-cover bg-gray-100" alt="">
+                <div id="phs" class="absolute inset-0"></div>
               </div>
-              <div class="mt-2 text-[11px] text-slate-500">
-                編輯時自動更新（不用按預覽）
-              </div>
+              <div class="mt-2 text-[11px] text-slate-500">自動更新</div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="mt-4 text-xs text-slate-500">
-        點紅框可查看送出文字（模擬點選）
-      </div>
+      <div class="mt-3 text-xs text-slate-500">點紅框可看送出文字</div>
     </div>
   </div>
 
@@ -306,956 +271,758 @@
 <input type="file" id="fileInput" accept="image/*" hidden>
 
 <script>
-/* ===================== 固定 Rich Menu 尺寸 ===================== */
-const FRAME_W = 2500;
-const FRAME_H = 1686;
-/* =============================================================== */
+/* 固定 Rich Menu 尺寸 */
+const W = 2500, H = 1686;
 
-const $ = (id) => document.getElementById(id);
-
+const $ = (id)=>document.getElementById(id);
 const workerUrlEl = $("workerUrl");
-const triggerEl = $("triggerKeyword");
-const fileNameEl = $("fileName");
+const keywordEl = $("keyword");
+const menuNameEl = $("menuName");
+const aliasIdEl = $("aliasId");
+const homeAliasIdEl = $("homeAliasId");
+const chatBarTextEl = $("chatBarText");
+const setHomeEl = $("setHome");
+const statusEl = $("status");
+const btnImportEl = $("btnImport");
 
-const statusTextEl = $("statusText");
-const panelEl = $("panel");
 const workspaceEl = $("workspace");
 const stageEl = $("stage");
 const artboardEl = $("artboard");
 const imgLayerEl = $("imgLayer");
 const imgEl = $("img");
 const safetyEl = $("safety");
-
 const hotspotLayerEl = $("hotspotLayer");
 const drawLayerEl = $("drawLayer");
-const areaListEl = $("areaList");
-const areaEmptyEl = $("areaEmpty");
-const hsCountEl = $("hsCount");
+
+const countEl = $("count");
+const emptyEl = $("empty");
+const listEl = $("list");
 const zoomLabelEl = $("zoomLabel");
-const btnImportEl = $("btnImport");
 
-/* ===== preview ===== */
+const pimgEl = $("pimg");
+const phsEl = $("phs");
 const previewPanelEl = $("previewPanel");
-const previewImgEl = $("previewImg");
-const previewHotspotsEl = $("previewHotspots");
-let previewCollapsed = false;
+const previewInnerEl = $("previewInner");
+let previewCollapsed=false;
 
-function togglePreviewPanel(){
-  previewCollapsed = !previewCollapsed;
-  if(previewCollapsed){
-    previewPanelEl.classList.add("preview-collapsed");
-    $("previewInner").classList.add("hidden");
-  }else{
-    previewPanelEl.classList.remove("preview-collapsed");
-    $("previewInner").classList.remove("hidden");
-  }
-}
-
-/* ===== helpers ===== */
+/* ========= 工具共用 ========= */
 function normalizeWorkerUrl(raw){
   if(!raw) return "";
   let s = raw.trim();
   if(!/^https?:\/\//i.test(s)) s = "https://" + s;
   return s.replace(/\/+$/,'');
 }
-
-function setStatus(msg){
-  statusTextEl.textContent = msg;
-}
-
-function escapeHtml(str){
-  return String(str||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-
+function setStatus(t){ statusEl.textContent = t; }
 async function postJSON(url, data){
-  const res = await fetch(url, {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(data)
-  });
-  if(!res.ok){
-    const t = await res.text().catch(()=> "");
-    throw new Error(`HTTP ${res.status}\n${t}`);
-  }
-  const ct = res.headers.get("content-type") || "";
-  return ct.includes("json") ? res.json() : res.text();
+  const res = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(data) });
+  const txt = await res.text().catch(()=> "");
+  if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
+  try{ return JSON.parse(txt); }catch{ return txt; }
 }
-
 async function uploadToR2(workerBaseUrl, fileBlob, filename){
   const form = new FormData();
   form.append("file", fileBlob, filename || "image.jpg");
   const res = await fetch(workerBaseUrl + "/upload", { method:"POST", body: form });
-  if(!res.ok){
-    const t = await res.text().catch(()=> "");
-    throw new Error(`HTTP ${res.status}\n${t}`);
-  }
-  const j = await res.json();
+  const txt = await res.text().catch(()=> "");
+  if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
+  const j = JSON.parse(txt);
   if(!j.ok || !j.url) throw new Error("上傳回傳格式不對");
   return j.url;
 }
+function escapeHtml(str){
+  return String(str||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
 
-/* ===== state ===== */
+/* ========= state ========= */
 let state = {
-  meta: { name: "" },
-  triggerKeyword: "",
-  imageUrl: "",
-  _sourceBlob: null,
-  _sourceName: "image",
-  frame: { w: FRAME_W, h: FRAME_H },
-  mode: "hotspot", // hotspot | crop
-  crop: { tx: 0, ty: 0, s: 1 },
-  hotspots: [],
-  selectedId: null
+  imageUrl:"",
+  crop:{ tx:0, ty:0, s:1 },
+  hotspots:[], // normalized 0..1
+  selectedId:null
 };
 
-/* ===== history (Undo/Redo) ===== */
-let history = [];
-let historyIndex = -1;
-let wheelCommitTimer = null;
-
-function cloneForHistory(s){
+/* ========= history ========= */
+let history=[], hi=-1, wheelTimer=null;
+function snap(){
   return JSON.parse(JSON.stringify({
-    meta: s.meta,
-    triggerKeyword: s.triggerKeyword,
-    imageUrl: s.imageUrl,
-    frame: s.frame,
-    mode: s.mode,
-    crop: s.crop,
-    hotspots: s.hotspots,
-    selectedId: s.selectedId
+    imageUrl: state.imageUrl,
+    crop: state.crop,
+    hotspots: state.hotspots,
+    selectedId: state.selectedId,
+    keyword: keywordEl.value.trim(),
+    menuName: menuNameEl.value.trim(),
+    aliasId: aliasIdEl.value.trim(),
+    homeAliasId: homeAliasIdEl.value.trim(),
+    chatBarText: chatBarTextEl.value.trim(),
+    setHome: setHomeEl.checked
   }));
 }
 function pushHistory(){
-  const snap = cloneForHistory(state);
-  history = history.slice(0, historyIndex + 1);
-  history.push(snap);
-  historyIndex++;
+  history = history.slice(0, hi+1);
+  history.push(snap());
+  hi++;
 }
-function applyHistorySnap(snap){
-  state.meta = snap.meta;
-  state.triggerKeyword = snap.triggerKeyword;
-  state.imageUrl = snap.imageUrl;
-  state.frame = snap.frame;
-  state.mode = snap.mode;
-  state.crop = snap.crop;
-  state.hotspots = snap.hotspots;
-  state.selectedId = snap.selectedId;
+function applySnap(s){
+  state.imageUrl = s.imageUrl;
+  state.crop = s.crop;
+  state.hotspots = s.hotspots;
+  state.selectedId = s.selectedId;
 
-  triggerEl.value = state.triggerKeyword || "";
-  fileNameEl.value = (state.meta?.name || "");
-  setMode(state.mode, true);
+  keywordEl.value = s.keyword;
+  menuNameEl.value = s.menuName;
+  aliasIdEl.value = s.aliasId;
+  homeAliasIdEl.value = s.homeAliasId;
+  chatBarTextEl.value = s.chatBarText;
+  setHomeEl.checked = s.setHome;
+
   setImageUrl(state.imageUrl, true);
-
   renderAll(true);
 }
-function undo(){
-  if(historyIndex <= 0) return;
-  historyIndex--;
-  applyHistorySnap(history[historyIndex]);
-}
-function redo(){
-  if(historyIndex >= history.length - 1) return;
-  historyIndex++;
-  applyHistorySnap(history[historyIndex]);
-}
+function undo(){ if(hi<=0) return; hi--; applySnap(history[hi]); }
+function redo(){ if(hi>=history.length-1) return; hi++; applySnap(history[hi]); }
 
-/* ===== view pan/zoom ===== */
-let view = { x: 0, y: 0, z: 1 };
-function updateStageTransform(){
+/* ========= view pan/zoom ========= */
+let view={x:0,y:0,z:1};
+function updateStage(){
   stageEl.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.z})`;
-  zoomLabelEl.textContent = Math.round(view.z * 100) + "%";
-}
-function resetView(){
-  view = { x: 0, y: 0, z: 1 };
-  updateStageTransform();
-}
-function zoomBy(factor, anchorClientX=null, anchorClientY=null){
-  const oldZ = view.z;
-  const newZ = Math.min(4, Math.max(0.15, oldZ * factor));
-
-  if(anchorClientX != null && anchorClientY != null){
-    const rect = workspaceEl.getBoundingClientRect();
-    const ax = anchorClientX - rect.left;
-    const ay = anchorClientY - rect.top;
-    const dx = ax - (rect.width/2);
-    const dy = ay - (rect.height/2);
-
-    view.x = (view.x - dx) * (newZ/oldZ) + dx;
-    view.y = (view.y - dy) * (newZ/oldZ) + dy;
-  }
-
-  view.z = newZ;
-  updateStageTransform();
+  zoomLabelEl.textContent = Math.round(view.z*100)+"%";
 }
 function fitToScreen(){
-  const wr = workspaceEl.getBoundingClientRect();
+  const r = workspaceEl.getBoundingClientRect();
   const pad = 140;
-  const maxW = Math.max(200, wr.width - pad);
-  const maxH = Math.max(200, wr.height - pad);
-  const z = Math.min(2.5, Math.max(0.08, Math.min(maxW/FRAME_W, maxH/FRAME_H)));
-  view = { x: 0, y: 0, z };
-  updateStageTransform();
+  const z = Math.min(2.5, Math.max(0.05, Math.min((r.width-pad)/W, (r.height-pad)/H)));
+  view={x:0,y:0,z};
+  updateStage();
+}
+function zoom(f){
+  view.z = Math.min(4, Math.max(0.05, view.z*f));
+  updateStage();
 }
 
-/* ===== panel collapse ===== */
-let panelCollapsed = false;
-function togglePanel(){
-  panelCollapsed = !panelCollapsed;
-  panelEl.classList.toggle("hidden", panelCollapsed);
-}
-
-/* ===== artboard setup ===== */
+/* ========= artboard ========= */
 function setupArtboard(){
-  artboardEl.style.width = FRAME_W + "px";
-  artboardEl.style.height = FRAME_H + "px";
-  renderSafety();
-}
-function renderSafety(){
-  safetyEl.innerHTML = "";
-  const m = 36;
-  const box = document.createElement("div");
-  box.style.position = "absolute";
-  box.style.left = m + "px";
-  box.style.top = m + "px";
-  box.style.right = m + "px";
-  box.style.bottom = m + "px";
-  box.style.border = "2px dashed rgba(15,23,42,.22)";
-  box.style.borderRadius = "12px";
+  artboardEl.style.width = W+"px";
+  artboardEl.style.height = H+"px";
+  safetyEl.innerHTML="";
+  const m=36;
+  const box=document.createElement("div");
+  box.style.position="absolute";
+  box.style.left=m+"px"; box.style.top=m+"px";
+  box.style.right=m+"px"; box.style.bottom=m+"px";
+  box.style.border="2px dashed rgba(15,23,42,.22)";
+  box.style.borderRadius="12px";
   safetyEl.appendChild(box);
 }
 
-/* ===== mode ===== */
-function setMode(mode, silent=false){
-  state.mode = mode;
-  imgLayerEl.classList.toggle("crop", mode === "crop");
-  if(!silent) pushHistory();
-  setStatus(mode === "crop" ? "裁切中" : "畫框中");
+/* ========= mode ========= */
+let mode="hotspot";
+function setMode(m){
+  mode=m;
+  imgLayerEl.classList.toggle("crop", mode==="crop");
+  pushHistory();
 }
 
-/* ===== image / crop ===== */
-function setImageUrl(url, silent=false){
-  state.imageUrl = url || "";
+/* ========= image ========= */
+function setImportBtn(){
   if(state.imageUrl){
-    imgEl.src = state.imageUrl;
-    previewImgEl.src = state.imageUrl;
+    btnImportEl.textContent="已匯入";
+    btnImportEl.className="flex-1 px-3 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700";
+  }else{
+    btnImportEl.textContent="匯入圖片";
+    btnImportEl.className="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700";
+  }
+}
+function setImageUrl(url, silent=false){
+  state.imageUrl = url||"";
+  if(state.imageUrl){
+    imgEl.src=state.imageUrl;
+    pimgEl.src=state.imageUrl;
   }else{
     imgEl.removeAttribute("src");
-    previewImgEl.removeAttribute("src");
+    pimgEl.removeAttribute("src");
   }
   if(!silent) pushHistory();
+  setImportBtn();
   refreshPreview();
 }
-
-function applyCropTransform(){
-  const t = state.crop;
+function applyCrop(){
+  const t=state.crop;
   imgEl.style.transform = `translate(calc(-50% + ${t.tx}px), calc(-50% + ${t.ty}px)) scale(${t.s})`;
 }
 
-/* ===== hotspots ===== */
-function uid(){
-  return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+/* ========= ✅最關鍵：用 DOMMatrix 反推座標（畫框會準） ========= */
+function clientToArtboard(clientX, clientY){
+  // stage 的 transform： translate(x,y) scale(z)
+  const st = stageEl.getBoundingClientRect();
+  const sx = view.z, sy = view.z;
+
+  // client -> stage-local (before scale)
+  const stageLocalX = (clientX - st.left - view.x) / sx;
+  const stageLocalY = (clientY - st.top  - view.y) / sy;
+
+  // artboard rect in stage-local:
+  // 直接用 artboard 的 bbox 取得它在 client 的位置，再換回 stage-local
+  const ab = artboardEl.getBoundingClientRect();
+  const abStageX = (ab.left - st.left - view.x) / sx;
+  const abStageY = (ab.top  - st.top  - view.y) / sy;
+
+  const px = stageLocalX - abStageX;
+  const py = stageLocalY - abStageY;
+
+  const nx = px / W;
+  const ny = py / H;
+  return { px, py, nx, ny };
 }
-function selectHotspot(id){
-  state.selectedId = id;
-  renderHotspots();
-  renderHotspotList();
-}
-function addHotspot(nx, ny, nw, nh){
-  const id = uid();
-  state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
-  state.selectedId = id;
+
+/* ========= hotspots ========= */
+function uid(){ return "hs_"+Math.random().toString(16).slice(2)+"_"+Date.now().toString(16); }
+function addHotspot(nx,ny,nw,nh){
+  const id=uid();
+  state.hotspots.push({id,x:nx,y:ny,w:nw,h:nh,text:""});
+  state.selectedId=id;
   pushHistory();
   renderAll();
 }
 function deleteSelected(){
   if(!state.selectedId) return;
-  const i = state.hotspots.findIndex(h => h.id === state.selectedId);
-  if(i >= 0){
+  const i=state.hotspots.findIndex(h=>h.id===state.selectedId);
+  if(i>=0){
     state.hotspots.splice(i,1);
-    state.selectedId = null;
+    state.selectedId=null;
     pushHistory();
     renderAll();
   }
 }
-
-/* ===== precision: convert mouse to artboard local (最關鍵：畫框準) ===== */
-function pointInArtboard(clientX, clientY){
-  const r = artboardEl.getBoundingClientRect(); // 會包含 pan/zoom 後的實際螢幕位置
-  const px = clientX - r.left;
-  const py = clientY - r.top;
-  const nx = px / r.width;
-  const ny = py / r.height;
-  return { px, py, nx, ny, r };
+function select(id){
+  state.selectedId=id;
+  renderHotspots();
+  renderList();
 }
 
-/* ===== render ===== */
+/* ========= render ========= */
 function renderHotspots(){
-  hotspotLayerEl.innerHTML = "";
+  hotspotLayerEl.innerHTML="";
+  state.hotspots.forEach((h,idx)=>{
+    const d=document.createElement("div");
+    d.className="hotspot"+(h.id===state.selectedId?" selected":"");
+    d.style.left=(h.x*100)+"%";
+    d.style.top=(h.y*100)+"%";
+    d.style.width=(h.w*100)+"%";
+    d.style.height=(h.h*100)+"%";
+    d.textContent=idx+1;
 
-  state.hotspots.forEach((h, idx) => {
-    const d = document.createElement("div");
-    d.className = "hotspot" + (h.id === state.selectedId ? " selected" : "");
-    d.style.left = (h.x * 100) + "%";
-    d.style.top = (h.y * 100) + "%";
-    d.style.width = (h.w * 100) + "%";
-    d.style.height = (h.h * 100) + "%";
-    d.textContent = (idx + 1);
-
-    d.addEventListener("mousedown", (ev) => {
+    d.addEventListener("pointerdown",(ev)=>{
       ev.stopPropagation();
-      if(state.mode !== "hotspot") return;
-      selectHotspot(h.id);
-      beginDragHotspot(ev, h.id, "move");
-    });
-    d.addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      selectHotspot(h.id);
+      if(mode!=="hotspot") return;
+      select(h.id);
+      beginDrag(ev,h.id,"move");
     });
 
-    if(h.id === state.selectedId && state.mode === "hotspot"){
+    if(h.id===state.selectedId && mode==="hotspot"){
       ["nw","ne","sw","se"].forEach(pos=>{
-        const hd = document.createElement("div");
-        hd.className = "handle " + pos;
-        hd.addEventListener("mousedown", (ev)=>{
+        const hd=document.createElement("div");
+        hd.className="handle "+pos;
+        hd.addEventListener("pointerdown",(ev)=>{
           ev.stopPropagation();
-          beginDragHotspot(ev, h.id, pos);
+          beginDrag(ev,h.id,pos);
         });
         d.appendChild(hd);
       });
     }
-
     hotspotLayerEl.appendChild(d);
   });
-
-  hsCountEl.textContent = state.hotspots.length + " 個";
+  countEl.textContent = state.hotspots.length+" 個";
 }
-function renderHotspotList(){
-  areaListEl.innerHTML = "";
-  areaEmptyEl.classList.toggle("hidden", state.hotspots.length !== 0);
+function renderList(){
+  listEl.innerHTML="";
+  emptyEl.classList.toggle("hidden", state.hotspots.length!==0);
 
-  state.hotspots.forEach((h, idx) => {
-    const row = document.createElement("div");
-    row.className = "border rounded-lg p-2 bg-white";
-    const selected = (h.id === state.selectedId);
-
-    row.innerHTML = `
+  state.hotspots.forEach((h,idx)=>{
+    const row=document.createElement("div");
+    row.className="border rounded-lg p-2 bg-white";
+    const selected = h.id===state.selectedId;
+    row.innerHTML=`
       <div class="flex items-center justify-between mb-2">
-        <div class="font-bold text-sm ${selected ? 'text-blue-700' : 'text-slate-700'}">框 ${idx+1}</div>
+        <div class="font-bold text-sm ${selected?'text-blue-700':'text-slate-700'}">框 ${idx+1}</div>
         <div class="flex items-center gap-2">
-          <button class="text-xs ${selected ? 'text-blue-700' : 'text-slate-500'} underline">選取</button>
+          <button class="text-xs ${selected?'text-blue-700':'text-slate-500'} underline">選取</button>
           <button class="text-xs text-red-600 underline">刪除</button>
         </div>
       </div>
-      <div class="text-xs text-slate-500 mb-1">點此框送出文字：</div>
+      <div class="text-xs text-slate-500 mb-1">送出文字（回首頁填 __HOME__ / 切換填 SWITCH:alias）</div>
       <input class="w-full border rounded px-2 py-2 text-sm font-bold"
-        placeholder="例如：MENU_HEALTH / MENU_SHOP / MENU_JOIN"
-        value="${escapeHtml(h.text)}">
+             value="${escapeHtml(h.text)}"
+             placeholder="例如：MENU_SHOP 或 __HOME__ 或 SWITCH:menu_shop">
     `;
-
-    const btnSelect = row.querySelectorAll("button")[0];
-    const btnDel = row.querySelectorAll("button")[1];
-    const input = row.querySelector("input");
-
-    btnSelect.onclick = () => selectHotspot(h.id);
-    btnDel.onclick = () => {
-      if(confirm(`刪除框 ${idx+1}？`)){
-        const i = state.hotspots.findIndex(x => x.id === h.id);
-        if(i>=0){
-          state.hotspots.splice(i,1);
-          if(state.selectedId === h.id) state.selectedId = null;
-          pushHistory();
-          renderAll();
-        }
-      }
-    };
-    input.oninput = () => {
-      h.text = input.value;
-      refreshPreview();
-    };
-    input.onblur = () => pushHistory();
-
-    areaListEl.appendChild(row);
+    const btnSel=row.querySelectorAll("button")[0];
+    const btnDel=row.querySelectorAll("button")[1];
+    const input=row.querySelector("input");
+    btnSel.onclick=()=>select(h.id);
+    btnDel.onclick=()=>{ state.selectedId=h.id; deleteSelected(); };
+    input.oninput=()=>{ h.text=input.value; refreshPreview(); };
+    input.onblur=()=>pushHistory();
+    listEl.appendChild(row);
   });
 }
 function renderAll(silent=false){
-  applyCropTransform();
+  applyCrop();
   renderHotspots();
-  renderHotspotList();
+  renderList();
   refreshPreview();
-  if(!silent) setImportButtonState();
+  if(!silent) setImportBtn();
 }
 
-/* ===== right preview auto render ===== */
-function refreshPreview(){
-  previewHotspotsEl.innerHTML = "";
+/* ========= draw new hotspot (pointer) ========= */
+let drawing=false, start=null, drawEl=null;
+drawLayerEl.addEventListener("pointerdown",(ev)=>{
+  if(mode!=="hotspot") return;
+  if(!state.imageUrl) return alert("請先匯入圖片");
+  drawLayerEl.setPointerCapture(ev.pointerId);
+
+  const p=clientToArtboard(ev.clientX, ev.clientY);
+  if(p.nx<0||p.nx>1||p.ny<0||p.ny>1) return;
+
+  drawing=true;
+  start={x:p.px,y:p.py};
+  drawEl=document.createElement("div");
+  drawEl.className="draw-rect";
+  drawEl.style.left=start.x+"px";
+  drawEl.style.top=start.y+"px";
+  drawEl.style.width="0px";
+  drawEl.style.height="0px";
+  drawLayerEl.appendChild(drawEl);
+
+  state.selectedId=null;
+  renderHotspots();
+});
+
+drawLayerEl.addEventListener("pointermove",(ev)=>{
+  if(!drawing||!drawEl) return;
+  const p=clientToArtboard(ev.clientX, ev.clientY);
+  const cx=Math.min(Math.max(p.px,0),W);
+  const cy=Math.min(Math.max(p.py,0),H);
+  const x=Math.min(start.x,cx);
+  const y=Math.min(start.y,cy);
+  const w=Math.abs(cx-start.x);
+  const h=Math.abs(cy-start.y);
+  drawEl.style.left=x+"px";
+  drawEl.style.top=y+"px";
+  drawEl.style.width=w+"px";
+  drawEl.style.height=h+"px";
+});
+
+drawLayerEl.addEventListener("pointerup",()=>{
+  if(!drawing) return;
+  drawing=false;
+  if(!drawEl) return;
+  const r=drawEl.getBoundingClientRect();
+  drawEl.remove(); drawEl=null;
+
+  // 轉回 artboard local：用 clientToArtboard 反推 r 的左上/右下
+  const p1=clientToArtboard(r.left, r.top);
+  const p2=clientToArtboard(r.right, r.bottom);
+
+  const x=Math.max(0, Math.min(p1.px,p2.px));
+  const y=Math.max(0, Math.min(p1.py,p2.py));
+  const w=Math.abs(p2.px-p1.px);
+  const h=Math.abs(p2.py-p1.py);
+
+  if(w<18||h<18) return;
+  addHotspot(x/W, y/H, w/W, h/H);
+});
+
+/* ========= drag/resize hotspot ========= */
+let drag=null;
+function beginDrag(ev,id,kind){
+  if(mode!=="hotspot") return;
+  const h=state.hotspots.find(x=>x.id===id); if(!h) return;
+  hotspotLayerEl.setPointerCapture(ev.pointerId);
+  drag={
+    id,kind,
+    sx:ev.clientX, sy:ev.clientY,
+    box:{x:h.x,y:h.y,w:h.w,h:h.h}
+  };
+}
+hotspotLayerEl.addEventListener("pointermove",(ev)=>{
+  if(!drag) return;
+  const h=state.hotspots.find(x=>x.id===drag.id); if(!h) return;
+
+  // 用 clientToArtboard 差值換算（準）
+  const p0=clientToArtboard(drag.sx, drag.sy);
+  const p1=clientToArtboard(ev.clientX, ev.clientY);
+  const dx=(p1.px-p0.px)/W;
+  const dy=(p1.py-p0.py)/H;
+
+  let nx=drag.box.x, ny=drag.box.y, nw=drag.box.w, nh=drag.box.h;
+  const min=0.02;
+
+  if(drag.kind==="move"){
+    nx=drag.box.x+dx; ny=drag.box.y+dy;
+  }else{
+    if(drag.kind.includes("n")){ ny=drag.box.y+dy; nh=drag.box.h-dy; }
+    if(drag.kind.includes("s")){ nh=drag.box.h+dy; }
+    if(drag.kind.includes("w")){ nx=drag.box.x+dx; nw=drag.box.w-dx; }
+    if(drag.kind.includes("e")){ nw=drag.box.w+dx; }
+  }
+
+  nw=Math.max(min,nw); nh=Math.max(min,nh);
+  nx=Math.min(1-nw, Math.max(0,nx));
+  ny=Math.min(1-nh, Math.max(0,ny));
+
+  h.x=nx; h.y=ny; h.w=nw; h.h=nh;
+  renderHotspots();
+  refreshPreview();
+});
+hotspotLayerEl.addEventListener("pointerup",()=>{
+  if(!drag) return;
+  drag=null;
+  pushHistory();
+  renderList();
+});
+
+/* ========= crop drag ========= */
+let cropDrag=null;
+imgLayerEl.addEventListener("pointerdown",(ev)=>{
+  if(mode!=="crop") return;
   if(!state.imageUrl) return;
+  imgLayerEl.setPointerCapture(ev.pointerId);
+  cropDrag={ sx:ev.clientX, sy:ev.clientY, tx:state.crop.tx, ty:state.crop.ty };
+});
+imgLayerEl.addEventListener("pointermove",(ev)=>{
+  if(!cropDrag) return;
+  state.crop.tx = cropDrag.tx + (ev.clientX - cropDrag.sx);
+  state.crop.ty = cropDrag.ty + (ev.clientY - cropDrag.sy);
+  applyCrop();
+});
+imgLayerEl.addEventListener("pointerup",()=>{
+  if(!cropDrag) return;
+  cropDrag=null;
+  pushHistory();
+});
 
-  // 預覽框上的互動點擊（模擬）
-  requestAnimationFrame(()=>{
-    const r = previewHotspotsEl.getBoundingClientRect();
-    if(!r.width || !r.height) return;
+/* ========= pan/zoom ========= */
+let space=false, panning=false, panStart=null;
+window.addEventListener("keydown",(ev)=>{
+  const k=ev.key.toLowerCase();
+  if(ev.code==="Space"){ ev.preventDefault(); space=true; }
+  if(ev.ctrlKey && !ev.shiftKey && k==="z"){ ev.preventDefault(); undo(); }
+  if(ev.ctrlKey && (k==="y" || (ev.shiftKey && k==="z"))){ ev.preventDefault(); redo(); }
+  if(ev.key==="Delete"){ ev.preventDefault(); deleteSelected(); }
+});
+window.addEventListener("keyup",(ev)=>{ if(ev.code==="Space") space=false; });
 
-    state.hotspots.forEach((h, i)=>{
-      // 顯示框
-      const box = document.createElement("div");
-      box.style.position = "absolute";
-      box.style.left = (h.x * 100) + "%";
-      box.style.top  = (h.y * 100) + "%";
-      box.style.width  = (h.w * 100) + "%";
-      box.style.height = (h.h * 100) + "%";
-      box.style.border = "2px solid rgba(239,68,68,.9)";
-      box.style.background = "rgba(239,68,68,.10)";
-      box.style.borderRadius = "10px";
-      previewHotspotsEl.appendChild(box);
+workspaceEl.addEventListener("pointerdown",(ev)=>{
+  if(!space) return;
+  panning=true;
+  panStart={ sx:ev.clientX, sy:ev.clientY, x:view.x, y:view.y };
+  workspaceEl.setPointerCapture(ev.pointerId);
+});
+workspaceEl.addEventListener("pointermove",(ev)=>{
+  if(!panning) return;
+  view.x = panStart.x + (ev.clientX - panStart.sx);
+  view.y = panStart.y + (ev.clientY - panStart.sy);
+  updateStage();
+});
+workspaceEl.addEventListener("pointerup",()=>{ panning=false; });
 
-      // 點擊層
-      const btn = document.createElement("button");
-      btn.style.position = "absolute";
-      btn.style.left = (h.x * 100) + "%";
-      btn.style.top  = (h.y * 100) + "%";
-      btn.style.width  = (h.w * 100) + "%";
-      btn.style.height = (h.h * 100) + "%";
-      btn.style.background = "transparent";
-      btn.onclick = () => {
-        alert(`熱區 ${i+1}\n將送出：${(h.text||"").trim() || "（尚未填）"}`);
-      };
-      previewHotspotsEl.appendChild(btn);
-    });
+workspaceEl.addEventListener("wheel",(ev)=>{
+  if(ev.ctrlKey){
+    ev.preventDefault();
+    const f = ev.deltaY<0 ? 1.08 : 1/1.08;
+    view.z = Math.min(4, Math.max(0.05, view.z*f));
+    updateStage();
+    return;
+  }
+  if(mode==="crop" && ev.altKey){
+    ev.preventDefault();
+    const f = ev.deltaY<0 ? 1.05 : 1/1.05;
+    state.crop.s = Math.min(8, Math.max(0.2, state.crop.s*f));
+    applyCrop();
+    if(wheelTimer) clearTimeout(wheelTimer);
+    wheelTimer=setTimeout(()=>pushHistory(), 160);
+  }
+},{passive:false});
+
+/* ========= preview ========= */
+function togglePreview(){
+  previewCollapsed=!previewCollapsed;
+  if(previewCollapsed){
+    previewPanelEl.classList.add("preview-collapsed");
+    previewInnerEl.classList.add("hidden");
+  }else{
+    previewPanelEl.classList.remove("preview-collapsed");
+    previewInnerEl.classList.remove("hidden");
+  }
+}
+function refreshPreview(){
+  phsEl.innerHTML="";
+  if(!state.imageUrl) return;
+  state.hotspots.forEach((h,i)=>{
+    const box=document.createElement("div");
+    box.style.position="absolute";
+    box.style.left=(h.x*100)+"%";
+    box.style.top=(h.y*100)+"%";
+    box.style.width=(h.w*100)+"%";
+    box.style.height=(h.h*100)+"%";
+    box.style.border="2px solid rgba(239,68,68,.9)";
+    box.style.background="rgba(239,68,68,.10)";
+    box.style.borderRadius="10px";
+    phsEl.appendChild(box);
+
+    const btn=document.createElement("button");
+    btn.style.position="absolute";
+    btn.style.left=(h.x*100)+"%";
+    btn.style.top=(h.y*100)+"%";
+    btn.style.width=(h.w*100)+"%";
+    btn.style.height=(h.h*100)+"%";
+    btn.style.background="transparent";
+    btn.onclick=()=>alert(`熱區 ${i+1}\n送出：${(h.text||"").trim()||"（尚未填）"}`);
+    phsEl.appendChild(btn);
   });
 }
 
-/* ===== draw new hotspot (準) ===== */
-let drawing = false;
-let drawStart = { x:0, y:0 };
-let drawRectEl = null;
-
-drawLayerEl.addEventListener("mousedown", (ev)=>{
-  if(state.mode !== "hotspot") return;
-  if(!state.imageUrl) return alert("請先匯入圖片");
-  const p = pointInArtboard(ev.clientX, ev.clientY);
-
-  // 必須在底框內才開始
-  if(p.nx < 0 || p.nx > 1 || p.ny < 0 || p.ny > 1) return;
-
-  drawing = true;
-  drawStart = { x:p.px, y:p.py };
-
-  drawRectEl = document.createElement("div");
-  drawRectEl.className = "draw-rect";
-  drawRectEl.style.left = drawStart.x + "px";
-  drawRectEl.style.top = drawStart.y + "px";
-  drawRectEl.style.width = "0px";
-  drawRectEl.style.height = "0px";
-  drawLayerEl.appendChild(drawRectEl);
-
-  state.selectedId = null;
-  renderHotspots();
-});
-
-window.addEventListener("mousemove", (ev)=>{
-  if(!drawing || !drawRectEl) return;
-  const p = pointInArtboard(ev.clientX, ev.clientY);
-
-  // clamp inside
-  const cx = Math.min(Math.max(p.px, 0), p.r.width);
-  const cy = Math.min(Math.max(p.py, 0), p.r.height);
-
-  const x = Math.min(drawStart.x, cx);
-  const y = Math.min(drawStart.y, cy);
-  const w = Math.abs(cx - drawStart.x);
-  const h = Math.abs(cy - drawStart.y);
-
-  drawRectEl.style.left = x + "px";
-  drawRectEl.style.top = y + "px";
-  drawRectEl.style.width = w + "px";
-  drawRectEl.style.height = h + "px";
-});
-
-window.addEventListener("mouseup", ()=>{
-  if(!drawing) return;
-  drawing = false;
-
-  if(drawRectEl){
-    const rect = drawRectEl.getBoundingClientRect();
-    drawRectEl.remove();
-    drawRectEl = null;
-
-    const ab = artboardEl.getBoundingClientRect();
-    const x = rect.left - ab.left;
-    const y = rect.top - ab.top;
-    const w = rect.width;
-    const h = rect.height;
-
-    if(w < 18 || h < 18) return;
-
-    const nx = x / ab.width;
-    const ny = y / ab.height;
-    const nw = w / ab.width;
-    const nh = h / ab.height;
-
-    addHotspot(nx, ny, nw, nh);
-  }
-});
-
-/* ===== drag/resize hotspot ===== */
-let drag = null;
-function beginDragHotspot(ev, id, kind){
-  const h = state.hotspots.find(x=>x.id===id);
-  if(!h) return;
-
-  const ab = artboardEl.getBoundingClientRect();
-  drag = {
-    id, kind,
-    ab,
-    startMouse: { x: ev.clientX, y: ev.clientY },
-    startBox: { x:h.x, y:h.y, w:h.w, h:h.h }
-  };
-  window.addEventListener("mousemove", onDragHotspot);
-  window.addEventListener("mouseup", endDragHotspot, { once:true });
-}
-function onDragHotspot(ev){
-  if(!drag) return;
-  const h = state.hotspots.find(x=>x.id===drag.id);
-  if(!h) return;
-
-  const dx = (ev.clientX - drag.startMouse.x) / drag.ab.width;
-  const dy = (ev.clientY - drag.startMouse.y) / drag.ab.height;
-
-  let nx = drag.startBox.x;
-  let ny = drag.startBox.y;
-  let nw = drag.startBox.w;
-  let nh = drag.startBox.h;
-
-  const min = 0.02;
-
-  if(drag.kind === "move"){
-    nx = drag.startBox.x + dx;
-    ny = drag.startBox.y + dy;
-  }else{
-    if(drag.kind.includes("n")){
-      ny = drag.startBox.y + dy;
-      nh = drag.startBox.h - dy;
-    }
-    if(drag.kind.includes("s")){
-      nh = drag.startBox.h + dy;
-    }
-    if(drag.kind.includes("w")){
-      nx = drag.startBox.x + dx;
-      nw = drag.startBox.w - dx;
-    }
-    if(drag.kind.includes("e")){
-      nw = drag.startBox.w + dx;
-    }
-  }
-
-  nw = Math.max(min, nw);
-  nh = Math.max(min, nh);
-  nx = Math.min(1 - nw, Math.max(0, nx));
-  ny = Math.min(1 - nh, Math.max(0, ny));
-
-  h.x = nx; h.y = ny; h.w = nw; h.h = nh;
-
-  renderHotspots();
-  refreshPreview();
-}
-function endDragHotspot(){
-  window.removeEventListener("mousemove", onDragHotspot);
-  drag = null;
-  pushHistory();
-  renderHotspotList();
-}
-
-/* ===== crop drag image ===== */
-let cropDrag = null;
-imgLayerEl.addEventListener("mousedown", (ev)=>{
-  if(state.mode !== "crop") return;
-  if(!state.imageUrl) return;
-
-  cropDrag = {
-    startMouse: { x: ev.clientX, y: ev.clientY },
-    start: { tx: state.crop.tx, ty: state.crop.ty }
-  };
-  window.addEventListener("mousemove", onCropDrag);
-  window.addEventListener("mouseup", endCropDrag, { once:true });
-});
-function onCropDrag(ev){
-  if(!cropDrag) return;
-  const dx = ev.clientX - cropDrag.startMouse.x;
-  const dy = ev.clientY - cropDrag.startMouse.y;
-  state.crop.tx = cropDrag.start.tx + dx;
-  state.crop.ty = cropDrag.start.ty + dy;
-  applyCropTransform();
-}
-function endCropDrag(){
-  window.removeEventListener("mousemove", onCropDrag);
-  cropDrag = null;
-  pushHistory();
-}
-
-/* ===== workspace pan (space drag) ===== */
-let isSpaceDown = false;
-let panning = false;
-let panStart = { x:0, y:0, vx:0, vy:0 };
-
-workspaceEl.addEventListener("mousedown", (ev)=>{
-  if(isSpaceDown && ev.button === 0){
-    panning = true;
-    panStart = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y };
-    window.addEventListener("mousemove", onPanMove);
-    window.addEventListener("mouseup", endPan, { once:true });
-  }
-});
-function onPanMove(ev){
-  if(!panning) return;
-  view.x = panStart.vx + (ev.clientX - panStart.x);
-  view.y = panStart.vy + (ev.clientY - panStart.y);
-  updateStageTransform();
-}
-function endPan(){
-  window.removeEventListener("mousemove", onPanMove);
-  panning = false;
-}
-
-/* ===== wheel zoom ===== */
-workspaceEl.addEventListener("wheel", (ev)=>{
-  // Ctrl+wheel => zoom view
-  if(ev.ctrlKey){
-    ev.preventDefault();
-    const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
-    zoomBy(factor, ev.clientX, ev.clientY);
-    return;
-  }
-
-  // crop image scale: Alt+wheel（支援 undo/redo，做 debounce commit）
-  if(state.mode === "crop" && ev.altKey){
-    ev.preventDefault();
-    const factor = ev.deltaY < 0 ? 1.05 : 1/1.05;
-    state.crop.s = Math.min(8, Math.max(0.2, state.crop.s * factor));
-    applyCropTransform();
-
-    if(wheelCommitTimer) clearTimeout(wheelCommitTimer);
-    wheelCommitTimer = setTimeout(()=> pushHistory(), 180);
-  }
-}, { passive:false });
-
-/* ===== keyboard shortcuts (Ctrl+Z / Ctrl+Y 全通用) ===== */
-window.addEventListener("keydown", (ev)=>{
-  if(ev.code === "Space"){
-    ev.preventDefault();
-    isSpaceDown = true;
-  }
-
-  // Undo/Redo
-  const key = ev.key.toLowerCase();
-  if(ev.ctrlKey && !ev.shiftKey && key === "z"){
-    ev.preventDefault(); undo(); return;
-  }
-  if((ev.ctrlKey && key === "y") || (ev.ctrlKey && ev.shiftKey && key === "z")){
-    ev.preventDefault(); redo(); return;
-  }
-
-  // Delete
-  if(ev.key === "Delete"){
-    ev.preventDefault();
-    deleteSelected();
-  }
-
-  // Esc
-  if(ev.key === "Escape"){
-    state.selectedId = null;
-    renderHotspots();
-    renderHotspotList();
-  }
-});
-window.addEventListener("keyup", (ev)=>{
-  if(ev.code === "Space") isSpaceDown = false;
-});
-
-/* ===== import button state ===== */
-function setImportButtonState(){
-  if(state.imageUrl){
-    btnImportEl.textContent = "已匯入";
-    btnImportEl.classList.remove("bg-blue-600","hover:bg-blue-700");
-    btnImportEl.classList.add("bg-emerald-600","hover:bg-emerald-700");
-  }else{
-    btnImportEl.textContent = "匯入圖片";
-    btnImportEl.classList.remove("bg-emerald-600","hover:bg-emerald-700");
-    btnImportEl.classList.add("bg-blue-600","hover:bg-blue-700");
-  }
-}
-
-/* ===== import/upload ===== */
-async function pickAndUpload(){
+/* ========= import/export ========= */
+async function importImage(){
   const base = normalizeWorkerUrl(workerUrlEl.value || localStorage.getItem("line_worker_url"));
-  if(!base) return alert("請先在首頁輸入 Worker 網址");
-  workerUrlEl.value = base;
+  if(!base) return alert("請先回首頁輸入 Worker URL");
+  workerUrlEl.value=base;
   localStorage.setItem("line_worker_url", base);
 
-  const input = $("fileInput");
-  input.value = "";
-  input.onchange = async (e)=>{
-    const file = e.target.files[0];
+  const input=$("fileInput");
+  input.value="";
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];
     if(!file) return;
-
     try{
       setStatus("匯入中...");
-      btnImportEl.disabled = true;
-
-      // 直接上傳原圖（R2），後續用「裁切」調整，最後再「輸出上傳」成 2500×1686
-      const url = await uploadToR2(base, file, file.name || "image.jpg");
-
-      state._sourceBlob = file;
-      state._sourceName = (file.name || "image").replace(/\.[^/.]+$/, "");
-
-      // reset state
-      state.imageUrl = url;
-      state.crop = { tx:0, ty:0, s:1 };
-      state.hotspots = [];
-      state.selectedId = null;
-
-      setImageUrl(url, true);
-      applyCropTransform();
-
+      const url = await uploadToR2(base, file, file.name||"image.jpg");
+      state.imageUrl=url;
+      state.crop={tx:0,ty:0,s:1};
+      state.hotspots=[];
+      state.selectedId=null;
+      setImageUrl(url,true);
       pushHistory();
       renderAll();
-
-      setMode("hotspot", true);
       fitToScreen();
-
       setStatus("就緒");
     }catch(err){
       setStatus("失敗");
-      alert("匯入失敗：\n" + err.message);
-    }finally{
-      btnImportEl.disabled = false;
-      setImportButtonState();
+      alert("匯入失敗：\n"+err.message);
     }
   };
   input.click();
 }
 
-/* ===== export crop -> 2500×1686 -> upload -> replace imageUrl (undoable) ===== */
-async function exportCropAndUpload(){
+async function export2500x1686(){
   const base = normalizeWorkerUrl(workerUrlEl.value || localStorage.getItem("line_worker_url"));
-  if(!base) return alert("請先在首頁輸入 Worker 網址");
+  if(!base) return alert("請先回首頁輸入 Worker URL");
   if(!state.imageUrl) return alert("請先匯入圖片");
-  workerUrlEl.value = base;
-  localStorage.setItem("line_worker_url", base);
+  workerUrlEl.value=base;
 
   try{
     setStatus("輸出上傳中...");
-
-    const im = await new Promise((resolve, reject)=>{
-      const x = new Image();
-      x.crossOrigin = "anonymous";
-      x.onload = ()=> resolve(x);
-      x.onerror = ()=> reject(new Error("圖片載入失敗（可能 CORS）"));
-      x.src = state.imageUrl;
+    const im = await new Promise((res,rej)=>{
+      const x=new Image(); x.crossOrigin="anonymous";
+      x.onload=()=>res(x);
+      x.onerror=()=>rej(new Error("圖片載入失敗（可能 CORS）"));
+      x.src=state.imageUrl;
     });
 
-    const W = FRAME_W, H = FRAME_H;
+    const canvas=document.createElement("canvas");
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,W,H);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext("2d");
+    const sCover=Math.max(W/im.naturalWidth, H/im.naturalHeight);
+    const s=sCover*state.crop.s;
+    const dw=im.naturalWidth*s;
+    const dh=im.naturalHeight*s;
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,W,H);
+    const cx=W/2+state.crop.tx;
+    const cy=H/2+state.crop.ty;
 
-    // cover scale
-    const sCover = Math.max(W / im.naturalWidth, H / im.naturalHeight);
-    const s = sCover * state.crop.s;
+    ctx.drawImage(im, cx-dw/2, cy-dh/2, dw, dh);
 
-    const dw = im.naturalWidth * s;
-    const dh = im.naturalHeight * s;
+    const outBlob = await new Promise(r=>canvas.toBlob(r,"image/jpeg",0.92));
+    const url = await uploadToR2(base, outBlob, `richmenu_${W}x${H}.jpg`);
 
-    const cx = W/2 + state.crop.tx;
-    const cy = H/2 + state.crop.ty;
-
-    const dx = cx - dw/2;
-    const dy = cy - dh/2;
-
-    ctx.drawImage(im, dx, dy, dw, dh);
-
-    const outBlob = await new Promise(res=> canvas.toBlob(res, "image/jpeg", 0.92));
-    if(!outBlob) throw new Error("輸出失敗");
-
-    const filename = (state._sourceName || "richmenu") + `_2500x1686.jpg`;
-    const url = await uploadToR2(base, outBlob, filename);
-
-    // replace to baked image, reset crop
-    state.imageUrl = url;
-    state.crop = { tx:0, ty:0, s:1 };
-    setImageUrl(url, true);
-    applyCropTransform();
-
+    state.imageUrl=url;
+    state.crop={tx:0,ty:0,s:1};
+    setImageUrl(url,true);
     pushHistory();
     renderAll();
-
     setStatus("完成");
   }catch(err){
     setStatus("失敗");
-    alert("輸出上傳失敗：\n" + err.message);
+    alert("輸出上傳失敗：\n"+err.message);
   }
 }
 
-/* ===== clear ===== */
-function clearAll(){
-  if(!confirm("確定清空圖片 + 全部熱區？")) return;
-  state.imageUrl = "";
-  state.hotspots = [];
-  state.selectedId = null;
-  state.crop = { tx:0, ty:0, s:1 };
-  imgEl.removeAttribute("src");
-  previewImgEl.removeAttribute("src");
-  pushHistory();
-  renderAll();
-  setImportButtonState();
-}
-
-/* ===== build imagemap-like payload (你要存 KV 用) =====
-(這裡不改你的 worker.js：還是用 /save keyword+payload)
-*/
-async function buildMessage(){
+/* ========= save/load to KV ========= */
+async function buildCfgPayload(){
   if(!state.imageUrl) throw new Error("尚未匯入圖片");
-  if(state.hotspots.length === 0) throw new Error("尚未新增熱區");
-  if(state.hotspots.some(h => !String(h.text||"").trim())) throw new Error("有熱區沒有填內容");
+  if(state.hotspots.length===0) throw new Error("尚未新增熱區");
+  if(state.hotspots.some(h=>!String(h.text||"").trim())) throw new Error("有熱區沒填文字");
 
-  const baseW = FRAME_W;
-  const baseH = FRAME_H;
-
-  // 用 imagemap 的 area 格式（你 worker.js 現在吃 messages[] 也能存）
-  const actions = state.hotspots.map(h => ({
-    type: "message",
-    text: h.text.trim(),
-    area: {
-      x: Math.round(h.x * baseW),
-      y: Math.round(h.y * baseH),
-      width: Math.round(h.w * baseW),
-      height: Math.round(h.h * baseH)
+  const actions = state.hotspots.map(h=>({
+    type:"message",
+    text:h.text.trim(),
+    area:{
+      x:Math.round(h.x*W),
+      y:Math.round(h.y*H),
+      width:Math.round(h.w*W),
+      height:Math.round(h.h*H)
     }
   }));
 
   return {
-    type: "imagemap",
-    baseUrl: state.imageUrl,
-    altText: state.meta?.name ? String(state.meta.name) : "選單",
-    baseSize: { width: baseW, height: baseH },
-    actions
+    mode:"imagemap",
+    meta:{ name: (menuNameEl.value||"").trim() },
+    messages:[{
+      type:"imagemap",
+      baseUrl: state.imageUrl,
+      altText: (menuNameEl.value||"選單").trim(),
+      baseSize:{ width:W, height:H },
+      actions
+    }]
   };
 }
 
-/* ===== save/load ===== */
-async function saveConfig(){
+async function saveCfg(){
   const base = normalizeWorkerUrl(workerUrlEl.value || localStorage.getItem("line_worker_url"));
-  const keyword = (triggerEl.value || "").trim();
-  const name = (fileNameEl.value || "").trim();
+  const keyword = keywordEl.value.trim();
   if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
-
-  workerUrlEl.value = base;
+  workerUrlEl.value=base;
   localStorage.setItem("line_worker_url", base);
 
   try{
-    state.triggerKeyword = keyword;
-    state.meta.name = name;
-
-    const msg = await buildMessage();
-    const payload = {
-      mode: "imagemap",
-      meta: { name: state.meta.name || "" },
-      messages: [msg]
-    };
-
-    await postJSON(base + "/save", { keyword, payload });
-
+    setStatus("儲存中...");
+    const payload = await buildCfgPayload();
+    await postJSON(base+"/save", { keyword, payload });
     pushHistory();
     setStatus("已儲存");
-    alert("儲存成功");
-  }catch(e){
+    alert("已存到 KV");
+  }catch(err){
     setStatus("失敗");
-    alert("儲存失敗：\n" + e.message);
+    alert("儲存失敗：\n"+err.message);
   }
 }
 
-async function loadConfig(){
+async function loadCfg(){
   const base = normalizeWorkerUrl(workerUrlEl.value || localStorage.getItem("line_worker_url"));
-  const keyword = (triggerEl.value || "").trim();
+  const keyword = keywordEl.value.trim();
   if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
-
-  workerUrlEl.value = base;
+  workerUrlEl.value=base;
   localStorage.setItem("line_worker_url", base);
 
   try{
-    const data = await postJSON(base + "/load", { keyword });
-    const obj = (typeof data === "string") ? JSON.parse(data) : data;
+    setStatus("讀取中...");
+    const cfg = await postJSON(base+"/load", { keyword });
+    const m = cfg?.messages?.[0];
+    if(!m) throw new Error("不是正確設定");
 
-    if(obj.mode !== "imagemap" || !obj.messages?.[0]) throw new Error("不是 imagemap 格式");
-    const m = obj.messages[0];
-
-    state.meta = obj.meta || { name:"" };
-    state.triggerKeyword = keyword;
+    menuNameEl.value = cfg?.meta?.name || "";
     state.imageUrl = m.baseUrl || "";
-    state.crop = { tx:0, ty:0, s:1 };
-
-    const bw = m.baseSize?.width || FRAME_W;
-    const bh = m.baseSize?.height || FRAME_H;
-
-    state.hotspots = (m.actions || []).map(a => ({
+    state.crop = { tx:0,ty:0,s:1 };
+    state.hotspots = (m.actions||[]).map(a=>({
       id: uid(),
-      x: (a.area?.x || 0) / bw,
-      y: (a.area?.y || 0) / bh,
-      w: (a.area?.width || 0) / bw,
-      h: (a.area?.height || 0) / bh,
+      x:(a.area?.x||0)/W,
+      y:(a.area?.y||0)/H,
+      w:(a.area?.width||0)/W,
+      h:(a.area?.height||0)/H,
       text: a.text || ""
     }));
     state.selectedId = state.hotspots[0]?.id || null;
 
-    fileNameEl.value = (state.meta?.name || "");
-    setImageUrl(state.imageUrl, true);
-
+    setImageUrl(state.imageUrl,true);
     pushHistory();
     renderAll();
     fitToScreen();
-    setImportButtonState();
     setStatus("已讀取");
-  }catch(e){
+  }catch(err){
     setStatus("失敗");
-    alert("讀取失敗：\n" + e.message);
+    alert("讀取失敗：\n"+err.message);
   }
 }
 
-/* ===== input sync ===== */
-triggerEl.addEventListener("input", ()=> state.triggerKeyword = triggerEl.value.trim());
-fileNameEl.addEventListener("input", ()=> {
-  state.meta.name = fileNameEl.value;
-  // 文字改動也可 undo：用 blur commit（避免每字一筆）
-});
-fileNameEl.addEventListener("blur", ()=> pushHistory());
-triggerEl.addEventListener("blur", ()=> pushHistory());
+/* ========= LINE publish ========= */
+async function publishToLine(){
+  const base = normalizeWorkerUrl(workerUrlEl.value || localStorage.getItem("line_worker_url"));
+  const keyword = keywordEl.value.trim();
+  const aliasId = aliasIdEl.value.trim();
+  const homeAliasId = homeAliasIdEl.value.trim();
+  const chatBarText = (chatBarTextEl.value||"選單").trim();
 
-/* ===== init ===== */
+  if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
+  if(!aliasId) return alert("請填此選單 aliasId（例如：home）");
+  if(state.hotspots.some(h=>String(h.text||"").trim()==="__HOME__") && !homeAliasId){
+    return alert("你有用 __HOME__，但沒填『首頁 aliasId』");
+  }
+
+  try{
+    setStatus("發布中...");
+    // 先確保 KV 有存最新
+    await saveCfg();
+
+    const res = await postJSON(base + "/line/richmenu/publish", {
+      keyword,
+      aliasId,
+      chatBarText,
+      homeAliasId,
+      setHome: setHomeEl.checked
+    });
+
+    setStatus("發布完成");
+    alert(`發布完成\nrichMenuId: ${res.richMenuId}\nalias: ${res.aliasId}\n設為首頁: ${res.setHome}`);
+    await refreshAliases();
+  }catch(err){
+    setStatus("失敗");
+    alert("發布失敗：\n"+err.message);
+  }
+}
+
+/* ========= alias list ========= */
+async function refreshAliases(){
+  const base = normalizeWorkerUrl(workerUrlEl.value || localStorage.getItem("line_worker_url"));
+  if(!base) return alert("請先回首頁輸入 Worker URL");
+  workerUrlEl.value=base;
+
+  try{
+    const res = await postJSON(base + "/line/richmenu/listAliases", {});
+    const sel = $("aliasList");
+    sel.innerHTML = `<option value="">（選擇 alias）</option>`;
+    (res.aliases||[]).forEach(a=>{
+      const opt=document.createElement("option");
+      opt.value=a.richMenuAliasId;
+      opt.textContent = `${a.richMenuAliasId}  →  ${a.richMenuId}`;
+      sel.appendChild(opt);
+    });
+  }catch(err){
+    alert("抓 alias 失敗：\n"+err.message);
+  }
+}
+function fillAliasFromSelect(){
+  const v = $("aliasList").value;
+  if(v) aliasIdEl.value = v;
+}
+
+/* ========= init ========= */
 (function init(){
-  // worker url from home
-  const savedUrl = (localStorage.getItem("line_worker_url") || "").trim();
-  if(savedUrl) workerUrlEl.value = savedUrl;
+  const saved = (localStorage.getItem("line_worker_url")||"").trim();
+  if(saved) workerUrlEl.value = saved;
 
   setupArtboard();
-  resetView();
+  updateStage();
   fitToScreen();
-  setMode("hotspot", true);
+  setMode("hotspot");
 
-  // init history
   pushHistory();
-  setImportButtonState();
+  setImportBtn();
   setStatus("就緒");
+  refreshAliases().catch(()=>{});
 })();
-imgEl.addEventListener("load", ()=>{
-  applyCropTransform();
-  refreshPreview();
-});
+imgEl.addEventListener("load", ()=>{ applyCrop(); refreshPreview(); });
 </script>
 
 </body>
