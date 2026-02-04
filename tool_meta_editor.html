@@ -13,12 +13,16 @@
     .btnDark:hover { background:#000; }
     .btnGreen { background:#059669; color:#fff; }
     .btnGreen:hover { background:#047857; }
+    .btnBlue { background:#2563eb; color:#fff; }
+    .btnBlue:hover { background:#1d4ed8; }
     .btnGhost { background:#fff; border:1px solid #e2e8f0; }
     .btnGhost:hover { background:#f1f5f9; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid; font-weight: 900; }
     .badge-db { background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
     .badge-replies { background:#fffbeb; color:#b45309; border-color:#fef3c7; }
+    .chip { font-size: 12px; padding: 2px 10px; border-radius: 999px; background:#f1f5f9; border:1px solid #e2e8f0; }
+    .danger { color:#be123c; }
   </style>
 </head>
 
@@ -31,7 +35,7 @@
           <div class="text-5xl">🏷️</div>
           <h1 class="text-2xl font-extrabold mt-2">資料標記器（功能 / 狀態 / 備註）</h1>
           <p class="text-sm text-slate-500 mt-1">
-            專門用來把舊資料從 unknown 變成可篩選（quickreply / imagemap / carousel / flow...）。
+            用來把舊資料從 unknown 變成可篩選（quickreply / imagemap / carousel / flow...），並支援 DB / REPLIES 寫回。
           </p>
         </div>
         <div class="text-right flex gap-2">
@@ -50,18 +54,31 @@
           <button class="btn btnGhost" onclick="ping()">測試連線</button>
         </div>
         <div class="mt-2 text-[12px] text-slate-600">
-          需要 Worker 支援：<span class="mono">/loadAny</span>、<span class="mono">/save</span>（DB）、以及最好有 <span class="mono">/listMeta</span>。
+          需要 Worker 支援：
+          <span class="mono">/listMeta</span>（最好有）、
+          <span class="mono">/loadAny</span>、
+          <span class="mono">/putAny</span>（寫回 DB/REPLIES）、
+          <span class="mono">/save</span>（相容 DB）。
         </div>
       </div>
 
       <div id="status" class="mt-3 text-sm text-slate-600"></div>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        <span class="chip">✅ DB 寫回：/save 或 /putAny</span>
+        <span class="chip">✅ REPLIES 寫回：/putAny</span>
+        <span class="chip">✅ 查詢：/listMeta（或 fallback /listAll /list）</span>
+      </div>
     </div>
 
     <div class="card p-6 space-y-3">
       <div class="flex flex-col lg:flex-row gap-3">
+        <!-- Left -->
         <div class="flex-1 space-y-2">
-          <div class="flex gap-2">
-            <input id="search" class="w-full border rounded-xl p-2 text-sm" placeholder="搜尋 key（例如：選單/產品/流程/卡片）" oninput="renderList()">
+          <div class="flex flex-col md:flex-row gap-2">
+            <input id="search" class="w-full border rounded-xl p-2 text-sm"
+                   placeholder="搜尋 key / note / feature（例如：選單/產品/流程/卡片）"
+                   oninput="renderList()">
             <select id="nsFilter" class="border rounded-xl p-2 text-sm" onchange="renderList()">
               <option value="ALL">全部</option>
               <option value="DB">DB</option>
@@ -69,10 +86,39 @@
             </select>
           </div>
 
-          <div id="list" class="space-y-2 max-h-[520px] overflow-auto pr-1"></div>
+          <div class="flex flex-col md:flex-row gap-2">
+            <select id="featureFilter" class="border rounded-xl p-2 text-sm flex-1" onchange="renderList()">
+              <option value="ALL">功能：全部</option>
+              <option value="quickreply">quickreply</option>
+              <option value="imagemap">imagemap</option>
+              <option value="carousel">carousel</option>
+              <option value="flow">flow</option>
+              <option value="liff_preview">liff_preview</option>
+              <option value="other">other</option>
+              <option value="unknown">unknown</option>
+            </select>
+
+            <select id="statusFilter" class="border rounded-xl p-2 text-sm flex-1" onchange="renderList()">
+              <option value="ALL">狀態：全部</option>
+              <option value="active">active</option>
+              <option value="testing">testing</option>
+              <option value="deprecated">deprecated</option>
+              <option value="unknown">unknown</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col md:flex-row gap-2">
+            <button class="btn btnGhost w-full md:w-auto" onclick="markAllVisible('active')">可見項目 → active</button>
+            <button class="btn btnGhost w-full md:w-auto" onclick="markAllVisible('testing')">可見項目 → testing</button>
+            <button class="btn btnGhost w-full md:w-auto" onclick="markAllVisible('deprecated')">可見項目 → deprecated</button>
+            <button class="btn btnGhost w-full md:w-auto danger" onclick="dangerZoneTip()">⚠ 批次標記說明</button>
+          </div>
+
+          <div id="list" class="space-y-2 max-h-[540px] overflow-auto pr-1"></div>
           <div id="stats" class="text-[12px] text-slate-500"></div>
         </div>
 
+        <!-- Right -->
         <div class="w-full lg:w-[420px] space-y-3">
           <div class="bg-slate-50 border rounded-2xl p-4">
             <div class="font-extrabold text-slate-800">目前選取</div>
@@ -82,6 +128,7 @@
                 <div id="selKey" class="font-black break-all">（尚未選取）</div>
               </div>
             </div>
+
             <div class="mt-3 grid grid-cols-1 gap-2">
               <div>
                 <label class="block text-xs font-bold text-slate-500 mb-1">功能 feature</label>
@@ -112,7 +159,13 @@
               </div>
 
               <button class="btn btnGreen w-full" onclick="saveMeta()">儲存標記</button>
-              <button class="btn btnGhost w-full" onclick="preview()">預覽 JSON</button>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button class="btn btnGhost w-full" onclick="preview()">預覽 JSON</button>
+                <button class="btn btnBlue w-full" onclick="copyJSON()">複製 JSON</button>
+              </div>
+
+              <button class="btn btnGhost w-full danger" onclick="deleteItem()">刪除這筆（慎用）</button>
             </div>
 
             <div class="mt-3 text-[12px] text-slate-500">
@@ -122,7 +175,7 @@
 
           <div class="bg-white border rounded-2xl p-4">
             <div class="font-extrabold">預覽</div>
-            <pre id="previewBox" class="mt-2 text-xs bg-slate-50 border rounded-xl p-3 max-h-[280px] overflow-auto mono"></pre>
+            <pre id="previewBox" class="mt-2 text-xs bg-slate-50 border rounded-xl p-3 max-h-[300px] overflow-auto mono"></pre>
           </div>
         </div>
       </div>
@@ -244,12 +297,16 @@
     }
   }
 
-  function renderList(){
+  function currentFilteredRows(){
     const q = (document.getElementById('search').value || '').trim().toLowerCase();
     const ns = document.getElementById('nsFilter').value;
+    const f = document.getElementById('featureFilter').value;
+    const s = document.getElementById('statusFilter').value;
 
     let rows = ITEMS.slice();
     if(ns !== 'ALL') rows = rows.filter(x => x.namespace === ns);
+    if(f !== 'ALL') rows = rows.filter(x => (x.feature || 'unknown') === f);
+    if(s !== 'ALL') rows = rows.filter(x => (x.status || 'unknown') === s);
     if(q) rows = rows.filter(x =>
       x.key.toLowerCase().includes(q) ||
       (x.note||'').toLowerCase().includes(q) ||
@@ -257,7 +314,11 @@
     );
 
     rows.sort((a,b)=>(a.namespace+":"+a.key).localeCompare(b.namespace+":"+b.key, 'zh-Hant'));
+    return rows;
+  }
 
+  function renderList(){
+    const rows = currentFilteredRows();
     document.getElementById('stats').textContent = `共 ${ITEMS.length} 筆（目前顯示 ${rows.length} 筆）`;
 
     const list = document.getElementById('list');
@@ -316,7 +377,7 @@
     const payload = r.out.payload;
     SELECTED = { namespace, key, payload };
 
-    // 先從 payload.meta 取值
+    // meta
     const meta = (payload && typeof payload === 'object' && payload.meta) ? payload.meta : {};
     document.getElementById('metaFeature').value = meta.feature || 'unknown';
     document.getElementById('metaStatus').value = meta.status || 'unknown';
@@ -332,6 +393,20 @@
       return;
     }
     document.getElementById('previewBox').textContent = JSON.stringify(SELECTED.payload, null, 2);
+  }
+
+  async function copyJSON(){
+    if(!SELECTED){
+      alert('請先從左邊選一筆資料');
+      return;
+    }
+    const text = JSON.stringify(SELECTED.payload, null, 2);
+    try{
+      await navigator.clipboard.writeText(text);
+      alert('已複製 JSON');
+    }catch(e){
+      prompt('複製這段 JSON：', text);
+    }
   }
 
   async function saveMeta(){
@@ -356,19 +431,18 @@
     payload.meta.createdFrom = payload.meta.createdFrom || 'tool_meta_editor';
     payload.meta.updatedAt = Date.now();
 
-    // 寫回：DB 用 /save；REPLIES 目前 worker.js 沒有 /saveReplies
-    // 所以：REPLIES 用 deleteAny + putAny 會更好，但你 worker.js 沒有 putAny
-    // → 這裡先處理 DB；REPLIES 會提示你加 putAny（下一步我會直接給你 worker.js 更新）
-    if(SELECTED.namespace !== 'DB'){
-      alert('你目前 Worker 沒有提供「寫入 REPLIES」的 API。\n下一步我會幫你在 worker.js 加：/putAny（DB/REPLIES 都可寫）。');
-      return;
-    }
-
     setStatus('儲存中…', 'info');
-    const r = await postJSON(w + '/save', { keyword: SELECTED.key, payload });
+
+    // ✅ 一律用 putAny（DB/REPLIES 都可寫）
+    const r = await postJSON(w + '/putAny', {
+      namespace: SELECTED.namespace,
+      keyword: SELECTED.key,
+      payload
+    });
+
     if(r.res.ok && r.out && r.out.ok !== false){
-      // 更新 ITEMS 內的 meta 方便 UI 立即刷新
-      const idx = ITEMS.findIndex(x => x.namespace==='DB' && x.key===SELECTED.key);
+      // 更新 ITEMS
+      const idx = ITEMS.findIndex(x => x.namespace===SELECTED.namespace && x.key===SELECTED.key);
       if(idx >= 0){
         ITEMS[idx].feature = feature;
         ITEMS[idx].status = status;
@@ -378,11 +452,109 @@
       SELECTED.payload = payload;
       document.getElementById('previewBox').textContent = JSON.stringify(payload, null, 2);
       renderList();
-      setStatus('儲存成功 ✅', 'ok');
+      setStatus('儲存成功 ✅（已寫回 '+SELECTED.namespace+'）', 'ok');
       alert('儲存成功');
       return;
     }
+
     setStatus('儲存失敗：' + (r.out?.error || r.res.status), 'err');
+  }
+
+  async function deleteItem(){
+    if(!SELECTED){
+      alert('請先從左邊選一筆資料');
+      return;
+    }
+    if(!confirm(`確定刪除？\n\n${SELECTED.namespace}/${SELECTED.key}\n\n這動作無法復原。`)) return;
+
+    const w = getWorker();
+    if(!w) return;
+
+    setStatus('刪除中…', 'info');
+    const r = await postJSON(w + '/deleteAny', {
+      namespace: SELECTED.namespace,
+      keyword: SELECTED.key
+    });
+
+    if(r.res.ok && r.out && r.out.ok !== false){
+      ITEMS = ITEMS.filter(x => !(x.namespace===SELECTED.namespace && x.key===SELECTED.key));
+      SELECTED = null;
+      document.getElementById('previewBox').textContent = '';
+      document.getElementById('selKey').textContent = '（尚未選取）';
+      setStatus('刪除成功 ✅', 'ok');
+      renderList();
+      alert('刪除成功');
+      return;
+    }
+    setStatus('刪除失敗：' + (r.out?.error || r.res.status), 'err');
+  }
+
+  function dangerZoneTip(){
+    alert(
+      '批次標記會「逐筆寫回 KV」：\n' +
+      '- 建議先用搜尋/篩選縮小範圍\n' +
+      '- 一次不要選太多（例如 30 筆以內）\n' +
+      '- REPLIES 也會寫回（需要你已更新 worker.js 有 /putAny）'
+    );
+  }
+
+  // 批次把可見項目改 status（保留 feature/note 不動）
+  async function markAllVisible(newStatus){
+    const w = getWorker();
+    if(!w) return;
+
+    const rows = currentFilteredRows();
+    if(rows.length === 0) return alert('目前沒有可見項目');
+    if(rows.length > 30){
+      alert('目前可見項目太多（'+rows.length+'筆）。\n建議先用搜尋/篩選縮小到 30 筆內再批次。');
+      return;
+    }
+    if(!confirm(`確定把「目前可見的 ${rows.length} 筆」狀態改成：${newStatus} ？`)) return;
+
+    setStatus(`批次更新中…（${rows.length} 筆）`, 'info');
+
+    // 逐筆：loadAny -> 改 meta.status -> putAny
+    let okCount = 0, failCount = 0;
+    for(const item of rows){
+      try{
+        const loaded = await postJSON(w + '/loadAny', { namespace: item.namespace, keyword: item.key });
+        if(!loaded.res.ok || !loaded.out?.ok){ failCount++; continue; }
+
+        let payload = loaded.out.payload;
+        if(!payload || typeof payload !== 'object') payload = { value: payload };
+        payload.meta = (payload.meta && typeof payload.meta === 'object') ? payload.meta : {};
+        payload.meta.feature = payload.meta.feature || item.feature || 'unknown';
+        payload.meta.status = newStatus;
+        payload.meta.note = typeof payload.meta.note === 'string' ? payload.meta.note : (item.note || '');
+        payload.meta.createdFrom = payload.meta.createdFrom || 'tool_meta_editor_batch';
+        payload.meta.updatedAt = Date.now();
+
+        const saved = await postJSON(w + '/putAny', {
+          namespace: item.namespace,
+          keyword: item.key,
+          payload
+        });
+        if(saved.res.ok && saved.out && saved.out.ok !== false){
+          okCount++;
+          // 更新 ITEMS 快取
+          const idx = ITEMS.findIndex(x => x.namespace===item.namespace && x.key===item.key);
+          if(idx>=0){
+            ITEMS[idx].status = newStatus;
+            ITEMS[idx].feature = payload.meta.feature || ITEMS[idx].feature;
+            ITEMS[idx].note = payload.meta.note || ITEMS[idx].note;
+            ITEMS[idx].updatedAt = payload.meta.updatedAt;
+          }
+        }else{
+          failCount++;
+        }
+      }catch(e){
+        failCount++;
+      }
+    }
+
+    renderList();
+    setStatus(`批次完成 ✅ 成功 ${okCount} 筆 / 失敗 ${failCount} 筆`, failCount? 'err':'ok');
+    alert(`批次完成：成功 ${okCount} / 失敗 ${failCount}`);
   }
 
   function escapeHtml(s){
