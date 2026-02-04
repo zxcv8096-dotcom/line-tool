@@ -25,34 +25,141 @@
       background:rgba(0,0,0,.10);
       pointer-events:none;
     }
+
+    /* ✅ 讓右側畫布更像「編輯器」：固定高度、可捲動 */
+    .editor-h {
+      height: calc(100vh - 88px); /* 會被 JS 動態更新更精準 */
+    }
+
+    /* ✅ 圖片縮放容器：用 transform scale */
+    #stage {
+      position: relative;
+      transform-origin: top left;
+    }
+    #drawLayer {
+      position: absolute;
+      inset: 0;
+      cursor: crosshair;
+    }
   </style>
 </head>
 
 <body class="bg-slate-100 h-screen flex flex-col text-slate-800">
-  <div class="bg-white shadow p-4 z-10 flex justify-between items-center">
-    <h1 class="font-bold text-xl text-blue-600 flex items-center gap-2">
-      <a href="index.html" class="text-2xl hover:bg-slate-100 rounded px-1">🔙</a>
-      引流圖編輯器 (R2 尺寸模式版)
-    </h1>
 
-    <div class="flex gap-2">
-      <input type="text" id="workerUrl" placeholder="https://xxxx.workers.dev"
-        class="border rounded px-2 text-sm w-60 bg-yellow-50">
-      <input type="text" id="triggerKeyword" placeholder="本圖關鍵字"
-        class="border rounded px-2 text-sm font-bold w-40 border-blue-500">
-      <button onclick="loadSettings()" class="bg-gray-500 text-white px-3 rounded text-sm hover:bg-gray-600">讀取</button>
-      <button onclick="saveSettings()" class="bg-green-600 text-white px-3 rounded text-sm hover:bg-green-700">儲存</button>
+  <!-- ✅ Top bar（可折疊，縮小占用） -->
+  <div id="topBar" class="bg-white shadow z-10">
+    <div class="p-3 flex flex-wrap gap-2 items-center justify-between">
+      <div class="flex items-center gap-2">
+        <a href="index.html" class="text-2xl hover:bg-slate-100 rounded px-2 py-1">🔙</a>
+        <div class="font-black text-lg text-blue-600">引流圖編輯器</div>
+
+        <button id="toggleBarBtn"
+          class="ml-2 text-xs px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">
+          收合
+        </button>
+      </div>
+
+      <div class="flex flex-wrap gap-2 items-center">
+        <input type="text" id="workerUrl" placeholder="https://xxxx.workers.dev"
+          class="border rounded px-2 py-2 text-sm w-56 bg-yellow-50">
+        <input type="text" id="triggerKeyword" placeholder="本圖關鍵字"
+          class="border rounded px-2 py-2 text-sm font-bold w-40 border-blue-500">
+        <button onclick="loadSettings()"
+          class="bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-600 font-bold">讀取</button>
+        <button onclick="saveSettings()"
+          class="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 font-bold">儲存</button>
+      </div>
+    </div>
+
+    <!-- ✅ 可折疊區（把你原本一堆說明放這裡，預設展開但不會太高） -->
+    <div id="topBarBody" class="px-3 pb-3">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+        <div class="bg-blue-50 p-2 rounded text-xs text-blue-700">
+          <strong>imagemap 建議：</strong><br>
+          - 常見是正方形風格（可勾「裁切正方形」）<br>
+          - 熱區不限數量，右側逐一填內容<br>
+          - ✅ 你現在可以用縮放更好畫框
+        </div>
+
+        <!-- ✅ Zoom 控制 -->
+        <div class="bg-slate-50 border rounded p-2">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold text-slate-600">🔎 圖片縮放</div>
+            <div class="text-[11px] text-slate-500">滾輪 + Ctrl/Alt/Shift</div>
+          </div>
+
+          <div class="mt-2 flex items-center gap-2">
+            <input id="zoomRange" type="range" min="0.5" max="3" step="0.01" value="1" class="w-full">
+            <div class="text-xs font-black w-14 text-right" id="zoomLabel">100%</div>
+          </div>
+
+          <div class="mt-2 flex gap-2">
+            <button class="text-xs bg-slate-900 text-white px-3 py-2 rounded hover:bg-black font-bold"
+                    onclick="setZoom(1)">100%</button>
+            <button class="text-xs bg-slate-100 px-3 py-2 rounded hover:bg-slate-200 font-bold"
+                    onclick="setZoom(0.75)">75%</button>
+            <button class="text-xs bg-slate-100 px-3 py-2 rounded hover:bg-slate-200 font-bold"
+                    onclick="setZoom(1.5)">150%</button>
+          </div>
+        </div>
+
+        <!-- ✅ 壓縮/裁切（原本你的） -->
+        <div class="bg-slate-50 border rounded p-2">
+          <div class="font-bold text-xs text-slate-600 mb-2">圖片尺寸/壓縮（上傳時生效）</div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex flex-col gap-1 col-span-2">
+              <span class="text-slate-500">尺寸模式</span>
+              <select id="sizeMode" class="border rounded px-2 py-1">
+                <option value="line">LINE 建議（長邊 1280）</option>
+                <option value="hd">清晰（長邊 1600）</option>
+                <option value="small">省空間（長邊 960）</option>
+                <option value="custom">自選尺寸（寬/高上限）</option>
+              </select>
+            </label>
+
+            <label id="customWWrap" class="flex flex-col gap-1 hidden">
+              <span class="text-slate-500">最大寬(px)</span>
+              <input id="customW" type="number" value="1280" min="320" max="4096" class="border rounded px-2 py-1">
+            </label>
+            <label id="customHWrap" class="flex flex-col gap-1 hidden">
+              <span class="text-slate-500">最大高(px)</span>
+              <input id="customH" type="number" value="1280" min="320" max="4096" class="border rounded px-2 py-1">
+            </label>
+
+            <label class="flex flex-col gap-1">
+              <span class="text-slate-500">格式</span>
+              <select id="outFormat" class="border rounded px-2 py-1">
+                <option value="image/webp" selected>WebP（推薦）</option>
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/png">PNG（不建議）</option>
+              </select>
+            </label>
+
+            <label class="flex flex-col gap-1">
+              <span class="text-slate-500">品質</span>
+              <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
+              <div class="text-right text-[11px] text-slate-500">目前：<span id="qVal">0.82</span></div>
+            </label>
+
+            <label class="flex items-center gap-2 col-span-2 mt-1">
+              <input id="cropSquare" type="checkbox" class="scale-110">
+              <span class="text-slate-600">裁切成正方形（imagemap 常用）</span>
+            </label>
+
+            <div class="col-span-2 text-[11px] text-slate-500">
+              * 上傳時會再自動限制：長寬不超過你目前螢幕可視大小
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="flex flex-1 overflow-hidden w-full">
+  <!-- ✅ 主編輯區（固定高度，畫布更大） -->
+  <div class="flex flex-1 overflow-hidden w-full editor-h" id="mainArea">
+    <!-- 左邊：圖片清單 -->
     <div class="w-72 bg-white border-r overflow-y-auto p-4 flex flex-col gap-4">
-      <div class="bg-blue-50 p-2 rounded text-xs text-blue-700">
-        <strong>imagemap 建議：</strong><br>
-        - 常見是正方形風格（可勾「裁切正方形」）<br>
-        - 熱區不限數量，右側逐一填內容
-      </div>
-
       <button onclick="addImageBlock()"
         class="w-full py-3 border-2 border-dashed border-blue-300 text-blue-500 rounded font-bold hover:bg-blue-50">
         + 新增圖片
@@ -61,77 +168,37 @@
       <div id="imageList" class="space-y-4"></div>
     </div>
 
-    <div class="flex-1 bg-slate-200 relative overflow-auto flex justify-center p-6">
+    <!-- 右邊：畫布 -->
+    <div class="flex-1 bg-slate-200 relative overflow-auto flex justify-center p-4">
       <div id="editorWrap" class="hidden w-full max-w-6xl grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-4">
+        <!-- 右側左欄：框框設定 -->
         <div class="bg-white rounded-lg shadow p-4 h-fit">
           <div class="flex items-center justify-between mb-2">
             <div class="font-bold text-slate-700">框框設定</div>
             <button onclick="clearAreas()" class="text-xs text-red-600 underline">清空本圖全部框</button>
           </div>
-
-          <div class="border rounded p-3 mb-3 bg-slate-50">
-            <div class="font-bold text-xs text-slate-600 mb-2">圖片尺寸/壓縮（上傳時生效）</div>
-
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <label class="flex flex-col gap-1 col-span-2">
-                <span class="text-slate-500">尺寸模式</span>
-                <select id="sizeMode" class="border rounded px-2 py-1">
-                  <option value="line">LINE 建議（長邊 1280）</option>
-                  <option value="hd">清晰（長邊 1600）</option>
-                  <option value="small">省空間（長邊 960）</option>
-                  <option value="custom">自選尺寸（寬/高上限）</option>
-                </select>
-              </label>
-
-              <label id="customWWrap" class="flex flex-col gap-1 hidden">
-                <span class="text-slate-500">最大寬(px)</span>
-                <input id="customW" type="number" value="1280" min="320" max="4096" class="border rounded px-2 py-1">
-              </label>
-              <label id="customHWrap" class="flex flex-col gap-1 hidden">
-                <span class="text-slate-500">最大高(px)</span>
-                <input id="customH" type="number" value="1280" min="320" max="4096" class="border rounded px-2 py-1">
-              </label>
-
-              <label class="flex flex-col gap-1">
-                <span class="text-slate-500">格式</span>
-                <select id="outFormat" class="border rounded px-2 py-1">
-                  <option value="image/webp" selected>WebP（推薦）</option>
-                  <option value="image/jpeg">JPEG</option>
-                  <option value="image/png">PNG（不建議）</option>
-                </select>
-              </label>
-
-              <label class="flex flex-col gap-1">
-                <span class="text-slate-500">品質</span>
-                <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
-                <div class="text-right text-[11px] text-slate-500">目前：<span id="qVal">0.82</span></div>
-              </label>
-
-              <label class="flex items-center gap-2 col-span-2 mt-1">
-                <input id="cropSquare" type="checkbox" class="scale-110">
-                <span class="text-slate-600">裁切成正方形（imagemap 常用）</span>
-              </label>
-
-              <div class="col-span-2 text-[11px] text-slate-500">
-                * 上傳時會再自動限制：長寬不超過你目前螢幕可視大小
-              </div>
-            </div>
-          </div>
-
           <div id="areaList" class="space-y-2"></div>
         </div>
 
+        <!-- 畫布區 -->
         <div class="bg-white shadow-lg relative rounded overflow-hidden">
-          <div class="relative">
-            <img id="previewImage" class="block pointer-events-none select-none w-full max-h-[720px] object-contain bg-gray-100">
+          <div class="p-2 bg-slate-50 border-b flex items-center justify-between">
+            <div class="text-xs text-slate-600">
+              ✅ 拖曳畫框，點紅框刪除。縮放不影響座標。
+            </div>
             <button onclick="triggerUpload(currentImgIndex, this)"
-              class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+              class="bg-black/70 text-white text-xs px-3 py-2 rounded font-bold hover:bg-black">
               📷 上傳到 R2（壓縮）
             </button>
-            <div id="drawLayer" class="absolute inset-0 cursor-crosshair"></div>
           </div>
-          <div class="p-3 bg-gray-50 text-center text-xs text-gray-600">
-            在圖片上按住拖曳畫框。點紅框可刪除。
+
+          <div class="relative overflow-auto bg-gray-100" style="height: calc(100% - 44px);">
+            <!-- ✅ stage：會被 scale -->
+            <div id="stage" class="inline-block">
+              <img id="previewImage" class="block pointer-events-none select-none"
+                   style="max-width: none; display:block;">
+              <div id="drawLayer"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -154,9 +221,52 @@ sizeModeEl.addEventListener('change', () => {
   customWWrap.classList.toggle('hidden', !show);
   customHWrap.classList.toggle('hidden', !show);
 });
+
 const q = document.getElementById('quality');
 const qVal = document.getElementById('qVal');
 q.addEventListener('input', () => qVal.textContent = q.value);
+
+/* ---------- Top bar 折疊 & 高度同步 ---------- */
+const toggleBarBtn = document.getElementById('toggleBarBtn');
+const topBarBody = document.getElementById('topBarBody');
+const topBar = document.getElementById('topBar');
+const mainArea = document.getElementById('mainArea');
+
+let barCollapsed = false;
+toggleBarBtn.onclick = () => {
+  barCollapsed = !barCollapsed;
+  topBarBody.classList.toggle('hidden', barCollapsed);
+  toggleBarBtn.textContent = barCollapsed ? '展開' : '收合';
+  syncEditorHeight();
+};
+function syncEditorHeight(){
+  const h = topBar.getBoundingClientRect().height;
+  mainArea.style.height = `calc(100vh - ${Math.ceil(h)}px)`;
+}
+window.addEventListener('resize', syncEditorHeight);
+
+/* ---------- Zoom ---------- */
+let ZOOM = 1;
+const zoomRange = document.getElementById('zoomRange');
+const zoomLabel = document.getElementById('zoomLabel');
+const stage = document.getElementById('stage');
+
+function setZoom(v){
+  ZOOM = Math.max(0.5, Math.min(3, Number(v) || 1));
+  stage.style.transform = `scale(${ZOOM})`;
+  zoomRange.value = String(ZOOM);
+  zoomLabel.textContent = Math.round(ZOOM * 100) + '%';
+  refreshLayerSize();
+}
+zoomRange.addEventListener('input', () => setZoom(zoomRange.value));
+
+/* 滾輪縮放：按 Ctrl/Alt/Shift 任一鍵 */
+stage.parentElement?.addEventListener('wheel', (e) => {
+  if(!(e.ctrlKey || e.altKey || e.shiftKey)) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.08 : 0.08;
+  setZoom((ZOOM + delta).toFixed(2));
+}, { passive:false });
 
 /* ---------- 共用工具 ---------- */
 function normalizeWorkerUrl(raw){
@@ -215,8 +325,8 @@ function getTargetMaxWH(){
 
   const dpr = window.devicePixelRatio || 1;
   const preview = document.getElementById('previewImage');
-  const vw = Math.max(320, Math.floor(preview.clientWidth * dpr));
-  const vh = Math.max(320, Math.floor(preview.clientHeight * dpr));
+  const vw = Math.max(320, Math.floor((preview.clientWidth || 1280) * dpr));
+  const vh = Math.max(320, Math.floor((preview.clientHeight || 1280) * dpr));
   maxW = Math.min(maxW, vw);
   maxH = Math.min(maxH, vh);
 
@@ -262,6 +372,8 @@ let currentImgIndex = -1;
 window.onload = () => {
   const savedUrl = localStorage.getItem('line_worker_url');
   if(savedUrl) document.getElementById('workerUrl').value = savedUrl;
+  syncEditorHeight();
+  setZoom(1);
 };
 
 /* ---------- list ---------- */
@@ -311,7 +423,12 @@ function selectImage(idx){
   wrap.classList.remove('hidden');
   empty.classList.add('hidden');
 
-  document.getElementById('previewImage').src = images[idx].url || '';
+  const imgEl = document.getElementById('previewImage');
+  imgEl.src = images[idx].url || '';
+  imgEl.onload = () => {
+    refreshLayerSize();
+    renderAreas();
+  };
   renderAreas();
   renderAreaList();
 }
@@ -320,6 +437,21 @@ function clearAreas(){
   if(confirm('確定清空本圖全部框？')){
     images[currentImgIndex].areas = [];
     renderAreas(); renderAreaList(); renderImageList();
+  }
+}
+
+/* ---------- layer size sync ---------- */
+const layer = document.getElementById('drawLayer');
+function refreshLayerSize(){
+  const imgEl = document.getElementById('previewImage');
+  // 確保 drawLayer 覆蓋圖片「原尺寸」(未縮放前)，縮放交給 stage transform
+  const w = imgEl.naturalWidth || imgEl.clientWidth || 0;
+  const h = imgEl.naturalHeight || imgEl.clientHeight || 0;
+  if(w && h){
+    imgEl.style.width = w + 'px';
+    imgEl.style.height = h + 'px';
+    layer.style.width = w + 'px';
+    layer.style.height = h + 'px';
   }
 }
 
@@ -353,6 +485,9 @@ async function triggerUpload(idx, btn){
       images[idx].areas = [];
       renderImageList();
       selectImage(idx);
+
+      // 上傳新圖後重置 zoom，避免你縮太大找不到
+      setZoom(1);
     }catch(err){
       alert('上傳失敗：\n' + err.message);
     }
@@ -363,20 +498,26 @@ async function triggerUpload(idx, btn){
   input.click();
 }
 
-/* ---------- draw ---------- */
-const layer = document.getElementById('drawLayer');
+/* ---------- draw（注意：要除以 zoom 才會準） ---------- */
 let isDrawing = false;
 let sx = 0, sy = 0;
 let previewRect = null;
+
+function getLayerPoint(e){
+  const rect = layer.getBoundingClientRect();
+  // 因為 stage 有 scale，所以 screen 座標要除以 zoom 才是「未縮放座標」
+  const x = (e.clientX - rect.left) / ZOOM;
+  const y = (e.clientY - rect.top) / ZOOM;
+  return { x, y, rect };
+}
 
 layer.addEventListener('mousedown', (e) => {
   if(currentImgIndex < 0) return;
   if(!images[currentImgIndex].url) return alert('請先上傳圖片（R2）再畫框');
 
-  const rect = layer.getBoundingClientRect();
   isDrawing = true;
-  sx = e.clientX - rect.left;
-  sy = e.clientY - rect.top;
+  const p = getLayerPoint(e);
+  sx = p.x; sy = p.y;
 
   previewRect = document.createElement('div');
   previewRect.className = 'draw-rect';
@@ -389,9 +530,8 @@ layer.addEventListener('mousedown', (e) => {
 
 layer.addEventListener('mousemove', (e) => {
   if(!isDrawing || !previewRect) return;
-  const rect = layer.getBoundingClientRect();
-  const cx = e.clientX - rect.left;
-  const cy = e.clientY - rect.top;
+  const p = getLayerPoint(e);
+  const cx = p.x, cy = p.y;
 
   const x = Math.min(sx, cx);
   const y = Math.min(sy, cy);
@@ -408,9 +548,8 @@ layer.addEventListener('mouseup', (e) => {
   if(!isDrawing) return;
   isDrawing = false;
 
-  const rect = layer.getBoundingClientRect();
-  const ex = e.clientX - rect.left;
-  const ey = e.clientY - rect.top;
+  const p = getLayerPoint(e);
+  const ex = p.x, ey = p.y;
 
   const x = Math.min(sx, ex);
   const y = Math.min(sy, ey);
@@ -420,9 +559,13 @@ layer.addEventListener('mouseup', (e) => {
   if(previewRect){ previewRect.remove(); previewRect = null; }
   if(w < 14 || h < 14) return;
 
+  // layer 原尺寸（未縮放）
+  const baseW = layer.clientWidth;
+  const baseH = layer.clientHeight;
+
   images[currentImgIndex].areas.push({
-    x: x / rect.width, y: y / rect.height,
-    w: w / rect.width, h: h / rect.height,
+    x: x / baseW, y: y / baseH,
+    w: w / baseW, h: h / baseH,
     type: 'message', text: ''
   });
 
@@ -554,7 +697,7 @@ function buildImagemapMessages(){
   })));
 }
 
-/* ---------- save/load ---------- */
+/* ---------- save/load（✅ 已移除 password） ---------- */
 async function saveSettings(){
   const raw = document.getElementById('workerUrl').value;
   const keyword = document.getElementById('triggerKeyword').value.trim();
@@ -570,7 +713,6 @@ async function saveSettings(){
   try{
     const messages = await buildImagemapMessages();
     await postJSON(base + '/save', {
-      password:'1234',
       keyword,
       payload:{ mode:'imagemap', messages }
     });
@@ -589,7 +731,7 @@ async function loadSettings(){
   localStorage.setItem('line_worker_url', base);
 
   try{
-    const data = await postJSON(base + '/load', { password:'1234', keyword });
+    const data = await postJSON(base + '/load', { keyword });
     const obj = (typeof data === 'string') ? JSON.parse(data) : data;
 
     if(!obj.messages || !Array.isArray(obj.messages)){
@@ -614,6 +756,7 @@ async function loadSettings(){
 
     renderImageList();
     selectImage(images.length ? 0 : -1);
+    setZoom(1);
     alert('讀取成功！');
   }catch(e){
     alert('讀取失敗：\n' + e.message);
