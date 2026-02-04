@@ -3,10 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LINE OA 彈窗熱區編輯器 (Canva自由編輯版)</title>
+  <title>LINE OA 彈窗熱區編輯器（Canva 版｜裁切拖移＋Undo/Redo＋檔名）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <style>
+    .workbench{
+      background:
+        linear-gradient(#f3f4f6 1px, transparent 1px) 0 0/24px 24px,
+        linear-gradient(90deg, #f3f4f6 1px, transparent 1px) 0 0/24px 24px,
+        #eef2f7;
+    }
+
+    /* stage transform */
+    #stage{ position:relative; transform-origin: top left; }
+    #drawLayer{ position:absolute; inset:0; }
+
+    /* hotspots */
     .area-box{
       position:absolute;
       border:2px solid rgba(255,0,0,.9);
@@ -16,15 +29,16 @@
       display:flex;
       justify-content:center;
       align-items:center;
-      cursor:move;
       user-select:none;
       text-shadow:0 1px 2px rgba(0,0,0,.9);
       box-sizing:border-box;
+      cursor:move;
     }
     .area-box.selected{
-      outline: 2px solid rgba(59,130,246,.9);
+      outline: 2px solid rgba(59,130,246,.95);
       box-shadow: 0 0 0 4px rgba(59,130,246,.18);
     }
+
     .handle{
       position:absolute;
       width:10px; height:10px;
@@ -44,186 +58,306 @@
 
     .draw-rect{
       position:absolute;
-      border:2px dashed rgba(0,0,0,.6);
-      background:rgba(0,0,0,.10);
+      border:2px dashed rgba(0,0,0,.55);
+      background:rgba(0,0,0,.08);
       pointer-events:none;
       box-sizing:border-box;
     }
 
-    #stage{
-      position:relative;
-      transform-origin: top left;
-    }
-    #drawLayer{
-      position:absolute;
-      inset:0;
-    }
-
-    /* Canva 感：空白鍵平移時的游標 */
+    /* space panning */
     .panning { cursor: grab !important; }
     .panning:active { cursor: grabbing !important; }
 
-    /* 全螢幕畫布 */
-    .fs{
-      position:fixed !important;
-      inset:0 !important;
-      z-index:9999 !important;
-      background:#fff !important;
-      border-radius:0 !important;
+    /* left collapse */
+    .sidebar-collapsed{ width:56px !important; min-width:56px !important; max-width:56px !important; }
+    .sidebar-collapsed .sidebar-hide{ display:none !important; }
+
+    /* line frame overlay */
+    .line-frame{
+      position:absolute;
+      inset:-14px;
+      border:2px solid rgba(15,23,42,.55);
+      border-radius:14px;
+      pointer-events:none;
+    }
+    .line-frame .tag{
+      position:absolute;
+      top:-12px; left:10px;
+      font-size:11px;
+      background:rgba(15,23,42,.85);
+      color:white;
+      padding:3px 8px;
+      border-radius:999px;
+      letter-spacing:.2px;
+    }
+
+    /* crop frame + image drag */
+    .crop-wrap{
+      position:relative;
+      overflow:hidden;
+      border-radius:10px;
+      background:#fff;
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    .crop-img{
+      position:absolute;
+      left:0; top:0;
+      will-change: transform;
+      cursor:grab;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+    .crop-img:active{ cursor:grabbing; }
+
+    /* preview drawer hotspots */
+    .preview-hotspot{
+      position:absolute;
+      border:2px solid rgba(255,0,0,.85);
+      background:rgba(255,0,0,.10);
+      pointer-events:none;
     }
   </style>
 </head>
 
 <body class="bg-slate-100 min-h-screen text-slate-800">
 
-  <!-- Header -->
-  <div id="topBar" class="bg-white shadow sticky top-0 z-20">
-    <div class="p-3">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <div class="font-bold text-lg text-blue-700">LINE OA 彈窗熱區編輯器（Canva 自由版）</div>
-          <div class="text-xs text-slate-500 mt-1">
-            空白鍵拖曳平移｜Ctrl/Alt/Shift + 滾輪縮放｜框框可拖移/拉角縮放｜可全螢幕編輯
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreviewDrawer(true)">📱預覽</button>
-          <button id="toggleBarBtn" class="px-3 py-2 rounded bg-slate-200 text-slate-800 text-sm hover:bg-slate-300 font-bold">收合</button>
-          <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900" onclick="closeLiff()">關閉</button>
+  <!-- Top bar -->
+  <div class="bg-white shadow sticky top-0 z-30">
+    <div class="px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="font-black text-blue-700 text-lg">LINE OA 彈窗熱區編輯器（Canva 版）</div>
+        <div class="hidden md:block text-xs text-slate-500">
+          空白鍵拖曳平移｜Ctrl/Alt/Shift + 滾輪縮放｜Ctrl+Z/Ctrl+Y Undo/Redo
         </div>
       </div>
-
-      <div class="mt-3 grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2">
-        <input id="workerUrl" class="border rounded px-3 py-2 bg-yellow-50 text-sm"
-          placeholder="Worker URL（https://xxx.workers.dev）" />
-        <input id="triggerKeyword" class="border rounded px-3 py-2 text-sm font-bold border-blue-500"
-          placeholder="觸發關鍵字（使用者輸入這句會出現這張圖）" />
+      <div class="flex gap-2">
+        <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
+          onclick="togglePreviewDrawer(true)">📱預覽</button>
+        <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900"
+          onclick="closeLiff()">關閉</button>
       </div>
     </div>
 
-    <!-- 可收合 -->
-    <div id="topBarBody" class="px-3 pb-3">
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr] gap-2">
-
-        <!-- Zoom -->
-        <div class="border rounded p-2 bg-slate-50">
-          <div class="text-xs font-bold text-slate-600 mb-2">🔎 縮放 / 視圖</div>
-          <div class="flex items-center gap-2">
-            <button class="text-xs bg-slate-900 text-white px-3 py-2 rounded hover:bg-black font-bold" onclick="zoomBy(-0.1)">-</button>
-            <input id="zoomRange" type="range" min="0.3" max="4" step="0.01" value="1" class="w-full">
-            <button class="text-xs bg-slate-900 text-white px-3 py-2 rounded hover:bg-black font-bold" onclick="zoomBy(0.1)">+</button>
-            <div class="text-xs font-black w-14 text-right" id="zoomLabel">100%</div>
-          </div>
-          <div class="mt-2 grid grid-cols-3 gap-2">
-            <button class="text-xs bg-white border px-3 py-2 rounded hover:bg-slate-50 font-bold" onclick="setZoom(1)">100%</button>
-            <button class="text-xs bg-white border px-3 py-2 rounded hover:bg-slate-50 font-bold" onclick="fitToView()">Fit</button>
-            <button class="text-xs bg-white border px-3 py-2 rounded hover:bg-slate-50 font-bold" onclick="centerView()">置中</button>
-          </div>
-          <div class="mt-2 text-[11px] text-slate-500">
-            平移：按住 <b>空白鍵</b> + 拖曳（或觸控板雙指滑）
-          </div>
-        </div>
-
-        <!-- 壓縮 -->
-        <div class="border rounded p-2 bg-slate-50">
-          <div class="text-xs font-bold text-slate-600 mb-2">圖片壓縮</div>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <label class="flex flex-col gap-1">
-              <span class="text-slate-500">長邊上限</span>
-              <select id="maxSide" class="border rounded px-2 py-1">
-                <option value="960">960（省空間）</option>
-                <option value="1280" selected>1280（LINE 建議）</option>
-                <option value="1600">1600（更清晰）</option>
-              </select>
-            </label>
-            <label class="flex flex-col gap-1">
-              <span class="text-slate-500">格式</span>
-              <select id="outFormat" class="border rounded px-2 py-1">
-                <option value="image/webp" selected>WebP（推薦）</option>
-                <option value="image/jpeg">JPEG</option>
-              </select>
-            </label>
-
-            <label class="flex flex-col gap-1 col-span-2">
-              <span class="text-slate-500">品質 <span id="qVal">0.82</span></span>
-              <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
-            </label>
-
-            <label class="flex items-center gap-2 col-span-2">
-              <input id="cropSquare" type="checkbox" class="scale-110">
-              <span class="text-slate-600">裁切正方形（常用）</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- 操作 -->
-        <div class="border rounded p-2 bg-slate-50">
-          <div class="text-xs font-bold text-slate-600 mb-2">操作</div>
-          <div class="flex flex-wrap gap-2">
-            <button class="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700" onclick="pickAndUpload()">上傳圖片到 R2</button>
-            <button class="px-3 py-2 rounded bg-gray-600 text-white text-sm hover:bg-gray-700" onclick="loadConfig()">讀取</button>
-            <button class="px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700" onclick="saveConfig()">儲存</button>
-            <button class="px-3 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700" onclick="clearAreas()">清空框</button>
-            <button class="px-3 py-2 rounded bg-black text-white text-sm hover:bg-slate-900" onclick="sendTestToMe()">送到我測試</button>
-          </div>
-          <div id="status" class="text-xs text-slate-500 mt-2">狀態：未初始化</div>
-
-          <div class="mt-3 border-t pt-3 text-xs text-slate-600 space-y-1">
-            <div>LIFF：<span id="liffState" class="font-bold">-</span></div>
-            <div>使用者：<span id="userName" class="font-bold">-</span></div>
-          </div>
-        </div>
-
-      </div>
+    <div class="px-4 pb-3 grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2">
+      <input id="workerUrl" class="border rounded px-3 py-2 bg-yellow-50 text-sm"
+        placeholder="Worker URL（https://xxx.workers.dev）" />
+      <input id="triggerKeyword" class="border rounded px-3 py-2 text-sm font-bold border-blue-500"
+        placeholder="觸發關鍵字（使用者輸入這句會出現這張圖）" />
     </div>
   </div>
 
-  <!-- Main: 左右可拉寬（splitter） -->
-  <div id="mainArea" class="p-4 pb-32" style="height:calc(100vh - 160px);">
-    <div class="bg-white rounded-xl shadow overflow-hidden h-full">
+  <!-- Main -->
+  <div class="p-4 pb-28" style="height:calc(100vh - 132px);">
+    <div class="bg-white rounded-2xl shadow overflow-hidden h-full">
       <div class="flex h-full">
 
-        <!-- Left Panel -->
-        <div id="leftPanel" class="w-[380px] min-w-[280px] max-w-[560px] border-r p-4 overflow-auto">
-          <div class="flex items-center justify-between mb-2">
-            <div class="font-bold text-slate-700">框框設定</div>
-            <div class="text-xs text-slate-500">可拖移/拉角縮放</div>
-          </div>
-          <div class="text-xs text-slate-500 mb-3">
-            每個框的「內容」＝點到時送出的文字（用來觸發你的自動回覆）
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-[400px] min-w-[280px] max-w-[600px] border-r bg-white overflow-auto">
+          <div class="p-3 border-b flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button id="collapseBtn" class="w-10 h-10 rounded-xl bg-slate-900 text-white hover:bg-black font-black">☰</button>
+              <div class="sidebar-hide">
+                <div class="font-bold text-slate-700">工具列</div>
+                <div class="text-[11px] text-slate-500">可收合｜裁切拖移｜Undo/Redo｜檔名</div>
+              </div>
+            </div>
+            <div class="sidebar-hide text-[11px] text-slate-500" id="status">狀態：未初始化</div>
           </div>
 
-          <div id="areaList" class="space-y-2"></div>
-          <div id="areaEmpty" class="text-xs text-slate-400">目前沒有框，去右邊圖片上拖曳畫框。</div>
+          <div class="p-3 space-y-3 sidebar-hide">
 
-          <div class="mt-4 border-t pt-3 grid grid-cols-2 gap-2">
-            <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreviewDrawer(true)">📱手機預覽</button>
-            <button id="fsBtn" class="px-3 py-2 rounded bg-white border text-slate-800 text-sm hover:bg-slate-50 font-bold" onclick="toggleFullscreenCanvas()">全螢幕編輯</button>
-          </div>
-          <div class="mt-2 text-[11px] text-slate-500">
-            提示：左側邊界可拖曳調整寬度（像 Canva 面板）
+            <!-- File meta -->
+            <div class="rounded-xl border bg-white p-3">
+              <div class="text-xs font-bold text-slate-700 mb-2">📝 檔案資訊（用來篩選/再編輯）</div>
+              <label class="text-xs text-slate-600">
+                檔案名稱
+                <input id="fileName" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm font-bold"
+                  placeholder="例如：2026-02-飲食菜單_彈窗熱區" />
+              </label>
+              <div class="mt-2 text-[11px] text-slate-500">
+                會存到 payload.meta.name，之後 lab_dashboard 可以用它篩選。
+              </div>
+            </div>
+
+            <!-- LIFF info -->
+            <div class="rounded-xl border bg-slate-50 p-3">
+              <div class="text-xs font-bold text-slate-700 mb-2">LIFF / 使用者</div>
+              <div class="text-xs text-slate-600 space-y-1">
+                <div>LIFF：<span id="liffState" class="font-bold">-</span></div>
+                <div>使用者：<span id="userName" class="font-bold">-</span></div>
+              </div>
+            </div>
+
+            <!-- Crop mode -->
+            <div class="rounded-xl border bg-white p-3">
+              <div class="text-xs font-bold text-slate-700 mb-2">🖼️ LINE 底框 / 裁切拖移</div>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <label class="flex items-center gap-2 col-span-2">
+                  <input id="cropEnabled" type="checkbox" class="scale-110">
+                  <span class="text-slate-700 font-bold">啟用裁切模式（圖片超過底框可拖移）</span>
+                </label>
+
+                <label class="flex flex-col gap-1">
+                  <span class="text-slate-500">底框長邊上限</span>
+                  <select id="maxSide" class="border rounded-lg px-2 py-2">
+                    <option value="960">960</option>
+                    <option value="1280" selected>1280（LINE 建議）</option>
+                    <option value="1600">1600</option>
+                  </select>
+                </label>
+
+                <label class="flex flex-col gap-1">
+                  <span class="text-slate-500">底框比例</span>
+                  <select id="frameAspect" class="border rounded-lg px-2 py-2">
+                    <option value="square" selected>1:1 正方形（最常用）</option>
+                    <option value="orig">跟原圖比例（只縮放不裁切）</option>
+                    <option value="16:9">16:9（橫幅）</option>
+                    <option value="4:5">4:5（貼文常用）</option>
+                  </select>
+                </label>
+
+                <label class="flex flex-col gap-1 col-span-2">
+                  <span class="text-slate-500">裁切輸出提示</span>
+                  <div class="text-[11px] text-slate-600 bg-slate-50 border rounded-lg p-2">
+                    開啟後，右側會出現「LINE 底框」，你可以直接拖圖片決定裁切位置。<br>
+                    儲存時會先產生裁切後的新圖（不需要你自己裁）。
+                  </div>
+                </label>
+
+                <button class="col-span-2 text-xs px-3 py-2 rounded-lg bg-white border hover:bg-slate-50 font-bold"
+                  onclick="resetCrop()">重置裁切位置</button>
+              </div>
+
+              <div class="mt-3 rounded-lg bg-slate-50 border p-2 text-[11px] text-slate-700">
+                <div class="font-bold mb-1">尺寸檢查</div>
+                <div id="sizeInfo" class="text-slate-600">尚未載入圖片</div>
+              </div>
+            </div>
+
+            <!-- Compress -->
+            <div class="rounded-xl border bg-white p-3">
+              <div class="text-xs font-bold text-slate-700 mb-2">🧩 上傳壓縮</div>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <label class="flex flex-col gap-1">
+                  <span class="text-slate-500">格式</span>
+                  <select id="outFormat" class="border rounded-lg px-2 py-2">
+                    <option value="image/webp" selected>WebP（推薦）</option>
+                    <option value="image/jpeg">JPEG</option>
+                  </select>
+                </label>
+
+                <label class="flex items-center gap-2 col-span-1">
+                  <input id="cropSquareUpload" type="checkbox" class="scale-110">
+                  <span class="text-slate-600">上傳先裁切正方形</span>
+                </label>
+
+                <label class="flex flex-col gap-1 col-span-2">
+                  <span class="text-slate-500">品質 <span id="qVal">0.82</span></span>
+                  <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
+                </label>
+              </div>
+            </div>
+
+            <!-- Zoom -->
+            <div class="rounded-xl border bg-white p-3">
+              <div class="text-xs font-bold text-slate-700 mb-2">🔎 縮放 / 視圖</div>
+              <div class="flex items-center gap-2">
+                <button class="text-xs bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-black font-bold"
+                  onclick="zoomBy(-0.1)">-</button>
+                <input id="zoomRange" type="range" min="0.3" max="4" step="0.01" value="1" class="w-full">
+                <button class="text-xs bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-black font-bold"
+                  onclick="zoomBy(0.1)">+</button>
+                <div class="text-xs font-black w-14 text-right" id="zoomLabel">100%</div>
+              </div>
+              <div class="mt-2 grid grid-cols-3 gap-2">
+                <button class="text-xs bg-white border px-3 py-2 rounded-lg hover:bg-slate-50 font-bold"
+                  onclick="setZoom(1)">100%</button>
+                <button class="text-xs bg-white border px-3 py-2 rounded-lg hover:bg-slate-50 font-bold"
+                  onclick="fitToView()">Fit</button>
+                <button class="text-xs bg-white border px-3 py-2 rounded-lg hover:bg-slate-50 font-bold"
+                  onclick="centerView()">置中</button>
+              </div>
+              <div class="mt-2 text-[11px] text-slate-500">
+                平移：按住 <b>空白鍵</b> + 拖曳｜縮放：<b>Ctrl/Alt/Shift</b> + 滾輪
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="rounded-xl border bg-white p-3">
+              <div class="text-xs font-bold text-slate-700 mb-2">⚙️ 操作</div>
+              <div class="grid grid-cols-2 gap-2">
+                <button class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 font-bold"
+                  onclick="pickAndUpload()">上傳到 R2</button>
+                <button class="px-3 py-2 rounded-lg bg-gray-600 text-white text-sm hover:bg-gray-700 font-bold"
+                  onclick="loadConfig()">讀取</button>
+                <button class="px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 font-bold"
+                  onclick="saveConfig()">儲存</button>
+                <button class="px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 font-bold"
+                  onclick="clearAreas()">清空框</button>
+              </div>
+              <button class="mt-2 w-full px-3 py-2 rounded-lg bg-black text-white text-sm hover:bg-slate-900 font-bold"
+                onclick="sendTestToMe()">送到我測試</button>
+
+              <div class="mt-2 text-[11px] text-slate-500">
+                Undo：Ctrl+Z｜Redo：Ctrl+Y 或 Ctrl+Shift+Z
+              </div>
+            </div>
+
+            <!-- Areas -->
+            <div class="rounded-xl border bg-white p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-xs font-bold text-slate-700">🟥 框框設定</div>
+                <div class="text-[11px] text-slate-500">Delete 可刪選取框</div>
+              </div>
+              <div class="text-[11px] text-slate-500 mb-3">
+                每個框的「內容」＝點到時送出的文字（觸發你的自動回覆）
+              </div>
+              <div id="areaList" class="space-y-2"></div>
+              <div id="areaEmpty" class="text-xs text-slate-400">目前沒有框，去右邊圖片上拖曳畫框。</div>
+            </div>
           </div>
         </div>
 
-        <!-- Splitter -->
-        <div id="splitter" class="w-2 cursor-col-resize bg-slate-100 hover:bg-slate-200"></div>
-
-        <!-- Right Canvas -->
-        <div id="rightPanel" class="flex-1 flex flex-col">
-          <div class="p-2 bg-slate-50 border-b text-xs text-slate-600 flex items-center justify-between">
-            <div>✅ 拖曳畫框（新增）｜選取框後可拖移/拉角縮放｜Delete 可刪除選取框</div>
-            <button class="text-[11px] px-2 py-1 rounded bg-white border hover:bg-slate-50" onclick="setZoom(1)">重置 100%</button>
-          </div>
-
-          <div id="canvasWrap" class="relative flex-1 overflow-auto bg-gray-100">
-            <div id="stage" class="inline-block">
-              <img id="preview" class="block pointer-events-none select-none" style="max-width:none;" alt="">
-              <div id="drawLayer"></div>
+        <!-- Canvas -->
+        <div class="flex-1 flex flex-col">
+          <div class="px-4 py-2 bg-slate-50 border-b text-xs text-slate-700 flex items-center justify-between">
+            <div>拖曳新增框｜選取框可拖移/拉角縮放｜裁切模式：拖圖片決定裁切位置</div>
+            <div class="flex items-center gap-2">
+              <button class="text-[11px] px-3 py-1.5 rounded-lg bg-white border hover:bg-slate-50 font-bold"
+                onclick="setZoom(1)">100%</button>
+              <button class="text-[11px] px-3 py-1.5 rounded-lg bg-white border hover:bg-slate-50 font-bold"
+                onclick="fitToView()">Fit</button>
             </div>
           </div>
 
-          <div class="p-3 bg-gray-50 text-center text-xs text-gray-600">
-            新增框：拖曳｜平移：空白鍵拖曳｜縮放：Ctrl/Alt/Shift + 滾輪
+          <div id="canvasWrap" class="relative flex-1 overflow-auto workbench">
+            <div class="min-w-full min-h-full flex items-center justify-center p-10">
+              <div id="stage" class="relative inline-block">
+
+                <!-- crop frame (only when enabled) -->
+                <div id="cropFrame" class="crop-wrap hidden">
+                  <img id="cropImg" class="crop-img" alt="">
+                  <div id="cropLayer" class="absolute inset-0"></div>
+                  <div class="line-frame">
+                    <div class="tag" id="lineFrameTag">LINE 底框</div>
+                  </div>
+                </div>
+
+                <!-- normal mode -->
+                <div id="normalFrame" class="relative">
+                  <div id="lineFrameNormal" class="line-frame hidden">
+                    <div class="tag" id="lineFrameTagNormal">LINE 建議範圍</div>
+                  </div>
+                  <img id="preview" class="block pointer-events-none select-none" style="max-width:none;" alt="">
+                  <div id="drawLayer"></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="px-4 py-3 bg-gray-50 text-center text-xs text-gray-600">
+            右側是 Canva 工作區。裁切模式下，熱區座標以「底框」為基準（最符合你的需求）。
           </div>
         </div>
 
@@ -234,8 +368,8 @@
   <input type="file" id="fileInput" accept="image/*" hidden>
 
   <!-- Preview Drawer -->
-  <div id="drawerOverlay" class="fixed inset-0 bg-black/40 hidden z-30" onclick="togglePreviewDrawer(false)"></div>
-  <div id="previewDrawer" class="fixed left-0 right-0 bottom-0 z-40 translate-y-full transition-transform duration-300 ease-out">
+  <div id="drawerOverlay" class="fixed inset-0 bg-black/40 hidden z-40" onclick="togglePreviewDrawer(false)"></div>
+  <div id="previewDrawer" class="fixed left-0 right-0 bottom-0 z-50 translate-y-full transition-transform duration-300 ease-out">
     <div class="mx-auto max-w-4xl">
       <div class="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
         <div class="flex items-center justify-between px-4 py-3 border-b">
@@ -256,33 +390,34 @@
               <div class="rounded-[20px] bg-white overflow-hidden">
                 <div class="bg-slate-100 text-xs text-slate-600 px-3 py-2 border-b flex items-center justify-between">
                   <span>LINE 聊天內尺寸感</span>
-                  <button class="text-[11px] px-2 py-1 rounded bg-white border hover:bg-slate-50" onclick="sendPreviewToMe()">直接送到我測試</button>
+                  <button class="text-[11px] px-2 py-1 rounded bg-white border hover:bg-slate-50"
+                          onclick="sendPreviewToMe()">直接送到我測試</button>
                 </div>
 
                 <div class="p-3">
                   <div class="mx-auto w-[320px] max-w-full">
                     <div class="text-[11px] text-slate-500 mb-2">點熱區會提示送出的關鍵字（模擬點選）</div>
-
                     <div class="relative rounded-lg overflow-hidden border bg-white">
-                      <img id="phoneImg" class="w-full h-[220px] object-cover bg-gray-100">
+                      <img id="phoneImg" class="w-full h-[220px] object-cover bg-gray-100" alt="">
                       <div id="phoneHotspots" class="absolute inset-0"></div>
                     </div>
-
-                    <div class="mt-2 text-[11px] text-slate-500">* 這是預覽「聊天泡泡寬度感」，實際會因手機略有差異</div>
+                    <div class="mt-2 text-[11px] text-slate-500">* 實際會因手機略有差異</div>
                   </div>
                 </div>
               </div>
             </div>
 
             <div class="mt-3 flex gap-2">
-              <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreviewDrawer(false)">收起預覽</button>
-              <button class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700" onclick="refreshPhonePreview()">重新渲染</button>
+              <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
+                onclick="togglePreviewDrawer(false)">收起預覽</button>
+              <button class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                onclick="refreshPhonePreview()">重新渲染</button>
             </div>
           </div>
         </div>
 
         <div class="px-4 py-3 bg-white border-t text-xs text-slate-500">
-          提示：你畫框或改文字後，預覽會自動更新；如果沒更新就按「重新渲染」。
+          提示：你畫框/改文字/移動裁切後，預覽會自動更新。
         </div>
       </div>
     </div>
@@ -294,23 +429,105 @@ const LIFF_ID = "2009037126-AD8Dolxb";
 /* ======================================================= */
 
 const $ = (id) => document.getElementById(id);
+
 let isReady = false;
 
-let config = { imageUrl: "", areas: [] }; // 0~1 normalized
-let ZOOM = 1;
+// 核心資料：areas 以「編輯座標系」0~1 存（裁切模式時=底框座標系；非裁切模式時=原圖座標系）
+let state = {
+  imageUrl: "",
+  areas: [],          // [{x,y,w,h,text}]
+  crop: {             // 裁切模式狀態（底框視窗）
+    enabled: false,
+    frameW: 1280,
+    frameH: 1280,
+    scale: 1,         // cover scale applied to original image
+    tx: 0,            // translate (px) of image inside frame
+    ty: 0
+  },
+  meta: { name: "" }
+};
 
+let ZOOM = 1;
 let selectedIndex = -1;
 
-// 空白鍵平移
-let spaceDown = false;
+/* ------------------- Undo/Redo ------------------- */
+let history = [];
+let historyIndex = -1;
+let historyLock = false;
 
-// splitter
-let splitting = false;
+function cloneDeep(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-// fullscreen
-let canvasFullscreen = false;
+function pushHistory(reason=""){
+  if(historyLock) return;
+  const snap = cloneDeep({ state, selectedIndex });
+  if(historyIndex >= 0){
+    const prev = history[historyIndex];
+    // 避免連續完全相同
+    if(JSON.stringify(prev) === JSON.stringify(snap)) return;
+  }
+  history = history.slice(0, historyIndex + 1);
+  history.push(snap);
+  historyIndex = history.length - 1;
+}
 
-/* ---------- utils ---------- */
+function applyHistorySnap(snap){
+  historyLock = true;
+  state = cloneDeep(snap.state);
+  selectedIndex = snap.selectedIndex;
+
+  $("fileName").value = state.meta?.name || "";
+  $("cropEnabled").checked = !!state.crop?.enabled;
+
+  // render view
+  if(state.imageUrl){
+    if(state.crop.enabled){
+      enterCropMode(true);
+      $("cropImg").src = state.imageUrl;
+    }else{
+      exitCropMode(true);
+      $("preview").src = state.imageUrl;
+    }
+  }else{
+    exitCropMode(true);
+    $("preview").src = "";
+    $("cropImg").src = "";
+  }
+
+  renderAreas();
+  renderAreaList();
+  refreshPhonePreview();
+  updateSizeInfo();
+
+  historyLock = false;
+}
+
+function undo(){
+  if(historyIndex <= 0) return;
+  historyIndex--;
+  applyHistorySnap(history[historyIndex]);
+}
+function redo(){
+  if(historyIndex >= history.length - 1) return;
+  historyIndex++;
+  applyHistorySnap(history[historyIndex]);
+}
+
+/* Key binds: Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z */
+window.addEventListener("keydown", (e) => {
+  const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
+  const mod = isMac ? e.metaKey : e.ctrlKey;
+
+  if(mod && e.key.toLowerCase() === "z" && !e.shiftKey){
+    e.preventDefault();
+    undo();
+  }
+  if((mod && e.key.toLowerCase() === "y") || (mod && e.key.toLowerCase() === "z" && e.shiftKey)){
+    e.preventDefault();
+    redo();
+  }
+});
+
+/* ------------------- Utils ------------------- */
 function normalizeWorkerUrl(raw){
   if(!raw) return "";
   let s = raw.trim();
@@ -318,6 +535,8 @@ function normalizeWorkerUrl(raw){
   return s.replace(/\/+$/,'');
 }
 function setStatus(msg){ $("status").textContent = "狀態：" + msg; }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function clamp01(v){ return clamp(v,0,1); }
 
 async function postJSON(url, data){
   const res = await fetch(url, {
@@ -346,35 +565,23 @@ async function uploadToR2(workerBaseUrl, fileBlob, filename){
   return j.url;
 }
 
-function clamp01(v){ return Math.max(0, Math.min(1, v)); }
-
-/* ---------- header collapse + main height ---------- */
-const topBar = $("topBar");
-const topBarBody = $("topBarBody");
-const toggleBarBtn = $("toggleBarBtn");
-const mainArea = $("mainArea");
-let barCollapsed = false;
-
-toggleBarBtn.onclick = () => {
-  barCollapsed = !barCollapsed;
-  topBarBody.classList.toggle("hidden", barCollapsed);
-  toggleBarBtn.textContent = barCollapsed ? "展開" : "收合";
-  syncMainHeight();
+/* ------------------- Sidebar collapse ------------------- */
+const sidebar = $("sidebar");
+let sidebarCollapsed = false;
+$("collapseBtn").onclick = () => {
+  sidebarCollapsed = !sidebarCollapsed;
+  sidebar.classList.toggle("sidebar-collapsed", sidebarCollapsed);
+  $("collapseBtn").textContent = sidebarCollapsed ? "⫶" : "☰";
 };
-function syncMainHeight(){
-  const h = topBar.getBoundingClientRect().height;
-  mainArea.style.height = `calc(100vh - ${Math.ceil(h)}px)`;
-}
-window.addEventListener("resize", () => {
-  syncMainHeight();
-  if(config.imageUrl) fitToView(false); // resize時稍微貼合
-});
 
-/* ---------- zoom ---------- */
+/* ------------------- Zoom & Pan ------------------- */
 const stage = $("stage");
 const canvasWrap = $("canvasWrap");
 const zoomRange = $("zoomRange");
 const zoomLabel = $("zoomLabel");
+
+let spaceDown = false;
+let panDown = false, panSX=0, panSY=0, panScrollL=0, panScrollT=0;
 
 function applyZoom(){
   stage.style.transform = `scale(${ZOOM})`;
@@ -382,50 +589,48 @@ function applyZoom(){
   zoomLabel.textContent = Math.round(ZOOM * 100) + "%";
 }
 function setZoom(v){
-  ZOOM = Math.max(0.3, Math.min(4, Number(v) || 1));
+  ZOOM = clamp(Number(v)||1, 0.3, 4);
   applyZoom();
 }
-function zoomBy(delta){
-  setZoom((ZOOM + delta).toFixed(2));
-}
+function zoomBy(delta){ setZoom((ZOOM + delta).toFixed(2)); }
+
 zoomRange.addEventListener("input", () => setZoom(zoomRange.value));
 
 canvasWrap.addEventListener("wheel", (e) => {
   if(!(e.ctrlKey || e.altKey || e.shiftKey)) return;
   e.preventDefault();
-  const delta = e.deltaY > 0 ? -0.10 : 0.10;
-  zoomBy(delta);
+  zoomBy(e.deltaY > 0 ? -0.10 : 0.10);
 }, { passive:false });
 
 function centerView(){
-  // 置中：滾動到中央
-  const r = stage.getBoundingClientRect();
-  canvasWrap.scrollLeft = Math.max(0, (stage.offsetWidth * ZOOM - canvasWrap.clientWidth) / 2);
-  canvasWrap.scrollTop  = Math.max(0, (stage.offsetHeight * ZOOM - canvasWrap.clientHeight) / 2);
+  const el = state.crop.enabled ? $("cropFrame") : $("preview");
+  const w = state.crop.enabled ? state.crop.frameW : (el.naturalWidth||0);
+  const h = state.crop.enabled ? state.crop.frameH : (el.naturalHeight||0);
+  if(!w || !h) return;
+
+  const cw = canvasWrap.clientWidth;
+  const ch = canvasWrap.clientHeight;
+  const sw = w * ZOOM;
+  const sh = h * ZOOM;
+  canvasWrap.scrollLeft = Math.max(0, (sw - cw) / 2);
+  canvasWrap.scrollTop  = Math.max(0, (sh - ch) / 2);
 }
 
-function fitToView(alsoCenter=true){
-  if(!config.imageUrl) return;
-  const img = $("preview");
-  const w = img.naturalWidth || img.width || 1;
-  const h = img.naturalHeight || img.height || 1;
+function fitToView(){
+  const w = state.crop.enabled ? state.crop.frameW : ($("preview").naturalWidth||0);
+  const h = state.crop.enabled ? state.crop.frameH : ($("preview").naturalHeight||0);
+  if(!w || !h) return;
 
-  // 預留一點邊距
-  const margin = 40;
-  const vw = Math.max(200, canvasWrap.clientWidth - margin);
-  const vh = Math.max(200, canvasWrap.clientHeight - margin);
-
+  const padding = 160;
+  const vw = Math.max(200, canvasWrap.clientWidth - padding);
+  const vh = Math.max(200, canvasWrap.clientHeight - padding);
   const z = Math.min(vw / w, vh / h);
   setZoom(z.toFixed(2));
-  if(alsoCenter) requestAnimationFrame(() => centerView());
+  requestAnimationFrame(() => centerView());
 }
 
-/* ---------- pan (space + drag scroll) ---------- */
-let panDown = false, panSX=0, panSY=0, panScrollL=0, panScrollT=0;
+function setPanningUI(on){ canvasWrap.classList.toggle("panning", on); }
 
-function setPanningUI(on){
-  canvasWrap.classList.toggle("panning", on);
-}
 window.addEventListener("keydown", (e) => {
   if(e.code === "Space" && !spaceDown){
     spaceDown = true;
@@ -434,11 +639,10 @@ window.addEventListener("keydown", (e) => {
   if(e.key === "Delete" || e.key === "Backspace"){
     if(selectedIndex >= 0){
       if(confirm(`刪除框 ${selectedIndex+1}？`)){
-        config.areas.splice(selectedIndex,1);
+        state.areas.splice(selectedIndex,1);
         selectedIndex = -1;
-        renderAreas();
-        renderAreaList();
-        refreshPhonePreview();
+        pushHistory("delete-area");
+        renderAreas(); renderAreaList(); refreshPhonePreview();
       }
     }
   }
@@ -460,7 +664,6 @@ canvasWrap.addEventListener("mousedown", (e) => {
   panScrollT = canvasWrap.scrollTop;
   e.preventDefault();
 });
-
 window.addEventListener("mousemove", (e) => {
   if(!panDown) return;
   const dx = e.clientX - panSX;
@@ -468,67 +671,19 @@ window.addEventListener("mousemove", (e) => {
   canvasWrap.scrollLeft = panScrollL - dx;
   canvasWrap.scrollTop  = panScrollT - dy;
 });
+window.addEventListener("mouseup", () => { panDown = false; });
 
-window.addEventListener("mouseup", () => {
-  panDown = false;
-});
-
-/* ---------- splitter (resize left panel) ---------- */
-const leftPanel = $("leftPanel");
-const splitter = $("splitter");
-
-splitter.addEventListener("mousedown", (e) => {
-  splitting = true;
-  document.body.style.userSelect = "none";
-});
-window.addEventListener("mousemove", (e) => {
-  if(!splitting) return;
-  const rect = mainArea.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const w = Math.max(280, Math.min(560, x));
-  leftPanel.style.width = w + "px";
-});
-window.addEventListener("mouseup", () => {
-  splitting = false;
-  document.body.style.userSelect = "";
-});
-
-/* ---------- fullscreen canvas ---------- */
-function toggleFullscreenCanvas(){
-  canvasFullscreen = !canvasFullscreen;
-  const container = mainArea.querySelector(".bg-white.rounded-xl.shadow");
-  const btn = $("fsBtn");
-
-  if(canvasFullscreen){
-    container.classList.add("fs");
-    container.style.height = "100vh";
-    mainArea.style.padding = "0px";
-    btn.textContent = "退出全螢幕";
-  }else{
-    container.classList.remove("fs");
-    container.style.height = "";
-    mainArea.style.padding = "1rem";
-    btn.textContent = "全螢幕編輯";
-    syncMainHeight();
-  }
-
-  // 全螢幕切換後，重算 fit
-  setTimeout(() => {
-    if(config.imageUrl) fitToView();
-  }, 50);
-}
-
-/* ---------- compress ---------- */
+/* ------------------- Upload compress ------------------- */
 $("quality").addEventListener("input", () => $("qVal").textContent = $("quality").value);
 
 async function compressImage(file, {maxSide, mime, quality, cropSquare}){
   const img = await createImageBitmap(file);
+  let sx=0, sy=0, sw=img.width, sh=img.height;
 
-  let sx = 0, sy = 0, sw = img.width, sh = img.height;
   if(cropSquare){
     const side = Math.min(img.width, img.height);
-    sx = Math.floor((img.width - side) / 2);
-    sy = Math.floor((img.height - side) / 2);
+    sx = Math.floor((img.width - side)/2);
+    sy = Math.floor((img.height - side)/2);
     sw = side; sh = side;
   }
 
@@ -539,261 +694,463 @@ async function compressImage(file, {maxSide, mime, quality, cropSquare}){
 
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext("2d", { alpha: true });
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+  const ctx = canvas.getContext("2d", { alpha:true });
+  ctx.drawImage(img, sx, sy, sw, sh, 0,0,w,h);
 
   const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
   if(!outBlob) throw new Error("壓縮失敗（toBlob 空）");
 
   const ext = (mime === "image/webp") ? "webp" : "jpg";
   const safeName = (file.name || "image").replace(/\.[^/.]+$/, "");
-  return { blob: outBlob, filename: `${safeName}.${ext}` };
+  return { blob: outBlob, filename: `${safeName}.${ext}`, w, h };
 }
 
-/* ---------- draw + edit rectangles (move/resize like canva) ---------- */
-const layer = $("drawLayer");
-let isDrawing = false;
-let drawSX = 0, drawSY = 0;
-let previewRect = null;
+/* ------------------- Crop mode logic ------------------- */
+function getFrameSize(origW, origH){
+  const maxSide = parseInt($("maxSide").value,10) || 1280;
+  const aspect = $("frameAspect").value;
 
-let dragMode = null; // "move" or handle key
-let dragIndex = -1;
-let dragStart = null;
+  if(aspect === "orig"){
+    const long = Math.max(origW, origH);
+    const scale = Math.min(1, maxSide / long);
+    return { frameW: Math.round(origW * scale), frameH: Math.round(origH * scale) };
+  }
+  if(aspect === "16:9") return { frameW: maxSide, frameH: Math.round(maxSide * 9/16) };
+  if(aspect === "4:5")  return { frameW: Math.round(maxSide * 4/5), frameH: maxSide };
+  return { frameW: maxSide, frameH: maxSide }; // square
+}
 
-function getLayerPoint(e){
+function enterCropMode(skipHistory=false){
+  state.crop.enabled = true;
+  $("cropFrame").classList.remove("hidden");
+  $("normalFrame").classList.add("hidden");
+  $("lineFrameNormal").classList.add("hidden");
+  $("lineFrameTag").textContent = `LINE 底框（輸出）`;
+  if(!skipHistory) pushHistory("crop-on");
+}
+
+function exitCropMode(skipHistory=false){
+  state.crop.enabled = false;
+  $("cropFrame").classList.add("hidden");
+  $("normalFrame").classList.remove("hidden");
+  if(!skipHistory) pushHistory("crop-off");
+}
+
+$("cropEnabled").addEventListener("change", () => {
+  const on = $("cropEnabled").checked;
+  if(!state.imageUrl){
+    $("cropEnabled").checked = false;
+    return alert("請先上傳圖片或讀取資料");
+  }
+  if(on){
+    enterCropMode();
+    setupCropFromImage(); // recalc
+  }else{
+    exitCropMode();
+    // 切回正常模式：圖片顯示原圖（不改 URL），熱區仍保留（座標系不同時，建議你固定用裁切模式做這類功能）
+    $("preview").src = state.imageUrl;
+    renderAreas(); renderAreaList(); refreshPhonePreview();
+  }
+  fitToView();
+});
+
+$("frameAspect").addEventListener("change", () => {
+  if(!state.imageUrl) return;
+  if(state.crop.enabled){
+    setupCropFromImage(true);
+    pushHistory("crop-aspect");
+    renderAreas(); renderAreaList(); refreshPhonePreview();
+    fitToView();
+  }else{
+    updateSizeInfo();
+  }
+});
+
+$("maxSide").addEventListener("change", () => {
+  if(!state.imageUrl) return;
+  if(state.crop.enabled){
+    setupCropFromImage(true);
+    pushHistory("crop-maxside");
+    renderAreas(); renderAreaList(); refreshPhonePreview();
+    fitToView();
+  }
+  updateSizeInfo();
+});
+
+function resetCrop(){
+  if(!state.imageUrl || !state.crop.enabled) return;
+  setupCropFromImage(true, true);
+  pushHistory("crop-reset");
+  renderAreas(); renderAreaList(); refreshPhonePreview();
+}
+
+async function setupCropFromImage(keepPosition=false, forceCenter=false){
+  // load image to get natural size
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = state.imageUrl;
+  await img.decode().catch(()=>{});
+
+  const origW = img.naturalWidth || 0;
+  const origH = img.naturalHeight || 0;
+  if(!origW || !origH) return;
+
+  const { frameW, frameH } = getFrameSize(origW, origH);
+  state.crop.frameW = frameW;
+  state.crop.frameH = frameH;
+
+  // compute cover scale for cropping modes (except orig which is just fit scale)
+  let scale = 1;
+  if($("frameAspect").value === "orig"){
+    // no cropping, only scale down to fit frame
+    scale = frameW / origW; // (same as frameH/origH)
+  }else{
+    scale = Math.max(frameW / origW, frameH / origH);
+  }
+  state.crop.scale = scale;
+
+  // init translate so image centered in frame
+  const imgW = origW * scale;
+  const imgH = origH * scale;
+
+  const minTX = frameW - imgW;
+  const minTY = frameH - imgH;
+  const maxTX = 0;
+  const maxTY = 0;
+
+  if(!keepPosition || forceCenter){
+    state.crop.tx = Math.round((frameW - imgW)/2);
+    state.crop.ty = Math.round((frameH - imgH)/2);
+  }else{
+    state.crop.tx = clamp(state.crop.tx, minTX, maxTX);
+    state.crop.ty = clamp(state.crop.ty, minTY, maxTY);
+  }
+
+  // set DOM size
+  const cropFrame = $("cropFrame");
+  cropFrame.style.width = frameW + "px";
+  cropFrame.style.height = frameH + "px";
+
+  const cropImg = $("cropImg");
+  cropImg.style.width = imgW + "px";
+  cropImg.style.height = imgH + "px";
+  cropImg.style.transform = `translate(${state.crop.tx}px, ${state.crop.ty}px)`;
+
+  // layer coordinate system should match frame
+  const cropLayer = $("cropLayer");
+  cropLayer.style.width = frameW + "px";
+  cropLayer.style.height = frameH + "px";
+
+  updateSizeInfo(origW, origH);
+}
+
+/* drag image inside crop frame */
+let cropDragging = false;
+let cropStart = null;
+
+$("cropImg").addEventListener("mousedown", (e) => {
+  if(!state.crop.enabled) return;
+  cropDragging = true;
+  cropStart = { x: e.clientX, y: e.clientY, tx: state.crop.tx, ty: state.crop.ty };
+  e.preventDefault();
+});
+window.addEventListener("mousemove", (e) => {
+  if(!cropDragging || !cropStart) return;
+  const dx = e.clientX - cropStart.x;
+  const dy = e.clientY - cropStart.y;
+
+  // bounds
+  const frameW = state.crop.frameW;
+  const frameH = state.crop.frameH;
+  const imgEl = $("cropImg");
+  const imgW = parseFloat(imgEl.style.width) || 0;
+  const imgH = parseFloat(imgEl.style.height) || 0;
+
+  const minTX = frameW - imgW;
+  const minTY = frameH - imgH;
+  const maxTX = 0;
+  const maxTY = 0;
+
+  state.crop.tx = clamp(cropStart.tx + dx, minTX, maxTX);
+  state.crop.ty = clamp(cropStart.ty + dy, minTY, maxTY);
+
+  imgEl.style.transform = `translate(${state.crop.tx}px, ${state.crop.ty}px)`;
+
+  // 熱區是畫在 cropLayer 上，不受圖片移動影響（正確）
+  refreshPhonePreview();
+});
+window.addEventListener("mouseup", () => {
+  if(cropDragging){
+    cropDragging = false;
+    cropStart = null;
+    pushHistory("crop-move");
+  }
+});
+
+/* ------------------- Size info ------------------- */
+function updateSizeInfo(origW=null, origH=null){
+  const maxSide = parseInt($("maxSide").value,10) || 1280;
+
+  // If known orig size
+  if(origW && origH){
+    const longSide = Math.max(origW, origH);
+    const ok = longSide <= maxSide;
+    $("sizeInfo").innerHTML = `
+      原圖：<b>${origW}</b> × <b>${origH}</b>（長邊：<b>${longSide}</b>）<br>
+      底框上限：<b>${maxSide}</b> → ${ok ? `<span class="text-green-700 font-bold">OK</span>` : `<span class="text-red-700 font-black">超過（建議開裁切模式或重新上傳壓縮）</span>`}
+      ${state.crop.enabled ? `<br>輸出底框：<b>${state.crop.frameW}</b> × <b>${state.crop.frameH}</b>` : ""}
+    `;
+    return;
+  }
+
+  // fallback by DOM
+  const img = state.crop.enabled ? $("cropImg") : $("preview");
+  const w = state.crop.enabled ? state.crop.frameW : (img.naturalWidth||0);
+  const h = state.crop.enabled ? state.crop.frameH : (img.naturalHeight||0);
+  if(!w || !h){
+    $("sizeInfo").textContent = "尚未載入圖片";
+    return;
+  }
+  const longSide = Math.max(w,h);
+  const ok = longSide <= maxSide;
+  $("sizeInfo").innerHTML = `
+    目前：<b>${w}</b> × <b>${h}</b>（長邊：<b>${longSide}</b>）<br>
+    底框上限：<b>${maxSide}</b> → ${ok ? `<span class="text-green-700 font-bold">OK</span>` : `<span class="text-red-700 font-black">超過</span>`}
+  `;
+}
+
+/* ------------------- Drawing hotspots (two layers) ------------------- */
+const drawLayer = $("drawLayer");
+const cropLayer = $("cropLayer");
+
+function currentLayer(){
+  return state.crop.enabled ? cropLayer : drawLayer;
+}
+function currentBaseSize(){
+  if(state.crop.enabled){
+    return { w: state.crop.frameW, h: state.crop.frameH };
+  }
+  const img = $("preview");
+  return { w: img.naturalWidth||0, h: img.naturalHeight||0 };
+}
+
+function layerPoint(e){
+  const layer = currentLayer();
   const rect = layer.getBoundingClientRect();
-  // layer的 bbox 已經被 zoom 放大，所以要除以 zoom 得到「原尺寸座標」
+  // 注意：layer 跟 stage 一起被 scale(ZOOM)，所以要除以 ZOOM 回到座標系
   const x = (e.clientX - rect.left) / ZOOM;
   const y = (e.clientY - rect.top) / ZOOM;
   return { x, y, rect };
 }
-
-function toNorm(x, y){
-  const baseW = layer.clientWidth;
-  const baseH = layer.clientHeight;
-  return { nx: x / baseW, ny: y / baseH };
+function toNormXY(x,y){
+  const { w, h } = currentBaseSize();
+  return { nx: x / w, ny: y / h };
 }
-function fromNorm(n){
-  const baseW = layer.clientWidth;
-  const baseH = layer.clientHeight;
-  return { x: n.x * baseW, y: n.y * baseH, w: n.w * baseW, h: n.h * baseH };
+function fromNormBox(a){
+  const { w, h } = currentBaseSize();
+  return { x: a.x*w, y: a.y*h, w: a.w*w, h: a.h*h };
 }
 
-layer.addEventListener("mousedown", (e) => {
-  if(spaceDown) return; // 平移優先
-  if(!config.imageUrl) return alert("請先上傳圖片");
+/* draw new box */
+let isDrawing = false;
+let drawSX=0, drawSY=0;
+let previewRect = null;
 
-  // 如果點到空白，開始「新增畫框」
-  if(e.target === layer){
-    selectedIndex = -1;
-    renderAreas();
-    renderAreaList();
-    refreshPhonePreview();
+/* drag/resize box */
+let dragMode = null;
+let dragIndex = -1;
+let dragStart = null;
 
-    const p = getLayerPoint(e);
-    isDrawing = true;
-    drawSX = p.x; drawSY = p.y;
-
-    previewRect = document.createElement("div");
-    previewRect.className = "draw-rect";
-    previewRect.style.left = drawSX + "px";
-    previewRect.style.top = drawSY + "px";
-    previewRect.style.width = "0px";
-    previewRect.style.height = "0px";
-    layer.appendChild(previewRect);
-  }
-});
-
-layer.addEventListener("mousemove", (e) => {
-  // 新增畫框
-  if(isDrawing && previewRect){
-    const p = getLayerPoint(e);
-    const cx = p.x, cy = p.y;
-
-    const x = Math.min(drawSX, cx);
-    const y = Math.min(drawSY, cy);
-    const w = Math.abs(cx - drawSX);
-    const h = Math.abs(cy - drawSY);
-
-    previewRect.style.left = x + "px";
-    previewRect.style.top = y + "px";
-    previewRect.style.width = w + "px";
-    previewRect.style.height = h + "px";
-  }
-
-  // 移動/縮放
-  if(dragMode && dragIndex >= 0 && dragStart){
-    const p = getLayerPoint(e);
-    const dx = p.x - dragStart.px;
-    const dy = p.y - dragStart.py;
-
-    const a = config.areas[dragIndex];
-    const base = fromNorm(dragStart.base);
-
-    let x = base.x, y = base.y, w = base.w, h = base.h;
-
-    if(dragMode === "move"){
-      x = base.x + dx;
-      y = base.y + dy;
-    }else{
-      // handles
-      const minSize = 16;
-      if(dragMode.includes("e")) w = Math.max(minSize, base.w + dx);
-      if(dragMode.includes("s")) h = Math.max(minSize, base.h + dy);
-      if(dragMode.includes("w")){ x = base.x + dx; w = Math.max(minSize, base.w - dx); }
-      if(dragMode.includes("n")){ y = base.y + dy; h = Math.max(minSize, base.h - dy); }
-    }
-
-    // clamp to image bounds
-    const maxX = layer.clientWidth - w;
-    const maxY = layer.clientHeight - h;
-    x = Math.max(0, Math.min(maxX, x));
-    y = Math.max(0, Math.min(maxY, y));
-
-    const n = toNorm(x, y);
-    a.x = clamp01(n.nx);
-    a.y = clamp01(n.ny);
-    a.w = clamp01(w / layer.clientWidth);
-    a.h = clamp01(h / layer.clientHeight);
-
-    renderAreas();
-    renderAreaList(false);
-    refreshPhonePreview();
-  }
-});
-
-window.addEventListener("mouseup", (e) => {
-  // 完成新增畫框
-  if(isDrawing){
-    isDrawing = false;
-
-    if(previewRect){ previewRect.remove(); previewRect = null; }
-
-    const p = getLayerPoint(e);
-    const ex = p.x, ey = p.y;
-
-    const x = Math.min(drawSX, ex);
-    const y = Math.min(drawSY, ey);
-    const w = Math.abs(ex - drawSX);
-    const h = Math.abs(ey - drawSY);
-
-    if(w < 14 || h < 14) return;
-
-    const n = toNorm(x, y);
-    config.areas.push({
-      x: clamp01(n.nx),
-      y: clamp01(n.ny),
-      w: clamp01(w / layer.clientWidth),
-      h: clamp01(h / layer.clientHeight),
-      text: ""
+function attachBoxHandles(boxEl, idx){
+  ["nw","n","ne","e","se","s","sw","w"].forEach(key => {
+    const h = document.createElement("div");
+    h.className = "handle " + key;
+    h.addEventListener("mousedown", (ev) => {
+      if(spaceDown) return;
+      ev.stopPropagation();
+      dragMode = key;
+      dragIndex = idx;
+      const p = layerPoint(ev);
+      dragStart = { px:p.x, py:p.y, base: cloneDeep(state.areas[idx]) };
     });
-    selectedIndex = config.areas.length - 1;
-    renderAreas();
-    renderAreaList();
-    refreshPhonePreview();
-  }
+    boxEl.appendChild(h);
+  });
+}
 
-  dragMode = null;
-  dragIndex = -1;
-  dragStart = null;
-});
-
-/* ---------- render areas + handles ---------- */
 function renderAreas(){
+  const layer = currentLayer();
   layer.querySelectorAll(".area-box").forEach(el => el.remove());
 
-  config.areas.forEach((a, i) => {
+  state.areas.forEach((a, i) => {
     const d = document.createElement("div");
-    d.className = "area-box" + (i === selectedIndex ? " selected" : "");
-    d.style.left = (a.x*100) + "%";
-    d.style.top  = (a.y*100) + "%";
-    d.style.width  = (a.w*100) + "%";
-    d.style.height = (a.h*100) + "%";
+    d.className = "area-box" + (i===selectedIndex ? " selected" : "");
+    d.style.left = (a.x*100)+"%";
+    d.style.top  = (a.y*100)+"%";
+    d.style.width = (a.w*100)+"%";
+    d.style.height= (a.h*100)+"%";
     d.textContent = (i+1);
 
     d.addEventListener("mousedown", (ev) => {
       if(spaceDown) return;
       ev.stopPropagation();
       selectedIndex = i;
-      renderAreas();
-      renderAreaList();
-      refreshPhonePreview();
+      renderAreas(); renderAreaList(); refreshPhonePreview();
 
-      // move
       dragMode = "move";
       dragIndex = i;
-
-      const p = getLayerPoint(ev);
-      dragStart = {
-        px: p.x,
-        py: p.y,
-        base: { ...a }
-      };
+      const p = layerPoint(ev);
+      dragStart = { px:p.x, py:p.y, base: cloneDeep(state.areas[i]) };
     });
 
-    // handles only when selected
-    if(i === selectedIndex){
-      ["nw","n","ne","e","se","s","sw","w"].forEach(key => {
-        const h = document.createElement("div");
-        h.className = "handle " + key;
-        h.addEventListener("mousedown", (ev) => {
-          ev.stopPropagation();
-          dragMode = key; // resize
-          dragIndex = i;
-
-          const p = getLayerPoint(ev);
-          dragStart = {
-            px: p.x,
-            py: p.y,
-            base: { ...a }
-          };
-        });
-        d.appendChild(h);
-      });
-    }
-
-    // double click to delete
     d.ondblclick = (ev) => {
       ev.stopPropagation();
       if(confirm(`刪除框 ${i+1}？`)){
-        config.areas.splice(i, 1);
+        state.areas.splice(i,1);
         if(selectedIndex === i) selectedIndex = -1;
-        renderAreas();
-        renderAreaList();
-        refreshPhonePreview();
+        pushHistory("delete-area");
+        renderAreas(); renderAreaList(); refreshPhonePreview();
       }
     };
 
+    if(i===selectedIndex) attachBoxHandles(d, i);
     layer.appendChild(d);
   });
 }
 
-/* ---------- left list ---------- */
+/* draw handlers */
+function bindLayerEvents(layerEl){
+  layerEl.addEventListener("mousedown", (e) => {
+    if(spaceDown) return;
+    if(!state.imageUrl) return alert("請先上傳圖片或讀取資料");
+    if(e.target !== layerEl) return;
+
+    selectedIndex = -1;
+    renderAreas(); renderAreaList(); refreshPhonePreview();
+
+    const p = layerPoint(e);
+    isDrawing = true;
+    drawSX = p.x; drawSY = p.y;
+
+    previewRect = document.createElement("div");
+    previewRect.className = "draw-rect";
+    previewRect.style.left = drawSX + "px";
+    previewRect.style.top  = drawSY + "px";
+    previewRect.style.width = "0px";
+    previewRect.style.height= "0px";
+    layerEl.appendChild(previewRect);
+  });
+
+  layerEl.addEventListener("mousemove", (e) => {
+    if(isDrawing && previewRect){
+      const p = layerPoint(e);
+      const cx=p.x, cy=p.y;
+      const x = Math.min(drawSX,cx);
+      const y = Math.min(drawSY,cy);
+      const w = Math.abs(cx-drawSX);
+      const h = Math.abs(cy-drawSY);
+      previewRect.style.left = x + "px";
+      previewRect.style.top  = y + "px";
+      previewRect.style.width = w + "px";
+      previewRect.style.height= h + "px";
+    }
+
+    // drag/resize
+    if(dragMode && dragIndex >= 0 && dragStart){
+      const p = layerPoint(e);
+      const dx = p.x - dragStart.px;
+      const dy = p.y - dragStart.py;
+
+      const basePx = fromNormBox(dragStart.base);
+      let x=basePx.x, y=basePx.y, w=basePx.w, h=basePx.h;
+      const minSize = 16;
+
+      if(dragMode === "move"){
+        x = basePx.x + dx;
+        y = basePx.y + dy;
+      }else{
+        if(dragMode.includes("e")) w = Math.max(minSize, basePx.w + dx);
+        if(dragMode.includes("s")) h = Math.max(minSize, basePx.h + dy);
+        if(dragMode.includes("w")){ x = basePx.x + dx; w = Math.max(minSize, basePx.w - dx); }
+        if(dragMode.includes("n")){ y = basePx.y + dy; h = Math.max(minSize, basePx.h - dy); }
+      }
+
+      const { w:BW, h:BH } = currentBaseSize();
+      x = clamp(x, 0, BW - w);
+      y = clamp(y, 0, BH - h);
+
+      const a = state.areas[dragIndex];
+      a.x = clamp01(x / BW);
+      a.y = clamp01(y / BH);
+      a.w = clamp01(w / BW);
+      a.h = clamp01(h / BH);
+
+      renderAreas();
+      renderAreaList(false);
+      refreshPhonePreview();
+    }
+  });
+}
+bindLayerEvents(drawLayer);
+bindLayerEvents(cropLayer);
+
+window.addEventListener("mouseup", (e) => {
+  if(isDrawing){
+    isDrawing = false;
+    if(previewRect){ previewRect.remove(); previewRect=null; }
+
+    const layerEl = currentLayer();
+    const p = layerPoint(e);
+    const ex=p.x, ey=p.y;
+
+    const x = Math.min(drawSX, ex);
+    const y = Math.min(drawSY, ey);
+    const w = Math.abs(ex - drawSX);
+    const h = Math.abs(ey - drawSY);
+    if(w < 14 || h < 14) return;
+
+    const { w:BW, h:BH } = currentBaseSize();
+    const nx = x / BW, ny = y / BH;
+
+    state.areas.push({ x:clamp01(nx), y:clamp01(ny), w:clamp01(w/BW), h:clamp01(h/BH), text:"" });
+    selectedIndex = state.areas.length - 1;
+
+    pushHistory("add-area");
+    renderAreas(); renderAreaList(); refreshPhonePreview();
+  }
+
+  if(dragMode){
+    dragMode = null; dragIndex = -1; dragStart = null;
+    pushHistory("move/resize");
+  }
+});
+
+/* ------------------- Area list ------------------- */
 function escapeHtml(str){
   return String(str||"")
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
+
 function renderAreaList(scrollToSelected=true){
   const list = $("areaList");
   list.innerHTML = "";
-  $("areaEmpty").classList.toggle("hidden", config.areas.length !== 0);
+  $("areaEmpty").classList.toggle("hidden", state.areas.length !== 0);
 
-  config.areas.forEach((a, i) => {
+  state.areas.forEach((a, i) => {
     const row = document.createElement("div");
-    row.className = "border rounded p-2 bg-white " + (i === selectedIndex ? "ring-2 ring-blue-400" : "");
+    row.className = "border rounded-xl p-2 bg-white " + (i === selectedIndex ? "ring-2 ring-blue-400" : "");
     row.innerHTML = `
       <div class="flex items-center justify-between mb-2">
         <div class="font-bold text-sm">框 ${i+1}</div>
         <button class="text-xs text-red-600 underline">刪除</button>
       </div>
       <div class="text-xs text-slate-500 mb-1">點此框送出文字：</div>
-      <input class="w-full border rounded px-2 py-2 text-sm font-bold"
+      <input class="w-full border rounded-lg px-2 py-2 text-sm font-bold"
         placeholder="例如：MENU_SHOP / MENU_CALENDAR / MENU_NUTRITION"
         value="${escapeHtml(a.text)}">
       <div class="mt-2 grid grid-cols-2 gap-2">
-        <button class="text-xs px-3 py-2 rounded bg-slate-900 text-white hover:bg-black font-bold">選取</button>
-        <button class="text-xs px-3 py-2 rounded bg-white border hover:bg-slate-50 font-bold">定位</button>
+        <button class="text-xs px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-black font-bold">選取</button>
+        <button class="text-xs px-3 py-2 rounded-lg bg-white border hover:bg-slate-50 font-bold">定位</button>
       </div>
     `;
 
@@ -804,31 +1161,29 @@ function renderAreaList(scrollToSelected=true){
 
     del.onclick = () => {
       if(confirm(`刪除框 ${i+1}？`)){
-        config.areas.splice(i,1);
+        state.areas.splice(i,1);
         if(selectedIndex === i) selectedIndex = -1;
-        renderAreas();
-        renderAreaList();
-        refreshPhonePreview();
+        pushHistory("delete-area");
+        renderAreas(); renderAreaList(); refreshPhonePreview();
       }
     };
-    input.oninput = () => { a.text = input.value; refreshPhonePreview(); };
+    input.oninput = () => {
+      a.text = input.value;
+      pushHistory("edit-text");
+      refreshPhonePreview();
+    };
 
     pickBtn.onclick = () => {
       selectedIndex = i;
-      renderAreas();
-      renderAreaList();
-      refreshPhonePreview();
+      renderAreas(); renderAreaList(); refreshPhonePreview();
     };
     focusBtn.onclick = () => {
       selectedIndex = i;
-      renderAreas();
-      renderAreaList(false);
-      refreshPhonePreview();
+      renderAreas(); renderAreaList(false); refreshPhonePreview();
       focusArea(i);
     };
 
     list.appendChild(row);
-
     if(scrollToSelected && i === selectedIndex){
       setTimeout(() => row.scrollIntoView({ block:"nearest", behavior:"smooth" }), 10);
     }
@@ -836,49 +1191,25 @@ function renderAreaList(scrollToSelected=true){
 }
 
 function focusArea(i){
-  const a = config.areas[i];
+  const a = state.areas[i];
   if(!a) return;
-  const px = fromNorm(a);
-
-  // scroll 到框中心（注意 zoom）
+  const px = fromNormBox(a);
   const cx = (px.x + px.w/2) * ZOOM;
   const cy = (px.y + px.h/2) * ZOOM;
-
   canvasWrap.scrollLeft = Math.max(0, cx - canvasWrap.clientWidth/2);
   canvasWrap.scrollTop  = Math.max(0, cy - canvasWrap.clientHeight/2);
 }
 
 function clearAreas(){
   if(confirm("確定清空全部框？")){
-    config.areas = [];
+    state.areas = [];
     selectedIndex = -1;
-    renderAreas();
-    renderAreaList();
-    refreshPhonePreview();
+    pushHistory("clear-areas");
+    renderAreas(); renderAreaList(); refreshPhonePreview();
   }
 }
 
-/* ---------- image load: sync layer size to natural image ---------- */
-function syncLayerToImage(){
-  const img = $("preview");
-  const w = img.naturalWidth || 0;
-  const h = img.naturalHeight || 0;
-  if(!w || !h) return;
-
-  img.style.width = w + "px";
-  img.style.height = h + "px";
-  layer.style.width = w + "px";
-  layer.style.height = h + "px";
-}
-
-$("preview").addEventListener("load", () => {
-  syncLayerToImage();
-  renderAreas();
-  refreshPhonePreview();
-  fitToView();
-});
-
-/* ---------- upload ---------- */
+/* ------------------- Pick & Upload ------------------- */
 async function pickAndUpload(){
   const base = normalizeWorkerUrl($("workerUrl").value);
   if(!base) return alert("請先填 Worker URL");
@@ -892,23 +1223,40 @@ async function pickAndUpload(){
 
     setStatus("壓縮+上傳中...");
     try{
-      const maxSide = parseInt($("maxSide").value, 10);
+      const maxSide = parseInt($("maxSide").value, 10) || 1280;
       const mime = $("outFormat").value;
       const quality = parseFloat($("quality").value);
-      const cropSquare = $("cropSquare").checked;
+      const cropSquare = $("cropSquareUpload").checked;
 
-      const { blob, filename } = await compressImage(file, {maxSide, mime, quality, cropSquare});
+      const { blob, filename, w, h } = await compressImage(file, {maxSide, mime, quality, cropSquare});
       const url = await uploadToR2(base, blob, filename);
 
-      config.imageUrl = url;
-      config.areas = [];
+      state.imageUrl = url;
+      state.areas = [];
       selectedIndex = -1;
 
-      $("preview").src = url;
+      // keep meta name (optional)
+      state.meta.name = ($("fileName").value || "").trim();
 
-      setZoom(1);
+      // show according to crop mode toggle
+      const wantCrop = $("cropEnabled").checked;
+      if(wantCrop){
+        enterCropMode(true);
+        $("cropImg").src = url;
+        await setupCropFromImage(false, true);
+      }else{
+        exitCropMode(true);
+        $("preview").src = url;
+        $("lineFrameNormal").classList.remove("hidden");
+        $("lineFrameTagNormal").textContent = `LINE 建議範圍（≤${maxSide}px）`;
+      }
+
+      pushHistory("upload");
+      renderAreas(); renderAreaList(); refreshPhonePreview();
+      updateSizeInfo();
       setStatus("上傳完成 ✅");
       togglePreviewDrawer(true);
+      fitToView();
     }catch(err){
       setStatus("上傳失敗");
       alert("上傳失敗：\n" + err.message);
@@ -917,56 +1265,135 @@ async function pickAndUpload(){
   input.click();
 }
 
-/* ---------- imagemap message build ---------- */
+/* ------------------- Build imagemap message ------------------- */
 async function buildImagemapMessage(){
-  if(!config.imageUrl) throw new Error("尚未上傳圖片");
-  if(config.areas.length === 0) throw new Error("尚未畫框");
-  if(config.areas.some(a => !String(a.text||"").trim())) throw new Error("有框沒有填內容");
+  if(!state.imageUrl) throw new Error("尚未上傳圖片");
+  if(state.areas.length === 0) throw new Error("尚未畫框");
+  if(state.areas.some(a => !String(a.text||"").trim())) throw new Error("有框沒有填內容");
 
-  return new Promise((resolve, reject) => {
+  // 實際要送出去的圖片：裁切模式 → 先前端產生裁切後圖片並上傳到R2，再用那張圖的URL
+  let finalUrl = state.imageUrl;
+  if(state.crop.enabled && $("frameAspect").value !== "orig"){
+    finalUrl = await exportCroppedAndUpload();
+  }
+
+  // 以「顯示座標系」產出 actions
+  const baseW = 1040;
+  const baseH = await calcBaseH(finalUrl, baseW);
+
+  const actions = state.areas.map(a => ({
+    type: "message",
+    text: a.text,
+    area: {
+      x: Math.round(a.x * baseW),
+      y: Math.round(a.y * baseH),
+      width: Math.round(a.w * baseW),
+      height: Math.round(a.h * baseH)
+    }
+  }));
+
+  return {
+    type: "imagemap",
+    baseUrl: finalUrl,
+    altText: "請點選",
+    baseSize: { width: baseW, height: baseH },
+    actions
+  };
+}
+
+async function calcBaseH(url, baseW){
+  return new Promise((resolve) => {
     const im = new Image();
+    im.crossOrigin = "anonymous";
     im.onload = () => {
-      const baseW = 1040;
       const ratio = im.naturalHeight / im.naturalWidth;
-      const baseH = Math.max(1040, Math.round(baseW * ratio));
-
-      const actions = config.areas.map(a => ({
-        type: "message",
-        text: a.text,
-        area: {
-          x: Math.round(a.x * baseW),
-          y: Math.round(a.y * baseH),
-          width: Math.round(a.w * baseW),
-          height: Math.round(a.h * baseH)
-        }
-      }));
-
-      resolve({
-        type: "imagemap",
-        baseUrl: config.imageUrl,
-        altText: "請點選",
-        baseSize: { width: baseW, height: baseH },
-        actions
-      });
+      const h = Math.max(1040, Math.round(baseW * ratio));
+      resolve(h);
     };
-    im.onerror = () => reject(new Error("讀取圖片尺寸失敗，請確認圖片 URL 可公開存取"));
-    im.src = config.imageUrl;
+    im.onerror = () => resolve(1040);
+    im.src = url;
   });
 }
 
-/* ---------- save/load (無密碼版) ---------- */
+/* ---- Export cropped image (only in crop mode) ---- */
+async function exportCroppedAndUpload(){
+  const base = normalizeWorkerUrl($("workerUrl").value);
+  if(!base) throw new Error("請先填 Worker URL（裁切輸出需要上傳到 R2）");
+
+  // load original image
+  const im = new Image();
+  im.crossOrigin = "anonymous";
+  im.src = state.imageUrl;
+  await im.decode().catch(()=>{});
+  const origW = im.naturalWidth, origH = im.naturalHeight;
+  if(!origW || !origH) throw new Error("裁切失敗：讀不到原圖尺寸");
+
+  // frame
+  const frameW = state.crop.frameW;
+  const frameH = state.crop.frameH;
+
+  // cover scale used in crop
+  const scale = state.crop.scale;
+  const imgW = origW * scale;
+  const imgH = origH * scale;
+
+  // cropImg translate in frame: tx, ty
+  const tx = state.crop.tx;
+  const ty = state.crop.ty;
+
+  // draw onto canvas of frame size
+  const canvas = document.createElement("canvas");
+  canvas.width = frameW;
+  canvas.height = frameH;
+  const ctx = canvas.getContext("2d");
+
+  // Draw the scaled image with translate
+  ctx.drawImage(im, tx, ty, imgW, imgH);
+
+  const mime = $("outFormat").value;
+  const quality = parseFloat($("quality").value);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
+  if(!blob) throw new Error("裁切輸出失敗：toBlob 空");
+
+  // filename
+  const name = (state.meta?.name || "imagemap").trim().replace(/[\\/:*?"<>|]/g, "_");
+  const ext = (mime === "image/webp") ? "webp" : "jpg";
+  const filename = `${name || "imagemap"}_crop.${ext}`;
+
+  // upload
+  const url = await uploadToR2(base, blob, filename);
+  return url;
+}
+
+/* ------------------- Save/Load with meta.name ------------------- */
 async function saveConfig(){
   const base = normalizeWorkerUrl($("workerUrl").value);
   const keyword = $("triggerKeyword").value.trim();
   if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
   localStorage.setItem("line_worker_url", base);
 
+  // update meta
+  state.meta.name = ($("fileName").value || "").trim();
+
   try{
     const msg = await buildImagemapMessage();
-    const payload = { mode:"imagemap", messages:[msg] };
+    const payload = {
+      mode:"imagemap",
+      messages:[msg],
+      meta: {
+        name: state.meta.name || "",
+        updatedAt: new Date().toISOString(),
+        cropEnabled: !!state.crop.enabled,
+        frameAspect: $("frameAspect").value,
+        maxSide: parseInt($("maxSide").value,10) || 1280
+      }
+    };
+
     await postJSON(base + "/save", { keyword, payload });
     setStatus("儲存成功 ✅");
-    alert("儲存成功！\n使用者輸入觸發關鍵字：「" + keyword + "」就會出現這張圖。");
+    pushHistory("save");
+    alert("儲存成功！\n觸發關鍵字：「" + keyword + "」");
   }catch(e){
     setStatus("儲存失敗");
     alert("儲存失敗：\n" + e.message);
@@ -986,13 +1413,32 @@ async function loadConfig(){
     if(obj.mode !== "imagemap" || !obj.messages?.[0]) throw new Error("不是 imagemap 格式");
     const m = obj.messages[0];
 
-    config.imageUrl = m.baseUrl;
-    $("preview").src = config.imageUrl;
+    state.imageUrl = m.baseUrl;
+    state.meta = obj.meta || obj.payload?.meta || obj.payload?.meta || obj.meta || { name:"" };
+    state.meta.name = (obj.meta?.name || obj.payload?.meta?.name || "") || "";
+
+    $("fileName").value = state.meta.name || "";
+
+    // restore crop preference (best effort)
+    const meta = obj.meta || obj.payload?.meta || {};
+    const cropEnabled = !!meta.cropEnabled;
+    $("cropEnabled").checked = cropEnabled;
+
+    if(cropEnabled){
+      enterCropMode(true);
+      $("cropImg").src = state.imageUrl;
+      await setupCropFromImage(false, true);
+    }else{
+      exitCropMode(true);
+      $("preview").src = state.imageUrl;
+      $("lineFrameNormal").classList.remove("hidden");
+      $("lineFrameTagNormal").textContent = `LINE 建議範圍（≤${parseInt($("maxSide").value,10)||1280}px）`;
+    }
 
     const bw = m.baseSize?.width || 1040;
     const bh = m.baseSize?.height || 1040;
 
-    config.areas = (m.actions || []).map(a => ({
+    state.areas = (m.actions || []).map(a => ({
       x: (a.area?.x || 0) / bw,
       y: (a.area?.y || 0) / bh,
       w: (a.area?.width || 0) / bw,
@@ -1001,19 +1447,22 @@ async function loadConfig(){
     }));
 
     selectedIndex = -1;
+    pushHistory("load");
+
     renderAreas();
     renderAreaList();
     refreshPhonePreview();
 
     setStatus("讀取成功 ✅");
     togglePreviewDrawer(true);
+    fitToView();
   }catch(e){
     setStatus("讀取失敗");
     alert("讀取失敗：\n" + e.message);
   }
 }
 
-/* ---------- LIFF send test ---------- */
+/* ------------------- LIFF send test ------------------- */
 async function sendTestToMe(){
   if(!isReady) return alert("LIFF 尚未初始化完成");
   if(!liff.isInClient()) return alert("請在 LINE 內開啟（彈窗）才可送測試訊息");
@@ -1027,7 +1476,7 @@ async function sendTestToMe(){
 }
 async function sendPreviewToMe(){ return sendTestToMe(); }
 
-/* ---------- preview drawer ---------- */
+/* ------------------- Preview drawer ------------------- */
 $("showHotspots").addEventListener("change", () => refreshPhonePreview());
 
 function togglePreviewDrawer(open){
@@ -1046,13 +1495,14 @@ function togglePreviewDrawer(open){
 function refreshPhonePreview(){
   const img = $("phoneImg");
   const wrap = $("phoneHotspots");
-  if(!config.imageUrl){
+
+  if(!state.imageUrl){
     img.src = "";
     wrap.innerHTML = "";
     return;
   }
 
-  img.src = config.imageUrl;
+  img.src = state.imageUrl;
   wrap.innerHTML = "";
 
   requestAnimationFrame(() => {
@@ -1060,7 +1510,7 @@ function refreshPhonePreview(){
     const r = wrap.getBoundingClientRect();
     if(!r.width || !r.height) return;
 
-    config.areas.forEach((a, i) => {
+    state.areas.forEach((a, i) => {
       if(show){
         const box = document.createElement("div");
         box.className = "preview-hotspot";
@@ -1070,6 +1520,7 @@ function refreshPhonePreview(){
         box.style.height = (a.h * r.height) + "px";
         wrap.appendChild(box);
       }
+
       const btn = document.createElement("button");
       btn.style.position="absolute";
       btn.style.left = (a.x*100)+"%";
@@ -1083,7 +1534,7 @@ function refreshPhonePreview(){
   });
 }
 
-/* ---------- LIFF init / close ---------- */
+/* ------------------- LIFF init / close ------------------- */
 async function initLIFF(){
   try{
     $("liffState").textContent = "初始化中...";
@@ -1105,10 +1556,10 @@ async function initLIFF(){
     if(savedUrl) $("workerUrl").value = savedUrl;
 
     isReady = true;
-    setStatus("就緒 ✅（可上傳、畫框、儲存）");
+    setStatus("就緒 ✅（可上傳、畫框、裁切、儲存）");
 
-    syncMainHeight();
-    setZoom(1);
+    // init history
+    pushHistory("init");
   }catch(e){
     $("liffState").textContent = "初始化失敗";
     setStatus("初始化失敗");
@@ -1121,8 +1572,37 @@ function closeLiff(){
   else window.close();
 }
 
-/* ---------- start ---------- */
+/* ------------------- Meta name change -> history ------------------- */
+$("fileName").addEventListener("input", () => {
+  state.meta.name = ($("fileName").value || "").trim();
+  pushHistory("rename");
+});
+
+/* ------------------- On image load (normal) ------------------- */
+$("preview").addEventListener("load", () => {
+  if(!state.imageUrl) return;
+  // show LINE frame tag (normal mode)
+  const maxSide = parseInt($("maxSide").value,10) || 1280;
+  $("lineFrameNormal").classList.remove("hidden");
+  $("lineFrameTagNormal").textContent = `LINE 建議範圍（≤${maxSide}px）`;
+
+  updateSizeInfo($("preview").naturalWidth, $("preview").naturalHeight);
+  renderAreas();
+  refreshPhonePreview();
+  fitToView();
+});
+
+$("cropImg").addEventListener("load", async () => {
+  if(!state.imageUrl || !state.crop.enabled) return;
+  await setupCropFromImage(true, false);
+  renderAreas();
+  refreshPhonePreview();
+  fitToView();
+});
+
+/* ------------------- Start ------------------- */
 initLIFF();
 </script>
+
 </body>
 </html>
