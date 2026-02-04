@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE Bot 萬能控制台</title>
+    <title>六宮格選單控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }
@@ -12,7 +12,7 @@
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
         <div class="text-6xl mb-4">🦁</div>
-        <h1 class="text-2xl font-bold text-slate-800 mb-2">LINE Bot 萬能控制台</h1>
+        <h1 class="text-2xl font-bold text-slate-800 mb-2">六宮格選單控制台</h1>
 
         <div class="mb-6 bg-slate-100 p-4 rounded-lg text-left">
             <label class="block text-xs font-bold text-slate-500 mb-1">Worker 網址 (自動記憶)</label>
@@ -44,7 +44,7 @@
 
         <div class="grid grid-cols-2 gap-4">
 
-            <!-- ✅ 新增：自製功能實驗室（總覽/控管） -->
+            <!-- ✅ 自製功能實驗室（總覽/控管） -->
             <a href="javascript:void(0)"
                onclick="openTool('lab_dashboard.html')"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-emerald-200">
@@ -57,28 +57,15 @@
                 </div>
             </a>
 
-            <!-- ✅ 新增：Rich Menu (2500x1686) Canva 編輯器 -->
+            <!-- ✅ 改名：六宮格選單（取代原本長名稱） -->
             <a href="javascript:void(0)"
                onclick="openTool('tool_richmenu.html')"
-               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-indigo-200">
+               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-blue-700 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-blue-200">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">🧩</span>
                     <div class="text-left">
-                        <h3 class="font-bold">Rich Menu 編輯器（2500×1686 / Canva 介面）</h3>
-                        <p class="text-[10px] opacity-90">拖曳畫框 / 裁切拖圖 / Ctrl+Z+Y / 檔名=選單文字 / 切換選單</p>
-                    </div>
-                </div>
-            </a>
-
-            <!-- 新增：LIFF 手機預覽抽屜版 -->
-            <a href="javascript:void(0)"
-               onclick="openTool('liff_popup_imagemap.html')"
-               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-blue-700 p-4 text-white shadow-lg transition hover:scale-105">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📱</span>
-                    <div class="text-left">
-                        <h3 class="font-bold">手機預覽引流圖（LIFF 彈窗）</h3>
-                        <p class="text-[10px] opacity-90">可收放抽屜預覽 / 畫框不限數量 / 上傳到 R2</p>
+                        <h3 class="font-bold">六宮格選單</h3>
+                        <p class="text-[10px] opacity-90">2500×1686 尺寸 / 可自由畫框 / 自動上傳 R2</p>
                     </div>
                 </div>
             </a>
