@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>六宮格選單控制台</title>
+    <title>LINE Bot 六宮格選單 控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; }
@@ -12,7 +12,7 @@
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
         <div class="text-6xl mb-4">🦁</div>
-        <h1 class="text-2xl font-bold text-slate-800 mb-2">六宮格選單控制台</h1>
+        <h1 class="text-2xl font-bold text-slate-800 mb-2">LINE Bot 六宮格選單 控制台</h1>
 
         <div class="mb-6 bg-slate-100 p-4 rounded-lg text-left">
             <label class="block text-xs font-bold text-slate-500 mb-1">Worker 網址 (自動記憶)</label>
@@ -23,7 +23,6 @@
             <p class="text-[10px] text-green-600" id="statusMsg">在此輸入一次，所有工具自動填入 👌</p>
         </div>
 
-        <!-- (可選) LIFF 快速連結工具：不需要可刪 -->
         <div class="mb-6 bg-slate-50 p-4 rounded-lg text-left border">
             <div class="flex items-center justify-between">
                 <label class="block text-xs font-bold text-slate-500">LIFF 入口網址（可選）</label>
@@ -44,7 +43,6 @@
 
         <div class="grid grid-cols-2 gap-4">
 
-            <!-- ✅ 自製功能實驗室（總覽/控管） -->
             <a href="javascript:void(0)"
                onclick="openTool('lab_dashboard.html')"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-emerald-200">
@@ -57,20 +55,31 @@
                 </div>
             </a>
 
-            <!-- ✅ 改名：六宮格選單（取代原本長名稱） -->
+            <!-- ✅ 六宮格選單（Rich Menu） -->
             <a href="javascript:void(0)"
                onclick="openTool('tool_richmenu.html')"
-               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-blue-700 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-blue-200">
+               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-blue-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-indigo-200">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">🧩</span>
                     <div class="text-left">
                         <h3 class="font-bold">六宮格選單</h3>
-                        <p class="text-[10px] opacity-90">2500×1686 尺寸 / 可自由畫框 / 自動上傳 R2</p>
+                        <p class="text-[10px] opacity-90">2500×1686 直接畫格 / 自動裁切上傳 / 預設(首頁)切換</p>
                     </div>
                 </div>
             </a>
 
-            <!-- 原本：引流圖工具 -->
+            <a href="javascript:void(0)"
+               onclick="openTool('liff_popup_imagemap.html')"
+               class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-blue-700 p-4 text-white shadow-lg transition hover:scale-105">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📱</span>
+                    <div class="text-left">
+                        <h3 class="font-bold">手機預覽引流圖（LIFF 彈窗）</h3>
+                        <p class="text-[10px] opacity-90">可收放抽屜預覽 / 畫框不限數量 / 上傳到 R2</p>
+                    </div>
+                </div>
+            </a>
+
             <a href="javascript:void(0)"
                onclick="openTool('tool_imagemap.html')"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white shadow-lg transition hover:scale-105">
@@ -103,7 +112,6 @@
                 </div>
             </a>
 
-            <!-- 原本名稱就是 tool_quickreply.html -->
             <a href="javascript:void(0)"
                onclick="openTool('tool_quickreply.html')"
                class="col-span-2 block group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-red-500 to-rose-500 p-4 text-white shadow-lg transition hover:scale-105 border-4 border-white ring-2 ring-red-300">
@@ -137,7 +145,6 @@
             localStorage.setItem('line_liff_id', (val || '').trim());
         }
 
-        // 所有工具入口先檢查 Worker URL
         function openTool(page) {
             const url = (localStorage.getItem('line_worker_url') || '').trim();
             if (!url) {
@@ -145,7 +152,6 @@
                 document.getElementById('globalWorkerUrl').focus();
                 return;
             }
-            // 順便把當下 input 再存一次（避免使用者只打在框裡沒觸發儲存）
             const inputVal = (document.getElementById('globalWorkerUrl').value || '').trim();
             if (inputVal) localStorage.setItem('line_worker_url', inputVal);
 
