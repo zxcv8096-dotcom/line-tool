@@ -3,540 +3,475 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LINE OA 彈窗熱區編輯器（Canva 版｜裁切拖移＋Undo/Redo＋檔名）</title>
+  <title>LINE OA 彈窗熱區編輯器（Canva 介面版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
   <style>
-    .workbench{
-      background:
-        linear-gradient(#f3f4f6 1px, transparent 1px) 0 0/24px 24px,
-        linear-gradient(90deg, #f3f4f6 1px, transparent 1px) 0 0/24px 24px,
-        #eef2f7;
+    :root{
+      --rail-w: 76px;
+      --panel-w: 340px;
+    }
+    body{ user-select:none; }
+    input, textarea, select, button { user-select:auto; }
+
+    /* 工作區：棋盤背景 */
+    .checker{
+      background-image:
+        linear-gradient(45deg, rgba(0,0,0,.04) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(0,0,0,.04) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0,0,0,.04) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(0,0,0,.04) 75%);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
     }
 
-    /* stage transform */
-    #stage{ position:relative; transform-origin: top left; }
-    #drawLayer{ position:absolute; inset:0; }
-
-    /* hotspots */
-    .area-box{
+    /* Artboard（LINE 底框） */
+    .artboard{
       position:absolute;
-      border:2px solid rgba(255,0,0,.9);
-      background:rgba(255,0,0,.12);
-      color:white;
-      font-weight:900;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      user-select:none;
-      text-shadow:0 1px 2px rgba(0,0,0,.9);
-      box-sizing:border-box;
-      cursor:move;
+      left:50%; top:50%;
+      transform: translate(-50%, -50%);
+      background:#fff;
+      border:1px solid rgba(15,23,42,.18);
+      box-shadow: 0 12px 30px rgba(0,0,0,.12);
+      border-radius: 14px;
+      overflow:hidden;
     }
-    .area-box.selected{
-      outline: 2px solid rgba(59,130,246,.95);
-      box-shadow: 0 0 0 4px rgba(59,130,246,.18);
+    .artboard::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(to bottom, rgba(0,0,0,.05), transparent 25%, transparent 75%, rgba(0,0,0,.05));
+      pointer-events:none;
+      opacity:.45;
     }
 
+    /* 影像層（裁切時拖動） */
+    .img-layer{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      cursor: default;
+      background:#f8fafc;
+    }
+    .img-layer img{
+      position:absolute;
+      left:50%; top:50%;
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
+      max-width:none;
+      max-height:none;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    /* 熱區框 */
+    .hotspot{
+      position:absolute;
+      border:2px solid rgba(239,68,68,.95);
+      background: rgba(239,68,68,.18);
+      border-radius: 10px;
+      color:white;
+      font-weight:800;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-shadow:0 1px 2px rgba(0,0,0,.85);
+      cursor:pointer;
+    }
+    .hotspot.selected{
+      border-color: rgba(59,130,246,.95);
+      background: rgba(59,130,246,.16);
+    }
+
+    /* 拉角 handle */
     .handle{
       position:absolute;
       width:10px; height:10px;
-      background:white;
+      background:#fff;
       border:2px solid rgba(59,130,246,.95);
-      border-radius:2px;
-      box-sizing:border-box;
+      border-radius: 4px;
+      box-shadow:0 1px 3px rgba(0,0,0,.25);
+      z-index: 10;
     }
     .handle.nw{ left:-6px; top:-6px; cursor:nwse-resize; }
-    .handle.n { left:calc(50% - 5px); top:-6px; cursor:ns-resize; }
     .handle.ne{ right:-6px; top:-6px; cursor:nesw-resize; }
-    .handle.e { right:-6px; top:calc(50% - 5px); cursor:ew-resize; }
-    .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
-    .handle.s { left:calc(50% - 5px); bottom:-6px; cursor:ns-resize; }
     .handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
-    .handle.w { left:-6px; top:calc(50% - 5px); cursor:ew-resize; }
+    .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
 
+    /* 拖曳新框時的預覽 */
     .draw-rect{
       position:absolute;
-      border:2px dashed rgba(0,0,0,.55);
-      background:rgba(0,0,0,.08);
-      pointer-events:none;
-      box-sizing:border-box;
-    }
-
-    /* space panning */
-    .panning { cursor: grab !important; }
-    .panning:active { cursor: grabbing !important; }
-
-    /* left collapse */
-    .sidebar-collapsed{ width:56px !important; min-width:56px !important; max-width:56px !important; }
-    .sidebar-collapsed .sidebar-hide{ display:none !important; }
-
-    /* line frame overlay */
-    .line-frame{
-      position:absolute;
-      inset:-14px;
-      border:2px solid rgba(15,23,42,.55);
-      border-radius:14px;
+      border:2px dashed rgba(2,6,23,.55);
+      background: rgba(2,6,23,.12);
+      border-radius: 10px;
       pointer-events:none;
     }
-    .line-frame .tag{
-      position:absolute;
-      top:-12px; left:10px;
-      font-size:11px;
-      background:rgba(15,23,42,.85);
-      color:white;
-      padding:3px 8px;
-      border-radius:999px;
-      letter-spacing:.2px;
-    }
 
-    /* crop frame + image drag */
-    .crop-wrap{
-      position:relative;
-      overflow:hidden;
-      border-radius:10px;
+    /* 小提示 */
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      border:1px solid rgba(0,0,0,.18);
+      padding:2px 6px;
+      border-radius:6px;
       background:#fff;
-      box-shadow: 0 8px 24px rgba(0,0,0,.08);
-    }
-    .crop-img{
-      position:absolute;
-      left:0; top:0;
-      will-change: transform;
-      cursor:grab;
-      user-select:none;
-      -webkit-user-drag:none;
-    }
-    .crop-img:active{ cursor:grabbing; }
-
-    /* preview drawer hotspots */
-    .preview-hotspot{
-      position:absolute;
-      border:2px solid rgba(255,0,0,.85);
-      background:rgba(255,0,0,.10);
-      pointer-events:none;
+      font-size: 11px;
     }
   </style>
 </head>
+<body class="bg-slate-100 text-slate-800 overflow-hidden">
 
-<body class="bg-slate-100 min-h-screen text-slate-800">
-
-  <!-- Top bar -->
-  <div class="bg-white shadow sticky top-0 z-30">
-    <div class="px-4 py-3 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="font-black text-blue-700 text-lg">LINE OA 彈窗熱區編輯器（Canva 版）</div>
-        <div class="hidden md:block text-xs text-slate-500">
-          空白鍵拖曳平移｜Ctrl/Alt/Shift + 滾輪縮放｜Ctrl+Z/Ctrl+Y Undo/Redo
-        </div>
-      </div>
-      <div class="flex gap-2">
-        <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
-          onclick="togglePreviewDrawer(true)">📱預覽</button>
-        <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900"
-          onclick="closeLiff()">關閉</button>
-      </div>
-    </div>
-
-    <div class="px-4 pb-3 grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-2">
-      <input id="workerUrl" class="border rounded px-3 py-2 bg-yellow-50 text-sm"
-        placeholder="Worker URL（https://xxx.workers.dev）" />
-      <input id="triggerKeyword" class="border rounded px-3 py-2 text-sm font-bold border-blue-500"
-        placeholder="觸發關鍵字（使用者輸入這句會出現這張圖）" />
+<!-- Top bar（像 Canva） -->
+<div class="h-14 bg-white border-b flex items-center justify-between px-3">
+  <div class="flex items-center gap-3">
+    <div class="font-extrabold text-blue-700">LINE OA 彈窗熱區編輯器（Canva 介面版）</div>
+    <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+      <span>空白鍵拖曳平移</span>
+      <span>｜</span>
+      <span>Ctrl + 滾輪縮放</span>
+      <span>｜</span>
+      <span>Ctrl+Z / Ctrl+Y Undo/Redo</span>
+      <span>｜</span>
+      <span>Delete 刪除選取框</span>
     </div>
   </div>
+  <div class="flex items-center gap-2">
+    <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreview(true)">
+      📱 預覽
+    </button>
+    <button class="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-900" onclick="closeLiff()">
+      關閉
+    </button>
+  </div>
+</div>
 
-  <!-- Main -->
-  <div class="p-4 pb-28" style="height:calc(100vh - 132px);">
-    <div class="bg-white rounded-2xl shadow overflow-hidden h-full">
-      <div class="flex h-full">
+<!-- Main layout -->
+<div class="h-[calc(100vh-56px)] flex">
 
-        <!-- Sidebar -->
-        <div id="sidebar" class="w-[400px] min-w-[280px] max-w-[600px] border-r bg-white overflow-auto">
-          <div class="p-3 border-b flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <button id="collapseBtn" class="w-10 h-10 rounded-xl bg-slate-900 text-white hover:bg-black font-black">☰</button>
-              <div class="sidebar-hide">
-                <div class="font-bold text-slate-700">工具列</div>
-                <div class="text-[11px] text-slate-500">可收合｜裁切拖移｜Undo/Redo｜檔名</div>
-              </div>
-            </div>
-            <div class="sidebar-hide text-[11px] text-slate-500" id="status">狀態：未初始化</div>
+  <!-- Left rail（Canva 左邊直欄） -->
+  <div id="rail" class="w-[76px] bg-white border-r flex flex-col items-center py-3 gap-2">
+    <button class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl hover:bg-black"
+            title="收合/展開工具列"
+            onclick="togglePanel()">
+      ☰
+    </button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="熱區編輯模式"
+            onclick="setMode('hotspot')">🔲</button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="裁切模式（拖圖片決定裁切位置）"
+            onclick="setMode('crop')">✂️</button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="Fit"
+            onclick="fitToScreen()">📐</button>
+
+    <button class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl"
+            title="重置縮放"
+            onclick="resetView()">🔁</button>
+  </div>
+
+  <!-- Left panel（可收合） -->
+  <div id="panel" class="w-[340px] bg-white border-r overflow-y-auto">
+    <div class="p-4 space-y-4">
+
+      <!-- 基本連線 -->
+      <div class="rounded-xl border p-3 bg-slate-50">
+        <div class="font-bold text-sm mb-2">基本設定</div>
+
+        <label class="text-xs text-slate-500">Worker URL</label>
+        <input id="workerUrl" class="mt-1 w-full border rounded px-3 py-2 bg-yellow-50 text-sm"
+               placeholder="https://xxx.workers.dev" />
+
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          <div>
+            <label class="text-xs text-slate-500">觸發關鍵字</label>
+            <input id="triggerKeyword" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold border-blue-500"
+                   placeholder="使用者輸入這句會出現圖" />
           </div>
-
-          <div class="p-3 space-y-3 sidebar-hide">
-
-            <!-- File meta -->
-            <div class="rounded-xl border bg-white p-3">
-              <div class="text-xs font-bold text-slate-700 mb-2">📝 檔案資訊（用來篩選/再編輯）</div>
-              <label class="text-xs text-slate-600">
-                檔案名稱
-                <input id="fileName" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm font-bold"
-                  placeholder="例如：2026-02-飲食菜單_彈窗熱區" />
-              </label>
-              <div class="mt-2 text-[11px] text-slate-500">
-                會存到 payload.meta.name，之後 lab_dashboard 可以用它篩選。
-              </div>
-            </div>
-
-            <!-- LIFF info -->
-            <div class="rounded-xl border bg-slate-50 p-3">
-              <div class="text-xs font-bold text-slate-700 mb-2">LIFF / 使用者</div>
-              <div class="text-xs text-slate-600 space-y-1">
-                <div>LIFF：<span id="liffState" class="font-bold">-</span></div>
-                <div>使用者：<span id="userName" class="font-bold">-</span></div>
-              </div>
-            </div>
-
-            <!-- Crop mode -->
-            <div class="rounded-xl border bg-white p-3">
-              <div class="text-xs font-bold text-slate-700 mb-2">🖼️ LINE 底框 / 裁切拖移</div>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                <label class="flex items-center gap-2 col-span-2">
-                  <input id="cropEnabled" type="checkbox" class="scale-110">
-                  <span class="text-slate-700 font-bold">啟用裁切模式（圖片超過底框可拖移）</span>
-                </label>
-
-                <label class="flex flex-col gap-1">
-                  <span class="text-slate-500">底框長邊上限</span>
-                  <select id="maxSide" class="border rounded-lg px-2 py-2">
-                    <option value="960">960</option>
-                    <option value="1280" selected>1280（LINE 建議）</option>
-                    <option value="1600">1600</option>
-                  </select>
-                </label>
-
-                <label class="flex flex-col gap-1">
-                  <span class="text-slate-500">底框比例</span>
-                  <select id="frameAspect" class="border rounded-lg px-2 py-2">
-                    <option value="square" selected>1:1 正方形（最常用）</option>
-                    <option value="orig">跟原圖比例（只縮放不裁切）</option>
-                    <option value="16:9">16:9（橫幅）</option>
-                    <option value="4:5">4:5（貼文常用）</option>
-                  </select>
-                </label>
-
-                <label class="flex flex-col gap-1 col-span-2">
-                  <span class="text-slate-500">裁切輸出提示</span>
-                  <div class="text-[11px] text-slate-600 bg-slate-50 border rounded-lg p-2">
-                    開啟後，右側會出現「LINE 底框」，你可以直接拖圖片決定裁切位置。<br>
-                    儲存時會先產生裁切後的新圖（不需要你自己裁）。
-                  </div>
-                </label>
-
-                <button class="col-span-2 text-xs px-3 py-2 rounded-lg bg-white border hover:bg-slate-50 font-bold"
-                  onclick="resetCrop()">重置裁切位置</button>
-              </div>
-
-              <div class="mt-3 rounded-lg bg-slate-50 border p-2 text-[11px] text-slate-700">
-                <div class="font-bold mb-1">尺寸檢查</div>
-                <div id="sizeInfo" class="text-slate-600">尚未載入圖片</div>
-              </div>
-            </div>
-
-            <!-- Compress -->
-            <div class="rounded-xl border bg-white p-3">
-              <div class="text-xs font-bold text-slate-700 mb-2">🧩 上傳壓縮</div>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                <label class="flex flex-col gap-1">
-                  <span class="text-slate-500">格式</span>
-                  <select id="outFormat" class="border rounded-lg px-2 py-2">
-                    <option value="image/webp" selected>WebP（推薦）</option>
-                    <option value="image/jpeg">JPEG</option>
-                  </select>
-                </label>
-
-                <label class="flex items-center gap-2 col-span-1">
-                  <input id="cropSquareUpload" type="checkbox" class="scale-110">
-                  <span class="text-slate-600">上傳先裁切正方形</span>
-                </label>
-
-                <label class="flex flex-col gap-1 col-span-2">
-                  <span class="text-slate-500">品質 <span id="qVal">0.82</span></span>
-                  <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
-                </label>
-              </div>
-            </div>
-
-            <!-- Zoom -->
-            <div class="rounded-xl border bg-white p-3">
-              <div class="text-xs font-bold text-slate-700 mb-2">🔎 縮放 / 視圖</div>
-              <div class="flex items-center gap-2">
-                <button class="text-xs bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-black font-bold"
-                  onclick="zoomBy(-0.1)">-</button>
-                <input id="zoomRange" type="range" min="0.3" max="4" step="0.01" value="1" class="w-full">
-                <button class="text-xs bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-black font-bold"
-                  onclick="zoomBy(0.1)">+</button>
-                <div class="text-xs font-black w-14 text-right" id="zoomLabel">100%</div>
-              </div>
-              <div class="mt-2 grid grid-cols-3 gap-2">
-                <button class="text-xs bg-white border px-3 py-2 rounded-lg hover:bg-slate-50 font-bold"
-                  onclick="setZoom(1)">100%</button>
-                <button class="text-xs bg-white border px-3 py-2 rounded-lg hover:bg-slate-50 font-bold"
-                  onclick="fitToView()">Fit</button>
-                <button class="text-xs bg-white border px-3 py-2 rounded-lg hover:bg-slate-50 font-bold"
-                  onclick="centerView()">置中</button>
-              </div>
-              <div class="mt-2 text-[11px] text-slate-500">
-                平移：按住 <b>空白鍵</b> + 拖曳｜縮放：<b>Ctrl/Alt/Shift</b> + 滾輪
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="rounded-xl border bg-white p-3">
-              <div class="text-xs font-bold text-slate-700 mb-2">⚙️ 操作</div>
-              <div class="grid grid-cols-2 gap-2">
-                <button class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 font-bold"
-                  onclick="pickAndUpload()">上傳到 R2</button>
-                <button class="px-3 py-2 rounded-lg bg-gray-600 text-white text-sm hover:bg-gray-700 font-bold"
-                  onclick="loadConfig()">讀取</button>
-                <button class="px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 font-bold"
-                  onclick="saveConfig()">儲存</button>
-                <button class="px-3 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 font-bold"
-                  onclick="clearAreas()">清空框</button>
-              </div>
-              <button class="mt-2 w-full px-3 py-2 rounded-lg bg-black text-white text-sm hover:bg-slate-900 font-bold"
-                onclick="sendTestToMe()">送到我測試</button>
-
-              <div class="mt-2 text-[11px] text-slate-500">
-                Undo：Ctrl+Z｜Redo：Ctrl+Y 或 Ctrl+Shift+Z
-              </div>
-            </div>
-
-            <!-- Areas -->
-            <div class="rounded-xl border bg-white p-3">
-              <div class="flex items-center justify-between mb-2">
-                <div class="text-xs font-bold text-slate-700">🟥 框框設定</div>
-                <div class="text-[11px] text-slate-500">Delete 可刪選取框</div>
-              </div>
-              <div class="text-[11px] text-slate-500 mb-3">
-                每個框的「內容」＝點到時送出的文字（觸發你的自動回覆）
-              </div>
-              <div id="areaList" class="space-y-2"></div>
-              <div id="areaEmpty" class="text-xs text-slate-400">目前沒有框，去右邊圖片上拖曳畫框。</div>
-            </div>
+          <div>
+            <label class="text-xs text-slate-500">檔案名稱（用來篩選）</label>
+            <input id="fileName" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
+                   placeholder="例如：2026-02-飲食菜單_彈窗熱區" />
           </div>
         </div>
 
-        <!-- Canvas -->
-        <div class="flex-1 flex flex-col">
-          <div class="px-4 py-2 bg-slate-50 border-b text-xs text-slate-700 flex items-center justify-between">
-            <div>拖曳新增框｜選取框可拖移/拉角縮放｜裁切模式：拖圖片決定裁切位置</div>
-            <div class="flex items-center gap-2">
-              <button class="text-[11px] px-3 py-1.5 rounded-lg bg-white border hover:bg-slate-50 font-bold"
-                onclick="setZoom(1)">100%</button>
-              <button class="text-[11px] px-3 py-1.5 rounded-lg bg-white border hover:bg-slate-50 font-bold"
-                onclick="fitToView()">Fit</button>
-            </div>
-          </div>
-
-          <div id="canvasWrap" class="relative flex-1 overflow-auto workbench">
-            <div class="min-w-full min-h-full flex items-center justify-center p-10">
-              <div id="stage" class="relative inline-block">
-
-                <!-- crop frame (only when enabled) -->
-                <div id="cropFrame" class="crop-wrap hidden">
-                  <img id="cropImg" class="crop-img" alt="">
-                  <div id="cropLayer" class="absolute inset-0"></div>
-                  <div class="line-frame">
-                    <div class="tag" id="lineFrameTag">LINE 底框</div>
-                  </div>
-                </div>
-
-                <!-- normal mode -->
-                <div id="normalFrame" class="relative">
-                  <div id="lineFrameNormal" class="line-frame hidden">
-                    <div class="tag" id="lineFrameTagNormal">LINE 建議範圍</div>
-                  </div>
-                  <img id="preview" class="block pointer-events-none select-none" style="max-width:none;" alt="">
-                  <div id="drawLayer"></div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-          <div class="px-4 py-3 bg-gray-50 text-center text-xs text-gray-600">
-            右側是 Canva 工作區。裁切模式下，熱區座標以「底框」為基準（最符合你的需求）。
-          </div>
+        <div class="mt-2 text-xs text-slate-500">
+          會存到 <span class="kbd">payload.meta.name</span>，之後你做的 <span class="kbd">lab_dashboard</span> 就能用它篩選再編輯。
         </div>
 
+        <div id="status" class="mt-2 text-xs text-slate-500">狀態：未初始化</div>
+      </div>
+
+      <!-- LINE 底框 -->
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2 flex items-center justify-between">
+          <span>LINE 底框（Artboard）</span>
+          <span class="text-xs text-slate-500">寬固定 1040</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <label class="text-xs text-slate-500">
+            高度比例
+            <select id="framePreset" class="mt-1 w-full border rounded px-2 py-2 text-sm" onchange="applyFramePreset()">
+              <option value="1">1:1（1040×1040）</option>
+              <option value="1.5">1:1.5（1040×1560）</option>
+              <option value="2">1:2（1040×2080）</option>
+            </select>
+          </label>
+
+          <label class="text-xs text-slate-500">
+            顯示安全框
+            <select id="safeFrame" class="mt-1 w-full border rounded px-2 py-2 text-sm" onchange="renderSafety()">
+              <option value="on" selected>開</option>
+              <option value="off">關</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          你現在看到的白色底框，就是「LINE 尺寸基準」。圖片超出底框時，用 <span class="kbd">裁切模式</span> 拖動圖片決定裁切位置。
+        </div>
+      </div>
+
+      <!-- 圖片 / 上傳 -->
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2">圖片（上傳到 R2）</div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <label class="flex flex-col gap-1">
+            <span class="text-slate-500">長邊上限</span>
+            <select id="maxSide" class="border rounded px-2 py-2 text-sm">
+              <option value="960">960（省空間）</option>
+              <option value="1280" selected>1280（LINE 建議）</option>
+              <option value="1600">1600（更清晰）</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-slate-500">格式</span>
+            <select id="outFormat" class="border rounded px-2 py-2 text-sm">
+              <option value="image/webp" selected>WebP（推薦）</option>
+              <option value="image/jpeg">JPEG</option>
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-1 col-span-2">
+            <span class="text-slate-500">品質 <span id="qVal">0.82</span></span>
+            <input id="quality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
+          </label>
+
+          <label class="flex items-center gap-2 col-span-2">
+            <input id="cropSquare" type="checkbox" class="scale-110">
+            <span class="text-slate-600">先裁切正方形（常用，非必要）</span>
+          </label>
+        </div>
+
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button class="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700" onclick="pickAndUpload()">
+            上傳圖片到 R2
+          </button>
+          <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="exportCropAndUpload()">
+            依裁切輸出並上傳
+          </button>
+          <button class="px-3 py-2 rounded bg-slate-600 text-white text-sm hover:bg-slate-700" onclick="clearAll()">
+            清空
+          </button>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          * 建議流程：先上傳 → 進裁切模式調整 → 按「依裁切輸出並上傳」產生真正符合底框的圖片。
+        </div>
+      </div>
+
+      <!-- 熱區列表 -->
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2 flex items-center justify-between">
+          <span>熱區清單</span>
+          <span id="hsCount" class="text-xs text-slate-500">0</span>
+        </div>
+
+        <div id="areaEmpty" class="text-xs text-slate-400">尚未新增熱區。用滑鼠在底框內拖曳即可新增。</div>
+        <div id="areaList" class="space-y-2"></div>
+
+        <div class="mt-3 flex gap-2">
+          <button class="flex-1 px-3 py-2 rounded bg-gray-600 text-white text-sm hover:bg-gray-700" onclick="loadConfig()">
+            讀取
+          </button>
+          <button class="flex-1 px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700" onclick="saveConfig()">
+            儲存
+          </button>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          熱區「內容」＝點到時送出的文字（你用來觸發自動回覆的關鍵字）。
+        </div>
+      </div>
+
+      <!-- LIFF -->
+      <div class="rounded-xl border p-3 bg-slate-50">
+        <div class="font-bold text-sm mb-2">LIFF / 使用者</div>
+        <div class="text-xs text-slate-600 space-y-1">
+          <div>LIFF：<span id="liffState" class="font-bold">-</span></div>
+          <div>使用者：<span id="userName" class="font-bold">-</span></div>
+          <div class="text-[11px] text-slate-500">在 LINE 內開啟可直接「送到我測試」。</div>
+        </div>
+
+        <div class="mt-3 flex gap-2">
+          <button class="flex-1 px-3 py-2 rounded bg-black text-white text-sm hover:bg-slate-900" onclick="sendTestToMe()">
+            送到我測試
+          </button>
+          <button class="flex-1 px-3 py-2 rounded bg-slate-200 text-slate-700 text-sm hover:bg-slate-300" onclick="togglePreview(true)">
+            預覽抽屜
+          </button>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 pb-10">
+        Powered by Cloudflare Workers & KV / R2
       </div>
     </div>
   </div>
 
-  <input type="file" id="fileInput" accept="image/*" hidden>
+  <!-- Workspace -->
+  <div class="flex-1 relative checker overflow-hidden" id="workspace">
+    <!-- zoom HUD -->
+    <div class="absolute top-3 right-3 z-20 flex items-center gap-2 bg-white/90 backdrop-blur border rounded-xl px-2 py-1 shadow">
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1.1)">＋</button>
+      <div class="w-16 text-center text-sm font-bold" id="zoomLabel">100%</div>
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1/1.1)">－</button>
+      <button class="px-2 py-1 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="fitToScreen()">Fit</button>
+    </div>
 
-  <!-- Preview Drawer -->
-  <div id="drawerOverlay" class="fixed inset-0 bg-black/40 hidden z-40" onclick="togglePreviewDrawer(false)"></div>
-  <div id="previewDrawer" class="fixed left-0 right-0 bottom-0 z-50 translate-y-full transition-transform duration-300 ease-out">
-    <div class="mx-auto max-w-4xl">
-      <div class="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
-        <div class="flex items-center justify-between px-4 py-3 border-b">
-          <div class="font-bold text-slate-700">📱 手機彈窗預覽（可收放）</div>
-          <div class="flex items-center gap-2">
-            <label class="flex items-center gap-2 text-xs text-slate-600">
-              <input id="showHotspots" type="checkbox" checked>
-              顯示熱區框
-            </label>
-            <button class="px-3 py-1.5 rounded bg-slate-200 text-slate-700 text-sm hover:bg-slate-300"
-              onclick="togglePreviewDrawer(false)">收起</button>
-          </div>
+    <!-- Workspace transform (pan/zoom) -->
+    <div id="stage" class="absolute inset-0">
+      <!-- Artboard -->
+      <div id="artboard" class="artboard">
+        <div id="imgLayer" class="img-layer">
+          <img id="img" alt="">
+          <!-- safety overlay -->
+          <div id="safety" class="absolute inset-0 pointer-events-none"></div>
         </div>
+        <div id="hotspotLayer" class="absolute inset-0"></div>
+        <div id="drawLayer" class="absolute inset-0"></div>
+      </div>
+    </div>
 
-        <div class="p-4 bg-slate-50">
-          <div class="mx-auto w-[360px] max-w-full">
-            <div class="rounded-[26px] border-4 border-slate-900 bg-slate-900 p-2">
-              <div class="rounded-[20px] bg-white overflow-hidden">
-                <div class="bg-slate-100 text-xs text-slate-600 px-3 py-2 border-b flex items-center justify-between">
-                  <span>LINE 聊天內尺寸感</span>
-                  <button class="text-[11px] px-2 py-1 rounded bg-white border hover:bg-slate-50"
-                          onclick="sendPreviewToMe()">直接送到我測試</button>
-                </div>
-
-                <div class="p-3">
-                  <div class="mx-auto w-[320px] max-w-full">
-                    <div class="text-[11px] text-slate-500 mb-2">點熱區會提示送出的關鍵字（模擬點選）</div>
-                    <div class="relative rounded-lg overflow-hidden border bg-white">
-                      <img id="phoneImg" class="w-full h-[220px] object-cover bg-gray-100" alt="">
-                      <div id="phoneHotspots" class="absolute inset-0"></div>
-                    </div>
-                    <div class="mt-2 text-[11px] text-slate-500">* 實際會因手機略有差異</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-3 flex gap-2">
-              <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
-                onclick="togglePreviewDrawer(false)">收起預覽</button>
-              <button class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                onclick="refreshPhonePreview()">重新渲染</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="px-4 py-3 bg-white border-t text-xs text-slate-500">
-          提示：你畫框/改文字/移動裁切後，預覽會自動更新。
-        </div>
+    <!-- Bottom hint -->
+    <div class="absolute left-3 bottom-3 z-20 bg-white/90 backdrop-blur border rounded-xl px-3 py-2 shadow text-xs text-slate-600">
+      <div class="font-bold mb-1">操作提示</div>
+      <div class="space-y-1">
+        <div>• 熱區模式：底框內拖曳新增；點框選取；拖移／拉角縮放；<span class="kbd">Delete</span> 刪除</div>
+        <div>• 裁切模式：拖動圖片決定裁切位置；<span class="kbd">Ctrl</span>+滾輪縮放圖片；再按「依裁切輸出並上傳」</div>
+        <div>• 視角：<span class="kbd">空白鍵</span> 按住拖曳平移；<span class="kbd">Ctrl</span>+滾輪縮放畫面</div>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Preview Drawer -->
+<div id="drawerOverlay" class="fixed inset-0 bg-black/40 hidden z-40" onclick="togglePreview(false)"></div>
+<div id="previewDrawer" class="fixed left-0 right-0 bottom-0 z-50 translate-y-full transition-transform duration-300 ease-out">
+  <div class="mx-auto max-w-4xl">
+    <div class="bg-white rounded-t-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <div class="font-bold text-slate-700">📱 手機預覽（聊天泡泡寬度感）</div>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 text-xs text-slate-600">
+            <input id="showHotspots" type="checkbox" checked>
+            顯示熱區框
+          </label>
+          <button class="px-3 py-1.5 rounded bg-slate-200 text-slate-700 text-sm hover:bg-slate-300" onclick="togglePreview(false)">收起</button>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50">
+        <div class="mx-auto w-[360px] max-w-full">
+          <div class="rounded-[26px] border-4 border-slate-900 bg-slate-900 p-2">
+            <div class="rounded-[20px] bg-white overflow-hidden">
+              <div class="bg-slate-100 text-xs text-slate-600 px-3 py-2 border-b flex items-center justify-between">
+                <span>預覽</span>
+                <button class="text-[11px] px-2 py-1 rounded bg-white border hover:bg-slate-50" onclick="sendPreviewToMe()">
+                  直接送到我測試
+                </button>
+              </div>
+              <div class="p-3">
+                <div class="mx-auto w-[320px] max-w-full">
+                  <div class="text-[11px] text-slate-500 mb-2">點熱區會提示送出的關鍵字（模擬用戶點選）</div>
+                  <div class="relative rounded-lg overflow-hidden border bg-white">
+                    <img id="phoneImg" class="w-full h-[220px] object-cover bg-gray-100">
+                    <div id="phoneHotspots" class="absolute inset-0"></div>
+                  </div>
+                  <div class="mt-2 text-[11px] text-slate-500">* 實際會因手機略有差異</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 flex gap-2">
+            <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="togglePreview(false)">收起</button>
+            <button class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700" onclick="refreshPhonePreview()">重新渲染</button>
+          </div>
+        </div>
+      </div>
+      <div class="px-4 py-3 bg-white border-t text-xs text-slate-500">
+        你畫框或改文字後會自動更新；沒更新就按「重新渲染」。
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
 
 <script>
 /* ===================== 你只要改這裡 ===================== */
 const LIFF_ID = "2009037126-AD8Dolxb";
 /* ======================================================= */
 
+/* ========= DOM ========= */
 const $ = (id) => document.getElementById(id);
 
-let isReady = false;
+const workerUrlEl = $("workerUrl");
+const triggerEl = $("triggerKeyword");
+const fileNameEl = $("fileName");
+const statusEl = $("status");
+const liffStateEl = $("liffState");
+const userNameEl = $("userName");
 
-// 核心資料：areas 以「編輯座標系」0~1 存（裁切模式時=底框座標系；非裁切模式時=原圖座標系）
-let state = {
-  imageUrl: "",
-  areas: [],          // [{x,y,w,h,text}]
-  crop: {             // 裁切模式狀態（底框視窗）
-    enabled: false,
-    frameW: 1280,
-    frameH: 1280,
-    scale: 1,         // cover scale applied to original image
-    tx: 0,            // translate (px) of image inside frame
-    ty: 0
-  },
-  meta: { name: "" }
-};
+const panelEl = $("panel");
+const railEl = $("rail");
 
-let ZOOM = 1;
-let selectedIndex = -1;
+const workspaceEl = $("workspace");
+const stageEl = $("stage");
 
-/* ------------------- Undo/Redo ------------------- */
-let history = [];
-let historyIndex = -1;
-let historyLock = false;
+const artboardEl = $("artboard");
+const imgLayerEl = $("imgLayer");
+const imgEl = $("img");
+const safetyEl = $("safety");
 
-function cloneDeep(obj){ return JSON.parse(JSON.stringify(obj)); }
+const hotspotLayerEl = $("hotspotLayer");
+const drawLayerEl = $("drawLayer");
 
-function pushHistory(reason=""){
-  if(historyLock) return;
-  const snap = cloneDeep({ state, selectedIndex });
-  if(historyIndex >= 0){
-    const prev = history[historyIndex];
-    // 避免連續完全相同
-    if(JSON.stringify(prev) === JSON.stringify(snap)) return;
-  }
-  history = history.slice(0, historyIndex + 1);
-  history.push(snap);
-  historyIndex = history.length - 1;
-}
+const areaListEl = $("areaList");
+const areaEmptyEl = $("areaEmpty");
+const hsCountEl = $("hsCount");
 
-function applyHistorySnap(snap){
-  historyLock = true;
-  state = cloneDeep(snap.state);
-  selectedIndex = snap.selectedIndex;
+const zoomLabelEl = $("zoomLabel");
 
-  $("fileName").value = state.meta?.name || "";
-  $("cropEnabled").checked = !!state.crop?.enabled;
-
-  // render view
-  if(state.imageUrl){
-    if(state.crop.enabled){
-      enterCropMode(true);
-      $("cropImg").src = state.imageUrl;
-    }else{
-      exitCropMode(true);
-      $("preview").src = state.imageUrl;
-    }
-  }else{
-    exitCropMode(true);
-    $("preview").src = "";
-    $("cropImg").src = "";
-  }
-
-  renderAreas();
-  renderAreaList();
-  refreshPhonePreview();
-  updateSizeInfo();
-
-  historyLock = false;
-}
-
-function undo(){
-  if(historyIndex <= 0) return;
-  historyIndex--;
-  applyHistorySnap(history[historyIndex]);
-}
-function redo(){
-  if(historyIndex >= history.length - 1) return;
-  historyIndex++;
-  applyHistorySnap(history[historyIndex]);
-}
-
-/* Key binds: Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z */
-window.addEventListener("keydown", (e) => {
-  const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
-  const mod = isMac ? e.metaKey : e.ctrlKey;
-
-  if(mod && e.key.toLowerCase() === "z" && !e.shiftKey){
-    e.preventDefault();
-    undo();
-  }
-  if((mod && e.key.toLowerCase() === "y") || (mod && e.key.toLowerCase() === "z" && e.shiftKey)){
-    e.preventDefault();
-    redo();
-  }
-});
-
-/* ------------------- Utils ------------------- */
+/* ========= helpers ========= */
 function normalizeWorkerUrl(raw){
   if(!raw) return "";
   let s = raw.trim();
   if(!/^https?:\/\//i.test(s)) s = "https://" + s;
   return s.replace(/\/+$/,'');
 }
-function setStatus(msg){ $("status").textContent = "狀態：" + msg; }
-function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-function clamp01(v){ return clamp(v,0,1); }
+function setStatus(msg){ statusEl.textContent = "狀態：" + msg; }
+
+function escapeHtml(str){
+  return String(str||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
 
 async function postJSON(url, data){
   const res = await fetch(url, {
@@ -565,921 +500,597 @@ async function uploadToR2(workerBaseUrl, fileBlob, filename){
   return j.url;
 }
 
-/* ------------------- Sidebar collapse ------------------- */
-const sidebar = $("sidebar");
-let sidebarCollapsed = false;
-$("collapseBtn").onclick = () => {
-  sidebarCollapsed = !sidebarCollapsed;
-  sidebar.classList.toggle("sidebar-collapsed", sidebarCollapsed);
-  $("collapseBtn").textContent = sidebarCollapsed ? "⫶" : "☰";
+/* ========= state =========
+hotspots: normalized to artboard [0..1]
+crop: image transform inside artboard
+*/
+let state = {
+  meta: { name: "" },
+  triggerKeyword: "",
+  imageUrl: "",
+  // we keep original uploaded blob for crop-export if possible
+  _sourceBlob: null,
+  _sourceName: "image",
+  frame: { w: 1040, h: 1040 }, // LINE base
+  mode: "hotspot",            // "hotspot" | "crop"
+  crop: { tx: 0, ty: 0, s: 1 },// image translate(px) relative to center + scale
+  hotspots: [],
+  selectedId: null
 };
 
-/* ------------------- Zoom & Pan ------------------- */
-const stage = $("stage");
-const canvasWrap = $("canvasWrap");
-const zoomRange = $("zoomRange");
-const zoomLabel = $("zoomLabel");
+let isReady = false;
 
-let spaceDown = false;
-let panDown = false, panSX=0, panSY=0, panScrollL=0, panScrollT=0;
-
-function applyZoom(){
-  stage.style.transform = `scale(${ZOOM})`;
-  zoomRange.value = String(ZOOM);
-  zoomLabel.textContent = Math.round(ZOOM * 100) + "%";
+/* ========= history (Undo/Redo) ========= */
+let history = [];
+let historyIndex = -1;
+function cloneForHistory(s){
+  // remove blobs for history to avoid heavy memory
+  return JSON.parse(JSON.stringify({
+    meta: s.meta,
+    triggerKeyword: s.triggerKeyword,
+    imageUrl: s.imageUrl,
+    frame: s.frame,
+    mode: s.mode,
+    crop: s.crop,
+    hotspots: s.hotspots,
+    selectedId: s.selectedId
+  }));
 }
-function setZoom(v){
-  ZOOM = clamp(Number(v)||1, 0.3, 4);
-  applyZoom();
+function applyHistorySnap(snap){
+  state.meta = snap.meta;
+  state.triggerKeyword = snap.triggerKeyword;
+  state.imageUrl = snap.imageUrl;
+  state.frame = snap.frame;
+  state.mode = snap.mode;
+  state.crop = snap.crop;
+  state.hotspots = snap.hotspots;
+  state.selectedId = snap.selectedId;
+  // UI sync
+  triggerEl.value = state.triggerKeyword || "";
+  fileNameEl.value = (state.meta?.name || "");
+  $("framePreset").value = (state.frame.h / state.frame.w).toString();
+  applyFramePreset(true);
+  setMode(state.mode, true);
+  setImageUrl(state.imageUrl, true);
+  renderAll();
 }
-function zoomBy(delta){ setZoom((ZOOM + delta).toFixed(2)); }
-
-zoomRange.addEventListener("input", () => setZoom(zoomRange.value));
-
-canvasWrap.addEventListener("wheel", (e) => {
-  if(!(e.ctrlKey || e.altKey || e.shiftKey)) return;
-  e.preventDefault();
-  zoomBy(e.deltaY > 0 ? -0.10 : 0.10);
-}, { passive:false });
-
-function centerView(){
-  const el = state.crop.enabled ? $("cropFrame") : $("preview");
-  const w = state.crop.enabled ? state.crop.frameW : (el.naturalWidth||0);
-  const h = state.crop.enabled ? state.crop.frameH : (el.naturalHeight||0);
-  if(!w || !h) return;
-
-  const cw = canvasWrap.clientWidth;
-  const ch = canvasWrap.clientHeight;
-  const sw = w * ZOOM;
-  const sh = h * ZOOM;
-  canvasWrap.scrollLeft = Math.max(0, (sw - cw) / 2);
-  canvasWrap.scrollTop  = Math.max(0, (sh - ch) / 2);
+function pushHistory(){
+  const snap = cloneForHistory(state);
+  // discard forward
+  history = history.slice(0, historyIndex + 1);
+  history.push(snap);
+  historyIndex++;
 }
-
-function fitToView(){
-  const w = state.crop.enabled ? state.crop.frameW : ($("preview").naturalWidth||0);
-  const h = state.crop.enabled ? state.crop.frameH : ($("preview").naturalHeight||0);
-  if(!w || !h) return;
-
-  const padding = 160;
-  const vw = Math.max(200, canvasWrap.clientWidth - padding);
-  const vh = Math.max(200, canvasWrap.clientHeight - padding);
-  const z = Math.min(vw / w, vh / h);
-  setZoom(z.toFixed(2));
-  requestAnimationFrame(() => centerView());
+function undo(){
+  if(historyIndex <= 0) return;
+  historyIndex--;
+  applyHistorySnap(history[historyIndex]);
+}
+function redo(){
+  if(historyIndex >= history.length - 1) return;
+  historyIndex++;
+  applyHistorySnap(history[historyIndex]);
 }
 
-function setPanningUI(on){ canvasWrap.classList.toggle("panning", on); }
+/* ========= view (pan/zoom) ========= */
+let view = { x: 0, y: 0, z: 1 };
+function updateStageTransform(){
+  stageEl.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.z})`;
+  zoomLabelEl.textContent = Math.round(view.z * 100) + "%";
+}
+function resetView(){
+  view = { x: 0, y: 0, z: 1 };
+  updateStageTransform();
+}
+function zoomBy(factor, anchorClientX=null, anchorClientY=null){
+  const oldZ = view.z;
+  const newZ = Math.min(4, Math.max(0.2, oldZ * factor));
 
-window.addEventListener("keydown", (e) => {
-  if(e.code === "Space" && !spaceDown){
-    spaceDown = true;
-    setPanningUI(true);
-  }
-  if(e.key === "Delete" || e.key === "Backspace"){
-    if(selectedIndex >= 0){
-      if(confirm(`刪除框 ${selectedIndex+1}？`)){
-        state.areas.splice(selectedIndex,1);
-        selectedIndex = -1;
-        pushHistory("delete-area");
-        renderAreas(); renderAreaList(); refreshPhonePreview();
-      }
-    }
-  }
-});
-window.addEventListener("keyup", (e) => {
-  if(e.code === "Space"){
-    spaceDown = false;
-    panDown = false;
-    setPanningUI(false);
-  }
-});
+  if(anchorClientX != null && anchorClientY != null){
+    // keep anchor stable
+    const rect = workspaceEl.getBoundingClientRect();
+    const ax = anchorClientX - rect.left;
+    const ay = anchorClientY - rect.top;
 
-canvasWrap.addEventListener("mousedown", (e) => {
-  if(!spaceDown) return;
-  panDown = true;
-  panSX = e.clientX;
-  panSY = e.clientY;
-  panScrollL = canvasWrap.scrollLeft;
-  panScrollT = canvasWrap.scrollTop;
-  e.preventDefault();
-});
-window.addEventListener("mousemove", (e) => {
-  if(!panDown) return;
-  const dx = e.clientX - panSX;
-  const dy = e.clientY - panSY;
-  canvasWrap.scrollLeft = panScrollL - dx;
-  canvasWrap.scrollTop  = panScrollT - dy;
-});
-window.addEventListener("mouseup", () => { panDown = false; });
+    const dx = ax - (rect.width/2);
+    const dy = ay - (rect.height/2);
 
-/* ------------------- Upload compress ------------------- */
-$("quality").addEventListener("input", () => $("qVal").textContent = $("quality").value);
-
-async function compressImage(file, {maxSide, mime, quality, cropSquare}){
-  const img = await createImageBitmap(file);
-  let sx=0, sy=0, sw=img.width, sh=img.height;
-
-  if(cropSquare){
-    const side = Math.min(img.width, img.height);
-    sx = Math.floor((img.width - side)/2);
-    sy = Math.floor((img.height - side)/2);
-    sw = side; sh = side;
+    // adjust pan so anchor stays
+    view.x = (view.x - dx) * (newZ/oldZ) + dx;
+    view.y = (view.y - dy) * (newZ/oldZ) + dy;
   }
 
-  const longSide = Math.max(sw, sh);
-  const scale = Math.min(1, maxSide / longSide);
-  const w = Math.max(1, Math.round(sw * scale));
-  const h = Math.max(1, Math.round(sh * scale));
+  view.z = newZ;
+  updateStageTransform();
+}
+function fitToScreen(){
+  // fit artboard into workspace
+  const wr = workspaceEl.getBoundingClientRect();
+  const pad = 120;
+  const maxW = Math.max(200, wr.width - pad);
+  const maxH = Math.max(200, wr.height - pad);
 
-  const canvas = document.createElement("canvas");
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext("2d", { alpha:true });
-  ctx.drawImage(img, sx, sy, sw, sh, 0,0,w,h);
+  const abW = state.frame.w;
+  const abH = state.frame.h;
 
-  const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
-  if(!outBlob) throw new Error("壓縮失敗（toBlob 空）");
-
-  const ext = (mime === "image/webp") ? "webp" : "jpg";
-  const safeName = (file.name || "image").replace(/\.[^/.]+$/, "");
-  return { blob: outBlob, filename: `${safeName}.${ext}`, w, h };
+  const z = Math.min(3, Math.max(0.2, Math.min(maxW/abW, maxH/abH)));
+  view.z = z;
+  view.x = 0; view.y = 0;
+  updateStageTransform();
 }
 
-/* ------------------- Crop mode logic ------------------- */
-function getFrameSize(origW, origH){
-  const maxSide = parseInt($("maxSide").value,10) || 1280;
-  const aspect = $("frameAspect").value;
+/* ========= panel collapse ========= */
+let panelCollapsed = false;
+function togglePanel(){
+  panelCollapsed = !panelCollapsed;
+  panelEl.classList.toggle("hidden", panelCollapsed);
+}
 
-  if(aspect === "orig"){
-    const long = Math.max(origW, origH);
-    const scale = Math.min(1, maxSide / long);
-    return { frameW: Math.round(origW * scale), frameH: Math.round(origH * scale) };
+/* ========= frame preset ========= */
+function applyFramePreset(silent=false){
+  const ratio = parseFloat($("framePreset").value || "1");
+  state.frame.w = 1040;
+  state.frame.h = Math.round(1040 * ratio);
+
+  // apply artboard size in CSS px (use 1:1 scale mapping)
+  artboardEl.style.width = state.frame.w + "px";
+  artboardEl.style.height = state.frame.h + "px";
+
+  renderSafety();
+  if(!silent) pushHistory();
+  // keep fit nice
+  fitToScreen();
+}
+function renderSafety(){
+  safetyEl.innerHTML = "";
+  const on = ($("safeFrame").value === "on");
+  if(!on) return;
+
+  // safe margin 24px for visual guide
+  const m = 24;
+  const box = document.createElement("div");
+  box.style.position = "absolute";
+  box.style.left = m + "px";
+  box.style.top = m + "px";
+  box.style.right = m + "px";
+  box.style.bottom = m + "px";
+  box.style.border = "2px dashed rgba(15,23,42,.25)";
+  box.style.borderRadius = "12px";
+  safetyEl.appendChild(box);
+}
+
+/* ========= mode ========= */
+function setMode(mode, silent=false){
+  state.mode = mode;
+  // cursor hint
+  if(mode === "crop"){
+    imgLayerEl.style.cursor = "grab";
+  }else{
+    imgLayerEl.style.cursor = "default";
   }
-  if(aspect === "16:9") return { frameW: maxSide, frameH: Math.round(maxSide * 9/16) };
-  if(aspect === "4:5")  return { frameW: Math.round(maxSide * 4/5), frameH: maxSide };
-  return { frameW: maxSide, frameH: maxSide }; // square
+  if(!silent) pushHistory();
+  renderModeBadge();
+}
+function renderModeBadge(){
+  // minimal status update
+  const text = state.mode === "crop"
+    ? "裁切模式：拖圖片決定裁切位置（Ctrl+滾輪縮放圖片）"
+    : "熱區模式：拖曳新增框；選取框可拖移/拉角縮放";
+  setStatus(text);
 }
 
-function enterCropMode(skipHistory=false){
-  state.crop.enabled = true;
-  $("cropFrame").classList.remove("hidden");
-  $("normalFrame").classList.add("hidden");
-  $("lineFrameNormal").classList.add("hidden");
-  $("lineFrameTag").textContent = `LINE 底框（輸出）`;
-  if(!skipHistory) pushHistory("crop-on");
-}
-
-function exitCropMode(skipHistory=false){
-  state.crop.enabled = false;
-  $("cropFrame").classList.add("hidden");
-  $("normalFrame").classList.remove("hidden");
-  if(!skipHistory) pushHistory("crop-off");
-}
-
-$("cropEnabled").addEventListener("change", () => {
-  const on = $("cropEnabled").checked;
+/* ========= image / crop ========= */
+function setImageUrl(url, silent=false){
+  state.imageUrl = url || "";
+  imgEl.src = state.imageUrl || "";
   if(!state.imageUrl){
-    $("cropEnabled").checked = false;
-    return alert("請先上傳圖片或讀取資料");
+    imgEl.removeAttribute("src");
   }
-  if(on){
-    enterCropMode();
-    setupCropFromImage(); // recalc
-  }else{
-    exitCropMode();
-    // 切回正常模式：圖片顯示原圖（不改 URL），熱區仍保留（座標系不同時，建議你固定用裁切模式做這類功能）
-    $("preview").src = state.imageUrl;
-    renderAreas(); renderAreaList(); refreshPhonePreview();
-  }
-  fitToView();
-});
-
-$("frameAspect").addEventListener("change", () => {
-  if(!state.imageUrl) return;
-  if(state.crop.enabled){
-    setupCropFromImage(true);
-    pushHistory("crop-aspect");
-    renderAreas(); renderAreaList(); refreshPhonePreview();
-    fitToView();
-  }else{
-    updateSizeInfo();
-  }
-});
-
-$("maxSide").addEventListener("change", () => {
-  if(!state.imageUrl) return;
-  if(state.crop.enabled){
-    setupCropFromImage(true);
-    pushHistory("crop-maxside");
-    renderAreas(); renderAreaList(); refreshPhonePreview();
-    fitToView();
-  }
-  updateSizeInfo();
-});
-
-function resetCrop(){
-  if(!state.imageUrl || !state.crop.enabled) return;
-  setupCropFromImage(true, true);
-  pushHistory("crop-reset");
-  renderAreas(); renderAreaList(); refreshPhonePreview();
-}
-
-async function setupCropFromImage(keepPosition=false, forceCenter=false){
-  // load image to get natural size
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = state.imageUrl;
-  await img.decode().catch(()=>{});
-
-  const origW = img.naturalWidth || 0;
-  const origH = img.naturalHeight || 0;
-  if(!origW || !origH) return;
-
-  const { frameW, frameH } = getFrameSize(origW, origH);
-  state.crop.frameW = frameW;
-  state.crop.frameH = frameH;
-
-  // compute cover scale for cropping modes (except orig which is just fit scale)
-  let scale = 1;
-  if($("frameAspect").value === "orig"){
-    // no cropping, only scale down to fit frame
-    scale = frameW / origW; // (same as frameH/origH)
-  }else{
-    scale = Math.max(frameW / origW, frameH / origH);
-  }
-  state.crop.scale = scale;
-
-  // init translate so image centered in frame
-  const imgW = origW * scale;
-  const imgH = origH * scale;
-
-  const minTX = frameW - imgW;
-  const minTY = frameH - imgH;
-  const maxTX = 0;
-  const maxTY = 0;
-
-  if(!keepPosition || forceCenter){
-    state.crop.tx = Math.round((frameW - imgW)/2);
-    state.crop.ty = Math.round((frameH - imgH)/2);
-  }else{
-    state.crop.tx = clamp(state.crop.tx, minTX, maxTX);
-    state.crop.ty = clamp(state.crop.ty, minTY, maxTY);
-  }
-
-  // set DOM size
-  const cropFrame = $("cropFrame");
-  cropFrame.style.width = frameW + "px";
-  cropFrame.style.height = frameH + "px";
-
-  const cropImg = $("cropImg");
-  cropImg.style.width = imgW + "px";
-  cropImg.style.height = imgH + "px";
-  cropImg.style.transform = `translate(${state.crop.tx}px, ${state.crop.ty}px)`;
-
-  // layer coordinate system should match frame
-  const cropLayer = $("cropLayer");
-  cropLayer.style.width = frameW + "px";
-  cropLayer.style.height = frameH + "px";
-
-  updateSizeInfo(origW, origH);
-}
-
-/* drag image inside crop frame */
-let cropDragging = false;
-let cropStart = null;
-
-$("cropImg").addEventListener("mousedown", (e) => {
-  if(!state.crop.enabled) return;
-  cropDragging = true;
-  cropStart = { x: e.clientX, y: e.clientY, tx: state.crop.tx, ty: state.crop.ty };
-  e.preventDefault();
-});
-window.addEventListener("mousemove", (e) => {
-  if(!cropDragging || !cropStart) return;
-  const dx = e.clientX - cropStart.x;
-  const dy = e.clientY - cropStart.y;
-
-  // bounds
-  const frameW = state.crop.frameW;
-  const frameH = state.crop.frameH;
-  const imgEl = $("cropImg");
-  const imgW = parseFloat(imgEl.style.width) || 0;
-  const imgH = parseFloat(imgEl.style.height) || 0;
-
-  const minTX = frameW - imgW;
-  const minTY = frameH - imgH;
-  const maxTX = 0;
-  const maxTY = 0;
-
-  state.crop.tx = clamp(cropStart.tx + dx, minTX, maxTX);
-  state.crop.ty = clamp(cropStart.ty + dy, minTY, maxTY);
-
-  imgEl.style.transform = `translate(${state.crop.tx}px, ${state.crop.ty}px)`;
-
-  // 熱區是畫在 cropLayer 上，不受圖片移動影響（正確）
+  if(!silent) pushHistory();
   refreshPhonePreview();
-});
-window.addEventListener("mouseup", () => {
-  if(cropDragging){
-    cropDragging = false;
-    cropStart = null;
-    pushHistory("crop-move");
+}
+function applyCropTransform(){
+  // apply translate+scale on img
+  const t = state.crop;
+  imgEl.style.transform = `translate(calc(-50% + ${t.tx}px), calc(-50% + ${t.ty}px)) scale(${t.s})`;
+}
+
+/* ========= hotspots ========= */
+function uid(){
+  return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+}
+function selectHotspot(id){
+  state.selectedId = id;
+  renderHotspots();
+  renderHotspotList();
+}
+function addHotspot(nx, ny, nw, nh){
+  const id = uid();
+  state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
+  state.selectedId = id;
+  pushHistory();
+  renderAll();
+}
+function deleteSelected(){
+  if(!state.selectedId) return;
+  const i = state.hotspots.findIndex(h => h.id === state.selectedId);
+  if(i >= 0){
+    state.hotspots.splice(i,1);
+    state.selectedId = null;
+    pushHistory();
+    renderAll();
   }
-});
-
-/* ------------------- Size info ------------------- */
-function updateSizeInfo(origW=null, origH=null){
-  const maxSide = parseInt($("maxSide").value,10) || 1280;
-
-  // If known orig size
-  if(origW && origH){
-    const longSide = Math.max(origW, origH);
-    const ok = longSide <= maxSide;
-    $("sizeInfo").innerHTML = `
-      原圖：<b>${origW}</b> × <b>${origH}</b>（長邊：<b>${longSide}</b>）<br>
-      底框上限：<b>${maxSide}</b> → ${ok ? `<span class="text-green-700 font-bold">OK</span>` : `<span class="text-red-700 font-black">超過（建議開裁切模式或重新上傳壓縮）</span>`}
-      ${state.crop.enabled ? `<br>輸出底框：<b>${state.crop.frameW}</b> × <b>${state.crop.frameH}</b>` : ""}
-    `;
-    return;
-  }
-
-  // fallback by DOM
-  const img = state.crop.enabled ? $("cropImg") : $("preview");
-  const w = state.crop.enabled ? state.crop.frameW : (img.naturalWidth||0);
-  const h = state.crop.enabled ? state.crop.frameH : (img.naturalHeight||0);
-  if(!w || !h){
-    $("sizeInfo").textContent = "尚未載入圖片";
-    return;
-  }
-  const longSide = Math.max(w,h);
-  const ok = longSide <= maxSide;
-  $("sizeInfo").innerHTML = `
-    目前：<b>${w}</b> × <b>${h}</b>（長邊：<b>${longSide}</b>）<br>
-    底框上限：<b>${maxSide}</b> → ${ok ? `<span class="text-green-700 font-bold">OK</span>` : `<span class="text-red-700 font-black">超過</span>`}
-  `;
 }
 
-/* ------------------- Drawing hotspots (two layers) ------------------- */
-const drawLayer = $("drawLayer");
-const cropLayer = $("cropLayer");
+/* ========= render ========= */
+function renderHotspots(){
+  hotspotLayerEl.innerHTML = "";
+  const ab = artboardEl.getBoundingClientRect();
 
-function currentLayer(){
-  return state.crop.enabled ? cropLayer : drawLayer;
-}
-function currentBaseSize(){
-  if(state.crop.enabled){
-    return { w: state.crop.frameW, h: state.crop.frameH };
-  }
-  const img = $("preview");
-  return { w: img.naturalWidth||0, h: img.naturalHeight||0 };
-}
-
-function layerPoint(e){
-  const layer = currentLayer();
-  const rect = layer.getBoundingClientRect();
-  // 注意：layer 跟 stage 一起被 scale(ZOOM)，所以要除以 ZOOM 回到座標系
-  const x = (e.clientX - rect.left) / ZOOM;
-  const y = (e.clientY - rect.top) / ZOOM;
-  return { x, y, rect };
-}
-function toNormXY(x,y){
-  const { w, h } = currentBaseSize();
-  return { nx: x / w, ny: y / h };
-}
-function fromNormBox(a){
-  const { w, h } = currentBaseSize();
-  return { x: a.x*w, y: a.y*h, w: a.w*w, h: a.h*h };
-}
-
-/* draw new box */
-let isDrawing = false;
-let drawSX=0, drawSY=0;
-let previewRect = null;
-
-/* drag/resize box */
-let dragMode = null;
-let dragIndex = -1;
-let dragStart = null;
-
-function attachBoxHandles(boxEl, idx){
-  ["nw","n","ne","e","se","s","sw","w"].forEach(key => {
-    const h = document.createElement("div");
-    h.className = "handle " + key;
-    h.addEventListener("mousedown", (ev) => {
-      if(spaceDown) return;
-      ev.stopPropagation();
-      dragMode = key;
-      dragIndex = idx;
-      const p = layerPoint(ev);
-      dragStart = { px:p.x, py:p.y, base: cloneDeep(state.areas[idx]) };
-    });
-    boxEl.appendChild(h);
-  });
-}
-
-function renderAreas(){
-  const layer = currentLayer();
-  layer.querySelectorAll(".area-box").forEach(el => el.remove());
-
-  state.areas.forEach((a, i) => {
+  state.hotspots.forEach((h, idx) => {
     const d = document.createElement("div");
-    d.className = "area-box" + (i===selectedIndex ? " selected" : "");
-    d.style.left = (a.x*100)+"%";
-    d.style.top  = (a.y*100)+"%";
-    d.style.width = (a.w*100)+"%";
-    d.style.height= (a.h*100)+"%";
-    d.textContent = (i+1);
+    d.className = "hotspot" + (h.id === state.selectedId ? " selected" : "");
+    d.style.left = (h.x * 100) + "%";
+    d.style.top = (h.y * 100) + "%";
+    d.style.width = (h.w * 100) + "%";
+    d.style.height = (h.h * 100) + "%";
+    d.textContent = (idx + 1);
 
     d.addEventListener("mousedown", (ev) => {
-      if(spaceDown) return;
       ev.stopPropagation();
-      selectedIndex = i;
-      renderAreas(); renderAreaList(); refreshPhonePreview();
-
-      dragMode = "move";
-      dragIndex = i;
-      const p = layerPoint(ev);
-      dragStart = { px:p.x, py:p.y, base: cloneDeep(state.areas[i]) };
+      if(state.mode !== "hotspot") return;
+      selectHotspot(h.id);
+      beginDragHotspot(ev, h.id, "move");
+    });
+    d.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      selectHotspot(h.id);
     });
 
-    d.ondblclick = (ev) => {
-      ev.stopPropagation();
-      if(confirm(`刪除框 ${i+1}？`)){
-        state.areas.splice(i,1);
-        if(selectedIndex === i) selectedIndex = -1;
-        pushHistory("delete-area");
-        renderAreas(); renderAreaList(); refreshPhonePreview();
-      }
-    };
-
-    if(i===selectedIndex) attachBoxHandles(d, i);
-    layer.appendChild(d);
-  });
-}
-
-/* draw handlers */
-function bindLayerEvents(layerEl){
-  layerEl.addEventListener("mousedown", (e) => {
-    if(spaceDown) return;
-    if(!state.imageUrl) return alert("請先上傳圖片或讀取資料");
-    if(e.target !== layerEl) return;
-
-    selectedIndex = -1;
-    renderAreas(); renderAreaList(); refreshPhonePreview();
-
-    const p = layerPoint(e);
-    isDrawing = true;
-    drawSX = p.x; drawSY = p.y;
-
-    previewRect = document.createElement("div");
-    previewRect.className = "draw-rect";
-    previewRect.style.left = drawSX + "px";
-    previewRect.style.top  = drawSY + "px";
-    previewRect.style.width = "0px";
-    previewRect.style.height= "0px";
-    layerEl.appendChild(previewRect);
-  });
-
-  layerEl.addEventListener("mousemove", (e) => {
-    if(isDrawing && previewRect){
-      const p = layerPoint(e);
-      const cx=p.x, cy=p.y;
-      const x = Math.min(drawSX,cx);
-      const y = Math.min(drawSY,cy);
-      const w = Math.abs(cx-drawSX);
-      const h = Math.abs(cy-drawSY);
-      previewRect.style.left = x + "px";
-      previewRect.style.top  = y + "px";
-      previewRect.style.width = w + "px";
-      previewRect.style.height= h + "px";
+    if(h.id === state.selectedId && state.mode === "hotspot"){
+      // handles
+      ["nw","ne","sw","se"].forEach(pos=>{
+        const hd = document.createElement("div");
+        hd.className = "handle " + pos;
+        hd.addEventListener("mousedown", (ev)=>{
+          ev.stopPropagation();
+          beginDragHotspot(ev, h.id, pos);
+        });
+        d.appendChild(hd);
+      });
     }
 
-    // drag/resize
-    if(dragMode && dragIndex >= 0 && dragStart){
-      const p = layerPoint(e);
-      const dx = p.x - dragStart.px;
-      const dy = p.y - dragStart.py;
-
-      const basePx = fromNormBox(dragStart.base);
-      let x=basePx.x, y=basePx.y, w=basePx.w, h=basePx.h;
-      const minSize = 16;
-
-      if(dragMode === "move"){
-        x = basePx.x + dx;
-        y = basePx.y + dy;
-      }else{
-        if(dragMode.includes("e")) w = Math.max(minSize, basePx.w + dx);
-        if(dragMode.includes("s")) h = Math.max(minSize, basePx.h + dy);
-        if(dragMode.includes("w")){ x = basePx.x + dx; w = Math.max(minSize, basePx.w - dx); }
-        if(dragMode.includes("n")){ y = basePx.y + dy; h = Math.max(minSize, basePx.h - dy); }
-      }
-
-      const { w:BW, h:BH } = currentBaseSize();
-      x = clamp(x, 0, BW - w);
-      y = clamp(y, 0, BH - h);
-
-      const a = state.areas[dragIndex];
-      a.x = clamp01(x / BW);
-      a.y = clamp01(y / BH);
-      a.w = clamp01(w / BW);
-      a.h = clamp01(h / BH);
-
-      renderAreas();
-      renderAreaList(false);
-      refreshPhonePreview();
-    }
+    hotspotLayerEl.appendChild(d);
   });
-}
-bindLayerEvents(drawLayer);
-bindLayerEvents(cropLayer);
 
-window.addEventListener("mouseup", (e) => {
-  if(isDrawing){
-    isDrawing = false;
-    if(previewRect){ previewRect.remove(); previewRect=null; }
-
-    const layerEl = currentLayer();
-    const p = layerPoint(e);
-    const ex=p.x, ey=p.y;
-
-    const x = Math.min(drawSX, ex);
-    const y = Math.min(drawSY, ey);
-    const w = Math.abs(ex - drawSX);
-    const h = Math.abs(ey - drawSY);
-    if(w < 14 || h < 14) return;
-
-    const { w:BW, h:BH } = currentBaseSize();
-    const nx = x / BW, ny = y / BH;
-
-    state.areas.push({ x:clamp01(nx), y:clamp01(ny), w:clamp01(w/BW), h:clamp01(h/BH), text:"" });
-    selectedIndex = state.areas.length - 1;
-
-    pushHistory("add-area");
-    renderAreas(); renderAreaList(); refreshPhonePreview();
-  }
-
-  if(dragMode){
-    dragMode = null; dragIndex = -1; dragStart = null;
-    pushHistory("move/resize");
-  }
-});
-
-/* ------------------- Area list ------------------- */
-function escapeHtml(str){
-  return String(str||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  hsCountEl.textContent = state.hotspots.length + " 個";
 }
 
-function renderAreaList(scrollToSelected=true){
-  const list = $("areaList");
-  list.innerHTML = "";
-  $("areaEmpty").classList.toggle("hidden", state.areas.length !== 0);
+function renderHotspotList(){
+  areaListEl.innerHTML = "";
+  areaEmptyEl.classList.toggle("hidden", state.hotspots.length !== 0);
 
-  state.areas.forEach((a, i) => {
+  state.hotspots.forEach((h, idx) => {
     const row = document.createElement("div");
-    row.className = "border rounded-xl p-2 bg-white " + (i === selectedIndex ? "ring-2 ring-blue-400" : "");
+    row.className = "border rounded-lg p-2 bg-white";
+    const selected = (h.id === state.selectedId);
+
     row.innerHTML = `
       <div class="flex items-center justify-between mb-2">
-        <div class="font-bold text-sm">框 ${i+1}</div>
-        <button class="text-xs text-red-600 underline">刪除</button>
+        <div class="font-bold text-sm ${selected ? 'text-blue-700' : 'text-slate-700'}">框 ${idx+1}</div>
+        <div class="flex items-center gap-2">
+          <button class="text-xs ${selected ? 'text-blue-700' : 'text-slate-500'} underline">選取</button>
+          <button class="text-xs text-red-600 underline">刪除</button>
+        </div>
       </div>
       <div class="text-xs text-slate-500 mb-1">點此框送出文字：</div>
-      <input class="w-full border rounded-lg px-2 py-2 text-sm font-bold"
+      <input class="w-full border rounded px-2 py-2 text-sm font-bold"
         placeholder="例如：MENU_SHOP / MENU_CALENDAR / MENU_NUTRITION"
-        value="${escapeHtml(a.text)}">
-      <div class="mt-2 grid grid-cols-2 gap-2">
-        <button class="text-xs px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-black font-bold">選取</button>
-        <button class="text-xs px-3 py-2 rounded-lg bg-white border hover:bg-slate-50 font-bold">定位</button>
-      </div>
+        value="${escapeHtml(h.text)}">
     `;
 
-    const del = row.querySelector("button.text-red-600");
+    const btnSelect = row.querySelectorAll("button")[0];
+    const btnDel = row.querySelectorAll("button")[1];
     const input = row.querySelector("input");
-    const pickBtn = row.querySelectorAll("button")[1];
-    const focusBtn = row.querySelectorAll("button")[2];
 
-    del.onclick = () => {
-      if(confirm(`刪除框 ${i+1}？`)){
-        state.areas.splice(i,1);
-        if(selectedIndex === i) selectedIndex = -1;
-        pushHistory("delete-area");
-        renderAreas(); renderAreaList(); refreshPhonePreview();
+    btnSelect.onclick = () => selectHotspot(h.id);
+    btnDel.onclick = () => {
+      if(confirm(`刪除框 ${idx+1}？`)){
+        const i = state.hotspots.findIndex(x => x.id === h.id);
+        if(i>=0){
+          state.hotspots.splice(i,1);
+          if(state.selectedId === h.id) state.selectedId = null;
+          pushHistory();
+          renderAll();
+        }
       }
     };
     input.oninput = () => {
-      a.text = input.value;
-      pushHistory("edit-text");
+      h.text = input.value;
+      // small push but not too frequent: push on blur
       refreshPhonePreview();
     };
+    input.onblur = () => pushHistory();
 
-    pickBtn.onclick = () => {
-      selectedIndex = i;
-      renderAreas(); renderAreaList(); refreshPhonePreview();
-    };
-    focusBtn.onclick = () => {
-      selectedIndex = i;
-      renderAreas(); renderAreaList(false); refreshPhonePreview();
-      focusArea(i);
-    };
-
-    list.appendChild(row);
-    if(scrollToSelected && i === selectedIndex){
-      setTimeout(() => row.scrollIntoView({ block:"nearest", behavior:"smooth" }), 10);
-    }
+    areaListEl.appendChild(row);
   });
 }
 
-function focusArea(i){
-  const a = state.areas[i];
-  if(!a) return;
-  const px = fromNormBox(a);
-  const cx = (px.x + px.w/2) * ZOOM;
-  const cy = (px.y + px.h/2) * ZOOM;
-  canvasWrap.scrollLeft = Math.max(0, cx - canvasWrap.clientWidth/2);
-  canvasWrap.scrollTop  = Math.max(0, cy - canvasWrap.clientHeight/2);
+function renderAll(){
+  // sync inputs
+  triggerEl.value = state.triggerKeyword || "";
+  fileNameEl.value = (state.meta?.name || "");
+  // image
+  applyCropTransform();
+  // layers
+  renderHotspots();
+  renderHotspotList();
+  refreshPhonePreview();
 }
 
-function clearAreas(){
-  if(confirm("確定清空全部框？")){
-    state.areas = [];
-    selectedIndex = -1;
-    pushHistory("clear-areas");
-    renderAreas(); renderAreaList(); refreshPhonePreview();
-  }
-}
+/* ========= drawing new hotspot ========= */
+let drawing = false;
+let drawStart = { x:0, y:0 };
+let drawRectEl = null;
 
-/* ------------------- Pick & Upload ------------------- */
-async function pickAndUpload(){
-  const base = normalizeWorkerUrl($("workerUrl").value);
-  if(!base) return alert("請先填 Worker URL");
-  localStorage.setItem("line_worker_url", base);
-
-  const input = $("fileInput");
-  input.value = "";
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-
-    setStatus("壓縮+上傳中...");
-    try{
-      const maxSide = parseInt($("maxSide").value, 10) || 1280;
-      const mime = $("outFormat").value;
-      const quality = parseFloat($("quality").value);
-      const cropSquare = $("cropSquareUpload").checked;
-
-      const { blob, filename, w, h } = await compressImage(file, {maxSide, mime, quality, cropSquare});
-      const url = await uploadToR2(base, blob, filename);
-
-      state.imageUrl = url;
-      state.areas = [];
-      selectedIndex = -1;
-
-      // keep meta name (optional)
-      state.meta.name = ($("fileName").value || "").trim();
-
-      // show according to crop mode toggle
-      const wantCrop = $("cropEnabled").checked;
-      if(wantCrop){
-        enterCropMode(true);
-        $("cropImg").src = url;
-        await setupCropFromImage(false, true);
-      }else{
-        exitCropMode(true);
-        $("preview").src = url;
-        $("lineFrameNormal").classList.remove("hidden");
-        $("lineFrameTagNormal").textContent = `LINE 建議範圍（≤${maxSide}px）`;
-      }
-
-      pushHistory("upload");
-      renderAreas(); renderAreaList(); refreshPhonePreview();
-      updateSizeInfo();
-      setStatus("上傳完成 ✅");
-      togglePreviewDrawer(true);
-      fitToView();
-    }catch(err){
-      setStatus("上傳失敗");
-      alert("上傳失敗：\n" + err.message);
-    }
-  };
-  input.click();
-}
-
-/* ------------------- Build imagemap message ------------------- */
-async function buildImagemapMessage(){
-  if(!state.imageUrl) throw new Error("尚未上傳圖片");
-  if(state.areas.length === 0) throw new Error("尚未畫框");
-  if(state.areas.some(a => !String(a.text||"").trim())) throw new Error("有框沒有填內容");
-
-  // 實際要送出去的圖片：裁切模式 → 先前端產生裁切後圖片並上傳到R2，再用那張圖的URL
-  let finalUrl = state.imageUrl;
-  if(state.crop.enabled && $("frameAspect").value !== "orig"){
-    finalUrl = await exportCroppedAndUpload();
-  }
-
-  // 以「顯示座標系」產出 actions
-  const baseW = 1040;
-  const baseH = await calcBaseH(finalUrl, baseW);
-
-  const actions = state.areas.map(a => ({
-    type: "message",
-    text: a.text,
-    area: {
-      x: Math.round(a.x * baseW),
-      y: Math.round(a.y * baseH),
-      width: Math.round(a.w * baseW),
-      height: Math.round(a.h * baseH)
-    }
-  }));
-
+function getPointInArtboard(ev){
+  const r = artboardEl.getBoundingClientRect();
   return {
-    type: "imagemap",
-    baseUrl: finalUrl,
-    altText: "請點選",
-    baseSize: { width: baseW, height: baseH },
-    actions
+    px: ev.clientX - r.left,
+    py: ev.clientY - r.top,
+    nx: (ev.clientX - r.left) / r.width,
+    ny: (ev.clientY - r.top) / r.height,
+    r
   };
 }
 
-async function calcBaseH(url, baseW){
-  return new Promise((resolve) => {
-    const im = new Image();
-    im.crossOrigin = "anonymous";
-    im.onload = () => {
-      const ratio = im.naturalHeight / im.naturalWidth;
-      const h = Math.max(1040, Math.round(baseW * ratio));
-      resolve(h);
-    };
-    im.onerror = () => resolve(1040);
-    im.src = url;
-  });
-}
+drawLayerEl.addEventListener("mousedown", (ev)=>{
+  if(state.mode !== "hotspot") return;
+  if(!state.imageUrl) return alert("請先上傳圖片（或先讀取）");
+  // if clicking on empty area -> start draw
+  const p = getPointInArtboard(ev);
+  drawing = true;
+  drawStart = { x:p.px, y:p.py };
 
-/* ---- Export cropped image (only in crop mode) ---- */
-async function exportCroppedAndUpload(){
-  const base = normalizeWorkerUrl($("workerUrl").value);
-  if(!base) throw new Error("請先填 Worker URL（裁切輸出需要上傳到 R2）");
+  drawRectEl = document.createElement("div");
+  drawRectEl.className = "draw-rect";
+  drawRectEl.style.left = drawStart.x + "px";
+  drawRectEl.style.top = drawStart.y + "px";
+  drawRectEl.style.width = "0px";
+  drawRectEl.style.height = "0px";
+  drawLayerEl.appendChild(drawRectEl);
 
-  // load original image
-  const im = new Image();
-  im.crossOrigin = "anonymous";
-  im.src = state.imageUrl;
-  await im.decode().catch(()=>{});
-  const origW = im.naturalWidth, origH = im.naturalHeight;
-  if(!origW || !origH) throw new Error("裁切失敗：讀不到原圖尺寸");
+  // deselect
+  state.selectedId = null;
+  renderHotspots();
+});
 
-  // frame
-  const frameW = state.crop.frameW;
-  const frameH = state.crop.frameH;
+window.addEventListener("mousemove", (ev)=>{
+  if(drawing && drawRectEl){
+    const r = artboardEl.getBoundingClientRect();
+    const cx = ev.clientX - r.left;
+    const cy = ev.clientY - r.top;
 
-  // cover scale used in crop
-  const scale = state.crop.scale;
-  const imgW = origW * scale;
-  const imgH = origH * scale;
+    const x = Math.min(drawStart.x, cx);
+    const y = Math.min(drawStart.y, cy);
+    const w = Math.abs(cx - drawStart.x);
+    const h = Math.abs(cy - drawStart.y);
 
-  // cropImg translate in frame: tx, ty
-  const tx = state.crop.tx;
-  const ty = state.crop.ty;
-
-  // draw onto canvas of frame size
-  const canvas = document.createElement("canvas");
-  canvas.width = frameW;
-  canvas.height = frameH;
-  const ctx = canvas.getContext("2d");
-
-  // Draw the scaled image with translate
-  ctx.drawImage(im, tx, ty, imgW, imgH);
-
-  const mime = $("outFormat").value;
-  const quality = parseFloat($("quality").value);
-
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
-  if(!blob) throw new Error("裁切輸出失敗：toBlob 空");
-
-  // filename
-  const name = (state.meta?.name || "imagemap").trim().replace(/[\\/:*?"<>|]/g, "_");
-  const ext = (mime === "image/webp") ? "webp" : "jpg";
-  const filename = `${name || "imagemap"}_crop.${ext}`;
-
-  // upload
-  const url = await uploadToR2(base, blob, filename);
-  return url;
-}
-
-/* ------------------- Save/Load with meta.name ------------------- */
-async function saveConfig(){
-  const base = normalizeWorkerUrl($("workerUrl").value);
-  const keyword = $("triggerKeyword").value.trim();
-  if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
-  localStorage.setItem("line_worker_url", base);
-
-  // update meta
-  state.meta.name = ($("fileName").value || "").trim();
-
-  try{
-    const msg = await buildImagemapMessage();
-    const payload = {
-      mode:"imagemap",
-      messages:[msg],
-      meta: {
-        name: state.meta.name || "",
-        updatedAt: new Date().toISOString(),
-        cropEnabled: !!state.crop.enabled,
-        frameAspect: $("frameAspect").value,
-        maxSide: parseInt($("maxSide").value,10) || 1280
-      }
-    };
-
-    await postJSON(base + "/save", { keyword, payload });
-    setStatus("儲存成功 ✅");
-    pushHistory("save");
-    alert("儲存成功！\n觸發關鍵字：「" + keyword + "」");
-  }catch(e){
-    setStatus("儲存失敗");
-    alert("儲存失敗：\n" + e.message);
+    drawRectEl.style.left = x + "px";
+    drawRectEl.style.top = y + "px";
+    drawRectEl.style.width = w + "px";
+    drawRectEl.style.height = h + "px";
   }
+});
+
+window.addEventListener("mouseup", (ev)=>{
+  if(!drawing) return;
+  drawing = false;
+
+  if(drawRectEl){
+    const r = artboardEl.getBoundingClientRect();
+    const rect = drawRectEl.getBoundingClientRect();
+    drawRectEl.remove();
+    drawRectEl = null;
+
+    // compute relative to artboard
+    const ab = artboardEl.getBoundingClientRect();
+    const x = rect.left - ab.left;
+    const y = rect.top - ab.top;
+    const w = rect.width;
+    const h = rect.height;
+
+    if(w < 18 || h < 18) return;
+
+    const nx = x / ab.width;
+    const ny = y / ab.height;
+    const nw = w / ab.width;
+    const nh = h / ab.height;
+
+    addHotspot(nx, ny, nw, nh);
+  }
+});
+
+/* ========= drag / resize hotspot ========= */
+let drag = null;
+// drag = { id, kind:"move"|"nw"|"ne"|"sw"|"se", startMouse:{x,y}, startBox:{x,y,w,h} }
+function beginDragHotspot(ev, id, kind){
+  const h = state.hotspots.find(x=>x.id===id);
+  if(!h) return;
+  const ab = artboardEl.getBoundingClientRect();
+  drag = {
+    id, kind,
+    ab,
+    startMouse: { x: ev.clientX, y: ev.clientY },
+    startBox: { x:h.x, y:h.y, w:h.w, h:h.h }
+  };
+  window.addEventListener("mousemove", onDragHotspot);
+  window.addEventListener("mouseup", endDragHotspot, { once:true });
 }
+function onDragHotspot(ev){
+  if(!drag) return;
+  const h = state.hotspots.find(x=>x.id===drag.id);
+  if(!h) return;
 
-async function loadConfig(){
-  const base = normalizeWorkerUrl($("workerUrl").value);
-  const keyword = $("triggerKeyword").value.trim();
-  if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
-  localStorage.setItem("line_worker_url", base);
+  const dx = (ev.clientX - drag.startMouse.x) / drag.ab.width;
+  const dy = (ev.clientY - drag.startMouse.y) / drag.ab.height;
 
-  try{
-    const data = await postJSON(base + "/load", { keyword });
-    const obj = (typeof data === "string") ? JSON.parse(data) : data;
+  let nx = drag.startBox.x;
+  let ny = drag.startBox.y;
+  let nw = drag.startBox.w;
+  let nh = drag.startBox.h;
 
-    if(obj.mode !== "imagemap" || !obj.messages?.[0]) throw new Error("不是 imagemap 格式");
-    const m = obj.messages[0];
+  const min = 0.02;
 
-    state.imageUrl = m.baseUrl;
-    state.meta = obj.meta || obj.payload?.meta || obj.payload?.meta || obj.meta || { name:"" };
-    state.meta.name = (obj.meta?.name || obj.payload?.meta?.name || "") || "";
-
-    $("fileName").value = state.meta.name || "";
-
-    // restore crop preference (best effort)
-    const meta = obj.meta || obj.payload?.meta || {};
-    const cropEnabled = !!meta.cropEnabled;
-    $("cropEnabled").checked = cropEnabled;
-
-    if(cropEnabled){
-      enterCropMode(true);
-      $("cropImg").src = state.imageUrl;
-      await setupCropFromImage(false, true);
-    }else{
-      exitCropMode(true);
-      $("preview").src = state.imageUrl;
-      $("lineFrameNormal").classList.remove("hidden");
-      $("lineFrameTagNormal").textContent = `LINE 建議範圍（≤${parseInt($("maxSide").value,10)||1280}px）`;
+  if(drag.kind === "move"){
+    nx = drag.startBox.x + dx;
+    ny = drag.startBox.y + dy;
+  }else{
+    // resize
+    if(drag.kind.includes("n")){
+      ny = drag.startBox.y + dy;
+      nh = drag.startBox.h - dy;
     }
-
-    const bw = m.baseSize?.width || 1040;
-    const bh = m.baseSize?.height || 1040;
-
-    state.areas = (m.actions || []).map(a => ({
-      x: (a.area?.x || 0) / bw,
-      y: (a.area?.y || 0) / bh,
-      w: (a.area?.width || 0) / bw,
-      h: (a.area?.height || 0) / bh,
-      text: a.text || ""
-    }));
-
-    selectedIndex = -1;
-    pushHistory("load");
-
-    renderAreas();
-    renderAreaList();
-    refreshPhonePreview();
-
-    setStatus("讀取成功 ✅");
-    togglePreviewDrawer(true);
-    fitToView();
-  }catch(e){
-    setStatus("讀取失敗");
-    alert("讀取失敗：\n" + e.message);
+    if(drag.kind.includes("s")){
+      nh = drag.startBox.h + dy;
+    }
+    if(drag.kind.includes("w")){
+      nx = drag.startBox.x + dx;
+      nw = drag.startBox.w - dx;
+    }
+    if(drag.kind.includes("e")){
+      nw = drag.startBox.w + dx;
+    }
   }
+
+  // clamp
+  nw = Math.max(min, nw);
+  nh = Math.max(min, nh);
+  nx = Math.min(1 - nw, Math.max(0, nx));
+  ny = Math.min(1 - nh, Math.max(0, ny));
+
+  h.x = nx; h.y = ny; h.w = nw; h.h = nh;
+
+  renderHotspots();
+  refreshPhonePreview();
+}
+function endDragHotspot(){
+  window.removeEventListener("mousemove", onDragHotspot);
+  drag = null;
+  pushHistory();
+  renderHotspotList();
 }
 
-/* ------------------- LIFF send test ------------------- */
-async function sendTestToMe(){
-  if(!isReady) return alert("LIFF 尚未初始化完成");
-  if(!liff.isInClient()) return alert("請在 LINE 內開啟（彈窗）才可送測試訊息");
-  try{
-    const msg = await buildImagemapMessage();
-    await liff.sendMessages([msg]);
-    alert("已把 imagemap 送到你目前的聊天室 ✅");
-  }catch(e){
-    alert("送測試失敗：\n" + e.message);
-  }
+/* ========= crop mode drag image ========= */
+let cropDrag = null;
+// cropDrag = { startMouse, startTxTy }
+imgLayerEl.addEventListener("mousedown", (ev)=>{
+  if(state.mode !== "crop") return;
+  if(!state.imageUrl) return;
+  cropDrag = {
+    startMouse: { x: ev.clientX, y: ev.clientY },
+    start: { tx: state.crop.tx, ty: state.crop.ty }
+  };
+  imgLayerEl.style.cursor = "grabbing";
+  window.addEventListener("mousemove", onCropDrag);
+  window.addEventListener("mouseup", endCropDrag, { once:true });
+});
+
+function onCropDrag(ev){
+  if(!cropDrag) return;
+  const dx = ev.clientX - cropDrag.startMouse.x;
+  const dy = ev.clientY - cropDrag.startMouse.y;
+  state.crop.tx = cropDrag.start.tx + dx;
+  state.crop.ty = cropDrag.start.ty + dy;
+  applyCropTransform();
 }
-async function sendPreviewToMe(){ return sendTestToMe(); }
+function endCropDrag(){
+  window.removeEventListener("mousemove", onCropDrag);
+  imgLayerEl.style.cursor = "grab";
+  cropDrag = null;
+  pushHistory();
+}
 
-/* ------------------- Preview drawer ------------------- */
-$("showHotspots").addEventListener("change", () => refreshPhonePreview());
+/* ========= workspace pan (space drag) ========= */
+let panning = false;
+let panStart = { x:0, y:0, vx:0, vy:0 };
+window.addEventListener("keydown", (ev)=>{
+  if(ev.code === "Space"){
+    // prevent page scroll
+    ev.preventDefault();
+  }
+});
+workspaceEl.addEventListener("mousedown", (ev)=>{
+  // Space + drag pan
+  if(isSpaceDown && ev.button === 0){
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y };
+    window.addEventListener("mousemove", onPanMove);
+    window.addEventListener("mouseup", endPan, { once:true });
+  }
+});
+function onPanMove(ev){
+  if(!panning) return;
+  view.x = panStart.vx + (ev.clientX - panStart.x);
+  view.y = panStart.vy + (ev.clientY - panStart.y);
+  updateStageTransform();
+}
+function endPan(){
+  window.removeEventListener("mousemove", onPanMove);
+  panning = false;
+}
 
-function togglePreviewDrawer(open){
+/* ========= wheel zoom ========= */
+workspaceEl.addEventListener("wheel", (ev)=>{
+  // Ctrl+wheel => zoom view
+  if(ev.ctrlKey){
+    ev.preventDefault();
+    const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
+    zoomBy(factor, ev.clientX, ev.clientY);
+    return;
+  }
+  // crop mode: Ctrl+wheel already used by view zoom, so for image zoom use Alt+wheel
+  if(state.mode === "crop" && ev.altKey){
+    ev.preventDefault();
+    const factor = ev.deltaY < 0 ? 1.06 : 1/1.06;
+    state.crop.s = Math.min(6, Math.max(0.2, state.crop.s * factor));
+    applyCropTransform();
+    pushHistory();
+  }
+}, { passive:false });
+
+/* ========= keyboard shortcuts ========= */
+let isSpaceDown = false;
+window.addEventListener("keydown", (ev)=>{
+  if(ev.code === "Space") isSpaceDown = true;
+
+  // Undo/Redo
+  if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase() === "z"){
+    ev.preventDefault(); undo(); return;
+  }
+  if((ev.ctrlKey && ev.key.toLowerCase() === "y") || (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === "z")){
+    ev.preventDefault(); redo(); return;
+  }
+  // Delete
+  if(ev.key === "Delete"){
+    ev.preventDefault();
+    deleteSelected();
+  }
+  // Esc deselect
+  if(ev.key === "Escape"){
+    state.selectedId = null;
+    renderHotspots();
+    renderHotspotList();
+  }
+});
+window.addEventListener("keyup", (ev)=>{
+  if(ev.code === "Space") isSpaceDown = false;
+});
+
+/* ========= preview drawer ========= */
+$("showHotspots").addEventListener("change", ()=> refreshPhonePreview());
+
+function togglePreview(open){
   const overlay = $("drawerOverlay");
   const drawer = $("previewDrawer");
   if(open){
@@ -1491,11 +1102,9 @@ function togglePreviewDrawer(open){
     drawer.classList.add("translate-y-full");
   }
 }
-
 function refreshPhonePreview(){
   const img = $("phoneImg");
   const wrap = $("phoneHotspots");
-
   if(!state.imageUrl){
     img.src = "";
     wrap.innerHTML = "";
@@ -1505,102 +1114,405 @@ function refreshPhonePreview(){
   img.src = state.imageUrl;
   wrap.innerHTML = "";
 
-  requestAnimationFrame(() => {
+  requestAnimationFrame(()=>{
     const show = $("showHotspots").checked;
     const r = wrap.getBoundingClientRect();
     if(!r.width || !r.height) return;
 
-    state.areas.forEach((a, i) => {
+    state.hotspots.forEach((h, i)=>{
       if(show){
         const box = document.createElement("div");
-        box.className = "preview-hotspot";
-        box.style.left = (a.x * r.width) + "px";
-        box.style.top  = (a.y * r.height) + "px";
-        box.style.width  = (a.w * r.width) + "px";
-        box.style.height = (a.h * r.height) + "px";
+        box.style.position = "absolute";
+        box.style.left = (h.x * r.width) + "px";
+        box.style.top = (h.y * r.height) + "px";
+        box.style.width = (h.w * r.width) + "px";
+        box.style.height = (h.h * r.height) + "px";
+        box.style.border = "2px solid rgba(239,68,68,.9)";
+        box.style.background = "rgba(239,68,68,.10)";
+        box.style.borderRadius = "10px";
         wrap.appendChild(box);
       }
 
       const btn = document.createElement("button");
-      btn.style.position="absolute";
-      btn.style.left = (a.x*100)+"%";
-      btn.style.top  = (a.y*100)+"%";
-      btn.style.width = (a.w*100)+"%";
-      btn.style.height= (a.h*100)+"%";
-      btn.style.background="transparent";
-      btn.onclick = () => alert(`熱區 ${i+1}\n將送出：${(a.text||"").trim() || "（尚未填）"}`);
+      btn.style.position = "absolute";
+      btn.style.left = (h.x*100) + "%";
+      btn.style.top = (h.y*100) + "%";
+      btn.style.width = (h.w*100) + "%";
+      btn.style.height = (h.h*100) + "%";
+      btn.style.background = "transparent";
+      btn.onclick = () => {
+        const t = (h.text || "").trim();
+        alert(`熱區 ${i+1}\n將送出：${t || "（尚未填）"}`);
+      };
       wrap.appendChild(btn);
     });
   });
 }
 
-/* ------------------- LIFF init / close ------------------- */
-async function initLIFF(){
+/* ========= upload / compress ========= */
+$("quality").addEventListener("input", () => $("qVal").textContent = $("quality").value);
+
+async function compressImage(file, {maxSide, mime, quality, cropSquare}){
+  const img = await createImageBitmap(file);
+
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if(cropSquare){
+    const side = Math.min(img.width, img.height);
+    sx = Math.floor((img.width - side) / 2);
+    sy = Math.floor((img.height - side) / 2);
+    sw = side; sh = side;
+  }
+
+  const longSide = Math.max(sw, sh);
+  const scale = Math.min(1, maxSide / longSide);
+  const w = Math.max(1, Math.round(sw * scale));
+  const h = Math.max(1, Math.round(sh * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d", { alpha: true });
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+
+  const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
+  if(!outBlob) throw new Error("壓縮失敗（toBlob 空）");
+
+  const ext = (mime === "image/webp") ? "webp" : "jpg";
+  const safeName = (file.name || "image").replace(/\.[^/.]+$/, "");
+  return { blob: outBlob, filename: `${safeName}.${ext}` };
+}
+
+async function pickAndUpload(){
+  const base = normalizeWorkerUrl(workerUrlEl.value);
+  if(!base) return alert("請先填 Worker URL");
+  localStorage.setItem("line_worker_url", base);
+
+  const input = $("fileInput");
+  input.value = "";
+  input.onchange = async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+
+    try{
+      setStatus("壓縮+上傳中...");
+      const maxSide = parseInt($("maxSide").value, 10);
+      const mime = $("outFormat").value;
+      const quality = parseFloat($("quality").value);
+      const cropSquare = $("cropSquare").checked;
+
+      const { blob, filename } = await compressImage(file, {maxSide, mime, quality, cropSquare});
+      const url = await uploadToR2(base, blob, filename);
+
+      // keep source for later crop-export
+      state._sourceBlob = blob;
+      state._sourceName = filename.replace(/\.[^/.]+$/, "");
+
+      // reset crop
+      state.crop = { tx:0, ty:0, s:1 };
+      state.hotspots = [];
+      state.selectedId = null;
+
+      setImageUrl(url, true);
+      applyCropTransform();
+      pushHistory();
+      renderAll();
+
+      setStatus("上傳完成 ✅（可裁切 / 畫框）");
+      fitToScreen();
+      togglePreview(true);
+    }catch(err){
+      setStatus("上傳失敗");
+      alert("上傳失敗：\n" + err.message);
+    }
+  };
+  input.click();
+}
+
+/* ========= export crop (真正裁切成底框尺寸) =========
+把目前裁切視覺結果 -> canvas -> blob -> 上傳 -> 替換 imageUrl
+*/
+async function exportCropAndUpload(){
+  const base = normalizeWorkerUrl(workerUrlEl.value);
+  if(!base) return alert("請先填 Worker URL");
+  if(!state.imageUrl) return alert("目前沒有圖片");
+  localStorage.setItem("line_worker_url", base);
+
   try{
-    $("liffState").textContent = "初始化中...";
-    await liff.init({ liffId: LIFF_ID });
+    setStatus("依裁切輸出中...");
 
-    if(!liff.isLoggedIn()){
-      $("liffState").textContent = "需要登入";
-      liff.login();
-      return;
-    }
+    // load image
+    const im = await new Promise((resolve, reject)=>{
+      const x = new Image();
+      x.crossOrigin = "anonymous";
+      x.onload = ()=> resolve(x);
+      x.onerror = ()=> reject(new Error("圖片載入失敗（可能 CORS / URL 不可用）"));
+      x.src = state.imageUrl;
+    });
 
-    $("liffState").textContent = liff.isInClient() ? "LINE 內（彈窗）" : "外部瀏覽器";
-    if(liff.getProfile){
-      const p = await liff.getProfile();
-      $("userName").textContent = p.displayName || "-";
-    }
+    // artboard px size
+    const W = state.frame.w;
+    const H = state.frame.h;
 
-    const savedUrl = localStorage.getItem("line_worker_url");
-    if(savedUrl) $("workerUrl").value = savedUrl;
+    // draw transformed image to canvas: we mimic CSS transform (center + translate + scale)
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
 
-    isReady = true;
-    setStatus("就緒 ✅（可上傳、畫框、裁切、儲存）");
+    // background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,W,H);
 
-    // init history
-    pushHistory("init");
-  }catch(e){
-    $("liffState").textContent = "初始化失敗";
-    setStatus("初始化失敗");
-    alert("LIFF 初始化失敗：\n" + e.message);
+    // compute draw size: we want image cover the artboard by default (like object-cover)
+    // base cover scale to cover W/H
+    const sCover = Math.max(W / im.naturalWidth, H / im.naturalHeight);
+    const s = sCover * state.crop.s;
+
+    const dw = im.naturalWidth * s;
+    const dh = im.naturalHeight * s;
+
+    // center
+    const cx = W/2 + state.crop.tx;
+    const cy = H/2 + state.crop.ty;
+
+    const dx = cx - dw/2;
+    const dy = cy - dh/2;
+
+    ctx.drawImage(im, dx, dy, dw, dh);
+
+    // encode
+    const mime = $("outFormat").value;
+    const quality = parseFloat($("quality").value);
+    const outBlob = await new Promise(res=>{
+      if(mime === "image/jpeg") canvas.toBlob(res, mime, quality);
+      else canvas.toBlob(res, "image/webp", quality);
+    });
+    if(!outBlob) throw new Error("輸出失敗（toBlob 空）");
+
+    const ext = (mime === "image/jpeg") ? "jpg" : "webp";
+    const filename = (state._sourceName || "crop") + `_crop_${W}x${H}.${ext}`;
+
+    const url = await uploadToR2(base, outBlob, filename);
+
+    // replace imageUrl to cropped result, and reset crop offsets (already baked)
+    state.imageUrl = url;
+    state.crop = { tx:0, ty:0, s:1 };
+    imgEl.src = url;
+    applyCropTransform();
+
+    pushHistory();
+    renderAll();
+    setStatus("裁切輸出完成 ✅（已換成底框尺寸的圖片）");
+    togglePreview(true);
+  }catch(err){
+    setStatus("裁切輸出失敗");
+    alert("裁切輸出失敗：\n" + err.message);
   }
 }
 
+/* ========= clear ========= */
+function clearAll(){
+  if(!confirm("確定清空圖片 + 全部熱區？")) return;
+  state.imageUrl = "";
+  state.hotspots = [];
+  state.selectedId = null;
+  state.crop = { tx:0, ty:0, s:1 };
+  imgEl.src = "";
+  pushHistory();
+  renderAll();
+}
+
+/* ========= build imagemap message ========= */
+async function buildImagemapMessage(){
+  if(!state.imageUrl) throw new Error("尚未有圖片");
+  if(state.hotspots.length === 0) throw new Error("尚未新增熱區");
+  if(state.hotspots.some(h => !String(h.text||"").trim())) throw new Error("有熱區沒有填內容");
+
+  const baseW = 1040;
+  const baseH = state.frame.h; // 1040/1560/2080
+
+  const actions = state.hotspots.map(h => ({
+    type: "message",
+    text: h.text.trim(),
+    area: {
+      x: Math.round(h.x * baseW),
+      y: Math.round(h.y * baseH),
+      width: Math.round(h.w * baseW),
+      height: Math.round(h.h * baseH)
+    }
+  }));
+
+  return {
+    type: "imagemap",
+    baseUrl: state.imageUrl,
+    altText: "請點選",
+    baseSize: { width: baseW, height: baseH },
+    actions
+  };
+}
+
+/* ========= save/load =========
+注意：你說不要密碼，所以這裡送的 JSON 不帶 password
+（你的 worker.js 也要配合取消 password 判斷）
+*/
+async function saveConfig(){
+  const base = normalizeWorkerUrl(workerUrlEl.value);
+  const keyword = triggerEl.value.trim();
+  const name = fileNameEl.value.trim();
+
+  if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
+  localStorage.setItem("line_worker_url", base);
+
+  try{
+    state.triggerKeyword = keyword;
+    state.meta.name = name;
+
+    const msg = await buildImagemapMessage();
+    const payload = {
+      mode: "imagemap",
+      meta: { name: state.meta.name || "" },
+      messages: [msg]
+    };
+
+    // worker: POST /save { keyword, payload }
+    await postJSON(base + "/save", { keyword, payload });
+
+    pushHistory();
+    setStatus("儲存成功 ✅");
+    alert("儲存成功！\n使用者輸入觸發關鍵字：「" + keyword + "」就會出現這張圖。");
+  }catch(e){
+    setStatus("儲存失敗");
+    alert("儲存失敗：\n" + e.message);
+  }
+}
+
+async function loadConfig(){
+  const base = normalizeWorkerUrl(workerUrlEl.value);
+  const keyword = triggerEl.value.trim();
+  if(!base || !keyword) return alert("請填 Worker URL + 觸發關鍵字");
+  localStorage.setItem("line_worker_url", base);
+
+  try{
+    const data = await postJSON(base + "/load", { keyword });
+    const obj = (typeof data === "string") ? JSON.parse(data) : data;
+
+    if(obj.mode !== "imagemap" || !obj.messages?.[0]) throw new Error("不是 imagemap 格式");
+    const m = obj.messages[0];
+
+    state.meta = obj.meta || { name:"" };
+    state.triggerKeyword = keyword;
+    state.imageUrl = m.baseUrl || "";
+    state.frame = {
+      w: (m.baseSize?.width || 1040),
+      h: (m.baseSize?.height || 1040)
+    };
+
+    // normalize from baseSize
+    const bw = state.frame.w || 1040;
+    const bh = state.frame.h || 1040;
+
+    state.hotspots = (m.actions || []).map((a, idx)=>({
+      id: uid(),
+      x: (a.area?.x || 0) / bw,
+      y: (a.area?.y || 0) / bh,
+      w: (a.area?.width || 0) / bw,
+      h: (a.area?.height || 0) / bh,
+      text: a.text || ""
+    }));
+    state.selectedId = state.hotspots[0]?.id || null;
+
+    // reset crop (already baked on image)
+    state.crop = { tx:0, ty:0, s:1 };
+
+    // UI
+    fileNameEl.value = (state.meta?.name || "");
+    $("framePreset").value = (state.frame.h / state.frame.w).toString();
+    applyFramePreset(true);
+
+    setImageUrl(state.imageUrl, true);
+    applyCropTransform();
+
+    pushHistory();
+    renderAll();
+    fitToScreen();
+    togglePreview(true);
+
+    setStatus("讀取成功 ✅");
+  }catch(e){
+    setStatus("讀取失敗");
+    alert("讀取失敗：\n" + e.message);
+  }
+}
+
+/* ========= LIFF send test ========= */
+async function sendTestToMe(){
+  if(!isReady) return alert("LIFF 尚未初始化完成");
+  if(!liff.isInClient()) return alert("請在 LINE 內開啟（彈窗）才可送測試訊息");
+
+  try{
+    const msg = await buildImagemapMessage();
+    await liff.sendMessages([msg]);
+    alert("已把 imagemap 送到你目前的聊天室 ✅\n你可以直接點熱區測試是否會送出關鍵字。");
+  }catch(e){
+    alert("送測試失敗：\n" + e.message);
+  }
+}
+async function sendPreviewToMe(){ return sendTestToMe(); }
+
+/* ========= close ========= */
 function closeLiff(){
   if(window.liff && liff.isInClient()) liff.closeWindow();
   else window.close();
 }
 
-/* ------------------- Meta name change -> history ------------------- */
-$("fileName").addEventListener("input", () => {
-  state.meta.name = ($("fileName").value || "").trim();
-  pushHistory("rename");
+/* ========= init LIFF ========= */
+async function initLIFF(){
+  try{
+    liffStateEl.textContent = "初始化中...";
+    await liff.init({ liffId: LIFF_ID });
+
+    if(!liff.isLoggedIn()){
+      liffStateEl.textContent = "需要登入";
+      liff.login();
+      return;
+    }
+
+    liffStateEl.textContent = liff.isInClient() ? "LINE 內（彈窗）" : "外部瀏覽器";
+    const p = await liff.getProfile();
+    userNameEl.textContent = p.displayName || "-";
+
+    const savedUrl = localStorage.getItem("line_worker_url");
+    if(savedUrl) workerUrlEl.value = savedUrl;
+
+    // default artboard
+    applyFramePreset(true);
+
+    // initial history
+    pushHistory();
+    renderModeBadge();
+    fitToScreen();
+
+    isReady = true;
+    setStatus("就緒 ✅（可上傳、裁切、畫框、儲存）");
+  }catch(e){
+    liffStateEl.textContent = "初始化失敗";
+    setStatus("初始化失敗");
+    alert("LIFF 初始化失敗：\n" + e.message + "\n\n請確認 LIFF_ID 正確。");
+  }
+}
+
+/* ========= input sync ========= */
+triggerEl.addEventListener("input", ()=> {
+  state.triggerKeyword = triggerEl.value.trim();
+});
+fileNameEl.addEventListener("input", ()=> {
+  state.meta.name = fileNameEl.value;
 });
 
-/* ------------------- On image load (normal) ------------------- */
-$("preview").addEventListener("load", () => {
-  if(!state.imageUrl) return;
-  // show LINE frame tag (normal mode)
-  const maxSide = parseInt($("maxSide").value,10) || 1280;
-  $("lineFrameNormal").classList.remove("hidden");
-  $("lineFrameTagNormal").textContent = `LINE 建議範圍（≤${maxSide}px）`;
-
-  updateSizeInfo($("preview").naturalWidth, $("preview").naturalHeight);
-  renderAreas();
+/* ========= start ========= */
+imgEl.addEventListener("load", ()=>{
+  applyCropTransform();
   refreshPhonePreview();
-  fitToView();
 });
-
-$("cropImg").addEventListener("load", async () => {
-  if(!state.imageUrl || !state.crop.enabled) return;
-  await setupCropFromImage(true, false);
-  renderAreas();
-  refreshPhonePreview();
-  fitToView();
-});
-
-/* ------------------- Start ------------------- */
 initLIFF();
 </script>
 
