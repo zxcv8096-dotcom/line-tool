@@ -49,9 +49,11 @@
       pointer-events:none;
     }
 
+    /* ✅ 熱區：雙描邊，深色圖也清楚 */
     .hotspot{
       position:absolute;
       border:2px solid rgba(239,68,68,.95);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 6px 18px rgba(0,0,0,.18);
       background: rgba(239,68,68,.14);
       border-radius: 12px;
       color:white;
@@ -66,6 +68,12 @@
     .hotspot.selected{
       border-color: rgba(59,130,246,.95);
       background: rgba(59,130,246,.12);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 0 0 4px rgba(59,130,246,.95), 0 6px 18px rgba(0,0,0,.18);
+    }
+    .hotspot.multiSelected:not(.selected){
+      border-color: rgba(234,179,8,.95);
+      background: rgba(234,179,8,.10);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 0 0 4px rgba(234,179,8,.95), 0 6px 18px rgba(0,0,0,.18);
     }
 
     .handle{
@@ -82,10 +90,12 @@
     .handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
     .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
 
+    /* ✅ 畫框：白+黑雙描邊，任何底色都超清楚 */
     .draw-rect{
       position:absolute;
-      border:2px dashed rgba(2,6,23,.55);
-      background: rgba(2,6,23,.10);
+      border:2px solid rgba(255,255,255,1);
+      box-shadow: 0 0 0 2px rgba(0,0,0,.85);
+      background: rgba(0,0,0,.10);
       border-radius: 12px;
       pointer-events:none;
     }
@@ -112,16 +122,6 @@
       background:#e7eefb;
       border:1px solid rgba(255,255,255,.12);
     }
-    .phone-top{
-      background:#ffffff;
-      border-bottom:1px solid rgba(2,6,23,.10);
-      padding:10px 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      font-size:12px;
-      color:#0f172a;
-    }
     .phone-chat{
       height: 360px;
       padding:12px;
@@ -138,6 +138,8 @@
       margin-left:auto;
       max-width: 80%;
     }
+
+    /* ✅ 底部區：模擬 LINE「左下角切換」+ 中間顯示選單名稱 */
     .phone-bottom{
       background:#ffffff;
       border-top:1px solid rgba(2,6,23,.10);
@@ -157,7 +159,26 @@
       font-weight:800;
       color:#0f172a;
       border:1px solid rgba(2,6,23,.10);
+      flex: 0 0 auto;
     }
+    .menu-title{
+      flex: 1 1 auto;
+      text-align:center;
+      font-size: 13px;
+      font-weight: 900;
+      color:#0f172a;
+      line-height: 1;
+      user-select:none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .menu-caret{
+      font-size: 12px;
+      opacity: .6;
+      margin-left: 4px;
+    }
+
     .rm-wrap{
       position:relative;
       width:100%;
@@ -182,13 +203,15 @@
   <div class="flex items-center gap-3">
     <div class="font-extrabold text-indigo-700 text-lg">六宮格選單</div>
     <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-      <span><span class="kbd">Ctrl</span>+滾輪 縮放</span>
+      <span>滾輪：縮放</span>
       <span>｜</span>
-      <span><span class="kbd">空白鍵</span> 拖曳平移</span>
+      <span>中鍵按住：拖曳平移</span>
+      <span>｜</span>
+      <span><span class="kbd">Shift+點選</span> 多選</span>
       <span>｜</span>
       <span><span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span> 復原/重做</span>
       <span>｜</span>
-      <span><span class="kbd">Delete</span> 刪除選取格</span>
+      <span><span class="kbd">Delete</span> 刪除選取</span>
     </div>
   </div>
   <div class="flex items-center gap-2">
@@ -203,9 +226,7 @@
   <div class="w-[92px] bg-white border-r flex flex-col items-center py-3 gap-2">
     <button class="w-14 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl hover:bg-black"
             title="收合/展開左側"
-            onclick="toggleLeft()">
-      ☰
-    </button>
+            onclick="toggleLeft()">☰</button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="makeSixGrid()" title="快速六宮格">
@@ -287,14 +308,24 @@
       <div class="rounded-xl border p-3">
         <div class="font-bold text-sm mb-2 flex items-center justify-between">
           <span>格子清單</span>
-          <span id="count" class="text-xs text-slate-500">0</span>
+          <div class="flex items-center gap-2">
+            <span id="count" class="text-xs text-slate-500">0</span>
+          </div>
         </div>
-        <div id="empty" class="text-xs text-slate-400">尚未新增格子。你可以拖曳新增，或按「六格」。</div>
+
+        <!-- ✅ 多選操作 -->
+        <div class="flex items-center gap-2 mb-2">
+          <button class="px-2 py-1 text-xs rounded border hover:bg-slate-50" onclick="selectAllHotspots()">全選</button>
+          <button class="px-2 py-1 text-xs rounded border hover:bg-slate-50" onclick="clearSelection()">取消選取</button>
+          <button class="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700" onclick="deleteSelectedAll()">刪除選取</button>
+        </div>
+
+        <div id="empty" class="text-xs text-slate-400">尚未新增格子。你可以拖曳新增格子，或按「六格」。</div>
         <div id="list" class="space-y-2"></div>
       </div>
 
       <div class="text-xs text-slate-400 pb-10">
-        圖片會自動裁切成 2500×1686 並上傳到 R2；所有操作支援 Ctrl+Z / Ctrl+Y。
+        圖片會自動裁切成 2500×1686 並上傳到 R2；多選：Shift+點選 或 左側勾選。
       </div>
     </div>
   </div>
@@ -322,8 +353,8 @@
       <div class="font-bold mb-1">操作</div>
       <div class="space-y-1">
         <div>• 拖曳新增格子；點選格子後可拖移/拉角縮放</div>
-        <div>• <span class="kbd">Ctrl</span>+滾輪：縮放畫面；<span class="kbd">空白鍵</span>：拖曳平移</div>
-        <div>• <span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span>：復原/重做；<span class="kbd">Delete</span>：刪除選取格</div>
+        <div>• 滾輪：縮放；中鍵按住：拖曳平移</div>
+        <div>• Shift+點選：多選；Delete：刪除選取</div>
       </div>
     </div>
   </div>
@@ -338,23 +369,21 @@
 
       <div class="phone">
         <div class="phone-inner">
-          <div class="phone-top">
-            <div class="font-bold">Rich Menu</div>
-            <div class="text-slate-500">預覽</div>
-          </div>
 
           <div class="phone-chat">
             <div class="bubble">點下方選單格子會送出你設定的文字</div>
-            <div id="rmArea" class="mt-3 hidden"></div>
           </div>
 
           <div class="phone-bottom">
-            <button id="toggleBtn" class="mini-btn" onclick="toggleKeyboard()">⌨️</button>
-            <div class="flex-1 text-xs text-slate-600 truncate" id="hint">選單</div>
+            <button id="toggleBtn" class="mini-btn" onclick="toggleKeyboard()">≡</button>
+            <div class="menu-title">
+              <span id="phoneMenuTitle">選單</span>
+              <span class="menu-caret">▼</span>
+            </div>
             <div class="mini-btn">＋</div>
           </div>
 
-          <div id="rmBar" class="p-3 bg-white hidden">
+          <div id="rmBar" class="p-3 bg-white">
             <div class="rm-wrap">
               <img id="phoneImg" alt="">
               <div id="phoneHotspots" class="absolute inset-0"></div>
@@ -365,7 +394,7 @@
       </div>
 
       <div class="mt-3 text-xs text-slate-500">
-        • 右下角切換：⌨️ / 選單（模擬 LINE 左下角切換）<br/>
+        • 底部顯示選單名稱（像 LINE 一樣）<br/>
         • 你每次拖曳/改文字，預覽會自動更新
       </div>
     </div>
@@ -407,7 +436,7 @@
   const phoneHotspotsEl = $("phoneHotspots");
   const rmBarEl = $("rmBar");
   const toggleBtnEl = $("toggleBtn");
-  const hintEl = $("hint");
+  const phoneMenuTitleEl = $("phoneMenuTitle");
 
   function setStatus(s){
     statusEl.textContent = "狀態：" + s;
@@ -449,7 +478,8 @@
     meta: { name: "" },
     imageUrl: "",
     hotspots: [],
-    selectedId: null
+    selectedId: null,         // 主選取（顯示拉角）
+    selectedIds: new Set(),   // ✅ 多選集合
   };
 
   // ===== history (Undo/Redo) =====
@@ -461,7 +491,8 @@
       meta: state.meta,
       imageUrl: state.imageUrl,
       hotspots: state.hotspots,
-      selectedId: state.selectedId
+      selectedId: state.selectedId,
+      selectedIds: Array.from(state.selectedIds),
     }));
   }
   function pushHistory(){
@@ -475,6 +506,7 @@
     state.imageUrl = snap.imageUrl;
     state.hotspots = snap.hotspots;
     state.selectedId = snap.selectedId;
+    state.selectedIds = new Set(snap.selectedIds || []);
 
     menuNameEl.value = state.meta?.name || "";
     imgEl.src = state.imageUrl || "";
@@ -543,13 +575,12 @@
     previewPanelEl.classList.toggle("hidden", previewCollapsed);
   }
 
-  // ===== phone preview menu/keyboard toggle =====
-  let showMenu = false;
+  // ===== phone preview toggle =====
+  let showMenu = true;
   function toggleKeyboard(){
     showMenu = !showMenu;
     rmBarEl.classList.toggle("hidden", !showMenu);
     toggleBtnEl.textContent = showMenu ? "≡" : "⌨️";
-    hintEl.textContent = showMenu ? "選單" : "鍵盤";
   }
 
   // ===== artboard size =====
@@ -559,41 +590,76 @@
     fitToScreen();
   }
 
-  // ===== hotspot helpers =====
+  // ===== selection helpers =====
   function uid(){
     return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
   }
-  function selectHotspot(id){
-    state.selectedId = id;
+
+  function clearSelection(){
+    state.selectedId = null;
+    state.selectedIds.clear();
     renderHotspots();
     renderList();
   }
-  function deleteSelected(){
-    if(!state.selectedId) return;
-    const i = state.hotspots.findIndex(h=>h.id===state.selectedId);
-    if(i>=0){
-      state.hotspots.splice(i,1);
-      state.selectedId = null;
-      pushHistory();
-      renderAll();
-    }
+
+  function selectAllHotspots(){
+    state.selectedIds = new Set(state.hotspots.map(h=>h.id));
+    state.selectedId = state.hotspots[0]?.id || null;
+    renderHotspots();
+    renderList();
   }
 
-  // ===== accurate coordinate mapping (FIX: “縮放後畫框不準”) =====
+  function selectHotspot(id, opts={multi:false, toggle:false}){
+    if(!opts.multi){
+      state.selectedIds.clear();
+      state.selectedIds.add(id);
+      state.selectedId = id;
+    }else{
+      if(opts.toggle){
+        if(state.selectedIds.has(id)) state.selectedIds.delete(id);
+        else state.selectedIds.add(id);
+      }else{
+        state.selectedIds.add(id);
+      }
+      // 主選取：保持最後點的那個，讓拉角出現
+      state.selectedId = id;
+    }
+    renderHotspots();
+    renderList();
+  }
+
+  function deleteSelectedAll(){
+    if(state.selectedIds.size === 0 && !state.selectedId) return;
+
+    const ids = new Set(state.selectedIds);
+    if(state.selectedId) ids.add(state.selectedId);
+
+    if(!confirm(`確定刪除選取的 ${ids.size} 個格子？`)) return;
+
+    state.hotspots = state.hotspots.filter(h=>!ids.has(h.id));
+    state.selectedId = null;
+    state.selectedIds.clear();
+
+    pushHistory();
+    renderAll();
+  }
+
+  // ===== accurate coordinate mapping =====
   function getArtboardPoint(ev){
     const r = artboardEl.getBoundingClientRect();
     const px = ev.clientX - r.left;
     const py = ev.clientY - r.top;
-    const nx = px / r.width;
-    const ny = py / r.height;
-    return { r, px, py, nx, ny };
+    return { r, px, py };
   }
 
   // ===== draw new hotspot =====
   let drawing=false, start={x:0,y:0}, drawRect=null;
 
   drawLayerEl.addEventListener("mousedown", (ev)=>{
-    if(!state.imageUrl) return alert("請先匯入圖片");
+    // 左鍵才畫
+    if(ev.button !== 0) return;
+    if (!state.imageUrl) return alert("請先匯入圖片");
+
     const p = getArtboardPoint(ev);
     drawing = true;
     start = { x:p.px, y:p.py };
@@ -606,6 +672,8 @@
     drawRect.style.height = "0px";
     drawLayerEl.appendChild(drawRect);
 
+    // 開始畫新的格子時，不自動清掉多選（讓你可以連續操作）
+    // 但主選取先清空，避免干擾
     state.selectedId = null;
     renderHotspots();
   });
@@ -651,6 +719,9 @@
 
       const id = uid();
       state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
+
+      // 新增後：自動選取（不清多選，只把它加進去）
+      state.selectedIds.add(id);
       state.selectedId = id;
 
       pushHistory();
@@ -720,7 +791,11 @@
     hotspotLayerEl.innerHTML = "";
     state.hotspots.forEach((h, idx)=>{
       const d = document.createElement("div");
-      d.className = "hotspot" + (h.id === state.selectedId ? " selected" : "");
+
+      const isMain = (h.id === state.selectedId);
+      const isMulti = state.selectedIds.has(h.id);
+
+      d.className = "hotspot" + (isMain ? " selected" : "") + (isMulti ? " multiSelected" : "");
       d.style.left = (h.x*100) + "%";
       d.style.top  = (h.y*100) + "%";
       d.style.width  = (h.w*100) + "%";
@@ -729,15 +804,22 @@
 
       d.addEventListener("mousedown", (ev)=>{
         ev.stopPropagation();
-        selectHotspot(h.id);
+
+        // ✅ Shift+點選：多選/取消
+        const multi = ev.shiftKey;
+        selectHotspot(h.id, { multi, toggle: multi });
+
+        // 拖移：只拖主選取那格
         beginDrag(ev, h.id, "move");
       });
+
       d.addEventListener("click", (ev)=>{
         ev.stopPropagation();
-        selectHotspot(h.id);
+        const multi = ev.shiftKey;
+        selectHotspot(h.id, { multi, toggle: multi });
       });
 
-      if(h.id === state.selectedId){
+      if(isMain){
         ["nw","ne","sw","se"].forEach(pos=>{
           const hd = document.createElement("div");
           hd.className = "handle " + pos;
@@ -775,13 +857,17 @@
     state.hotspots.forEach((h, idx)=>{
       const wrap = document.createElement("div");
       wrap.className = "border rounded-lg p-2 bg-white";
-      const selected = h.id === state.selectedId;
+
+      const checked = state.selectedIds.has(h.id) || (state.selectedId === h.id);
 
       wrap.innerHTML = `
         <div class="flex items-center justify-between mb-2">
-          <div class="font-bold text-sm ${selected?'text-blue-700':'text-slate-800'}">格 ${idx+1}</div>
           <div class="flex items-center gap-2">
-            <button class="text-xs ${selected?'text-blue-700':'text-slate-500'} underline">選取</button>
+            <input type="checkbox" class="w-4 h-4" ${checked ? "checked" : ""} />
+            <div class="font-bold text-sm ${h.id===state.selectedId?'text-blue-700':'text-slate-800'}">格 ${idx+1}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="text-xs text-slate-500 underline">選取</button>
             <button class="text-xs text-red-600 underline">刪除</button>
           </div>
         </div>
@@ -791,16 +877,25 @@
           value="${escapeHtml(h.text)}">
       `;
 
+      const checkbox = wrap.querySelector("input[type=checkbox]");
       const btnSel = wrap.querySelectorAll("button")[0];
       const btnDel = wrap.querySelectorAll("button")[1];
-      const input = wrap.querySelector("input");
+      const input = wrap.querySelector("input[type=text]");
 
-      btnSel.onclick = ()=> selectHotspot(h.id);
+      checkbox.onchange = ()=>{
+        if(checkbox.checked) state.selectedIds.add(h.id);
+        else state.selectedIds.delete(h.id);
+        // 若主選取被取消勾，主選取不強制清，但會在 renderHotspots 顯示狀態
+        renderHotspots();
+      };
+
+      btnSel.onclick = ()=> selectHotspot(h.id, { multi:false });
       btnDel.onclick = ()=>{
         if(confirm(`刪除格 ${idx+1}？`)){
           const i = state.hotspots.findIndex(x=>x.id===h.id);
           if(i>=0){
             state.hotspots.splice(i,1);
+            state.selectedIds.delete(h.id);
             if(state.selectedId===h.id) state.selectedId=null;
             pushHistory();
             renderAll();
@@ -827,6 +922,9 @@
 
   // ===== phone preview =====
   function refreshPhonePreview(){
+    // ✅ 名稱只影響底部顯示文字，不會動到圖片
+    phoneMenuTitleEl.textContent = (state.meta?.name || "選單").trim() || "選單";
+
     if(!state.imageUrl){
       phoneImgEl.src = "";
       phoneHotspotsEl.innerHTML = "";
@@ -850,39 +948,26 @@
       };
       phoneHotspotsEl.appendChild(btn);
     });
-
-    // 自動讓預覽像 LINE：匯入後直接顯示選單
-    if(state.imageUrl){
-      showMenu = true;
-      rmBarEl.classList.remove("hidden");
-      toggleBtnEl.textContent = "≡";
-      hintEl.textContent = "選單";
-    }
   }
 
   // ===== make 6 grid =====
   function makeSixGrid(){
-    // 3 columns x 2 rows
     const cols = 3, rows = 2;
-    const gap = 0.012; // small margin in normalized units
+    const gap = 0.012;
     const cellW = (1 - gap*(cols+1)) / cols;
     const cellH = (1 - gap*(rows+1)) / rows;
 
     state.hotspots = [];
-    let n=0;
     for(let r=0;r<rows;r++){
       for(let c=0;c<cols;c++){
-        n++;
         const x = gap + c*(cellW + gap);
         const y = gap + r*(cellH + gap);
-        state.hotspots.push({
-          id: uid(),
-          x, y, w: cellW, h: cellH,
-          text: ""
-        });
+        state.hotspots.push({ id: uid(), x, y, w: cellW, h: cellH, text: "" });
       }
     }
+    state.selectedIds = new Set(state.hotspots.map(h=>h.id));
     state.selectedId = state.hotspots[0]?.id || null;
+
     pushHistory();
     renderAll();
   }
@@ -892,12 +977,10 @@
     const bmp = await createImageBitmap(file);
     const W = BASE_W, H = BASE_H;
 
-    // cover scale
     const s = Math.max(W / bmp.width, H / bmp.height);
     const dw = bmp.width * s;
     const dh = bmp.height * s;
 
-    // center
     const dx = (W - dw) / 2;
     const dy = (H - dh) / 2;
 
@@ -908,7 +991,6 @@
     ctx.fillRect(0,0,W,H);
     ctx.drawImage(bmp, dx, dy, dw, dh);
 
-    // webp
     const blob = await new Promise(res=> canvas.toBlob(res, "image/webp", 0.90));
     if(!blob) throw new Error("裁切失敗（toBlob 空）");
     return blob;
@@ -933,7 +1015,6 @@
         state.imageUrl = url;
         imgEl.src = url;
 
-        // reset hotspots? 不強制清空，你要清空就按清空
         btnImportEl.textContent = "已匯入";
         btnImportEl.classList.remove("bg-blue-600");
         btnImportEl.classList.add("bg-emerald-600");
@@ -963,27 +1044,17 @@
         width: Math.round(h.w * BASE_W),
         height: Math.round(h.h * BASE_H)
       },
-      action: {
-        type: "message",
-        text: String(h.text).trim()
-      }
+      action: { type: "message", text: String(h.text).trim() }
     }));
 
     return {
-      meta: {
-        feature: "richmenu",
-        name: state.meta.name || "",
-        updatedAt: Date.now()
-      },
+      meta: { feature: "richmenu", name: state.meta.name || "", updatedAt: Date.now() },
       type: "richmenu",
       size: { width: BASE_W, height: BASE_H },
       imageUrl: state.imageUrl,
       areas
     };
   }
-
-  // ===== KV store routes (worker.js 會新增) =====
-  function keyOf(name){ return "RM:" + name; }
 
   async function saveMenu(){
     const base = normalizeWorkerUrl(workerUrlEl.value);
@@ -1032,6 +1103,8 @@
         h: (a.bounds.height || 0) / BASE_H,
         text: (a.action?.text || "")
       }));
+
+      state.selectedIds = new Set(state.hotspots.map(h=>h.id));
       state.selectedId = state.hotspots[0]?.id || null;
 
       menuNameEl.value = name;
@@ -1041,7 +1114,6 @@
       btnImportEl.classList.toggle("bg-emerald-600", !!state.imageUrl);
       btnImportEl.classList.toggle("bg-blue-600", !state.imageUrl);
 
-      // default?
       isDefaultEl.value = j.isDefault ? "yes" : "no";
 
       pushHistory();
@@ -1071,9 +1143,7 @@
       menuSelectEl.appendChild(opt);
     });
 
-    if(current){
-      menuSelectEl.value = current;
-    }
+    if(current) menuSelectEl.value = current;
   }
 
   function onSelectMenu(){
@@ -1088,6 +1158,7 @@
     state.imageUrl = "";
     state.hotspots = [];
     state.selectedId = null;
+    state.selectedIds.clear();
     imgEl.src = "";
 
     btnImportEl.textContent = "匯入圖片";
@@ -1098,21 +1169,15 @@
     renderAll();
   }
 
-  // ===== input sync =====
+  // ✅ 名稱變更：只更新預覽底部文字，不會動圖片
   menuNameEl.addEventListener("input", ()=>{
     state.meta.name = menuNameEl.value;
+    refreshPhonePreview();
     scheduleHistory();
   });
 
   // ===== keyboard shortcuts =====
-  let isSpaceDown = false;
-
   window.addEventListener("keydown", (ev)=>{
-    if(ev.code === "Space"){
-      isSpaceDown = true;
-      ev.preventDefault();
-    }
-
     if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase() === "z"){
       ev.preventDefault(); undo(); return;
     }
@@ -1121,25 +1186,21 @@
     }
     if(ev.key === "Delete"){
       ev.preventDefault();
-      deleteSelected();
+      deleteSelectedAll();
     }
     if(ev.key === "Escape"){
-      state.selectedId = null;
-      renderHotspots();
-      renderList();
+      clearSelection();
     }
   });
 
-  window.addEventListener("keyup", (ev)=>{
-    if(ev.code === "Space") isSpaceDown = false;
-  });
-
-  // ===== panning with space =====
+  // ===== ✅ middle mouse panning =====
   let panning = false;
   let panStart = { x:0,y:0,vx:0,vy:0 };
 
   workspaceEl.addEventListener("mousedown", (ev)=>{
-    if(isSpaceDown && ev.button===0){
+    // 中鍵（button=1）按住拖曳平移
+    if(ev.button === 1){
+      ev.preventDefault();
       panning = true;
       panStart = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y };
       window.addEventListener("mousemove", onPan);
@@ -1158,24 +1219,20 @@
     panning = false;
   }
 
-  // ===== zoom wheel =====
+  // ===== ✅ wheel zoom (no ctrl needed) =====
   workspaceEl.addEventListener("wheel", (ev)=>{
-    if(ev.ctrlKey){
-      ev.preventDefault();
-      const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
-      zoomBy(factor, ev.clientX, ev.clientY);
-    }
+    ev.preventDefault();
+    const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
+    zoomBy(factor, ev.clientX, ev.clientY);
   }, { passive:false });
 
   // ===== close =====
   function closePage(){
-    // 回首頁（不改網址）
     window.location.href = "index.html";
   }
 
   // ===== boot =====
   (function init(){
-    // worker url from homepage
     const savedUrl = (localStorage.getItem("line_worker_url") || "").trim();
     if(savedUrl) workerUrlEl.value = savedUrl;
 
