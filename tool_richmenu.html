@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>六宮格選單</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
     :root{
       --rail-w: 92px;
@@ -50,15 +49,12 @@
       pointer-events:none;
     }
 
-    /* ✅ 熱區：三層描邊（深/淺圖都清楚） */
+    /* ✅ 熱區：雙描邊，深色圖也清楚 */
     .hotspot{
       position:absolute;
-      border:2px solid rgba(0, 229, 255, .95); /* 螢光青 */
-      box-shadow:
-        0 0 0 2px rgba(255,255,255,.98),       /* 白外框 */
-        0 0 0 4px rgba(0,0,0,.90),             /* 黑外框 */
-        0 10px 22px rgba(0,0,0,.22);
-      background: rgba(0, 229, 255, .10);
+      border:2px solid rgba(239,68,68,.95);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 6px 18px rgba(0,0,0,.18);
+      background: rgba(239,68,68,.14);
       border-radius: 12px;
       color:white;
       font-weight:900;
@@ -71,22 +67,14 @@
       touch-action:none;
     }
     .hotspot.selected{
-      border-color: rgba(59,130,246,.98);      /* 藍 */
+      border-color: rgba(59,130,246,.95);
       background: rgba(59,130,246,.12);
-      box-shadow:
-        0 0 0 2px rgba(255,255,255,.98),
-        0 0 0 4px rgba(0,0,0,.90),
-        0 0 0 6px rgba(59,130,246,.98),
-        0 10px 22px rgba(0,0,0,.22);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 0 0 4px rgba(59,130,246,.95), 0 6px 18px rgba(0,0,0,.18);
     }
     .hotspot.multiSelected:not(.selected){
-      border-color: rgba(250,204,21,.98);      /* 黃 */
-      background: rgba(250,204,21,.10);
-      box-shadow:
-        0 0 0 2px rgba(255,255,255,.98),
-        0 0 0 4px rgba(0,0,0,.90),
-        0 0 0 6px rgba(250,204,21,.98),
-        0 10px 22px rgba(0,0,0,.22);
+      border-color: rgba(234,179,8,.95);
+      background: rgba(234,179,8,.10);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 0 0 4px rgba(234,179,8,.95), 0 6px 18px rgba(0,0,0,.18);
     }
 
     .handle{
@@ -103,14 +91,12 @@
     .handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
     .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
 
-    /* ✅ 畫框：白+黑+螢光綠（深/淺圖都超清楚） */
+    /* ✅ 畫框：白+黑雙描邊，任何底色都超清楚 */
     .draw-rect{
       position:absolute;
-      border:2px solid rgba(34,197,94,.98); /* 螢光綠 */
-      box-shadow:
-        0 0 0 2px rgba(255,255,255,1),
-        0 0 0 4px rgba(0,0,0,.95);
-      background: rgba(34,197,94,.10);
+      border:2px solid rgba(255,255,255,1);
+      box-shadow: 0 0 0 2px rgba(0,0,0,.85);
+      background: rgba(0,0,0,.10);
       border-radius: 12px;
       pointer-events:none;
     }
@@ -175,6 +161,7 @@
       color:#0f172a;
       border:1px solid rgba(2,6,23,.10);
       flex: 0 0 auto;
+      user-select:none;
     }
     .menu-title{
       flex: 1 1 auto;
@@ -209,17 +196,9 @@
       display:block;
     }
 
-    /* ✅ 修正預覽熱區跑位：清掉 button 預設 padding/border（Chrome 縮放也不會偏） */
-    #phoneHotspots button{
-      padding: 0 !important;
-      margin: 0 !important;
-      border: 0 !important;
-      background: transparent !important;
-      appearance: none !important;
-      -webkit-appearance: none !important;
-      box-sizing: border-box !important;
-      line-height: 0 !important;
-      outline: none !important;
+    /* ✅ 讓右側預覽點擊熱區也能接到事件（因為上面用 absolute inset-0） */
+    #phoneHotspots{
+      pointer-events:auto;
     }
   </style>
 </head>
@@ -507,7 +486,7 @@
     imageUrl: "",
     hotspots: [],
     selectedId: null,         // 主選取（顯示拉角）
-    selectedIds: new Set(),   // 多選集合
+    selectedIds: new Set(),   // ✅ 多選集合
   };
 
   // ===== history (Undo/Redo) =====
@@ -539,7 +518,6 @@
     menuNameEl.value = state.meta?.name || "";
     imgEl.src = state.imageUrl || "";
     renderAll(true);
-    fitToScreen();
   }
   function undo(){
     if(historyIndex <= 0) return;
@@ -672,24 +650,40 @@
     renderAll();
   }
 
-  // ===== draw new hotspot (精準：用 artboard getBoundingClientRect) =====
-  let drawing=false, start={x:0,y:0}, drawRect=null;
+  // ===== focus keyword input after create/select =====
+  function focusHotspotInput(id){
+    const el = document.querySelector(`[data-hs-input="${id}"]`);
+    if(el){
+      el.focus();
+      el.select?.();
+    }
+  }
 
-  drawLayerEl.addEventListener("mousedown", (ev)=>{
-    // 左鍵才畫
+  // ===== draw new hotspot (✅ 瀏覽器縮放/畫面縮放都精準：不用 drawRect 的 getBoundingClientRect) =====
+  let drawing=false, start={x:0,y:0}, last={x:0,y:0}, drawRect=null;
+
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+  function pointInArtboard(ev){
+    const ab = artboardEl.getBoundingClientRect();
+    const x = clamp(ev.clientX - ab.left, 0, ab.width);
+    const y = clamp(ev.clientY - ab.top, 0, ab.height);
+    return { ab, x, y };
+  }
+
+  artboardEl.addEventListener("mousedown", (ev)=>{
     if(ev.button !== 0) return;
-
-    // ✅ 避免中鍵平移干擾（中鍵會 preventDefault）
-    if(ev.button === 1) return;
-
     if (!state.imageUrl) return alert("請先匯入圖片");
 
-    const r = artboardEl.getBoundingClientRect();
-    const px = ev.clientX - r.left;
-    const py = ev.clientY - r.top;
+    // 點到既有熱區或 handle => 不進入畫框模式
+    const hitHotspot = ev.target.closest(".hotspot");
+    const hitHandle  = ev.target.closest(".handle");
+    if(hitHotspot || hitHandle) return;
 
+    const p = pointInArtboard(ev);
     drawing = true;
-    start = { x:px, y:py };
+    start = { x:p.x, y:p.y };
+    last  = { x:p.x, y:p.y };
 
     drawRect = document.createElement("div");
     drawRect.className = "draw-rect";
@@ -699,21 +693,20 @@
     drawRect.style.height = "0px";
     drawLayerEl.appendChild(drawRect);
 
-    // 畫新格時主選取先清（多選不強制清）
     state.selectedId = null;
     renderHotspots();
   });
 
   window.addEventListener("mousemove", (ev)=>{
     if(!drawing || !drawRect) return;
-    const r = artboardEl.getBoundingClientRect();
-    const cx = ev.clientX - r.left;
-    const cy = ev.clientY - r.top;
 
-    const x = Math.min(start.x, cx);
-    const y = Math.min(start.y, cy);
-    const w = Math.abs(cx - start.x);
-    const h = Math.abs(cy - start.y);
+    const p = pointInArtboard(ev);
+    last = { x:p.x, y:p.y };
+
+    const x = Math.min(start.x, last.x);
+    const y = Math.min(start.y, last.y);
+    const w = Math.abs(last.x - start.x);
+    const h = Math.abs(last.y - start.y);
 
     drawRect.style.left = x + "px";
     drawRect.style.top = y + "px";
@@ -724,37 +717,38 @@
   window.addEventListener("mouseup", ()=>{
     if(!drawing) return;
     drawing = false;
+    if(!drawRect) return;
 
-    if(drawRect){
-      const ab = artboardEl.getBoundingClientRect();
-      const rr = drawRect.getBoundingClientRect();
-      drawRect.remove();
-      drawRect = null;
+    const ab = artboardEl.getBoundingClientRect();
 
-      const x = rr.left - ab.left;
-      const y = rr.top - ab.top;
-      const w = rr.width;
-      const h = rr.height;
+    const x = Math.min(start.x, last.x);
+    const y = Math.min(start.y, last.y);
+    const w = Math.abs(last.x - start.x);
+    const h = Math.abs(last.y - start.y);
 
-      if(w < 18 || h < 18) return;
+    drawRect.remove();
+    drawRect = null;
 
-      const nx = x / ab.width;
-      const ny = y / ab.height;
-      const nw = w / ab.width;
-      const nh = h / ab.height;
+    if(w < 18 || h < 18) return;
 
-      const id = uid();
-      state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
+    const nx = x / ab.width;
+    const ny = y / ab.height;
+    const nw = w / ab.width;
+    const nh = h / ab.height;
 
-      state.selectedIds.add(id);
-      state.selectedId = id;
+    const id = uid();
+    state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
 
-      pushHistory();
-      renderAll();
-    }
+    state.selectedIds.add(id);
+    state.selectedId = id;
+
+    pushHistory();
+    renderAll();
+
+    setTimeout(()=>focusHotspotInput(id), 50);
   });
 
-  // ===== drag/resize =====
+  // ===== drag/resize (只拖主選取那格) =====
   let drag = null;
   function beginDrag(ev, id, kind){
     const h = state.hotspots.find(x=>x.id===id);
@@ -830,11 +824,9 @@
       d.addEventListener("mousedown", (ev)=>{
         ev.stopPropagation();
 
-        // Shift+點選：多選/取消
         const multi = ev.shiftKey;
         selectHotspot(h.id, { multi, toggle: multi });
 
-        // 拖移：拖主選取那格
         beginDrag(ev, h.id, "move");
       });
 
@@ -892,20 +884,20 @@
             <div class="font-bold text-sm ${h.id===state.selectedId?'text-blue-700':'text-slate-800'}">格 ${idx+1}</div>
           </div>
           <div class="flex items-center gap-2">
-            <button type="button" class="text-xs text-slate-500 underline">選取</button>
-            <button type="button" class="text-xs text-red-600 underline">刪除</button>
+            <button class="text-xs text-slate-500 underline">選取</button>
+            <button class="text-xs text-red-600 underline">刪除</button>
           </div>
         </div>
-        <div class="text-xs text-slate-500 mb-1">點擊送出文字：</div>
-        <input class="w-full border rounded px-2 py-2 text-sm font-bold"
-          placeholder="例如：MENU_SHOP / MENU_CALENDAR / RM:HOME"
+        <div class="text-xs text-slate-500 mb-1">點擊送出文字（關鍵字）：</div>
+        <input data-hs-input="${h.id}" class="w-full border rounded px-2 py-2 text-sm font-bold"
+          placeholder="例如：RM:HOME / MENU_SHOP / 開始"
           value="${escapeHtml(h.text)}">
       `;
 
       const checkbox = wrap.querySelector("input[type=checkbox]");
       const btnSel = wrap.querySelectorAll("button")[0];
       const btnDel = wrap.querySelectorAll("button")[1];
-      const input = wrap.querySelector("input[type=text]");
+      const input = wrap.querySelector("input[data-hs-input]");
 
       checkbox.onchange = ()=>{
         if(checkbox.checked) state.selectedIds.add(h.id);
@@ -913,7 +905,11 @@
         renderHotspots();
       };
 
-      btnSel.onclick = ()=> selectHotspot(h.id, { multi:false });
+      btnSel.onclick = ()=>{
+        selectHotspot(h.id, { multi:false });
+        setTimeout(()=>focusHotspotInput(h.id), 0);
+      };
+
       btnDel.onclick = ()=>{
         if(confirm(`刪除格 ${idx+1}？`)){
           const i = state.hotspots.findIndex(x=>x.id===h.id);
@@ -928,9 +924,13 @@
       };
 
       input.oninput = ()=>{
-        h.text = input.value;              // ✅ 關鍵字輸入就在這裡（每格一個）
+        h.text = input.value;
         refreshPhonePreview();
         scheduleHistory();
+      };
+
+      input.onfocus = ()=>{
+        selectHotspot(h.id, { multi:false });
       };
 
       listEl.appendChild(wrap);
@@ -944,7 +944,7 @@
     if(!silent) setStatus("就緒");
   }
 
-  // ===== phone preview（✅ 修正：Chrome 縮放也不會偏移） =====
+  // ===== phone preview =====
   function refreshPhonePreview(){
     phoneMenuTitleEl.textContent = (state.meta?.name || "選單").trim() || "選單";
 
@@ -959,22 +959,13 @@
 
     state.hotspots.forEach((h, i)=>{
       const btn = document.createElement("button");
-      btn.type = "button";
       btn.style.position = "absolute";
       btn.style.left = (h.x*100) + "%";
       btn.style.top  = (h.y*100) + "%";
       btn.style.width  = (h.w*100) + "%";
       btn.style.height = (h.h*100) + "%";
-
-      // ✅ 關鍵：避免 Chrome 縮放造成預設樣式偏移
-      btn.style.padding = "0";
-      btn.style.margin = "0";
-      btn.style.border = "0";
       btn.style.background = "transparent";
-      btn.style.display = "block";
-      btn.style.boxSizing = "border-box";
-      btn.style.lineHeight = "0";
-
+      btn.style.border = "none";
       btn.onclick = ()=>{
         const t = (h.text||"").trim();
         alert(`格 ${i+1}\n將送出：${t || "（尚未填）"}`);
@@ -1153,6 +1144,7 @@
       renderAll();
       fitToScreen();
       setStatus("讀取成功 ✅");
+      setTimeout(()=>focusHotspotInput(state.selectedId), 50);
     }catch(e){
       setStatus("讀取失敗");
       alert("讀取失敗：\n" + e.message);
@@ -1202,7 +1194,7 @@
     renderAll();
   }
 
-  // 名稱變更：只更新預覽底部文字，不會動圖片
+  // ✅ 名稱變更：只更新預覽底部文字，不會動圖片
   menuNameEl.addEventListener("input", ()=>{
     state.meta.name = menuNameEl.value;
     refreshPhonePreview();
@@ -1231,7 +1223,6 @@
   let panStart = { x:0,y:0,vx:0,vy:0 };
 
   workspaceEl.addEventListener("mousedown", (ev)=>{
-    // 中鍵（button=1）按住拖曳平移
     if(ev.button === 1){
       ev.preventDefault();
       panning = true;
