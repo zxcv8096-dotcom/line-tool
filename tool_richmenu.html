@@ -1,347 +1,1172 @@
-// worker.js - KV + R2 + LINE webhook + RichMenu 套用
-// Bindings: DB (KV), REPLIES (KV optional), BUCKET (R2)
-// Secrets: CHANNEL_ACCESS_TOKEN (必), CHANNEL_SECRET (選)
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>六宮格選單</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
+  <style>
+    :root{ --rail-w:92px; --panel-w:360px; --preview-w:380px; }
+    body{ user-select:none; }
+    input, textarea, select, button { user-select:auto; }
 
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
-
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders });
+    .checker{
+      background-image:
+        linear-gradient(45deg, rgba(0,0,0,.035) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(0,0,0,.035) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0,0,0,.035) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(0,0,0,.035) 75%);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
     }
 
-    const json = (obj, status = 200) =>
-      new Response(JSON.stringify(obj), {
-        status,
-        headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" },
-      });
-
-    try {
-      if (url.pathname === "/health" && request.method === "GET") {
-        return json({ ok: true, ts: Date.now() }, 200);
-      }
-
-      // ===== R2 upload =====
-      if (url.pathname === "/upload" && request.method === "POST") {
-        if (!env.BUCKET) return json({ ok: false, error: "R2(BUCKET) 未綁定" }, 500);
-
-        let form;
-        try { form = await request.formData(); }
-        catch { return json({ ok: false, error: "請用 multipart/form-data 上傳" }, 400); }
-
-        const file = form.get("file");
-        if (!file || typeof file === "string") {
-          return json({ ok: false, error: "缺少檔案欄位 file" }, 400);
-        }
-
-        // content-type 不可靠，用副檔名/預設
-        let contentType = (file.type || "").toLowerCase();
-        const extGuess = guessExtFromType(contentType) || guessExtFromName(file.name) || "jpg";
-        if (!contentType.startsWith("image/")) {
-          contentType = extGuess === "png" ? "image/png" : "image/jpeg";
-        }
-
-        if (!(contentType.includes("png") || contentType.includes("jpeg") || contentType.includes("jpg"))) {
-          return json({ ok: false, error: "只允許 PNG / JPEG" }, 400);
-        }
-
-        const ext = contentType.includes("png") ? "png" : "jpg";
-        const key = `uploads/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
-        await env.BUCKET.put(key, file.stream(), {
-          httpMetadata: { contentType, cacheControl: "public, max-age=31536000, immutable" },
-          customMetadata: { originalName: (file.name || "").slice(0, 200) },
-        });
-
-        const publicUrl = `${url.origin}/file/${encodeURIComponent(key)}`;
-        return json({ ok: true, key, url: publicUrl }, 200);
-      }
-
-      // ===== R2 file =====
-      if (url.pathname.startsWith("/file/") && request.method === "GET") {
-        if (!env.BUCKET) return json({ ok: false, error: "R2(BUCKET) 未綁定" }, 500);
-
-        const key = decodeURIComponent(url.pathname.replace("/file/", ""));
-        if (!key) return new Response("Not Found", { status: 404, headers: corsHeaders });
-
-        const obj = await env.BUCKET.get(key);
-        if (!obj) return new Response("Not Found", { status: 404, headers: corsHeaders });
-
-        const headers = new Headers();
-        obj.writeHttpMetadata(headers);
-        headers.set("ETag", obj.etag);
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Cache-Control", "public, max-age=31536000, immutable");
-
-        let ct = (headers.get("content-type") || "").toLowerCase();
-        if (!ct.startsWith("image/")) {
-          const ext = guessExtFromName(key) || "";
-          ct = ext === "png" ? "image/png" : "image/jpeg";
-          headers.set("content-type", ct);
-        }
-
-        return new Response(obj.body, { status: 200, headers });
-      }
-
-      // =========================================================
-      // RichMenu save/load/list
-      // =========================================================
-      if (url.pathname === "/richmenu/save" && request.method === "POST") {
-        if (!env.DB) return json({ ok: false, error: "KV(DB) 未綁定" }, 500);
-        if (!env.BUCKET) return json({ ok: false, error: "R2(BUCKET) 未綁定" }, 500);
-        if (!env.CHANNEL_ACCESS_TOKEN) return json({ ok:false, error:"缺少 CHANNEL_ACCESS_TOKEN" }, 500);
-
-        const data = await request.json().catch(() => ({}));
-        const name = String(data?.name || "").trim();
-        const payload = data?.payload;
-        const isDefault = !!data?.isDefault;
-
-        if (!name) return json({ ok: false, error: "name 不可空白" }, 400);
-        if (!payload) return json({ ok: false, error: "payload 不可空白" }, 400);
-
-        const fixed = ensureMeta(payload, { feature: "richmenu", createdFrom: "tool_richmenu", status: "active" });
-        await env.DB.put(`RM:${name}`, JSON.stringify(fixed));
-        if (isDefault) await env.DB.put("RM:__DEFAULT__", JSON.stringify({ name }));
-
-        // 建立 RichMenu
-        const rmBody = {
-          size: fixed.size,
-          selected: true,
-          name,
-          chatBarText: (name || "選單").slice(0, 14),
-          areas: fixed.areas || [],
-        };
-
-        // 刪同名舊 ID
-        const idKey = `RMID:${name}`;
-        const oldId = await env.DB.get(idKey);
-        if (oldId) { try { await lineDelete(env, `/v2/bot/richmenu/${encodeURIComponent(oldId)}`); } catch {} }
-
-        const created = await linePost(env, "/v2/bot/richmenu", rmBody);
-        const richMenuId = created?.richMenuId;
-        if (!richMenuId) throw new Error("LINE 建立 richmenu 失敗（沒有 richMenuId）");
-
-        // ✅ 取 imageKey（沒有就從 imageUrl 推）
-        let imageKey = String(fixed.imageKey || "").trim();
-        if (!imageKey) {
-          const imageUrl = String(fixed.imageUrl || "").trim();
-          try {
-            const u = new URL(imageUrl);
-            if (u.pathname.startsWith("/file/")) imageKey = decodeURIComponent(u.pathname.replace("/file/", ""));
-          } catch {}
-        }
-        if (!imageKey) throw new Error("缺少 imageKey（請重新匯入圖片）");
-
-        const obj = await env.BUCKET.get(imageKey);
-        if (!obj) throw new Error(`圖片讀取失敗 404（R2 key 不存在）：${imageKey}`);
-
-        const buf = await obj.arrayBuffer();
-        const ct = sniffImageType(buf);
-        if (!ct) throw new Error("LINE RichMenu 只支援 PNG/JPEG（檔頭不是 PNG/JPEG）");
-
-        // 上傳圖片到 LINE
-        const up = await fetch(`https://api-data.line.me/v2/bot/richmenu/${encodeURIComponent(richMenuId)}/content`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${env.CHANNEL_ACCESS_TOKEN}`, "Content-Type": ct },
-          body: buf,
-        });
-        if (!up.ok) throw new Error(`LINE 上傳圖片失敗 ${up.status}: ${await up.text().catch(()=> "")}`);
-
-        // 套用預設
-        if (isDefault) await linePost(env, `/v2/bot/user/all/richmenu/${encodeURIComponent(richMenuId)}`, null);
-
-        await env.DB.put(idKey, richMenuId);
-        return json({ ok: true, richMenuId, isDefault }, 200);
-      }
-
-      if (url.pathname === "/richmenu/load" && request.method === "POST") {
-        if (!env.DB) return json({ ok: false, error: "KV(DB) 未綁定" }, 500);
-
-        const data = await request.json().catch(() => ({}));
-        const name = String(data?.name || "").trim();
-        if (!name) return json({ ok: false, error: "name 不可空白" }, 400);
-
-        const raw = await env.DB.get(`RM:${name}`);
-        if (!raw) return json({ ok: false, error: "無資料" }, 404);
-
-        const defRaw = await env.DB.get("RM:__DEFAULT__");
-        let isDefault = false;
-        try { isDefault = (defRaw ? JSON.parse(defRaw).name : "") === name; } catch {}
-
-        try { return json({ ok: true, payload: JSON.parse(raw), isDefault }, 200); }
-        catch { return json({ ok: true, payload: raw, isDefault }, 200); }
-      }
-
-      if (url.pathname === "/richmenu/list" && request.method === "POST") {
-        if (!env.DB) return json({ ok: false, error: "KV(DB) 未綁定" }, 500);
-
-        const list = await env.DB.list({ limit: 1000 });
-        const keys = (list.keys || []).map(k => k.name).filter(n => n.startsWith("RM:") && n !== "RM:__DEFAULT__");
-
-        const defRaw = await env.DB.get("RM:__DEFAULT__");
-        let defName = "";
-        try { defName = defRaw ? JSON.parse(defRaw).name : ""; } catch {}
-
-        const items = keys
-          .map(k => ({ name: k.replace(/^RM:/, ""), isDefault: k.replace(/^RM:/,"") === defName }))
-          .sort((a,b)=>a.name.localeCompare(b.name, "zh-Hant"));
-
-        return json({ ok: true, items }, 200);
-      }
-
-      // =========================================================
-      // LINE webhook（有 x-line-signature 才當 webhook）
-      // =========================================================
-      const hasLineSig = !!request.headers.get("x-line-signature");
-      if (request.method === "POST" && hasLineSig) {
-        const signature = request.headers.get("x-line-signature") || "";
-        const raw = await request.text();
-
-        if (env.CHANNEL_SECRET) {
-          const ok = await verifyLineSignature(raw, signature, env.CHANNEL_SECRET);
-          if (!ok) return json({ ok: false, error: "Invalid signature" }, 401);
-        }
-
-        let body;
-        try { body = JSON.parse(raw); }
-        catch { return json({ ok: false, error: "Webhook body 不是 JSON" }, 400); }
-
-        if (body && Array.isArray(body.events)) {
-          for (const event of body.events) {
-            if (event?.type === "message" && event?.message?.type === "text") {
-              await handleMessage(event, env);
-            }
-          }
-        }
-        return json({ ok: true }, 200);
-      }
-
-      return json({ ok: true, message: "API Running (KV + R2 + RichMenu + Webhook)" }, 200);
-
-    } catch (e) {
-      return json({ ok: false, error: "Server Error", detail: String(e?.message || e) }, 500);
+    .artboard{
+      position:absolute;
+      left:50%; top:50%;
+      transform: translate(-50%, -50%);
+      background:#fff;
+      border:1px solid rgba(15,23,42,.20);
+      box-shadow: 0 12px 30px rgba(0,0,0,.12);
+      border-radius: 14px;
+      overflow:hidden;
+      touch-action:none;
     }
-  },
-};
 
-// ===== helpers =====
-function guessExtFromType(type) {
-  const map = { "image/jpeg":"jpg","image/jpg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif","image/avif":"avif","image/svg+xml":"svg" };
-  return map[type] || null;
-}
-function guessExtFromName(name) {
-  const m = (name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
-  if (!m) return null;
-  const ext = m[1];
-  return ["jpg","jpeg","png","webp","gif","avif","svg"].includes(ext) ? (ext === "jpeg" ? "jpg" : ext) : null;
-}
-function ensureMeta(payload, defaults = {}) {
-  const obj = payload && typeof payload === "object" ? payload : { value: payload };
-  obj.meta = obj.meta && typeof obj.meta === "object" ? obj.meta : {};
-  if (!obj.meta.feature) obj.meta.feature = defaults.feature || "unknown";
-  if (!obj.meta.status) obj.meta.status = defaults.status || "active";
-  if (!obj.meta.createdFrom) obj.meta.createdFrom = defaults.createdFrom || "unknown";
-  if (typeof obj.meta.note !== "string") obj.meta.note = "";
-  obj.meta.updatedAt = Date.now();
-  return obj;
-}
-function sniffImageType(buf) {
-  const u = new Uint8Array(buf);
-  if (u.length >= 8 && u[0]===0x89 && u[1]===0x50 && u[2]===0x4E && u[3]===0x47 && u[4]===0x0D && u[5]===0x0A && u[6]===0x1A && u[7]===0x0A) return "image/png";
-  if (u.length >= 3 && u[0]===0xFF && u[1]===0xD8 && u[2]===0xFF) return "image/jpeg";
-  return "";
-}
-
-// LINE signature verify
-async function verifyLineSignature(rawBody, signature, channelSecret) {
-  try {
-    const enc = new TextEncoder();
-    const key = await crypto.subtle.importKey("raw", enc.encode(channelSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const mac = await crypto.subtle.sign("HMAC", key, enc.encode(rawBody));
-    const b64 = arrayBufferToBase64(mac);
-    return safeEqual(b64, signature);
-  } catch { return false; }
-}
-function arrayBufferToBase64(buf) {
-  const bytes = new Uint8Array(buf);
-  let binary = "";
-  for (let i=0;i<bytes.byteLength;i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
-function safeEqual(a, b) {
-  if (typeof a !== "string" || typeof b !== "string") return false;
-  if (a.length !== b.length) return false;
-  let out = 0;
-  for (let i=0;i<a.length;i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return out === 0;
-}
-
-// LINE helpers
-async function linePost(env, path, body = null) {
-  const res = await fetch("https://api.line.me" + path, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.CHANNEL_ACCESS_TOKEN}`,
-      ...(body ? { "Content-Type": "application/json" } : {}),
-    },
-    body: body ? JSON.stringify(body) : null,
-  });
-  const txt = await res.text().catch(() => "");
-  if (!res.ok) throw new Error(`LINE API ${res.status}: ${txt}`);
-  try { return JSON.parse(txt); } catch { return txt; }
-}
-async function lineDelete(env, path) {
-  const res = await fetch("https://api.line.me" + path, { method: "DELETE", headers: { Authorization: `Bearer ${env.CHANNEL_ACCESS_TOKEN}` } });
-  const txt = await res.text().catch(() => "");
-  if (!res.ok) throw new Error(`LINE API ${res.status}: ${txt}`);
-  return true;
-}
-
-// QuickReply/messages reply
-async function handleMessage(event, env) {
-  if (!env.DB) return;
-  if (!env.CHANNEL_ACCESS_TOKEN) return;
-
-  const userText = (event.message.text || "").trim();
-  if (!userText) return;
-
-  const stored = await env.DB.get(userText);
-  if (!stored) return;
-
-  let config;
-  try { config = JSON.parse(stored); } catch { return; }
-
-  let messages = [];
-  if (config.mode === "text") {
-    const msg = { type: "text", text: config.replyText || "請選擇：" };
-    if (Array.isArray(config.quickReplies) && config.quickReplies.length > 0) {
-      msg.quickReply = {
-        items: config.quickReplies.slice(0, 13).map((b) => ({
-          type: "action",
-          action: {
-            type: "message",
-            label: String(b.label || "").slice(0, 20) || "選項",
-            text: String(b.text || "").slice(0, 300),
-          },
-        })),
-      };
+    .img-layer{ position:absolute; inset:0; overflow:hidden; background:#f8fafc; }
+    .img-layer img{
+      width:100%; height:100%;
+      object-fit:cover;
+      user-select:none;
+      pointer-events:none;
     }
-    messages = [msg];
-  } else if (Array.isArray(config.messages) && config.messages.length > 0) {
-    messages = config.messages;
-  } else {
-    return;
+
+    .hotspot{
+      position:absolute;
+      border:2px solid rgba(239,68,68,.95);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 6px 18px rgba(0,0,0,.18);
+      background: rgba(239,68,68,.14);
+      border-radius: 12px;
+      color:white;
+      font-weight:900;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-shadow:0 1px 2px rgba(0,0,0,.85);
+      cursor:pointer;
+      touch-action:none;
+    }
+    .hotspot.selected{
+      border-color: rgba(59,130,246,.95);
+      background: rgba(59,130,246,.12);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 0 0 4px rgba(59,130,246,.95), 0 6px 18px rgba(0,0,0,.18);
+    }
+    .hotspot.multiSelected:not(.selected){
+      border-color: rgba(234,179,8,.95);
+      background: rgba(234,179,8,.10);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 0 0 4px rgba(234,179,8,.95), 0 6px 18px rgba(0,0,0,.18);
+    }
+
+    .handle{
+      position:absolute;
+      width:10px; height:10px;
+      background:#fff;
+      border:2px solid rgba(59,130,246,.95);
+      border-radius: 4px;
+      box-shadow:0 1px 3px rgba(0,0,0,.25);
+      z-index: 10;
+      touch-action:none;
+    }
+    .handle.nw{ left:-6px; top:-6px; cursor:nwse-resize; }
+    .handle.ne{ right:-6px; top:-6px; cursor:nesw-resize; }
+    .handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
+    .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
+
+    .draw-rect{
+      position:absolute;
+      border:2px solid rgba(255,255,255,1);
+      box-shadow: 0 0 0 2px rgba(0,0,0,.85);
+      background: rgba(0,0,0,.10);
+      border-radius: 12px;
+      pointer-events:none;
+    }
+
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      border:1px solid rgba(0,0,0,.18);
+      padding:2px 6px;
+      border-radius:6px;
+      background:#fff;
+      font-size: 11px;
+    }
+
+    .phone{ border-radius:34px; background:#0b1220; padding:10px; box-shadow:0 22px 50px rgba(0,0,0,.25); }
+    .phone-inner{ border-radius:26px; overflow:hidden; background:#e7eefb; border:1px solid rgba(255,255,255,.12); }
+    .phone-chat{ height:360px; padding:12px; position:relative; overflow:hidden; }
+    .bubble{ display:inline-block; padding:10px 12px; background:#a7f3d0; color:#064e3b; border-radius:18px; font-size:12px; margin-left:auto; max-width:80%; }
+
+    .phone-bottom{
+      background:#ffffff;
+      border-top:1px solid rgba(2,6,23,.10);
+      padding:8px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .mini-btn{
+      width:38px; height:34px;
+      border-radius:10px;
+      background:#f1f5f9;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      color:#0f172a;
+      border:1px solid rgba(2,6,23,.10);
+      flex: 0 0 auto;
+      user-select:none;
+    }
+    .menu-title{
+      flex:1 1 auto;
+      text-align:center;
+      font-size:13px;
+      font-weight:900;
+      color:#0f172a;
+      line-height:1;
+      user-select:none;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .menu-caret{ font-size:12px; opacity:.6; margin-left:4px; }
+
+    .rm-wrap{
+      position:relative;
+      width:100%;
+      aspect-ratio: 2500 / 1686;
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid rgba(2,6,23,.12);
+    }
+    .rm-wrap img{ width:100%; height:100%; object-fit:cover; display:block; }
+    #phoneHotspots{ pointer-events:auto; }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 overflow-hidden">
+
+<div class="h-14 bg-white border-b flex items-center justify-between px-3">
+  <div class="flex items-center gap-3">
+    <div class="font-extrabold text-indigo-700 text-lg">六宮格選單</div>
+    <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+      <span>滾輪：縮放</span><span>｜</span><span>中鍵按住：拖曳平移</span><span>｜</span>
+      <span><span class="kbd">Shift+點選</span> 多選</span><span>｜</span>
+      <span><span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span> 復原/重做</span><span>｜</span>
+      <span><span class="kbd">Delete</span> 刪除選取</span>
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <div id="status" class="text-xs text-slate-500 mr-2 hidden md:block">狀態：就緒</div>
+    <button class="px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="closePage()">返回</button>
+  </div>
+</div>
+
+<div class="h-[calc(100vh-56px)] flex">
+
+  <div class="w-[92px] bg-white border-r flex flex-col items-center py-3 gap-2">
+    <button class="w-14 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl hover:bg-black"
+            title="收合/展開左側" onclick="toggleLeft()">☰</button>
+
+    <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
+            onclick="makeSixGrid()" title="快速六宮格">
+      <div class="text-xl">🧩</div><div class="text-[10px] text-slate-700 font-bold">六格</div>
+    </button>
+
+    <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
+            onclick="fitToScreen()" title="Fit">
+      <div class="text-xl">📐</div><div class="text-[10px] text-slate-700 font-bold">Fit</div>
+    </button>
+
+    <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
+            onclick="resetView()" title="重置視角">
+      <div class="text-xl">🔁</div><div class="text-[10px] text-slate-700 font-bold">重置</div>
+    </button>
+
+    <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
+            onclick="togglePreview()" title="預覽面板（右側）">
+      <div class="text-xl">📱</div><div class="text-[10px] text-slate-700 font-bold">預覽</div>
+    </button>
+  </div>
+
+  <div id="leftPanel" class="w-[360px] bg-white border-r overflow-y-auto">
+    <div class="p-4 space-y-4">
+
+      <div class="rounded-xl border p-3 bg-slate-50">
+        <div class="font-bold text-sm mb-2">連線</div>
+        <label class="text-xs text-slate-500">Worker URL</label>
+        <input id="workerUrl" class="mt-1 w-full border rounded px-3 py-2 bg-yellow-50 text-sm"
+               placeholder="https://api.xxx.workers.dev" />
+      </div>
+
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2">選單資訊</div>
+
+        <label class="text-xs text-slate-500">選單名稱（=檔案名稱）</label>
+        <input id="menuName" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
+               placeholder="例如：HOME_六宮格" />
+
+        <div class="mt-2 grid grid-cols-2 gap-2">
+          <label class="text-xs text-slate-500">
+            切換其他選單
+            <select id="menuSelect" class="mt-1 w-full border rounded px-2 py-2 text-sm" onchange="onSelectMenu()">
+              <option value="">（尚未載入）</option>
+            </select>
+          </label>
+
+          <label class="text-xs text-slate-500">
+            設為預設(首頁)
+            <select id="isDefault" class="mt-1 w-full border rounded px-2 py-2 text-sm">
+              <option value="no" selected>否</option>
+              <option value="yes">是</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mt-3 flex gap-2">
+          <button id="btnImport" class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                  onclick="pickAndImport()">匯入圖片（自動壓縮）</button>
+
+          <button class="flex-1 px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700"
+                  onclick="saveMenu()">儲存並套用到 LINE</button>
+        </div>
+
+        <div class="mt-2 flex gap-2">
+          <button class="flex-1 px-3 py-2 rounded bg-slate-900 text-white text-sm hover:bg-black"
+                  onclick="loadMenu()">讀取</button>
+
+          <button class="flex-1 px-3 py-2 rounded bg-slate-200 text-slate-800 text-sm hover:bg-slate-300"
+                  onclick="clearAll()">清空</button>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-500">
+          ✅ 會轉 JPEG 並壓到 950KB 以下，避免 LINE 413
+        </div>
+      </div>
+
+      <div class="rounded-xl border p-3">
+        <div class="font-bold text-sm mb-2 flex items-center justify-between">
+          <span>格子清單</span>
+          <div class="flex items-center gap-2">
+            <span id="count" class="text-xs text-slate-500">0</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 mb-2">
+          <button class="px-2 py-1 text-xs rounded border hover:bg-slate-50" onclick="selectAllHotspots()">全選</button>
+          <button class="px-2 py-1 text-xs rounded border hover:bg-slate-50" onclick="clearSelection()">取消選取</button>
+          <button class="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700" onclick="deleteSelectedAll()">刪除選取</button>
+        </div>
+
+        <div id="empty" class="text-xs text-slate-400">尚未新增格子。你可以拖曳新增格子，或按「六格」。</div>
+        <div id="list" class="space-y-2"></div>
+      </div>
+
+      <div class="text-xs text-slate-400 pb-10">
+        圖片會裁切成 2500×1686，並上傳到 R2。<br/>
+        每個格子「文字」就是用來觸發 webhook 的關鍵字。
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 relative checker overflow-hidden" id="workspace">
+    <div class="absolute top-3 right-3 z-20 flex items-center gap-2 bg-white/90 backdrop-blur border rounded-xl px-2 py-1 shadow">
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1.1)">＋</button>
+      <div class="w-16 text-center text-sm font-bold" id="zoomLabel">100%</div>
+      <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1/1.1)">－</button>
+      <button class="px-2 py-1 rounded bg-slate-900 text-white text-sm hover:bg-black" onclick="fitToScreen()">Fit</button>
+    </div>
+
+    <div id="stage" class="absolute inset-0">
+      <div id="artboard" class="artboard">
+        <div class="img-layer"><img id="img" alt=""></div>
+        <div id="hotspotLayer" class="absolute inset-0"></div>
+        <div id="drawLayer" class="absolute inset-0"></div>
+      </div>
+    </div>
+
+    <div class="absolute left-3 bottom-3 z-20 bg-white/90 backdrop-blur border rounded-xl px-3 py-2 shadow text-xs text-slate-600">
+      <div class="font-bold mb-1">操作</div>
+      <div class="space-y-1">
+        <div>• 拖曳新增格子；點選格子後可拖移/拉角縮放</div>
+        <div>• 滾輪：縮放；中鍵按住：拖曳平移</div>
+        <div>• Shift+點選：多選；Delete：刪除選取</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="previewPanel" class="w-[380px] bg-white border-l overflow-y-auto">
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-bold text-sm">LINE 手機預覽</div>
+        <button class="text-xs px-2 py-1 rounded border hover:bg-slate-50" onclick="togglePreview()">收合</button>
+      </div>
+
+      <div class="phone">
+        <div class="phone-inner">
+          <div class="phone-chat">
+            <div class="bubble">點下方選單格子會送出你設定的文字</div>
+          </div>
+
+          <div class="phone-bottom">
+            <button id="toggleBtn" class="mini-btn" onclick="toggleKeyboard()">≡</button>
+            <div class="menu-title">
+              <span id="phoneMenuTitle">選單</span><span class="menu-caret">▼</span>
+            </div>
+            <div class="mini-btn">＋</div>
+          </div>
+
+          <div id="rmBar" class="p-3 bg-white">
+            <div class="rm-wrap">
+              <img id="phoneImg" alt="">
+              <div id="phoneHotspots" class="absolute inset-0"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="mt-3 text-xs text-slate-500">• 你每次拖曳/改文字，預覽會自動更新</div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+
+<script>
+  const $ = (id)=>document.getElementById(id);
+  const BASE_W = 2500, BASE_H = 1686;
+  const MAX_UPLOAD_BYTES = 950 * 1024; // ✅ 壓到 950KB 以下（避免 LINE 413）
+
+  const workerUrlEl = $("workerUrl");
+  const menuNameEl = $("menuName");
+  const menuSelectEl = $("menuSelect");
+  const isDefaultEl = $("isDefault");
+  const statusEl = $("status");
+
+  const leftPanelEl = $("leftPanel");
+  const previewPanelEl = $("previewPanel");
+  const workspaceEl = $("workspace");
+  const stageEl = $("stage");
+
+  const artboardEl = $("artboard");
+  const imgEl = $("img");
+  const hotspotLayerEl = $("hotspotLayer");
+  const drawLayerEl = $("drawLayer");
+
+  const listEl = $("list");
+  const emptyEl = $("empty");
+  const countEl = $("count");
+  const zoomLabelEl = $("zoomLabel");
+
+  const btnImportEl = $("btnImport");
+
+  const phoneImgEl = $("phoneImg");
+  const phoneHotspotsEl = $("phoneHotspots");
+  const rmBarEl = $("rmBar");
+  const toggleBtnEl = $("toggleBtn");
+  const phoneMenuTitleEl = $("phoneMenuTitle");
+
+  function setStatus(s){ statusEl.textContent = "狀態：" + s; }
+
+  function normalizeWorkerUrl(raw){
+    if(!raw) return "";
+    let s = raw.trim();
+    if(!/^https?:\/\//i.test(s)) s = "https://" + s;
+    return s.replace(/\/+$/,'');
   }
 
-  await fetch("https://api.line.me/v2/bot/message/reply", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.CHANNEL_ACCESS_TOKEN}` },
-    body: JSON.stringify({ replyToken: event.replyToken, messages }),
+  async function postJSON(url, data){
+    const res = await fetch(url, {
+      method:"POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(data)
+    });
+    const txt = await res.text().catch(()=> "");
+    if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
+    try { return JSON.parse(txt); } catch { return txt; }
+  }
+
+  async function uploadToR2(workerBaseUrl, blob, filename){
+    const form = new FormData();
+    form.append("file", blob, filename || "richmenu.jpg");
+    const res = await fetch(workerBaseUrl + "/upload", { method:"POST", body: form });
+    const txt = await res.text().catch(()=> "");
+    if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
+    const j = JSON.parse(txt);
+    if(!j.ok || !j.url || !j.key) throw new Error("上傳回傳格式不對（缺 url/key）");
+    return { url: j.url, key: j.key };
+  }
+
+  // ===== state =====
+  let state = {
+    meta: { name: "" },
+    imageUrl: "",
+    imageKey: "",
+    hotspots: [],
+    selectedId: null,
+    selectedIds: new Set(),
+  };
+
+  // ===== history =====
+  let history = [];
+  let historyIndex = -1;
+  function snapshot(){
+    return JSON.parse(JSON.stringify({
+      meta: state.meta,
+      imageUrl: state.imageUrl,
+      imageKey: state.imageKey,
+      hotspots: state.hotspots,
+      selectedId: state.selectedId,
+      selectedIds: Array.from(state.selectedIds),
+    }));
+  }
+  function pushHistory(){
+    const snap = snapshot();
+    history = history.slice(0, historyIndex + 1);
+    history.push(snap);
+    historyIndex++;
+  }
+  function applySnap(snap){
+    state.meta = snap.meta;
+    state.imageUrl = snap.imageUrl;
+    state.imageKey = snap.imageKey || "";
+    state.hotspots = snap.hotspots;
+    state.selectedId = snap.selectedId;
+    state.selectedIds = new Set(snap.selectedIds || []);
+    menuNameEl.value = state.meta?.name || "";
+    imgEl.src = state.imageUrl || "";
+    renderAll(true);
+  }
+  function undo(){ if(historyIndex<=0) return; historyIndex--; applySnap(history[historyIndex]); }
+  function redo(){ if(historyIndex>=history.length-1) return; historyIndex++; applySnap(history[historyIndex]); }
+
+  // ===== view =====
+  let view = { x: 0, y: 0, z: 1 };
+  function updateStage(){
+    stageEl.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.z})`;
+    zoomLabelEl.textContent = Math.round(view.z * 100) + "%";
+  }
+  function resetView(){ view = { x:0, y:0, z:1 }; updateStage(); }
+  function zoomBy(factor, anchorX=null, anchorY=null){
+    const oldZ = view.z;
+    const newZ = Math.min(4, Math.max(0.15, oldZ * factor));
+    if(anchorX != null && anchorY != null){
+      const rect = workspaceEl.getBoundingClientRect();
+      const ax = anchorX - rect.left;
+      const ay = anchorY - rect.top;
+      const dx = ax - (rect.width/2);
+      const dy = ay - (rect.height/2);
+      view.x = (view.x - dx) * (newZ/oldZ) + dx;
+      view.y = (view.y - dy) * (newZ/oldZ) + dy;
+    }
+    view.z = newZ;
+    updateStage();
+  }
+  function fitToScreen(){
+    const wr = workspaceEl.getBoundingClientRect();
+    const pad = 140;
+    const maxW = Math.max(200, wr.width - pad);
+    const maxH = Math.max(200, wr.height - pad);
+    const z = Math.min(3, Math.max(0.15, Math.min(maxW/BASE_W, maxH/BASE_H)));
+    view.z = z; view.x = 0; view.y = 0;
+    updateStage();
+  }
+
+  // ===== toggles =====
+  let leftCollapsed = false;
+  function toggleLeft(){ leftCollapsed = !leftCollapsed; leftPanelEl.classList.toggle("hidden", leftCollapsed); }
+  let previewCollapsed = false;
+  function togglePreview(){ previewCollapsed = !previewCollapsed; previewPanelEl.classList.toggle("hidden", previewCollapsed); }
+
+  let showMenu = true;
+  function toggleKeyboard(){
+    showMenu = !showMenu;
+    rmBarEl.classList.toggle("hidden", !showMenu);
+    toggleBtnEl.textContent = showMenu ? "≡" : "⌨️";
+  }
+
+  function initArtboard(){
+    artboardEl.style.width = BASE_W + "px";
+    artboardEl.style.height = BASE_H + "px";
+    fitToScreen();
+  }
+
+  // ===== selection =====
+  function uid(){ return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
+  function clearSelection(){ state.selectedId=null; state.selectedIds.clear(); renderHotspots(); renderList(); }
+  function selectAllHotspots(){ state.selectedIds = new Set(state.hotspots.map(h=>h.id)); state.selectedId = state.hotspots[0]?.id || null; renderHotspots(); renderList(); }
+  function selectHotspot(id, opts={multi:false, toggle:false}){
+    if(!opts.multi){
+      state.selectedIds.clear();
+      state.selectedIds.add(id);
+      state.selectedId = id;
+    }else{
+      if(opts.toggle){
+        if(state.selectedIds.has(id)) state.selectedIds.delete(id);
+        else state.selectedIds.add(id);
+      }else{
+        state.selectedIds.add(id);
+      }
+      state.selectedId = id;
+    }
+    renderHotspots(); renderList();
+  }
+  function deleteSelectedAll(){
+    if(state.selectedIds.size===0 && !state.selectedId) return;
+    const ids = new Set(state.selectedIds);
+    if(state.selectedId) ids.add(state.selectedId);
+    if(!confirm(`確定刪除選取的 ${ids.size} 個格子？`)) return;
+    state.hotspots = state.hotspots.filter(h=>!ids.has(h.id));
+    state.selectedId=null; state.selectedIds.clear();
+    pushHistory(); renderAll();
+  }
+  function focusHotspotInput(id){
+    const el = document.querySelector(`[data-hs-input="${id}"]`);
+    if(el){ el.focus(); el.select?.(); }
+  }
+
+  // ===== draw new hotspot (pointer) =====
+  let drawing=false, start={x:0,y:0}, last={x:0,y:0}, drawRect=null, drawPointerId=null;
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+  function pointInArtboardFromClient(clientX, clientY){
+    const ab = artboardEl.getBoundingClientRect();
+    const x = clamp(clientX - ab.left, 0, ab.width);
+    const y = clamp(clientY - ab.top, 0, ab.height);
+    return { ab, x, y };
+  }
+
+  artboardEl.addEventListener("pointerdown", (ev)=>{
+    if(ev.pointerType==="mouse" && ev.button!==0) return;
+    if(!state.imageUrl) return alert("請先匯入圖片");
+
+    const hitHotspot = ev.target.closest(".hotspot");
+    const hitHandle  = ev.target.closest(".handle");
+    if(hitHotspot || hitHandle) return;
+
+    ev.preventDefault();
+
+    const p = pointInArtboardFromClient(ev.clientX, ev.clientY);
+    drawing=true;
+    drawPointerId=ev.pointerId;
+    artboardEl.setPointerCapture(drawPointerId);
+
+    start={x:p.x,y:p.y};
+    last={x:p.x,y:p.y};
+
+    drawRect=document.createElement("div");
+    drawRect.className="draw-rect";
+    drawRect.style.left=start.x+"px";
+    drawRect.style.top=start.y+"px";
+    drawRect.style.width="0px";
+    drawRect.style.height="0px";
+    drawLayerEl.appendChild(drawRect);
+
+    state.selectedId=null;
+    renderHotspots();
   });
-}
+
+  artboardEl.addEventListener("pointermove", (ev)=>{
+    if(drag) return;
+    if(!drawing || !drawRect) return;
+    if(drawPointerId!==ev.pointerId) return;
+    ev.preventDefault();
+
+    const p = pointInArtboardFromClient(ev.clientX, ev.clientY);
+    last={x:p.x,y:p.y};
+
+    const x=Math.min(start.x,last.x);
+    const y=Math.min(start.y,last.y);
+    const w=Math.abs(last.x-start.x);
+    const h=Math.abs(last.y-start.y);
+
+    drawRect.style.left=x+"px";
+    drawRect.style.top=y+"px";
+    drawRect.style.width=w+"px";
+    drawRect.style.height=h+"px";
+  });
+
+  function finishDraw(){
+    if(!drawing) return;
+    drawing=false;
+    if(drawRect){ drawRect.remove(); drawRect=null; }
+
+    const ab = artboardEl.getBoundingClientRect();
+    const x=Math.min(start.x,last.x);
+    const y=Math.min(start.y,last.y);
+    const w=Math.abs(last.x-start.x);
+    const h=Math.abs(last.y-start.y);
+
+    drawPointerId=null;
+    if(w<18 || h<18) return;
+
+    const nx=x/ab.width, ny=y/ab.height, nw=w/ab.width, nh=h/ab.height;
+    const id=uid();
+    state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
+    state.selectedIds.add(id);
+    state.selectedId=id;
+
+    pushHistory();
+    renderAll();
+    setTimeout(()=>focusHotspotInput(id), 50);
+  }
+
+  artboardEl.addEventListener("pointerup", (ev)=>{
+    if(drawPointerId!==ev.pointerId) return;
+    ev.preventDefault();
+    try{ artboardEl.releasePointerCapture(ev.pointerId); }catch{}
+    finishDraw();
+  });
+
+  artboardEl.addEventListener("pointercancel", (ev)=>{
+    if(drawPointerId!==ev.pointerId) return;
+    try{ artboardEl.releasePointerCapture(ev.pointerId); }catch{}
+    drawing=false;
+    drawPointerId=null;
+    if(drawRect){ drawRect.remove(); drawRect=null; }
+  });
+
+  // ===== drag/resize (pointer) =====
+  let drag=null;
+  function beginDragPointer(ev, id, kind){
+    const h = state.hotspots.find(x=>x.id===id);
+    if(!h) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    const r = artboardEl.getBoundingClientRect();
+    let px=(ev.clientX-r.left)/r.width;
+    let py=(ev.clientY-r.top)/r.height;
+    px=Math.max(0,Math.min(1,px));
+    py=Math.max(0,Math.min(1,py));
+
+    drag={
+      id, kind,
+      pointerId: ev.pointerId,
+      startPointer:{x:px,y:py},
+      startBox:{x:h.x,y:h.y,w:h.w,h:h.h},
+      offset:{x:px-h.x,y:py-h.y}
+    };
+
+    if(drawing){
+      drawing=false;
+      drawPointerId=null;
+      if(drawRect){ drawRect.remove(); drawRect=null; }
+    }
+    artboardEl.setPointerCapture(ev.pointerId);
+  }
+
+  function onDragPointer(ev){
+    if(!drag) return;
+    if(ev.pointerId!==drag.pointerId) return;
+    ev.preventDefault();
+
+    const h = state.hotspots.find(x=>x.id===drag.id);
+    if(!h) return;
+
+    const r = artboardEl.getBoundingClientRect();
+    let px=(ev.clientX-r.left)/r.width;
+    let py=(ev.clientY-r.top)/r.height;
+    px=Math.max(0,Math.min(1,px));
+    py=Math.max(0,Math.min(1,py));
+
+    const dx=px-drag.startPointer.x;
+    const dy=py-drag.startPointer.y;
+
+    let nx=drag.startBox.x, ny=drag.startBox.y, nw=drag.startBox.w, nh=drag.startBox.h;
+    const min=0.03;
+
+    if(drag.kind==="move"){
+      nx = px - drag.offset.x;
+      ny = py - drag.offset.y;
+    }else{
+      if(drag.kind.includes("n")){ ny = drag.startBox.y + dy; nh = drag.startBox.h - dy; }
+      if(drag.kind.includes("s")){ nh = drag.startBox.h + dy; }
+      if(drag.kind.includes("w")){ nx = drag.startBox.x + dx; nw = drag.startBox.w - dx; }
+      if(drag.kind.includes("e")){ nw = drag.startBox.w + dx; }
+    }
+
+    nw=Math.max(min,nw);
+    nh=Math.max(min,nh);
+    nx=Math.min(1-nw,Math.max(0,nx));
+    ny=Math.min(1-nh,Math.max(0,ny));
+
+    h.x=nx; h.y=ny; h.w=nw; h.h=nh;
+    renderHotspots();
+    refreshPhonePreview();
+  }
+
+  function endDragPointer(ev){
+    if(!drag) return;
+    if(ev.pointerId!==drag.pointerId) return;
+    ev.preventDefault();
+    try{ artboardEl.releasePointerCapture(ev.pointerId); }catch{}
+    drag=null;
+    pushHistory();
+    renderList();
+  }
+
+  artboardEl.addEventListener("pointermove", onDragPointer);
+  artboardEl.addEventListener("pointerup", endDragPointer);
+
+  // ===== render =====
+  function renderHotspots(){
+    hotspotLayerEl.innerHTML="";
+    state.hotspots.forEach((h, idx)=>{
+      const d=document.createElement("div");
+      const isMain=(h.id===state.selectedId);
+      const isMulti=state.selectedIds.has(h.id);
+
+      d.className="hotspot"+(isMain?" selected":"")+(isMulti?" multiSelected":"");
+      d.style.left=(h.x*100)+"%";
+      d.style.top=(h.y*100)+"%";
+      d.style.width=(h.w*100)+"%";
+      d.style.height=(h.h*100)+"%";
+      d.textContent=(idx+1);
+
+      d.addEventListener("pointerdown",(ev)=>{
+        if(ev.pointerType==="mouse" && ev.button!==0) return;
+        const multi=ev.shiftKey;
+        selectHotspot(h.id,{multi,toggle:multi});
+        beginDragPointer(ev,h.id,"move");
+      });
+
+      if(isMain){
+        ["nw","ne","sw","se"].forEach(pos=>{
+          const hd=document.createElement("div");
+          hd.className="handle "+pos;
+          hd.addEventListener("pointerdown",(ev)=>{
+            if(ev.pointerType==="mouse" && ev.button!==0) return;
+            ev.stopPropagation();
+            selectHotspot(h.id,{multi:false});
+            beginDragPointer(ev,h.id,pos);
+          });
+          d.appendChild(hd);
+        });
+      }
+
+      hotspotLayerEl.appendChild(d);
+    });
+    countEl.textContent = state.hotspots.length + " 個";
+  }
+
+  function escapeHtml(str){
+    return String(str||"")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  let inputTimer=null;
+  function scheduleHistory(){
+    clearTimeout(inputTimer);
+    inputTimer=setTimeout(()=>pushHistory(),350);
+  }
+
+  function renderList(){
+    listEl.innerHTML="";
+    emptyEl.classList.toggle("hidden", state.hotspots.length!==0);
+
+    state.hotspots.forEach((h, idx)=>{
+      const wrap=document.createElement("div");
+      wrap.className="border rounded-lg p-2 bg-white";
+
+      const checked = state.selectedIds.has(h.id) || (state.selectedId===h.id);
+
+      wrap.innerHTML=`
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" class="w-4 h-4" ${checked ? "checked":""} />
+            <div class="font-bold text-sm ${h.id===state.selectedId?'text-blue-700':'text-slate-800'}">格 ${idx+1}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="text-xs text-slate-500 underline">選取</button>
+            <button class="text-xs text-red-600 underline">刪除</button>
+          </div>
+        </div>
+        <div class="text-xs text-slate-500 mb-1">點擊送出文字（關鍵字）：</div>
+        <input data-hs-input="${h.id}" class="w-full border rounded px-2 py-2 text-sm font-bold"
+          placeholder="例如：RM:HOME / MENU_SHOP / 開始"
+          value="${escapeHtml(h.text)}">
+      `;
+
+      const checkbox=wrap.querySelector("input[type=checkbox]");
+      const btnSel=wrap.querySelectorAll("button")[0];
+      const btnDel=wrap.querySelectorAll("button")[1];
+      const input=wrap.querySelector("input[data-hs-input]");
+
+      checkbox.onchange=()=>{
+        if(checkbox.checked) state.selectedIds.add(h.id);
+        else state.selectedIds.delete(h.id);
+        renderHotspots();
+      };
+
+      btnSel.onclick=()=>{
+        selectHotspot(h.id,{multi:false});
+        setTimeout(()=>focusHotspotInput(h.id),0);
+      };
+
+      btnDel.onclick=()=>{
+        if(confirm(`刪除格 ${idx+1}？`)){
+          const i=state.hotspots.findIndex(x=>x.id===h.id);
+          if(i>=0){
+            state.hotspots.splice(i,1);
+            state.selectedIds.delete(h.id);
+            if(state.selectedId===h.id) state.selectedId=null;
+            pushHistory();
+            renderAll();
+          }
+        }
+      };
+
+      input.oninput=()=>{
+        h.text=input.value;
+        refreshPhonePreview();
+        scheduleHistory();
+      };
+
+      // ✅ 不重建 list（避免打字被打斷），只更新熱區
+      input.onfocus=()=>{
+        state.selectedIds.clear();
+        state.selectedIds.add(h.id);
+        state.selectedId=h.id;
+        renderHotspots();
+      };
+
+      listEl.appendChild(wrap);
+    });
+  }
+
+  function renderAll(silent=false){
+    renderHotspots();
+    renderList();
+    refreshPhonePreview();
+    if(!silent) setStatus("就緒");
+  }
+
+  function refreshPhonePreview(){
+    phoneMenuTitleEl.textContent = (state.meta?.name || "選單").trim() || "選單";
+
+    if(!state.imageUrl){
+      phoneImgEl.src="";
+      phoneHotspotsEl.innerHTML="";
+      return;
+    }
+
+    phoneImgEl.src = state.imageUrl;
+    phoneHotspotsEl.innerHTML="";
+
+    state.hotspots.forEach((h,i)=>{
+      const btn=document.createElement("button");
+      btn.style.position="absolute";
+      btn.style.left=(h.x*100)+"%";
+      btn.style.top=(h.y*100)+"%";
+      btn.style.width=(h.w*100)+"%";
+      btn.style.height=(h.h*100)+"%";
+      btn.style.background="transparent";
+      btn.style.border="none";
+      btn.onclick=()=>{
+        const t=(h.text||"").trim();
+        alert(`格 ${i+1}\n將送出：${t || "（尚未填）"}`);
+      };
+      phoneHotspotsEl.appendChild(btn);
+    });
+  }
+
+  function makeSixGrid(){
+    const cols=3, rows=2;
+    const gap=0.012;
+    const cellW=(1-gap*(cols+1))/cols;
+    const cellH=(1-gap*(rows+1))/rows;
+
+    state.hotspots=[];
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const x=gap + c*(cellW+gap);
+        const y=gap + r*(cellH+gap);
+        state.hotspots.push({ id:uid(), x, y, w:cellW, h:cellH, text:"" });
+      }
+    }
+    state.selectedIds = new Set(state.hotspots.map(h=>h.id));
+    state.selectedId = state.hotspots[0]?.id || null;
+
+    pushHistory();
+    renderAll();
+  }
+
+  // ✅ 產出 2500x1686 並「自動壓縮到 950KB 以下」
+  async function encodeRichMenuImage(file){
+    const bmp = await createImageBitmap(file);
+    const W=BASE_W, H=BASE_H;
+
+    const s = Math.max(W / bmp.width, H / bmp.height);
+    const dw = bmp.width * s;
+    const dh = bmp.height * s;
+    const dx = (W - dw) / 2;
+    const dy = (H - dh) / 2;
+
+    const canvas=document.createElement("canvas");
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(0,0,W,H);
+    ctx.drawImage(bmp, dx, dy, dw, dh);
+
+    // ✅ 優先 JPEG（小很多），逐步降品質直到 <= MAX_UPLOAD_BYTES
+    const qualities=[0.86,0.80,0.74,0.68,0.62,0.56];
+    let blob=null;
+    for(const q of qualities){
+      blob = await new Promise(res=>canvas.toBlob(res, "image/jpeg", q));
+      if(!blob) throw new Error("圖片轉換失敗（toBlob 空）");
+      if(blob.size <= MAX_UPLOAD_BYTES) return { blob, ext:"jpg", mime:"image/jpeg", quality:q };
+    }
+    // 還是太大：就回傳最後一個（通常不會）
+    return { blob, ext:"jpg", mime:"image/jpeg", quality:qualities[qualities.length-1] };
+  }
+
+  async function pickAndImport(){
+    const base = normalizeWorkerUrl(workerUrlEl.value);
+    if(!base) return alert("請先填 Worker URL");
+    localStorage.setItem("line_worker_url", base);
+
+    const input = $("fileInput");
+    input.value="";
+    input.onchange=async (e)=>{
+      const file=e.target.files[0];
+      if(!file) return;
+
+      try{
+        setStatus("匯入中（壓縮）...");
+        const encoded = await encodeRichMenuImage(file);
+
+        const up = await uploadToR2(base, encoded.blob, `richmenu_2500x1686.${encoded.ext}`);
+
+        state.imageUrl = up.url;
+        state.imageKey = up.key;
+        imgEl.src = up.url;
+
+        btnImportEl.textContent = `已匯入（${Math.round(encoded.blob.size/1024)}KB）`;
+        btnImportEl.classList.remove("bg-blue-600");
+        btnImportEl.classList.add("bg-emerald-600");
+
+        pushHistory();
+        renderAll();
+        fitToScreen();
+        setStatus("已匯入 ✅");
+      }catch(err){
+        setStatus("匯入失敗");
+        alert("匯入失敗：\n"+err.message);
+      }
+    };
+    input.click();
+  }
+
+  function buildRichMenuPayload(){
+    if(!state.imageUrl) throw new Error("尚未匯入圖片");
+    if(!state.imageKey) throw new Error("缺少 imageKey（請先重新匯入圖片）");
+    if(state.hotspots.length===0) throw new Error("尚未新增格子");
+    if(state.hotspots.some(h=>!String(h.text||"").trim())) throw new Error("有格子沒有填文字");
+
+    const areas=state.hotspots.map(h=>({
+      bounds:{
+        x: Math.round(h.x * BASE_W),
+        y: Math.round(h.y * BASE_H),
+        width: Math.round(h.w * BASE_W),
+        height: Math.round(h.h * BASE_H),
+      },
+      action:{ type:"message", text:String(h.text).trim() }
+    }));
+
+    return {
+      meta:{ feature:"richmenu", name: state.meta.name || "", updatedAt: Date.now() },
+      type:"richmenu",
+      size:{ width: BASE_W, height: BASE_H },
+      imageUrl: state.imageUrl,
+      imageKey: state.imageKey,
+      areas
+    };
+  }
+
+  async function saveMenu(){
+    const base=normalizeWorkerUrl(workerUrlEl.value);
+    if(!base) return alert("請先填 Worker URL");
+
+    const name=(menuNameEl.value||"").trim();
+    if(!name) return alert("請先填選單名稱");
+
+    try{
+      state.meta.name=name;
+      const payload=buildRichMenuPayload();
+      const isDefault=(isDefaultEl.value==="yes");
+
+      setStatus("儲存/套用中...");
+      const res = await postJSON(base+"/richmenu/save",{ name, payload, isDefault });
+
+      pushHistory();
+      setStatus("成功 ✅");
+      await refreshMenuList(true);
+
+      alert("已儲存並套用到 LINE OA ✅\n選單名稱："+name+(isDefault?"\n（已設為預設/首頁）":"")+(res?.richMenuId?`\nRichMenuId：${res.richMenuId}`:""));
+    }catch(e){
+      setStatus("儲存失敗");
+      alert("儲存失敗：\n"+e.message);
+    }
+  }
+
+  async function loadMenu(){
+    const base=normalizeWorkerUrl(workerUrlEl.value);
+    if(!base) return alert("請先填 Worker URL");
+
+    const name=(menuNameEl.value||"").trim() || (menuSelectEl.value||"").trim();
+    if(!name) return alert("請先輸入/選擇要讀取的選單");
+
+    try{
+      setStatus("讀取中...");
+      const j=await postJSON(base+"/richmenu/load",{ name });
+      if(!j.ok) throw new Error(j.error || "讀取失敗");
+
+      const p=j.payload;
+      state.meta = p.meta || { name };
+      state.imageUrl = p.imageUrl || "";
+      state.imageKey = p.imageKey || "";
+      state.hotspots = (p.areas||[]).map(a=>({
+        id: uid(),
+        x: (a.bounds.x||0)/BASE_W,
+        y: (a.bounds.y||0)/BASE_H,
+        w: (a.bounds.width||0)/BASE_W,
+        h: (a.bounds.height||0)/BASE_H,
+        text: (a.action?.text||""),
+      }));
+
+      state.selectedIds=new Set(state.hotspots.map(h=>h.id));
+      state.selectedId=state.hotspots[0]?.id || null;
+
+      menuNameEl.value=name;
+      imgEl.src=state.imageUrl||"";
+
+      btnImportEl.textContent=state.imageUrl?"已匯入":"匯入圖片（自動壓縮）";
+      btnImportEl.classList.toggle("bg-emerald-600", !!state.imageUrl);
+      btnImportEl.classList.toggle("bg-blue-600", !state.imageUrl);
+
+      isDefaultEl.value = j.isDefault ? "yes" : "no";
+
+      pushHistory();
+      renderAll();
+      fitToScreen();
+      setStatus("讀取成功 ✅");
+      setTimeout(()=>focusHotspotInput(state.selectedId), 50);
+    }catch(e){
+      setStatus("讀取失敗");
+      alert("讀取失敗：\n"+e.message);
+    }
+  }
+
+  async function refreshMenuList(keepSelection=false){
+    const base=normalizeWorkerUrl(workerUrlEl.value);
+    if(!base) return;
+
+    const current = keepSelection ? (menuSelectEl.value || "") : "";
+    const j = await postJSON(base+"/richmenu/list", {});
+    if(!j.ok) return;
+
+    menuSelectEl.innerHTML = `<option value="">（選擇選單）</option>`;
+    (j.items||[]).forEach(it=>{
+      const opt=document.createElement("option");
+      opt.value=it.name;
+      opt.textContent=it.name+(it.isDefault?"（預設）":"");
+      menuSelectEl.appendChild(opt);
+    });
+    if(current) menuSelectEl.value=current;
+  }
+
+  function onSelectMenu(){
+    const v=(menuSelectEl.value||"").trim();
+    if(!v) return;
+    menuNameEl.value=v;
+    loadMenu();
+  }
+
+  function clearAll(){
+    if(!confirm("確定清空圖片與全部格子？")) return;
+    state.imageUrl="";
+    state.imageKey="";
+    state.hotspots=[];
+    state.selectedId=null;
+    state.selectedIds.clear();
+    imgEl.src="";
+
+    btnImportEl.textContent="匯入圖片（自動壓縮）";
+    btnImportEl.classList.remove("bg-emerald-600");
+    btnImportEl.classList.add("bg-blue-600");
+
+    pushHistory();
+    renderAll();
+  }
+
+  menuNameEl.addEventListener("input", ()=>{
+    state.meta.name = menuNameEl.value;
+    refreshPhonePreview();
+    scheduleHistory();
+  });
+
+  window.addEventListener("keydown",(ev)=>{
+    if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase()==="z"){ ev.preventDefault(); undo(); return; }
+    if((ev.ctrlKey && ev.key.toLowerCase()==="y") || (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase()==="z")){ ev.preventDefault(); redo(); return; }
+    if(ev.key==="Delete"){ ev.preventDefault(); deleteSelectedAll(); }
+    if(ev.key==="Escape"){ clearSelection(); }
+  });
+
+  // middle mouse panning
+  let panning=false;
+  let panStart={x:0,y:0,vx:0,vy:0};
+  workspaceEl.addEventListener("mousedown",(ev)=>{
+    if(ev.button===1){
+      ev.preventDefault();
+      panning=true;
+      panStart={ x:ev.clientX, y:ev.clientY, vx:view.x, vy:view.y };
+      window.addEventListener("mousemove", onPan);
+      window.addEventListener("mouseup", endPan, { once:true });
+    }
+  });
+  function onPan(ev){
+    if(!panning) return;
+    view.x = panStart.vx + (ev.clientX - panStart.x);
+    view.y = panStart.vy + (ev.clientY - panStart.y);
+    updateStage();
+  }
+  function endPan(){ window.removeEventListener("mousemove", onPan); panning=false; }
+
+  // wheel zoom
+  workspaceEl.addEventListener("wheel",(ev)=>{
+    ev.preventDefault();
+    const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
+    zoomBy(factor, ev.clientX, ev.clientY);
+  }, { passive:false });
+
+  function closePage(){ window.location.href="index.html"; }
+
+  (function init(){
+    const savedUrl=(localStorage.getItem("line_worker_url")||"").trim();
+    if(savedUrl) workerUrlEl.value=savedUrl;
+    initArtboard();
+    resetView();
+    renderAll(true);
+    pushHistory();
+    refreshMenuList();
+    setStatus("就緒 ✅");
+  })();
+</script>
+
+</body>
+</html>
