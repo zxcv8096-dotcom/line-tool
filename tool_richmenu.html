@@ -748,62 +748,88 @@
     setTimeout(()=>focusHotspotInput(id), 50);
   });
 
-  // ===== drag/resize (只拖主選取那格) =====
-  let drag = null;
-  function beginDrag(ev, id, kind){
-    const h = state.hotspots.find(x=>x.id===id);
-    if(!h) return;
+  // ===== ✅ drag/resize（修正 Chrome 縮放 / sub-pixel / transform 下拖曳過程偏移） =====
+let drag = null;
 
-    const ab = artboardEl.getBoundingClientRect();
-    drag = {
-      id, kind, ab,
-      startMouse: { x: ev.clientX, y: ev.clientY },
-      startBox: { x:h.x, y:h.y, w:h.w, h:h.h }
-    };
-    window.addEventListener("mousemove", onDrag);
-    window.addEventListener("mouseup", endDrag, { once:true });
+function clientToNorm(clientX, clientY){
+  const r = artboardEl.getBoundingClientRect();
+  // 轉成 0~1 的 normalized（以「當下」artboardRect為準）
+  let x = (clientX - r.left) / r.width;
+  let y = (clientY - r.top) / r.height;
+  x = Math.max(0, Math.min(1, x));
+  y = Math.max(0, Math.min(1, y));
+  return { x, y, r };
+}
+
+function beginDrag(ev, id, kind){
+  const h = state.hotspots.find(x=>x.id===id);
+  if(!h) return;
+
+  ev.preventDefault(); // ✅ 避免拖曳時瀏覽器做選取/拖拉
+  const p = clientToNorm(ev.clientX, ev.clientY);
+
+  drag = {
+    id,
+    kind,
+    startPointer: { x: p.x, y: p.y },
+    startBox: { x: h.x, y: h.y, w: h.w, h: h.h },
+    // ✅ move 用 offset 才能「指到哪拖到哪」不會跳
+    offset: { x: p.x - h.x, y: p.y - h.y }
+  };
+
+  window.addEventListener("mousemove", onDrag, { passive:false });
+  window.addEventListener("mouseup", endDrag, { once:true });
+}
+
+function onDrag(ev){
+  if(!drag) return;
+  ev.preventDefault();
+
+  const h = state.hotspots.find(x=>x.id===drag.id);
+  if(!h) return;
+
+  const p = clientToNorm(ev.clientX, ev.clientY);
+  const dx = p.x - drag.startPointer.x;
+  const dy = p.y - drag.startPointer.y;
+
+  let nx = drag.startBox.x;
+  let ny = drag.startBox.y;
+  let nw = drag.startBox.w;
+  let nh = drag.startBox.h;
+
+  const min = 0.03;
+
+  if(drag.kind === "move"){
+    // ✅ 用 offset 保證拖曳過程不會「偏移」
+    nx = p.x - drag.offset.x;
+    ny = p.y - drag.offset.y;
+  }else{
+    // ✅ resize：仍用 normalized 的 dx/dy
+    if(drag.kind.includes("n")){ ny = drag.startBox.y + dy; nh = drag.startBox.h - dy; }
+    if(drag.kind.includes("s")){ nh = drag.startBox.h + dy; }
+    if(drag.kind.includes("w")){ nx = drag.startBox.x + dx; nw = drag.startBox.w - dx; }
+    if(drag.kind.includes("e")){ nw = drag.startBox.w + dx; }
   }
-  function onDrag(ev){
-    if(!drag) return;
-    const h = state.hotspots.find(x=>x.id===drag.id);
-    if(!h) return;
 
-    const dx = (ev.clientX - drag.startMouse.x) / drag.ab.width;
-    const dy = (ev.clientY - drag.startMouse.y) / drag.ab.height;
+  // clamp
+  nw = Math.max(min, nw);
+  nh = Math.max(min, nh);
+  nx = Math.min(1 - nw, Math.max(0, nx));
+  ny = Math.min(1 - nh, Math.max(0, ny));
 
-    let nx = drag.startBox.x;
-    let ny = drag.startBox.y;
-    let nw = drag.startBox.w;
-    let nh = drag.startBox.h;
+  h.x = nx; h.y = ny; h.w = nw; h.h = nh;
 
-    const min = 0.03;
+  renderHotspots();
+  refreshPhonePreview();
+}
 
-    if(drag.kind === "move"){
-      nx = drag.startBox.x + dx;
-      ny = drag.startBox.y + dy;
-    }else{
-      if(drag.kind.includes("n")){ ny = drag.startBox.y + dy; nh = drag.startBox.h - dy; }
-      if(drag.kind.includes("s")){ nh = drag.startBox.h + dy; }
-      if(drag.kind.includes("w")){ nx = drag.startBox.x + dx; nw = drag.startBox.w - dx; }
-      if(drag.kind.includes("e")){ nw = drag.startBox.w + dx; }
-    }
+function endDrag(){
+  window.removeEventListener("mousemove", onDrag);
+  drag = null;
+  pushHistory();
+  renderList();
+}
 
-    nw = Math.max(min, nw);
-    nh = Math.max(min, nh);
-    nx = Math.min(1 - nw, Math.max(0, nx));
-    ny = Math.min(1 - nh, Math.max(0, ny));
-
-    h.x = nx; h.y = ny; h.w = nw; h.h = nh;
-
-    renderHotspots();
-    refreshPhonePreview();
-  }
-  function endDrag(){
-    window.removeEventListener("mousemove", onDrag);
-    drag = null;
-    pushHistory();
-    renderList();
-  }
 
   // ===== render hotspots =====
   function renderHotspots(){
