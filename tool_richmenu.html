@@ -7,11 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    :root{
-      --rail-w: 92px;
-      --panel-w: 360px;
-      --preview-w: 380px;
-    }
+    :root{ --rail-w: 92px; --panel-w: 360px; --preview-w: 380px; }
     body{ user-select:none; }
     input, textarea, select, button { user-select:auto; }
 
@@ -34,26 +30,17 @@
       box-shadow: 0 12px 30px rgba(0,0,0,.12);
       border-radius: 14px;
       overflow:hidden;
-
-      /* ✅ 重要：避免觸控板/觸控手勢干擾拖曳（Pointer Events） */
-      touch-action: none;
+      touch-action:none;
     }
 
-    .img-layer{
-      position:absolute;
-      inset:0;
-      overflow:hidden;
-      background:#f8fafc;
-    }
+    .img-layer{ position:absolute; inset:0; overflow:hidden; background:#f8fafc; }
     .img-layer img{
-      width:100%;
-      height:100%;
+      width:100%; height:100%;
       object-fit:cover;
       user-select:none;
       pointer-events:none;
     }
 
-    /* ✅ 熱區：雙描邊，深色圖也清楚 */
     .hotspot{
       position:absolute;
       border:2px solid rgba(239,68,68,.95);
@@ -96,7 +83,6 @@
     .handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
     .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
 
-    /* ✅ 畫框：白+黑雙描邊 */
     .draw-rect{
       position:absolute;
       border:2px solid rgba(255,255,255,1);
@@ -115,7 +101,6 @@
       font-size: 11px;
     }
 
-    /* phone preview */
     .phone{
       border-radius: 34px;
       background:#0b1220;
@@ -144,7 +129,6 @@
       margin-left:auto;
       max-width: 80%;
     }
-
     .phone-bottom{
       background:#ffffff;
       border-top:1px solid rgba(2,6,23,.10);
@@ -179,11 +163,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .menu-caret{
-      font-size: 12px;
-      opacity: .6;
-      margin-left: 4px;
-    }
+    .menu-caret{ font-size: 12px; opacity: .6; margin-left: 4px; }
 
     .rm-wrap{
       position:relative;
@@ -194,31 +174,20 @@
       overflow:hidden;
       border:1px solid rgba(2,6,23,.12);
     }
-    .rm-wrap img{
-      width:100%; height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
+    .rm-wrap img{ width:100%; height:100%; object-fit:cover; display:block; }
     #phoneHotspots{ pointer-events:auto; }
   </style>
 </head>
 
 <body class="bg-slate-100 text-slate-800 overflow-hidden">
 
-<!-- Top bar -->
 <div class="h-14 bg-white border-b flex items-center justify-between px-3">
   <div class="flex items-center gap-3">
     <div class="font-extrabold text-indigo-700 text-lg">六宮格選單</div>
     <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-      <span>滾輪：縮放</span>
-      <span>｜</span>
-      <span>中鍵按住：拖曳平移</span>
-      <span>｜</span>
-      <span><span class="kbd">Shift+點選</span> 多選</span>
-      <span>｜</span>
-      <span><span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span> 復原/重做</span>
-      <span>｜</span>
+      <span>滾輪：縮放</span><span>｜</span><span>中鍵按住：拖曳平移</span><span>｜</span>
+      <span><span class="kbd">Shift+點選</span> 多選</span><span>｜</span>
+      <span><span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span> 復原/重做</span><span>｜</span>
       <span><span class="kbd">Delete</span> 刪除選取</span>
     </div>
   </div>
@@ -230,38 +199,31 @@
 
 <div class="h-[calc(100vh-56px)] flex">
 
-  <!-- Left rail -->
   <div class="w-[92px] bg-white border-r flex flex-col items-center py-3 gap-2">
     <button class="w-14 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl hover:bg-black"
-            title="收合/展開左側"
-            onclick="toggleLeft()">☰</button>
+            title="收合/展開左側" onclick="toggleLeft()">☰</button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="makeSixGrid()" title="快速六宮格">
-      <div class="text-xl">🧩</div>
-      <div class="text-[10px] text-slate-700 font-bold">六格</div>
+      <div class="text-xl">🧩</div><div class="text-[10px] text-slate-700 font-bold">六格</div>
     </button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="fitToScreen()" title="Fit">
-      <div class="text-xl">📐</div>
-      <div class="text-[10px] text-slate-700 font-bold">Fit</div>
+      <div class="text-xl">📐</div><div class="text-[10px] text-slate-700 font-bold">Fit</div>
     </button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="resetView()" title="重置視角">
-      <div class="text-xl">🔁</div>
-      <div class="text-[10px] text-slate-700 font-bold">重置</div>
+      <div class="text-xl">🔁</div><div class="text-[10px] text-slate-700 font-bold">重置</div>
     </button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="togglePreview()" title="預覽面板（右側）">
-      <div class="text-xl">📱</div>
-      <div class="text-[10px] text-slate-700 font-bold">預覽</div>
+      <div class="text-xl">📱</div><div class="text-[10px] text-slate-700 font-bold">預覽</div>
     </button>
   </div>
 
-  <!-- Left panel -->
   <div id="leftPanel" class="w-[360px] bg-white border-r overflow-y-auto">
     <div class="p-4 space-y-4">
 
@@ -298,10 +260,10 @@
 
         <div class="mt-3 flex gap-2">
           <button id="btnImport" class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                  onclick="pickAndImport()">匯入圖片</button>
+                  onclick="pickAndImport()">匯入 PNG/JPG</button>
 
           <button class="flex-1 px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700"
-                  onclick="saveMenu()">儲存</button>
+                  onclick="saveMenu()">儲存並套用到 LINE</button>
         </div>
 
         <div class="mt-2 flex gap-2">
@@ -332,13 +294,12 @@
       </div>
 
       <div class="text-xs text-slate-400 pb-10">
-        ✅ 圖片會裁切成 2500×1686 並上傳到 R2（PNG）<br/>
-        ✅ 你按「儲存」會呼叫 Worker 的 /richmenu/save（由 Worker 套用到 LINE OA）
+        ✅ 會裁切成 2500×1686 並上傳到 R2<br/>
+        ✅ 儲存時 Worker 會用 R2 的 key 取圖，不會再 404
       </div>
     </div>
   </div>
 
-  <!-- Workspace -->
   <div class="flex-1 relative checker overflow-hidden" id="workspace">
     <div class="absolute top-3 right-3 z-20 flex items-center gap-2 bg-white/90 backdrop-blur border rounded-xl px-2 py-1 shadow">
       <button class="px-2 py-1 rounded hover:bg-slate-100 text-sm" onclick="zoomBy(1.1)">＋</button>
@@ -349,9 +310,7 @@
 
     <div id="stage" class="absolute inset-0">
       <div id="artboard" class="artboard">
-        <div class="img-layer">
-          <img id="img" alt="">
-        </div>
+        <div class="img-layer"><img id="img" alt=""></div>
         <div id="hotspotLayer" class="absolute inset-0"></div>
         <div id="drawLayer" class="absolute inset-0"></div>
       </div>
@@ -367,7 +326,6 @@
     </div>
   </div>
 
-  <!-- Right preview panel -->
   <div id="previewPanel" class="w-[380px] bg-white border-l overflow-y-auto">
     <div class="p-4">
       <div class="flex items-center justify-between mb-3">
@@ -377,7 +335,6 @@
 
       <div class="phone">
         <div class="phone-inner">
-
           <div class="phone-chat">
             <div class="bubble">點下方選單格子會送出你設定的文字</div>
           </div>
@@ -385,8 +342,7 @@
           <div class="phone-bottom">
             <button id="toggleBtn" class="mini-btn" onclick="toggleKeyboard()">≡</button>
             <div class="menu-title">
-              <span id="phoneMenuTitle">選單</span>
-              <span class="menu-caret">▼</span>
+              <span id="phoneMenuTitle">選單</span><span class="menu-caret">▼</span>
             </div>
             <div class="mini-btn">＋</div>
           </div>
@@ -401,9 +357,7 @@
         </div>
       </div>
 
-      <div class="mt-3 text-xs text-slate-500">
-        • 你每次拖曳/改文字，預覽會自動更新
-      </div>
+      <div class="mt-3 text-xs text-slate-500">• 你每次拖曳/改文字，預覽會自動更新</div>
     </div>
   </div>
 </div>
@@ -412,9 +366,7 @@
 
 <script>
   const $ = (id)=>document.getElementById(id);
-
-  const BASE_W = 2500;
-  const BASE_H = 1686;
+  const BASE_W = 2500, BASE_H = 1686;
 
   const workerUrlEl = $("workerUrl");
   const menuNameEl = $("menuName");
@@ -465,6 +417,7 @@
     try { return JSON.parse(txt); } catch { return txt; }
   }
 
+  // ✅ 回傳 {url, key}
   async function uploadToR2(workerBaseUrl, blob, filename){
     const form = new FormData();
     form.append("file", blob, filename || "richmenu.png");
@@ -472,20 +425,21 @@
     const txt = await res.text().catch(()=> "");
     if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
     const j = JSON.parse(txt);
-    if(!j.ok || !j.url) throw new Error("上傳回傳格式不對");
-    return j.url;
+    if(!j.ok || !j.url || !j.key) throw new Error("上傳回傳格式不對（缺 url/key）");
+    return { url: j.url, key: j.key };
   }
 
   // ===== state =====
   let state = {
     meta: { name: "" },
     imageUrl: "",
+    imageKey: "",
     hotspots: [],
     selectedId: null,
     selectedIds: new Set(),
   };
 
-  // ===== history =====
+  // ===== history (Undo/Redo) =====
   let history = [];
   let historyIndex = -1;
 
@@ -493,6 +447,7 @@
     return JSON.parse(JSON.stringify({
       meta: state.meta,
       imageUrl: state.imageUrl,
+      imageKey: state.imageKey,
       hotspots: state.hotspots,
       selectedId: state.selectedId,
       selectedIds: Array.from(state.selectedIds),
@@ -507,6 +462,7 @@
   function applySnap(snap){
     state.meta = snap.meta;
     state.imageUrl = snap.imageUrl;
+    state.imageKey = snap.imageKey || "";
     state.hotspots = snap.hotspots;
     state.selectedId = snap.selectedId;
     state.selectedIds = new Set(snap.selectedIds || []);
@@ -528,7 +484,6 @@
   function zoomBy(factor, anchorX=null, anchorY=null){
     const oldZ = view.z;
     const newZ = Math.min(4, Math.max(0.15, oldZ * factor));
-
     if(anchorX != null && anchorY != null){
       const rect = workspaceEl.getBoundingClientRect();
       const ax = anchorX - rect.left;
@@ -566,15 +521,17 @@
     toggleBtnEl.textContent = showMenu ? "≡" : "⌨️";
   }
 
-  // ===== artboard =====
+  // ===== artboard size =====
   function initArtboard(){
     artboardEl.style.width = BASE_W + "px";
     artboardEl.style.height = BASE_H + "px";
     fitToScreen();
   }
 
-  // ===== selection =====
-  function uid(){ return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
+  // ===== selection helpers =====
+  function uid(){
+    return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+  }
 
   function clearSelection(){
     state.selectedId = null;
@@ -610,10 +567,8 @@
 
   function deleteSelectedAll(){
     if(state.selectedIds.size === 0 && !state.selectedId) return;
-
     const ids = new Set(state.selectedIds);
     if(state.selectedId) ids.add(state.selectedId);
-
     if(!confirm(`確定刪除選取的 ${ids.size} 個格子？`)) return;
 
     state.hotspots = state.hotspots.filter(h=>!ids.has(h.id));
@@ -629,12 +584,8 @@
     if(el){ el.focus(); el.select?.(); }
   }
 
-  // ===== ✅ Pointer Events：畫框新增 =====
-  let drawing = false;
-  let start = {x:0,y:0}, last = {x:0,y:0};
-  let drawRect = null;
-  let drawPointerId = null;
-
+  // ===== draw new hotspot (Pointer Events) =====
+  let drawing=false, start={x:0,y:0}, last={x:0,y:0}, drawRect=null, drawPointerId=null;
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
   function pointInArtboardFromClient(clientX, clientY){
     const ab = artboardEl.getBoundingClientRect();
@@ -696,11 +647,7 @@
   function finishDraw(){
     if(!drawing) return;
     drawing = false;
-
-    if(drawRect){
-      drawRect.remove();
-      drawRect = null;
-    }
+    if(drawRect){ drawRect.remove(); drawRect = null; }
 
     const ab = artboardEl.getBoundingClientRect();
     const x = Math.min(start.x, last.x);
@@ -712,20 +659,14 @@
 
     if(w < 18 || h < 18) return;
 
-    const nx = x / ab.width;
-    const ny = y / ab.height;
-    const nw = w / ab.width;
-    const nh = h / ab.height;
-
+    const nx = x / ab.width, ny = y / ab.height, nw = w / ab.width, nh = h / ab.height;
     const id = uid();
     state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
-
     state.selectedIds.add(id);
     state.selectedId = id;
 
     pushHistory();
     renderAll();
-
     setTimeout(()=>focusHotspotInput(id), 50);
   }
 
@@ -744,7 +685,7 @@
     if(drawRect){ drawRect.remove(); drawRect = null; }
   });
 
-  // ===== ✅ Pointer Events：拖移/縮放 =====
+  // ===== drag/resize (Pointer Events) =====
   let drag = null;
 
   function beginDragPointer(ev, id, kind){
@@ -847,7 +788,6 @@
     hotspotLayerEl.innerHTML = "";
     state.hotspots.forEach((h, idx)=>{
       const d = document.createElement("div");
-
       const isMain = (h.id === state.selectedId);
       const isMulti = state.selectedIds.has(h.id);
 
@@ -959,8 +899,7 @@
         scheduleHistory();
       };
 
-      /* ✅ 重要：不要再 onfocus 呼叫 selectHotspot（會重建 DOM 造成無法打字）
-         只做「不重建清單」的選取更新 */
+      // ✅ 不重建 list（避免無法打字），只更新熱區顯示
       input.onfocus = ()=>{
         state.selectedIds.clear();
         state.selectedIds.add(h.id);
@@ -979,7 +918,6 @@
     if(!silent) setStatus("就緒");
   }
 
-  // ===== phone preview =====
   function refreshPhonePreview(){
     phoneMenuTitleEl.textContent = (state.meta?.name || "選單").trim() || "選單";
 
@@ -1009,7 +947,6 @@
     });
   }
 
-  // ===== make 6 grid =====
   function makeSixGrid(){
     const cols = 3, rows = 2;
     const gap = 0.012;
@@ -1031,7 +968,7 @@
     renderAll();
   }
 
-  // ===== ✅ 匯入圖片：裁切成 2500x1686，輸出 PNG（LINE RichMenu 可用）=====
+  // ✅ 裁切成 2500x1686，輸出 PNG（LINE RichMenu 可用）
   async function cropToBasePNG(file){
     const bmp = await createImageBitmap(file);
     const W = BASE_W, H = BASE_H;
@@ -1069,10 +1006,11 @@
       try{
         setStatus("匯入中...");
         const blob = await cropToBasePNG(file);
-        const url = await uploadToR2(base, blob, "richmenu_2500x1686.png");
+        const up = await uploadToR2(base, blob, "richmenu_2500x1686.png");
 
-        state.imageUrl = url;
-        imgEl.src = url;
+        state.imageUrl = up.url;
+        state.imageKey = up.key;
+        imgEl.src = up.url;
 
         btnImportEl.textContent = "已匯入";
         btnImportEl.classList.remove("bg-blue-600");
@@ -1090,9 +1028,9 @@
     input.click();
   }
 
-  // ===== build richmenu payload =====
   function buildRichMenuPayload(){
     if(!state.imageUrl) throw new Error("尚未匯入圖片");
+    if(!state.imageKey) throw new Error("圖片 key 缺失（請重新匯入）");
     if(state.hotspots.length === 0) throw new Error("尚未新增格子");
     if(state.hotspots.some(h => !String(h.text||"").trim())) throw new Error("有格子沒有填文字");
 
@@ -1111,6 +1049,7 @@
       type: "richmenu",
       size: { width: BASE_W, height: BASE_H },
       imageUrl: state.imageUrl,
+      imageKey: state.imageKey,
       areas
     };
   }
@@ -1124,7 +1063,6 @@
 
     try{
       state.meta.name = name;
-
       const payload = buildRichMenuPayload();
       const isDefault = (isDefaultEl.value === "yes");
 
@@ -1158,6 +1096,7 @@
       const p = j.payload;
       state.meta = p.meta || { name };
       state.imageUrl = p.imageUrl || "";
+      state.imageKey = p.imageKey || "";
       state.hotspots = (p.areas || []).map(a=>({
         id: uid(),
         x: (a.bounds.x || 0) / BASE_W,
@@ -1173,11 +1112,12 @@
       menuNameEl.value = name;
       imgEl.src = state.imageUrl || "";
 
-      btnImportEl.textContent = state.imageUrl ? "已匯入" : "匯入圖片";
+      btnImportEl.textContent = state.imageUrl ? "已匯入" : "匯入 PNG/JPG";
       btnImportEl.classList.toggle("bg-emerald-600", !!state.imageUrl);
       btnImportEl.classList.toggle("bg-blue-600", !state.imageUrl);
 
-      // 這裡的 isDefault 你 worker 若有回傳可再接；先保持不動
+      isDefaultEl.value = j.isDefault ? "yes" : "no";
+
       pushHistory();
       renderAll();
       fitToScreen();
@@ -1194,7 +1134,6 @@
     if(!base) return;
 
     const current = keepSelection ? (menuSelectEl.value || "") : "";
-
     const j = await postJSON(base + "/richmenu/list", {});
     if(!j.ok) return;
 
@@ -1219,12 +1158,13 @@
   function clearAll(){
     if(!confirm("確定清空圖片與全部格子？")) return;
     state.imageUrl = "";
+    state.imageKey = "";
     state.hotspots = [];
     state.selectedId = null;
     state.selectedIds.clear();
     imgEl.src = "";
 
-    btnImportEl.textContent = "匯入圖片";
+    btnImportEl.textContent = "匯入 PNG/JPG";
     btnImportEl.classList.remove("bg-emerald-600");
     btnImportEl.classList.add("bg-blue-600");
 
@@ -1232,14 +1172,12 @@
     renderAll();
   }
 
-  // ✅ 名稱變更：只更新預覽底部文字
   menuNameEl.addEventListener("input", ()=>{
     state.meta.name = menuNameEl.value;
     refreshPhonePreview();
     scheduleHistory();
   });
 
-  // ===== keyboard shortcuts =====
   window.addEventListener("keydown", (ev)=>{
     if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase() === "z"){
       ev.preventDefault(); undo(); return;
@@ -1247,16 +1185,11 @@
     if((ev.ctrlKey && ev.key.toLowerCase() === "y") || (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === "z")){
       ev.preventDefault(); redo(); return;
     }
-    if(ev.key === "Delete"){
-      ev.preventDefault();
-      deleteSelectedAll();
-    }
-    if(ev.key === "Escape"){
-      clearSelection();
-    }
+    if(ev.key === "Delete"){ ev.preventDefault(); deleteSelectedAll(); }
+    if(ev.key === "Escape"){ clearSelection(); }
   });
 
-  // ===== middle mouse panning =====
+  // middle mouse panning
   let panning = false;
   let panStart = { x:0,y:0,vx:0,vy:0 };
 
@@ -1281,7 +1214,6 @@
     panning = false;
   }
 
-  // ===== wheel zoom =====
   workspaceEl.addEventListener("wheel", (ev)=>{
     ev.preventDefault();
     const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
@@ -1289,11 +1221,9 @@
   }, { passive:false });
 
   function closePage(){
-    // 你自己的路徑
     window.location.href = "index.html";
   }
 
-  // ===== boot =====
   (function init(){
     const savedUrl = (localStorage.getItem("line_worker_url") || "").trim();
     if(savedUrl) workerUrlEl.value = savedUrl;
