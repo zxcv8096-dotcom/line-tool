@@ -35,7 +35,7 @@
       border-radius: 14px;
       overflow:hidden;
 
-      /* ✅ 重要：避免觸控板/觸控手勢干擾拖曳（Pointer Events 的關鍵） */
+      /* ✅ 重要：避免觸控板/觸控手勢干擾拖曳（Pointer Events） */
       touch-action: none;
     }
 
@@ -96,7 +96,7 @@
     .handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
     .handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
 
-    /* ✅ 畫框：白+黑雙描邊，任何底色都超清楚 */
+    /* ✅ 畫框：白+黑雙描邊 */
     .draw-rect{
       position:absolute;
       border:2px solid rgba(255,255,255,1);
@@ -145,7 +145,6 @@
       max-width: 80%;
     }
 
-    /* ✅ 底部區：模擬 LINE「左下角切換」+ 中間顯示選單名稱 */
     .phone-bottom{
       background:#ffffff;
       border-top:1px solid rgba(2,6,23,.10);
@@ -201,10 +200,7 @@
       display:block;
     }
 
-    /* ✅ 讓右側預覽點擊熱區也能接到事件 */
-    #phoneHotspots{
-      pointer-events:auto;
-    }
+    #phoneHotspots{ pointer-events:auto; }
   </style>
 </head>
 
@@ -271,7 +267,7 @@
 
       <div class="rounded-xl border p-3 bg-slate-50">
         <div class="font-bold text-sm mb-2">連線</div>
-        <label class="text-xs text-slate-500">Worker URL（從首頁自動帶入）</label>
+        <label class="text-xs text-slate-500">Worker URL</label>
         <input id="workerUrl" class="mt-1 w-full border rounded px-3 py-2 bg-yellow-50 text-sm"
                placeholder="https://api.xxx.workers.dev" />
       </div>
@@ -292,7 +288,7 @@
           </label>
 
           <label class="text-xs text-slate-500">
-            預設(首頁)
+            設為預設(首頁)
             <select id="isDefault" class="mt-1 w-full border rounded px-2 py-2 text-sm">
               <option value="no" selected>否</option>
               <option value="yes">是</option>
@@ -325,7 +321,6 @@
           </div>
         </div>
 
-        <!-- ✅ 多選操作 -->
         <div class="flex items-center gap-2 mb-2">
           <button class="px-2 py-1 text-xs rounded border hover:bg-slate-50" onclick="selectAllHotspots()">全選</button>
           <button class="px-2 py-1 text-xs rounded border hover:bg-slate-50" onclick="clearSelection()">取消選取</button>
@@ -337,7 +332,8 @@
       </div>
 
       <div class="text-xs text-slate-400 pb-10">
-        圖片會自動裁切成 2500×1686 並上傳到 R2；多選：Shift+點選 或 左側勾選。
+        ✅ 圖片會裁切成 2500×1686 並上傳到 R2（PNG）<br/>
+        ✅ 你按「儲存」會呼叫 Worker 的 /richmenu/save（由 Worker 套用到 LINE OA）
       </div>
     </div>
   </div>
@@ -406,7 +402,6 @@
       </div>
 
       <div class="mt-3 text-xs text-slate-500">
-        • 底部顯示選單名稱（像 LINE 一樣）<br/>
         • 你每次拖曳/改文字，預覽會自動更新
       </div>
     </div>
@@ -450,9 +445,7 @@
   const toggleBtnEl = $("toggleBtn");
   const phoneMenuTitleEl = $("phoneMenuTitle");
 
-  function setStatus(s){
-    statusEl.textContent = "狀態：" + s;
-  }
+  function setStatus(s){ statusEl.textContent = "狀態：" + s; }
 
   function normalizeWorkerUrl(raw){
     if(!raw) return "";
@@ -468,15 +461,13 @@
       body: JSON.stringify(data)
     });
     const txt = await res.text().catch(()=> "");
-    if(!res.ok){
-      throw new Error(`HTTP ${res.status}\n${txt}`);
-    }
+    if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
     try { return JSON.parse(txt); } catch { return txt; }
   }
 
   async function uploadToR2(workerBaseUrl, blob, filename){
     const form = new FormData();
-    form.append("file", blob, filename || "richmenu.webp");
+    form.append("file", blob, filename || "richmenu.png");
     const res = await fetch(workerBaseUrl + "/upload", { method:"POST", body: form });
     const txt = await res.text().catch(()=> "");
     if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
@@ -490,11 +481,11 @@
     meta: { name: "" },
     imageUrl: "",
     hotspots: [],
-    selectedId: null,         // 主選取（顯示拉角）
-    selectedIds: new Set(),   // 多選集合
+    selectedId: null,
+    selectedIds: new Set(),
   };
 
-  // ===== history (Undo/Redo) =====
+  // ===== history =====
   let history = [];
   let historyIndex = -1;
 
@@ -524,16 +515,8 @@
     imgEl.src = state.imageUrl || "";
     renderAll(true);
   }
-  function undo(){
-    if(historyIndex <= 0) return;
-    historyIndex--;
-    applySnap(history[historyIndex]);
-  }
-  function redo(){
-    if(historyIndex >= history.length - 1) return;
-    historyIndex++;
-    applySnap(history[historyIndex]);
-  }
+  function undo(){ if(historyIndex<=0) return; historyIndex--; applySnap(history[historyIndex]); }
+  function redo(){ if(historyIndex>=history.length-1) return; historyIndex++; applySnap(history[historyIndex]); }
 
   // ===== view (pan/zoom) =====
   let view = { x: 0, y: 0, z: 1 };
@@ -541,10 +524,7 @@
     stageEl.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.z})`;
     zoomLabelEl.textContent = Math.round(view.z * 100) + "%";
   }
-  function resetView(){
-    view = { x: 0, y: 0, z: 1 };
-    updateStage();
-  }
+  function resetView(){ view = { x:0, y:0, z:1 }; updateStage(); }
   function zoomBy(factor, anchorX=null, anchorY=null){
     const oldZ = view.z;
     const newZ = Math.min(4, Math.max(0.15, oldZ * factor));
@@ -558,7 +538,6 @@
       view.x = (view.x - dx) * (newZ/oldZ) + dx;
       view.y = (view.y - dy) * (newZ/oldZ) + dy;
     }
-
     view.z = newZ;
     updateStage();
   }
@@ -567,25 +546,17 @@
     const pad = 140;
     const maxW = Math.max(200, wr.width - pad);
     const maxH = Math.max(200, wr.height - pad);
-
     const z = Math.min(3, Math.max(0.15, Math.min(maxW/BASE_W, maxH/BASE_H)));
-    view.z = z;
-    view.x = 0; view.y = 0;
+    view.z = z; view.x = 0; view.y = 0;
     updateStage();
   }
 
   // ===== layout toggles =====
   let leftCollapsed = false;
-  function toggleLeft(){
-    leftCollapsed = !leftCollapsed;
-    leftPanelEl.classList.toggle("hidden", leftCollapsed);
-  }
+  function toggleLeft(){ leftCollapsed = !leftCollapsed; leftPanelEl.classList.toggle("hidden", leftCollapsed); }
 
   let previewCollapsed = false;
-  function togglePreview(){
-    previewCollapsed = !previewCollapsed;
-    previewPanelEl.classList.toggle("hidden", previewCollapsed);
-  }
+  function togglePreview(){ previewCollapsed = !previewCollapsed; previewPanelEl.classList.toggle("hidden", previewCollapsed); }
 
   // ===== phone preview toggle =====
   let showMenu = true;
@@ -595,17 +566,15 @@
     toggleBtnEl.textContent = showMenu ? "≡" : "⌨️";
   }
 
-  // ===== artboard size =====
+  // ===== artboard =====
   function initArtboard(){
     artboardEl.style.width = BASE_W + "px";
     artboardEl.style.height = BASE_H + "px";
     fitToScreen();
   }
 
-  // ===== selection helpers =====
-  function uid(){
-    return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-  }
+  // ===== selection =====
+  function uid(){ return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
 
   function clearSelection(){
     state.selectedId = null;
@@ -655,23 +624,18 @@
     renderAll();
   }
 
-  // ===== focus keyword input after create/select =====
   function focusHotspotInput(id){
     const el = document.querySelector(`[data-hs-input="${id}"]`);
-    if(el){
-      el.focus();
-      el.select?.();
-    }
+    if(el){ el.focus(); el.select?.(); }
   }
 
-  // ===== ✅ Pointer Events：draw new hotspot（完全解決 Chrome 縮放/transform 拖曳過程偏移） =====
+  // ===== ✅ Pointer Events：畫框新增 =====
   let drawing = false;
   let start = {x:0,y:0}, last = {x:0,y:0};
   let drawRect = null;
   let drawPointerId = null;
 
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-
   function pointInArtboardFromClient(clientX, clientY){
     const ab = artboardEl.getBoundingClientRect();
     const x = clamp(clientX - ab.left, 0, ab.width);
@@ -683,7 +647,6 @@
     if(ev.pointerType === "mouse" && ev.button !== 0) return;
     if(!state.imageUrl) return alert("請先匯入圖片");
 
-    // 點到既有熱區或 handle => 不進入畫框
     const hitHotspot = ev.target.closest(".hotspot");
     const hitHandle  = ev.target.closest(".handle");
     if(hitHotspot || hitHandle) return;
@@ -711,9 +674,7 @@
   });
 
   artboardEl.addEventListener("pointermove", (ev)=>{
-    // drag 優先（如果正在拖曳/縮放熱區，就不要畫框）
     if(drag) return;
-
     if(!drawing || !drawRect) return;
     if(drawPointerId !== ev.pointerId) return;
     ev.preventDefault();
@@ -783,7 +744,7 @@
     if(drawRect){ drawRect.remove(); drawRect = null; }
   });
 
-  // ===== ✅ Pointer Events：drag/resize（capture，拖曳中不飄不跳） =====
+  // ===== ✅ Pointer Events：拖移/縮放 =====
   let drag = null;
 
   function beginDragPointer(ev, id, kind){
@@ -800,15 +761,13 @@
     py = Math.max(0, Math.min(1, py));
 
     drag = {
-      id,
-      kind,
+      id, kind,
       pointerId: ev.pointerId,
-      startPointer: { x: px, y: py },
-      startBox: { x: h.x, y: h.y, w: h.w, h: h.h },
-      offset: { x: px - h.x, y: py - h.y }
+      startPointer: { x:px, y:py },
+      startBox: { x:h.x, y:h.y, w:h.w, h:h.h },
+      offset: { x:px - h.x, y:py - h.y }
     };
 
-    // ✅ 拖曳優先：如果剛好在畫框，直接終止畫框
     if(drawing){
       drawing = false;
       drawPointerId = null;
@@ -899,13 +858,10 @@
       d.style.height = (h.h*100) + "%";
       d.textContent = (idx+1);
 
-      // ✅ 改為 pointerdown（避免 click/mousedown 打架）
       d.addEventListener("pointerdown", (ev)=>{
         if(ev.pointerType === "mouse" && ev.button !== 0) return;
-
         const multi = ev.shiftKey;
         selectHotspot(h.id, { multi, toggle: multi });
-
         beginDragPointer(ev, h.id, "move");
       });
 
@@ -935,7 +891,6 @@
       .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
 
-  // debounce for input history
   let inputTimer = null;
   function scheduleHistory(){
     clearTimeout(inputTimer);
@@ -1004,8 +959,13 @@
         scheduleHistory();
       };
 
+      /* ✅ 重要：不要再 onfocus 呼叫 selectHotspot（會重建 DOM 造成無法打字）
+         只做「不重建清單」的選取更新 */
       input.onfocus = ()=>{
-        selectHotspot(h.id, { multi:false });
+        state.selectedIds.clear();
+        state.selectedIds.add(h.id);
+        state.selectedId = h.id;
+        renderHotspots();
       };
 
       listEl.appendChild(wrap);
@@ -1071,8 +1031,8 @@
     renderAll();
   }
 
-  // ===== import image: auto crop to 2500x1686 and upload =====
-  async function cropToBase(file){
+  // ===== ✅ 匯入圖片：裁切成 2500x1686，輸出 PNG（LINE RichMenu 可用）=====
+  async function cropToBasePNG(file){
     const bmp = await createImageBitmap(file);
     const W = BASE_W, H = BASE_H;
 
@@ -1090,7 +1050,7 @@
     ctx.fillRect(0,0,W,H);
     ctx.drawImage(bmp, dx, dy, dw, dh);
 
-    const blob = await new Promise(res=> canvas.toBlob(res, "image/webp", 0.90));
+    const blob = await new Promise(res=> canvas.toBlob(res, "image/png"));
     if(!blob) throw new Error("裁切失敗（toBlob 空）");
     return blob;
   }
@@ -1108,8 +1068,8 @@
 
       try{
         setStatus("匯入中...");
-        const blob = await cropToBase(file);
-        const url = await uploadToR2(base, blob, "richmenu_2500x1686.webp");
+        const blob = await cropToBasePNG(file);
+        const url = await uploadToR2(base, blob, "richmenu_2500x1686.png");
 
         state.imageUrl = url;
         imgEl.src = url;
@@ -1168,12 +1128,15 @@
       const payload = buildRichMenuPayload();
       const isDefault = (isDefaultEl.value === "yes");
 
-      await postJSON(base + "/richmenu/save", { name, payload, isDefault });
+      setStatus("儲存/套用中...");
+      const res = await postJSON(base + "/richmenu/save", { name, payload, isDefault });
 
       pushHistory();
-      setStatus("儲存成功 ✅");
+      setStatus("儲存/套用成功 ✅");
       await refreshMenuList(true);
-      alert("已儲存 ✅\n選單名稱：" + name + (isDefault ? "\n（已設為預設/首頁）" : ""));
+
+      const id = res?.richMenuId ? `\nRichMenuId：${res.richMenuId}` : "";
+      alert("已儲存並套用到 LINE OA ✅\n選單名稱：" + name + (isDefault ? "\n（已設為預設/首頁）" : "") + id);
     }catch(e){
       setStatus("儲存失敗");
       alert("儲存失敗：\n" + e.message);
@@ -1188,6 +1151,7 @@
     if(!name) return alert("請先輸入/選擇要讀取的選單");
 
     try{
+      setStatus("讀取中...");
       const j = await postJSON(base + "/richmenu/load", { name });
       if(!j.ok) throw new Error(j.error || "讀取失敗");
 
@@ -1213,8 +1177,7 @@
       btnImportEl.classList.toggle("bg-emerald-600", !!state.imageUrl);
       btnImportEl.classList.toggle("bg-blue-600", !state.imageUrl);
 
-      isDefaultEl.value = j.isDefault ? "yes" : "no";
-
+      // 這裡的 isDefault 你 worker 若有回傳可再接；先保持不動
       pushHistory();
       renderAll();
       fitToScreen();
@@ -1269,7 +1232,7 @@
     renderAll();
   }
 
-  // ✅ 名稱變更：只更新預覽底部文字，不會動圖片
+  // ✅ 名稱變更：只更新預覽底部文字
   menuNameEl.addEventListener("input", ()=>{
     state.meta.name = menuNameEl.value;
     refreshPhonePreview();
@@ -1293,7 +1256,7 @@
     }
   });
 
-  // ===== ✅ middle mouse panning =====
+  // ===== middle mouse panning =====
   let panning = false;
   let panStart = { x:0,y:0,vx:0,vy:0 };
 
@@ -1318,15 +1281,15 @@
     panning = false;
   }
 
-  // ===== ✅ wheel zoom (no ctrl needed) =====
+  // ===== wheel zoom =====
   workspaceEl.addEventListener("wheel", (ev)=>{
     ev.preventDefault();
     const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
     zoomBy(factor, ev.clientX, ev.clientY);
   }, { passive:false });
 
-  // ===== close =====
   function closePage(){
+    // 你自己的路徑
     window.location.href = "index.html";
   }
 
