@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>六宮格選單</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
-    :root{ --rail-w:92px; --panel-w:360px; --preview-w:380px; }
+    :root{ --rail-w: 92px; --panel-w: 360px; --preview-w: 380px; }
     body{ user-select:none; }
     input, textarea, select, button { user-select:auto; }
 
@@ -30,12 +29,17 @@
       box-shadow: 0 12px 30px rgba(0,0,0,.12);
       border-radius: 14px;
       overflow:hidden;
-      touch-action:none;
     }
 
-    .img-layer{ position:absolute; inset:0; overflow:hidden; background:#f8fafc; }
+    .img-layer{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      background:#f8fafc;
+    }
     .img-layer img{
-      width:100%; height:100%;
+      width:100%;
+      height:100%;
       object-fit:cover;
       user-select:none;
       pointer-events:none;
@@ -76,7 +80,6 @@
       border-radius: 4px;
       box-shadow:0 1px 3px rgba(0,0,0,.25);
       z-index: 10;
-      touch-action:none;
     }
     .handle.nw{ left:-6px; top:-6px; cursor:nwse-resize; }
     .handle.ne{ right:-6px; top:-6px; cursor:nesw-resize; }
@@ -101,10 +104,34 @@
       font-size: 11px;
     }
 
-    .phone{ border-radius:34px; background:#0b1220; padding:10px; box-shadow:0 22px 50px rgba(0,0,0,.25); }
-    .phone-inner{ border-radius:26px; overflow:hidden; background:#e7eefb; border:1px solid rgba(255,255,255,.12); }
-    .phone-chat{ height:360px; padding:12px; position:relative; overflow:hidden; }
-    .bubble{ display:inline-block; padding:10px 12px; background:#a7f3d0; color:#064e3b; border-radius:18px; font-size:12px; margin-left:auto; max-width:80%; }
+    .phone{
+      border-radius: 34px;
+      background:#0b1220;
+      padding:10px;
+      box-shadow: 0 22px 50px rgba(0,0,0,.25);
+    }
+    .phone-inner{
+      border-radius: 26px;
+      overflow:hidden;
+      background:#e7eefb;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .phone-chat{
+      height: 360px;
+      padding:12px;
+      position:relative;
+      overflow:hidden;
+    }
+    .bubble{
+      display:inline-block;
+      padding:10px 12px;
+      background:#a7f3d0;
+      color:#064e3b;
+      border-radius:18px;
+      font-size:12px;
+      margin-left:auto;
+      max-width: 80%;
+    }
 
     .phone-bottom{
       background:#ffffff;
@@ -129,18 +156,22 @@
       user-select:none;
     }
     .menu-title{
-      flex:1 1 auto;
+      flex: 1 1 auto;
       text-align:center;
-      font-size:13px;
-      font-weight:900;
+      font-size: 13px;
+      font-weight: 900;
       color:#0f172a;
-      line-height:1;
+      line-height: 1;
       user-select:none;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .menu-caret{ font-size:12px; opacity:.6; margin-left:4px; }
+    .menu-caret{
+      font-size: 12px;
+      opacity: .6;
+      margin-left: 4px;
+    }
 
     .rm-wrap{
       position:relative;
@@ -151,7 +182,11 @@
       overflow:hidden;
       border:1px solid rgba(2,6,23,.12);
     }
-    .rm-wrap img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .rm-wrap img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+    }
     #phoneHotspots{ pointer-events:auto; }
   </style>
 </head>
@@ -162,9 +197,14 @@
   <div class="flex items-center gap-3">
     <div class="font-extrabold text-indigo-700 text-lg">六宮格選單</div>
     <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-      <span>滾輪：縮放</span><span>｜</span><span>中鍵按住：拖曳平移</span><span>｜</span>
-      <span><span class="kbd">Shift+點選</span> 多選</span><span>｜</span>
-      <span><span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span> 復原/重做</span><span>｜</span>
+      <span>滾輪：縮放</span>
+      <span>｜</span>
+      <span>中鍵按住：拖曳平移</span>
+      <span>｜</span>
+      <span><span class="kbd">Shift+點選</span> 多選</span>
+      <span>｜</span>
+      <span><span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span> 復原/重做</span>
+      <span>｜</span>
       <span><span class="kbd">Delete</span> 刪除選取</span>
     </div>
   </div>
@@ -182,22 +222,26 @@
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="makeSixGrid()" title="快速六宮格">
-      <div class="text-xl">🧩</div><div class="text-[10px] text-slate-700 font-bold">六格</div>
+      <div class="text-xl">🧩</div>
+      <div class="text-[10px] text-slate-700 font-bold">六格</div>
     </button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="fitToScreen()" title="Fit">
-      <div class="text-xl">📐</div><div class="text-[10px] text-slate-700 font-bold">Fit</div>
+      <div class="text-xl">📐</div>
+      <div class="text-[10px] text-slate-700 font-bold">Fit</div>
     </button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="resetView()" title="重置視角">
-      <div class="text-xl">🔁</div><div class="text-[10px] text-slate-700 font-bold">重置</div>
+      <div class="text-xl">🔁</div>
+      <div class="text-[10px] text-slate-700 font-bold">重置</div>
     </button>
 
     <button class="w-14 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center"
             onclick="togglePreview()" title="預覽面板（右側）">
-      <div class="text-xl">📱</div><div class="text-[10px] text-slate-700 font-bold">預覽</div>
+      <div class="text-xl">📱</div>
+      <div class="text-[10px] text-slate-700 font-bold">預覽</div>
     </button>
   </div>
 
@@ -216,7 +260,7 @@
 
         <label class="text-xs text-slate-500">選單名稱（=檔案名稱）</label>
         <input id="menuName" class="mt-1 w-full border rounded px-3 py-2 text-sm font-bold"
-               placeholder="例如：HOME_六宮格" />
+               placeholder="例如：HOME / SHOP / TEAM" />
 
         <div class="mt-2 grid grid-cols-2 gap-2">
           <label class="text-xs text-slate-500">
@@ -227,7 +271,7 @@
           </label>
 
           <label class="text-xs text-slate-500">
-            設為預設(首頁)
+            預設(首頁)
             <select id="isDefault" class="mt-1 w-full border rounded px-2 py-2 text-sm">
               <option value="no" selected>否</option>
               <option value="yes">是</option>
@@ -237,10 +281,10 @@
 
         <div class="mt-3 flex gap-2">
           <button id="btnImport" class="flex-1 px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                  onclick="pickAndImport()">匯入圖片（自動壓縮）</button>
+                  onclick="pickAndImport()">匯入圖片</button>
 
           <button class="flex-1 px-3 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700"
-                  onclick="saveMenu()">儲存並套用到 LINE</button>
+                  onclick="saveMenu()">儲存 + 套用</button>
         </div>
 
         <div class="mt-2 flex gap-2">
@@ -249,10 +293,6 @@
 
           <button class="flex-1 px-3 py-2 rounded bg-slate-200 text-slate-800 text-sm hover:bg-slate-300"
                   onclick="clearAll()">清空</button>
-        </div>
-
-        <div class="mt-2 text-xs text-slate-500">
-          ✅ 會轉 JPEG 並壓到 950KB 以下，避免 LINE 413
         </div>
       </div>
 
@@ -275,8 +315,8 @@
       </div>
 
       <div class="text-xs text-slate-400 pb-10">
-        圖片會裁切成 2500×1686，並上傳到 R2。<br/>
-        每個格子「文字」就是用來觸發 webhook 的關鍵字。
+        ✅ 圖片會裁成 2500×1686 並轉 JPG（壓到 LINE 不會 413）<br/>
+        ✅ 切換：格子填 <b>RM:HOME</b> / <b>RM:SHOP</b>（用戶在 LINE 點了就會切）
       </div>
     </div>
   </div>
@@ -291,7 +331,9 @@
 
     <div id="stage" class="absolute inset-0">
       <div id="artboard" class="artboard">
-        <div class="img-layer"><img id="img" alt=""></div>
+        <div class="img-layer">
+          <img id="img" alt="">
+        </div>
         <div id="hotspotLayer" class="absolute inset-0"></div>
         <div id="drawLayer" class="absolute inset-0"></div>
       </div>
@@ -314,8 +356,40 @@
         <button class="text-xs px-2 py-1 rounded border hover:bg-slate-50" onclick="togglePreview()">收合</button>
       </div>
 
+      <!-- ✅ 直覺切換 -->
+      <div class="mb-3 rounded-xl border p-3 bg-slate-50">
+        <div class="text-xs text-slate-500 mb-1">直覺切換（測試用）</div>
+
+        <div class="grid grid-cols-1 gap-2">
+          <label class="text-xs text-slate-500">
+            你的 userId（自動抓最近互動）
+            <input id="myUserId" class="mt-1 w-full border rounded px-2 py-2 text-xs bg-white"
+                   placeholder="先在 LINE 跟機器人說一句話才抓得到" />
+          </label>
+
+          <div class="grid grid-cols-2 gap-2">
+            <label class="text-xs text-slate-500">
+              切換到選單
+              <select id="switchMenuSelect" class="mt-1 w-full border rounded px-2 py-2 text-sm">
+                <option value="">（請先載入選單清單）</option>
+              </select>
+            </label>
+
+            <div class="flex items-end">
+              <button class="w-full px-3 py-2 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700"
+                      onclick="switchMenuNow()">切換</button>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-500">
+            你必須先在 LINE 對機器人說一句話，系統才會記住你的 userId（LAST_USER_ID）。
+          </div>
+        </div>
+      </div>
+
       <div class="phone">
         <div class="phone-inner">
+
           <div class="phone-chat">
             <div class="bubble">點下方選單格子會送出你設定的文字</div>
           </div>
@@ -323,7 +397,8 @@
           <div class="phone-bottom">
             <button id="toggleBtn" class="mini-btn" onclick="toggleKeyboard()">≡</button>
             <div class="menu-title">
-              <span id="phoneMenuTitle">選單</span><span class="menu-caret">▼</span>
+              <span id="phoneMenuTitle">選單</span>
+              <span class="menu-caret">▼</span>
             </div>
             <div class="mini-btn">＋</div>
           </div>
@@ -338,7 +413,10 @@
         </div>
       </div>
 
-      <div class="mt-3 text-xs text-slate-500">• 你每次拖曳/改文字，預覽會自動更新</div>
+      <div class="mt-3 text-xs text-slate-500">
+        • 底部顯示選單名稱（像 LINE 一樣）<br/>
+        • 你每次拖曳/改文字，預覽會自動更新
+      </div>
     </div>
   </div>
 </div>
@@ -347,8 +425,9 @@
 
 <script>
   const $ = (id)=>document.getElementById(id);
-  const BASE_W = 2500, BASE_H = 1686;
-  const MAX_UPLOAD_BYTES = 950 * 1024; // ✅ 壓到 950KB 以下（避免 LINE 413）
+
+  const BASE_W = 2500;
+  const BASE_H = 1686;
 
   const workerUrlEl = $("workerUrl");
   const menuNameEl = $("menuName");
@@ -379,7 +458,13 @@
   const toggleBtnEl = $("toggleBtn");
   const phoneMenuTitleEl = $("phoneMenuTitle");
 
-  function setStatus(s){ statusEl.textContent = "狀態：" + s; }
+  // ✅ 直覺切換 UI
+  const myUserIdEl = $("myUserId");
+  const switchMenuSelectEl = $("switchMenuSelect");
+
+  function setStatus(s){
+    statusEl.textContent = "狀態：" + s;
+  }
 
   function normalizeWorkerUrl(raw){
     if(!raw) return "";
@@ -399,6 +484,19 @@
     try { return JSON.parse(txt); } catch { return txt; }
   }
 
+  async function apiPost(path, body){
+    const base = normalizeWorkerUrl(workerUrlEl.value);
+    if(!base) throw new Error("請先填 Worker URL");
+    const res = await fetch(base + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {})
+    });
+    const txt = await res.text().catch(()=> "");
+    if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
+    try { return JSON.parse(txt); } catch { return txt; }
+  }
+
   async function uploadToR2(workerBaseUrl, blob, filename){
     const form = new FormData();
     form.append("file", blob, filename || "richmenu.jpg");
@@ -406,15 +504,15 @@
     const txt = await res.text().catch(()=> "");
     if(!res.ok) throw new Error(`HTTP ${res.status}\n${txt}`);
     const j = JSON.parse(txt);
-    if(!j.ok || !j.url || !j.key) throw new Error("上傳回傳格式不對（缺 url/key）");
-    return { url: j.url, key: j.key };
+    if(!j.ok || !j.url || !j.key) throw new Error("上傳回傳格式不對");
+    return j; // { ok, key, url }
   }
 
   // ===== state =====
   let state = {
     meta: { name: "" },
     imageUrl: "",
-    imageKey: "",
+    imageKey: "",      // ✅ 一定要存，避免缺少 imageKey
     hotspots: [],
     selectedId: null,
     selectedIds: new Set(),
@@ -423,6 +521,7 @@
   // ===== history =====
   let history = [];
   let historyIndex = -1;
+
   function snapshot(){
     return JSON.parse(JSON.stringify({
       meta: state.meta,
@@ -446,23 +545,25 @@
     state.hotspots = snap.hotspots;
     state.selectedId = snap.selectedId;
     state.selectedIds = new Set(snap.selectedIds || []);
+
     menuNameEl.value = state.meta?.name || "";
     imgEl.src = state.imageUrl || "";
     renderAll(true);
   }
-  function undo(){ if(historyIndex<=0) return; historyIndex--; applySnap(history[historyIndex]); }
-  function redo(){ if(historyIndex>=history.length-1) return; historyIndex++; applySnap(history[historyIndex]); }
+  function undo(){ if(historyIndex <= 0) return; historyIndex--; applySnap(history[historyIndex]); }
+  function redo(){ if(historyIndex >= history.length - 1) return; historyIndex++; applySnap(history[historyIndex]); }
 
-  // ===== view =====
+  // ===== view (pan/zoom) =====
   let view = { x: 0, y: 0, z: 1 };
   function updateStage(){
     stageEl.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.z})`;
     zoomLabelEl.textContent = Math.round(view.z * 100) + "%";
   }
-  function resetView(){ view = { x:0, y:0, z:1 }; updateStage(); }
+  function resetView(){ view = { x: 0, y: 0, z: 1 }; updateStage(); }
   function zoomBy(factor, anchorX=null, anchorY=null){
     const oldZ = view.z;
     const newZ = Math.min(4, Math.max(0.15, oldZ * factor));
+
     if(anchorX != null && anchorY != null){
       const rect = workspaceEl.getBoundingClientRect();
       const ax = anchorX - rect.left;
@@ -472,6 +573,7 @@
       view.x = (view.x - dx) * (newZ/oldZ) + dx;
       view.y = (view.y - dy) * (newZ/oldZ) + dy;
     }
+
     view.z = newZ;
     updateStage();
   }
@@ -485,12 +587,19 @@
     updateStage();
   }
 
-  // ===== toggles =====
+  // ===== layout toggles =====
   let leftCollapsed = false;
-  function toggleLeft(){ leftCollapsed = !leftCollapsed; leftPanelEl.classList.toggle("hidden", leftCollapsed); }
+  function toggleLeft(){
+    leftCollapsed = !leftCollapsed;
+    leftPanelEl.classList.toggle("hidden", leftCollapsed);
+  }
   let previewCollapsed = false;
-  function togglePreview(){ previewCollapsed = !previewCollapsed; previewPanelEl.classList.toggle("hidden", previewCollapsed); }
+  function togglePreview(){
+    previewCollapsed = !previewCollapsed;
+    previewPanelEl.classList.toggle("hidden", previewCollapsed);
+  }
 
+  // ===== phone preview toggle =====
   let showMenu = true;
   function toggleKeyboard(){
     showMenu = !showMenu;
@@ -498,16 +607,21 @@
     toggleBtnEl.textContent = showMenu ? "≡" : "⌨️";
   }
 
+  // ===== artboard size =====
   function initArtboard(){
     artboardEl.style.width = BASE_W + "px";
     artboardEl.style.height = BASE_H + "px";
     fitToScreen();
   }
 
-  // ===== selection =====
+  // ===== selection helpers =====
   function uid(){ return "hs_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
-  function clearSelection(){ state.selectedId=null; state.selectedIds.clear(); renderHotspots(); renderList(); }
-  function selectAllHotspots(){ state.selectedIds = new Set(state.hotspots.map(h=>h.id)); state.selectedId = state.hotspots[0]?.id || null; renderHotspots(); renderList(); }
+  function clearSelection(){ state.selectedId = null; state.selectedIds.clear(); renderHotspots(); renderList(); }
+  function selectAllHotspots(){
+    state.selectedIds = new Set(state.hotspots.map(h=>h.id));
+    state.selectedId = state.hotspots[0]?.id || null;
+    renderHotspots(); renderList();
+  }
   function selectHotspot(id, opts={multi:false, toggle:false}){
     if(!opts.multi){
       state.selectedIds.clear();
@@ -525,172 +639,144 @@
     renderHotspots(); renderList();
   }
   function deleteSelectedAll(){
-    if(state.selectedIds.size===0 && !state.selectedId) return;
+    if(state.selectedIds.size === 0 && !state.selectedId) return;
+
     const ids = new Set(state.selectedIds);
     if(state.selectedId) ids.add(state.selectedId);
+
     if(!confirm(`確定刪除選取的 ${ids.size} 個格子？`)) return;
+
     state.hotspots = state.hotspots.filter(h=>!ids.has(h.id));
-    state.selectedId=null; state.selectedIds.clear();
-    pushHistory(); renderAll();
+    state.selectedId = null;
+    state.selectedIds.clear();
+
+    pushHistory();
+    renderAll();
   }
+
   function focusHotspotInput(id){
     const el = document.querySelector(`[data-hs-input="${id}"]`);
     if(el){ el.focus(); el.select?.(); }
   }
 
-  // ===== draw new hotspot (pointer) =====
-  let drawing=false, start={x:0,y:0}, last={x:0,y:0}, drawRect=null, drawPointerId=null;
+  // ===== draw new hotspot =====
+  let drawing=false, start={x:0,y:0}, last={x:0,y:0}, drawRect=null;
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-  function pointInArtboardFromClient(clientX, clientY){
+  function pointInArtboard(ev){
     const ab = artboardEl.getBoundingClientRect();
-    const x = clamp(clientX - ab.left, 0, ab.width);
-    const y = clamp(clientY - ab.top, 0, ab.height);
+    const x = clamp(ev.clientX - ab.left, 0, ab.width);
+    const y = clamp(ev.clientY - ab.top, 0, ab.height);
     return { ab, x, y };
   }
 
-  artboardEl.addEventListener("pointerdown", (ev)=>{
-    if(ev.pointerType==="mouse" && ev.button!==0) return;
-    if(!state.imageUrl) return alert("請先匯入圖片");
+  artboardEl.addEventListener("mousedown", (ev)=>{
+    if(ev.button !== 0) return;
+    if (!state.imageUrl) return alert("請先匯入圖片");
 
     const hitHotspot = ev.target.closest(".hotspot");
     const hitHandle  = ev.target.closest(".handle");
     if(hitHotspot || hitHandle) return;
 
-    ev.preventDefault();
+    const p = pointInArtboard(ev);
+    drawing = true;
+    start = { x:p.x, y:p.y };
+    last  = { x:p.x, y:p.y };
 
-    const p = pointInArtboardFromClient(ev.clientX, ev.clientY);
-    drawing=true;
-    drawPointerId=ev.pointerId;
-    artboardEl.setPointerCapture(drawPointerId);
-
-    start={x:p.x,y:p.y};
-    last={x:p.x,y:p.y};
-
-    drawRect=document.createElement("div");
-    drawRect.className="draw-rect";
-    drawRect.style.left=start.x+"px";
-    drawRect.style.top=start.y+"px";
-    drawRect.style.width="0px";
-    drawRect.style.height="0px";
+    drawRect = document.createElement("div");
+    drawRect.className = "draw-rect";
+    drawRect.style.left = start.x + "px";
+    drawRect.style.top = start.y + "px";
+    drawRect.style.width = "0px";
+    drawRect.style.height = "0px";
     drawLayerEl.appendChild(drawRect);
 
-    state.selectedId=null;
+    state.selectedId = null;
     renderHotspots();
   });
 
-  artboardEl.addEventListener("pointermove", (ev)=>{
-    if(drag) return;
+  window.addEventListener("mousemove", (ev)=>{
     if(!drawing || !drawRect) return;
-    if(drawPointerId!==ev.pointerId) return;
-    ev.preventDefault();
+    const p = pointInArtboard(ev);
+    last = { x:p.x, y:p.y };
 
-    const p = pointInArtboardFromClient(ev.clientX, ev.clientY);
-    last={x:p.x,y:p.y};
+    const x = Math.min(start.x, last.x);
+    const y = Math.min(start.y, last.y);
+    const w = Math.abs(last.x - start.x);
+    const h = Math.abs(last.y - start.y);
 
-    const x=Math.min(start.x,last.x);
-    const y=Math.min(start.y,last.y);
-    const w=Math.abs(last.x-start.x);
-    const h=Math.abs(last.y-start.y);
-
-    drawRect.style.left=x+"px";
-    drawRect.style.top=y+"px";
-    drawRect.style.width=w+"px";
-    drawRect.style.height=h+"px";
+    drawRect.style.left = x + "px";
+    drawRect.style.top = y + "px";
+    drawRect.style.width = w + "px";
+    drawRect.style.height = h + "px";
   });
 
-  function finishDraw(){
+  window.addEventListener("mouseup", ()=>{
     if(!drawing) return;
-    drawing=false;
-    if(drawRect){ drawRect.remove(); drawRect=null; }
+    drawing = false;
+    if(!drawRect) return;
 
     const ab = artboardEl.getBoundingClientRect();
-    const x=Math.min(start.x,last.x);
-    const y=Math.min(start.y,last.y);
-    const w=Math.abs(last.x-start.x);
-    const h=Math.abs(last.y-start.y);
 
-    drawPointerId=null;
-    if(w<18 || h<18) return;
+    const x = Math.min(start.x, last.x);
+    const y = Math.min(start.y, last.y);
+    const w = Math.abs(last.x - start.x);
+    const h = Math.abs(last.y - start.y);
 
-    const nx=x/ab.width, ny=y/ab.height, nw=w/ab.width, nh=h/ab.height;
-    const id=uid();
+    drawRect.remove();
+    drawRect = null;
+
+    if(w < 18 || h < 18) return;
+
+    const nx = x / ab.width;
+    const ny = y / ab.height;
+    const nw = w / ab.width;
+    const nh = h / ab.height;
+
+    const id = uid();
     state.hotspots.push({ id, x:nx, y:ny, w:nw, h:nh, text:"" });
+
     state.selectedIds.add(id);
-    state.selectedId=id;
+    state.selectedId = id;
 
     pushHistory();
     renderAll();
+
     setTimeout(()=>focusHotspotInput(id), 50);
-  }
-
-  artboardEl.addEventListener("pointerup", (ev)=>{
-    if(drawPointerId!==ev.pointerId) return;
-    ev.preventDefault();
-    try{ artboardEl.releasePointerCapture(ev.pointerId); }catch{}
-    finishDraw();
   });
 
-  artboardEl.addEventListener("pointercancel", (ev)=>{
-    if(drawPointerId!==ev.pointerId) return;
-    try{ artboardEl.releasePointerCapture(ev.pointerId); }catch{}
-    drawing=false;
-    drawPointerId=null;
-    if(drawRect){ drawRect.remove(); drawRect=null; }
-  });
-
-  // ===== drag/resize (pointer) =====
-  let drag=null;
-  function beginDragPointer(ev, id, kind){
+  // ===== drag/resize =====
+  let drag = null;
+  function beginDrag(ev, id, kind){
     const h = state.hotspots.find(x=>x.id===id);
     if(!h) return;
-    ev.preventDefault();
-    ev.stopPropagation();
 
-    const r = artboardEl.getBoundingClientRect();
-    let px=(ev.clientX-r.left)/r.width;
-    let py=(ev.clientY-r.top)/r.height;
-    px=Math.max(0,Math.min(1,px));
-    py=Math.max(0,Math.min(1,py));
-
-    drag={
-      id, kind,
-      pointerId: ev.pointerId,
-      startPointer:{x:px,y:py},
-      startBox:{x:h.x,y:h.y,w:h.w,h:h.h},
-      offset:{x:px-h.x,y:py-h.y}
+    const ab = artboardEl.getBoundingClientRect();
+    drag = {
+      id, kind, ab,
+      startMouse: { x: ev.clientX, y: ev.clientY },
+      startBox: { x:h.x, y:h.y, w:h.w, h:h.h }
     };
-
-    if(drawing){
-      drawing=false;
-      drawPointerId=null;
-      if(drawRect){ drawRect.remove(); drawRect=null; }
-    }
-    artboardEl.setPointerCapture(ev.pointerId);
+    window.addEventListener("mousemove", onDrag);
+    window.addEventListener("mouseup", endDrag, { once:true });
   }
-
-  function onDragPointer(ev){
+  function onDrag(ev){
     if(!drag) return;
-    if(ev.pointerId!==drag.pointerId) return;
-    ev.preventDefault();
-
     const h = state.hotspots.find(x=>x.id===drag.id);
     if(!h) return;
 
-    const r = artboardEl.getBoundingClientRect();
-    let px=(ev.clientX-r.left)/r.width;
-    let py=(ev.clientY-r.top)/r.height;
-    px=Math.max(0,Math.min(1,px));
-    py=Math.max(0,Math.min(1,py));
+    const dx = (ev.clientX - drag.startMouse.x) / drag.ab.width;
+    const dy = (ev.clientY - drag.startMouse.y) / drag.ab.height;
 
-    const dx=px-drag.startPointer.x;
-    const dy=py-drag.startPointer.y;
+    let nx = drag.startBox.x;
+    let ny = drag.startBox.y;
+    let nw = drag.startBox.w;
+    let nh = drag.startBox.h;
 
-    let nx=drag.startBox.x, ny=drag.startBox.y, nw=drag.startBox.w, nh=drag.startBox.h;
-    const min=0.03;
+    const min = 0.03;
 
-    if(drag.kind==="move"){
-      nx = px - drag.offset.x;
-      ny = py - drag.offset.y;
+    if(drag.kind === "move"){
+      nx = drag.startBox.x + dx;
+      ny = drag.startBox.y + dy;
     }else{
       if(drag.kind.includes("n")){ ny = drag.startBox.y + dy; nh = drag.startBox.h - dy; }
       if(drag.kind.includes("s")){ nh = drag.startBox.h + dy; }
@@ -698,60 +784,59 @@
       if(drag.kind.includes("e")){ nw = drag.startBox.w + dx; }
     }
 
-    nw=Math.max(min,nw);
-    nh=Math.max(min,nh);
-    nx=Math.min(1-nw,Math.max(0,nx));
-    ny=Math.min(1-nh,Math.max(0,ny));
+    nw = Math.max(min, nw);
+    nh = Math.max(min, nh);
+    nx = Math.min(1 - nw, Math.max(0, nx));
+    ny = Math.min(1 - nh, Math.max(0, ny));
 
-    h.x=nx; h.y=ny; h.w=nw; h.h=nh;
+    h.x = nx; h.y = ny; h.w = nw; h.h = nh;
+
     renderHotspots();
     refreshPhonePreview();
   }
-
-  function endDragPointer(ev){
-    if(!drag) return;
-    if(ev.pointerId!==drag.pointerId) return;
-    ev.preventDefault();
-    try{ artboardEl.releasePointerCapture(ev.pointerId); }catch{}
-    drag=null;
+  function endDrag(){
+    window.removeEventListener("mousemove", onDrag);
+    drag = null;
     pushHistory();
     renderList();
   }
 
-  artboardEl.addEventListener("pointermove", onDragPointer);
-  artboardEl.addEventListener("pointerup", endDragPointer);
-
-  // ===== render =====
+  // ===== render hotspots =====
   function renderHotspots(){
-    hotspotLayerEl.innerHTML="";
+    hotspotLayerEl.innerHTML = "";
     state.hotspots.forEach((h, idx)=>{
-      const d=document.createElement("div");
-      const isMain=(h.id===state.selectedId);
-      const isMulti=state.selectedIds.has(h.id);
+      const d = document.createElement("div");
 
-      d.className="hotspot"+(isMain?" selected":"")+(isMulti?" multiSelected":"");
-      d.style.left=(h.x*100)+"%";
-      d.style.top=(h.y*100)+"%";
-      d.style.width=(h.w*100)+"%";
-      d.style.height=(h.h*100)+"%";
-      d.textContent=(idx+1);
+      const isMain = (h.id === state.selectedId);
+      const isMulti = state.selectedIds.has(h.id);
 
-      d.addEventListener("pointerdown",(ev)=>{
-        if(ev.pointerType==="mouse" && ev.button!==0) return;
-        const multi=ev.shiftKey;
-        selectHotspot(h.id,{multi,toggle:multi});
-        beginDragPointer(ev,h.id,"move");
+      d.className = "hotspot" + (isMain ? " selected" : "") + (isMulti ? " multiSelected" : "");
+      d.style.left = (h.x*100) + "%";
+      d.style.top  = (h.y*100) + "%";
+      d.style.width  = (h.w*100) + "%";
+      d.style.height = (h.h*100) + "%";
+      d.textContent = (idx+1);
+
+      d.addEventListener("mousedown", (ev)=>{
+        ev.stopPropagation();
+        const multi = ev.shiftKey;
+        selectHotspot(h.id, { multi, toggle: multi });
+        beginDrag(ev, h.id, "move");
+      });
+
+      d.addEventListener("click", (ev)=>{
+        ev.stopPropagation();
+        const multi = ev.shiftKey;
+        selectHotspot(h.id, { multi, toggle: multi });
       });
 
       if(isMain){
         ["nw","ne","sw","se"].forEach(pos=>{
-          const hd=document.createElement("div");
-          hd.className="handle "+pos;
-          hd.addEventListener("pointerdown",(ev)=>{
-            if(ev.pointerType==="mouse" && ev.button!==0) return;
+          const hd = document.createElement("div");
+          hd.className = "handle " + pos;
+          hd.addEventListener("mousedown", (ev)=>{
             ev.stopPropagation();
-            selectHotspot(h.id,{multi:false});
-            beginDragPointer(ev,h.id,pos);
+            beginDrag(ev, h.id, pos);
           });
           d.appendChild(hd);
         });
@@ -759,6 +844,7 @@
 
       hotspotLayerEl.appendChild(d);
     });
+
     countEl.textContent = state.hotspots.length + " 個";
   }
 
@@ -768,26 +854,26 @@
       .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
 
-  let inputTimer=null;
+  let inputTimer = null;
   function scheduleHistory(){
     clearTimeout(inputTimer);
-    inputTimer=setTimeout(()=>pushHistory(),350);
+    inputTimer = setTimeout(()=> pushHistory(), 350);
   }
 
   function renderList(){
-    listEl.innerHTML="";
-    emptyEl.classList.toggle("hidden", state.hotspots.length!==0);
+    listEl.innerHTML = "";
+    emptyEl.classList.toggle("hidden", state.hotspots.length !== 0);
 
     state.hotspots.forEach((h, idx)=>{
-      const wrap=document.createElement("div");
-      wrap.className="border rounded-lg p-2 bg-white";
+      const wrap = document.createElement("div");
+      wrap.className = "border rounded-lg p-2 bg-white";
 
-      const checked = state.selectedIds.has(h.id) || (state.selectedId===h.id);
+      const checked = state.selectedIds.has(h.id) || (state.selectedId === h.id);
 
-      wrap.innerHTML=`
+      wrap.innerHTML = `
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <input type="checkbox" class="w-4 h-4" ${checked ? "checked":""} />
+            <input type="checkbox" class="w-4 h-4" ${checked ? "checked" : ""} />
             <div class="font-bold text-sm ${h.id===state.selectedId?'text-blue-700':'text-slate-800'}">格 ${idx+1}</div>
           </div>
           <div class="flex items-center gap-2">
@@ -795,31 +881,31 @@
             <button class="text-xs text-red-600 underline">刪除</button>
           </div>
         </div>
-        <div class="text-xs text-slate-500 mb-1">點擊送出文字（關鍵字）：</div>
+        <div class="text-xs text-slate-500 mb-1">點擊送出文字（關鍵字 / 切換用 RM:xxx）：</div>
         <input data-hs-input="${h.id}" class="w-full border rounded px-2 py-2 text-sm font-bold"
-          placeholder="例如：RM:HOME / MENU_SHOP / 開始"
+          placeholder="例如：RM:HOME / RM:SHOP / 開始"
           value="${escapeHtml(h.text)}">
       `;
 
-      const checkbox=wrap.querySelector("input[type=checkbox]");
-      const btnSel=wrap.querySelectorAll("button")[0];
-      const btnDel=wrap.querySelectorAll("button")[1];
-      const input=wrap.querySelector("input[data-hs-input]");
+      const checkbox = wrap.querySelector("input[type=checkbox]");
+      const btnSel = wrap.querySelectorAll("button")[0];
+      const btnDel = wrap.querySelectorAll("button")[1];
+      const input = wrap.querySelector("input[data-hs-input]");
 
-      checkbox.onchange=()=>{
+      checkbox.onchange = ()=>{
         if(checkbox.checked) state.selectedIds.add(h.id);
         else state.selectedIds.delete(h.id);
         renderHotspots();
       };
 
-      btnSel.onclick=()=>{
-        selectHotspot(h.id,{multi:false});
-        setTimeout(()=>focusHotspotInput(h.id),0);
+      btnSel.onclick = ()=>{
+        selectHotspot(h.id, { multi:false });
+        setTimeout(()=>focusHotspotInput(h.id), 0);
       };
 
-      btnDel.onclick=()=>{
+      btnDel.onclick = ()=>{
         if(confirm(`刪除格 ${idx+1}？`)){
-          const i=state.hotspots.findIndex(x=>x.id===h.id);
+          const i = state.hotspots.findIndex(x=>x.id===h.id);
           if(i>=0){
             state.hotspots.splice(i,1);
             state.selectedIds.delete(h.id);
@@ -830,18 +916,14 @@
         }
       };
 
-      input.oninput=()=>{
-        h.text=input.value;
+      input.oninput = ()=>{
+        h.text = input.value;
         refreshPhonePreview();
         scheduleHistory();
       };
 
-      // ✅ 不重建 list（避免打字被打斷），只更新熱區
-      input.onfocus=()=>{
-        state.selectedIds.clear();
-        state.selectedIds.add(h.id);
-        state.selectedId=h.id;
-        renderHotspots();
+      input.onfocus = ()=>{
+        selectHotspot(h.id, { multi:false });
       };
 
       listEl.appendChild(wrap);
@@ -855,47 +937,49 @@
     if(!silent) setStatus("就緒");
   }
 
+  // ===== phone preview =====
   function refreshPhonePreview(){
     phoneMenuTitleEl.textContent = (state.meta?.name || "選單").trim() || "選單";
 
     if(!state.imageUrl){
-      phoneImgEl.src="";
-      phoneHotspotsEl.innerHTML="";
+      phoneImgEl.src = "";
+      phoneHotspotsEl.innerHTML = "";
       return;
     }
 
     phoneImgEl.src = state.imageUrl;
-    phoneHotspotsEl.innerHTML="";
+    phoneHotspotsEl.innerHTML = "";
 
-    state.hotspots.forEach((h,i)=>{
-      const btn=document.createElement("button");
-      btn.style.position="absolute";
-      btn.style.left=(h.x*100)+"%";
-      btn.style.top=(h.y*100)+"%";
-      btn.style.width=(h.w*100)+"%";
-      btn.style.height=(h.h*100)+"%";
-      btn.style.background="transparent";
-      btn.style.border="none";
-      btn.onclick=()=>{
-        const t=(h.text||"").trim();
+    state.hotspots.forEach((h, i)=>{
+      const btn = document.createElement("button");
+      btn.style.position = "absolute";
+      btn.style.left = (h.x*100) + "%";
+      btn.style.top  = (h.y*100) + "%";
+      btn.style.width  = (h.w*100) + "%";
+      btn.style.height = (h.h*100) + "%";
+      btn.style.background = "transparent";
+      btn.style.border = "none";
+      btn.onclick = ()=>{
+        const t = (h.text||"").trim();
         alert(`格 ${i+1}\n將送出：${t || "（尚未填）"}`);
       };
       phoneHotspotsEl.appendChild(btn);
     });
   }
 
+  // ===== make 6 grid =====
   function makeSixGrid(){
-    const cols=3, rows=2;
-    const gap=0.012;
-    const cellW=(1-gap*(cols+1))/cols;
-    const cellH=(1-gap*(rows+1))/rows;
+    const cols = 3, rows = 2;
+    const gap = 0.012;
+    const cellW = (1 - gap*(cols+1)) / cols;
+    const cellH = (1 - gap*(rows+1)) / rows;
 
-    state.hotspots=[];
+    state.hotspots = [];
     for(let r=0;r<rows;r++){
       for(let c=0;c<cols;c++){
-        const x=gap + c*(cellW+gap);
-        const y=gap + r*(cellH+gap);
-        state.hotspots.push({ id:uid(), x, y, w:cellW, h:cellH, text:"" });
+        const x = gap + c*(cellW + gap);
+        const y = gap + r*(cellH + gap);
+        state.hotspots.push({ id: uid(), x, y, w: cellW, h: cellH, text: "" });
       }
     }
     state.selectedIds = new Set(state.hotspots.map(h=>h.id));
@@ -905,34 +989,38 @@
     renderAll();
   }
 
-  // ✅ 產出 2500x1686 並「自動壓縮到 950KB 以下」
-  async function encodeRichMenuImage(file){
+  // ===== import image: crop 2500x1686 + convert JPG + compress under 1MB =====
+  async function cropToBaseJpeg(file){
     const bmp = await createImageBitmap(file);
-    const W=BASE_W, H=BASE_H;
+    const W = BASE_W, H = BASE_H;
 
     const s = Math.max(W / bmp.width, H / bmp.height);
     const dw = bmp.width * s;
     const dh = bmp.height * s;
+
     const dx = (W - dw) / 2;
     const dy = (H - dh) / 2;
 
-    const canvas=document.createElement("canvas");
-    canvas.width=W; canvas.height=H;
-    const ctx=canvas.getContext("2d");
-    ctx.fillStyle="#ffffff";
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0,0,W,H);
     ctx.drawImage(bmp, dx, dy, dw, dh);
 
-    // ✅ 優先 JPEG（小很多），逐步降品質直到 <= MAX_UPLOAD_BYTES
-    const qualities=[0.86,0.80,0.74,0.68,0.62,0.56];
-    let blob=null;
-    for(const q of qualities){
-      blob = await new Promise(res=>canvas.toBlob(res, "image/jpeg", q));
-      if(!blob) throw new Error("圖片轉換失敗（toBlob 空）");
-      if(blob.size <= MAX_UPLOAD_BYTES) return { blob, ext:"jpg", mime:"image/jpeg", quality:q };
+    // LINE richmenu 常見限制：<= 1MB，這裡用迴圈壓縮避免 413
+    let q = 0.88;
+    let blob = null;
+    for(let i=0;i<10;i++){
+      blob = await new Promise(res=> canvas.toBlob(res, "image/jpeg", q));
+      if(!blob) throw new Error("裁切失敗（toBlob 空）");
+      if(blob.size <= 950 * 1024) break; // 留一些緩衝
+      q = Math.max(0.40, q - 0.07);
     }
-    // 還是太大：就回傳最後一個（通常不會）
-    return { blob, ext:"jpg", mime:"image/jpeg", quality:qualities[qualities.length-1] };
+    if(blob.size > 1024 * 1024) {
+      throw new Error(`圖片仍太大（${Math.round(blob.size/1024)}KB），請換一張更簡單的圖或底色少一點`);
+    }
+    return blob;
   }
 
   async function pickAndImport(){
@@ -941,22 +1029,22 @@
     localStorage.setItem("line_worker_url", base);
 
     const input = $("fileInput");
-    input.value="";
-    input.onchange=async (e)=>{
-      const file=e.target.files[0];
+    input.value = "";
+    input.onchange = async (e)=>{
+      const file = e.target.files[0];
       if(!file) return;
 
       try{
-        setStatus("匯入中（壓縮）...");
-        const encoded = await encodeRichMenuImage(file);
+        setStatus("匯入中...");
+        const blob = await cropToBaseJpeg(file);
 
-        const up = await uploadToR2(base, encoded.blob, `richmenu_2500x1686.${encoded.ext}`);
-
+        const up = await uploadToR2(base, blob, "richmenu_2500x1686.jpg");
         state.imageUrl = up.url;
         state.imageKey = up.key;
+
         imgEl.src = up.url;
 
-        btnImportEl.textContent = `已匯入（${Math.round(encoded.blob.size/1024)}KB）`;
+        btnImportEl.textContent = "已匯入";
         btnImportEl.classList.remove("bg-blue-600");
         btnImportEl.classList.add("bg-emerald-600");
 
@@ -966,96 +1054,99 @@
         setStatus("已匯入 ✅");
       }catch(err){
         setStatus("匯入失敗");
-        alert("匯入失敗：\n"+err.message);
+        alert("匯入失敗：\n" + err.message);
       }
     };
     input.click();
   }
 
+  // ===== build richmenu payload =====
   function buildRichMenuPayload(){
     if(!state.imageUrl) throw new Error("尚未匯入圖片");
-    if(!state.imageKey) throw new Error("缺少 imageKey（請先重新匯入圖片）");
-    if(state.hotspots.length===0) throw new Error("尚未新增格子");
-    if(state.hotspots.some(h=>!String(h.text||"").trim())) throw new Error("有格子沒有填文字");
+    if(!state.imageKey) throw new Error("缺少 imageKey（請重新匯入圖片）");
+    if(state.hotspots.length === 0) throw new Error("尚未新增格子");
+    if(state.hotspots.some(h => !String(h.text||"").trim())) throw new Error("有格子沒有填文字");
 
-    const areas=state.hotspots.map(h=>({
-      bounds:{
+    const areas = state.hotspots.map(h=>({
+      bounds: {
         x: Math.round(h.x * BASE_W),
         y: Math.round(h.y * BASE_H),
         width: Math.round(h.w * BASE_W),
-        height: Math.round(h.h * BASE_H),
+        height: Math.round(h.h * BASE_H)
       },
-      action:{ type:"message", text:String(h.text).trim() }
+      action: { type: "message", text: String(h.text).trim() }
     }));
 
     return {
-      meta:{ feature:"richmenu", name: state.meta.name || "", updatedAt: Date.now() },
-      type:"richmenu",
-      size:{ width: BASE_W, height: BASE_H },
+      meta: { feature: "richmenu", name: state.meta.name || "", updatedAt: Date.now() },
+      type: "richmenu",
+      size: { width: BASE_W, height: BASE_H },
       imageUrl: state.imageUrl,
-      imageKey: state.imageKey,
+      imageKey: state.imageKey, // ✅ 最重要：給 worker 直接去 R2 取
       areas
     };
   }
 
   async function saveMenu(){
-    const base=normalizeWorkerUrl(workerUrlEl.value);
+    const base = normalizeWorkerUrl(workerUrlEl.value);
     if(!base) return alert("請先填 Worker URL");
 
-    const name=(menuNameEl.value||"").trim();
+    const name = (menuNameEl.value || "").trim();
     if(!name) return alert("請先填選單名稱");
 
     try{
-      state.meta.name=name;
-      const payload=buildRichMenuPayload();
-      const isDefault=(isDefaultEl.value==="yes");
+      state.meta.name = name;
 
-      setStatus("儲存/套用中...");
-      const res = await postJSON(base+"/richmenu/save",{ name, payload, isDefault });
+      const payload = buildRichMenuPayload();
+      const isDefault = (isDefaultEl.value === "yes");
+
+      setStatus("儲存+套用中...");
+      const j = await postJSON(base + "/richmenu/save", { name, payload, isDefault });
 
       pushHistory();
-      setStatus("成功 ✅");
+      setStatus("儲存成功 ✅");
       await refreshMenuList(true);
+      await refreshSwitchMenuDropdown();
+      await loadMyUserId();
 
-      alert("已儲存並套用到 LINE OA ✅\n選單名稱："+name+(isDefault?"\n（已設為預設/首頁）":"")+(res?.richMenuId?`\nRichMenuId：${res.richMenuId}`:""));
+      alert("已儲存並套用 ✅\n選單名稱：" + name + (isDefault ? "\n（已設為預設/首頁）" : "") + (j?.richMenuId ? `\nrichMenuId: ${j.richMenuId}` : ""));
     }catch(e){
       setStatus("儲存失敗");
-      alert("儲存失敗：\n"+e.message);
+      alert("儲存失敗：\n" + e.message);
     }
   }
 
   async function loadMenu(){
-    const base=normalizeWorkerUrl(workerUrlEl.value);
+    const base = normalizeWorkerUrl(workerUrlEl.value);
     if(!base) return alert("請先填 Worker URL");
 
-    const name=(menuNameEl.value||"").trim() || (menuSelectEl.value||"").trim();
+    const name = (menuNameEl.value || "").trim() || (menuSelectEl.value || "").trim();
     if(!name) return alert("請先輸入/選擇要讀取的選單");
 
     try{
-      setStatus("讀取中...");
-      const j=await postJSON(base+"/richmenu/load",{ name });
+      const j = await postJSON(base + "/richmenu/load", { name });
       if(!j.ok) throw new Error(j.error || "讀取失敗");
 
-      const p=j.payload;
+      const p = j.payload;
       state.meta = p.meta || { name };
       state.imageUrl = p.imageUrl || "";
-      state.imageKey = p.imageKey || "";
-      state.hotspots = (p.areas||[]).map(a=>({
+      state.imageKey = p.imageKey || ""; // ✅ 讀回
+      state.hotspots = (p.areas || []).map(a=>({
         id: uid(),
-        x: (a.bounds.x||0)/BASE_W,
-        y: (a.bounds.y||0)/BASE_H,
-        w: (a.bounds.width||0)/BASE_W,
-        h: (a.bounds.height||0)/BASE_H,
-        text: (a.action?.text||""),
+        x: (a.bounds.x || 0) / BASE_W,
+        y: (a.bounds.y || 0) / BASE_H,
+        w: (a.bounds.width || 0) / BASE_W,
+        h: (a.bounds.height || 0) / BASE_H,
+        text: (a.action?.text || "")
       }));
 
-      state.selectedIds=new Set(state.hotspots.map(h=>h.id));
-      state.selectedId=state.hotspots[0]?.id || null;
+      state.selectedIds = new Set(state.hotspots.map(h=>h.id));
+      state.selectedId = state.hotspots[0]?.id || null;
 
-      menuNameEl.value=name;
-      imgEl.src=state.imageUrl||"";
+      menuNameEl.value = name;
+      imgEl.src = state.imageUrl || "";
 
-      btnImportEl.textContent=state.imageUrl?"已匯入":"匯入圖片（自動壓縮）";
+      btnImportEl.textContent = state.imageUrl ? "已匯入" : "匯入圖片";
       btnImportEl.classList.toggle("bg-emerald-600", !!state.imageUrl);
       btnImportEl.classList.toggle("bg-blue-600", !state.imageUrl);
 
@@ -1068,45 +1159,47 @@
       setTimeout(()=>focusHotspotInput(state.selectedId), 50);
     }catch(e){
       setStatus("讀取失敗");
-      alert("讀取失敗：\n"+e.message);
+      alert("讀取失敗：\n" + e.message);
     }
   }
 
   async function refreshMenuList(keepSelection=false){
-    const base=normalizeWorkerUrl(workerUrlEl.value);
+    const base = normalizeWorkerUrl(workerUrlEl.value);
     if(!base) return;
 
     const current = keepSelection ? (menuSelectEl.value || "") : "";
-    const j = await postJSON(base+"/richmenu/list", {});
+
+    const j = await postJSON(base + "/richmenu/list", {});
     if(!j.ok) return;
 
     menuSelectEl.innerHTML = `<option value="">（選擇選單）</option>`;
-    (j.items||[]).forEach(it=>{
-      const opt=document.createElement("option");
-      opt.value=it.name;
-      opt.textContent=it.name+(it.isDefault?"（預設）":"");
+    (j.items || []).forEach(it=>{
+      const opt = document.createElement("option");
+      opt.value = it.name;
+      opt.textContent = it.name + (it.isDefault ? "（預設）" : "");
       menuSelectEl.appendChild(opt);
     });
-    if(current) menuSelectEl.value=current;
+
+    if(current) menuSelectEl.value = current;
   }
 
   function onSelectMenu(){
-    const v=(menuSelectEl.value||"").trim();
+    const v = (menuSelectEl.value || "").trim();
     if(!v) return;
-    menuNameEl.value=v;
+    menuNameEl.value = v;
     loadMenu();
   }
 
   function clearAll(){
     if(!confirm("確定清空圖片與全部格子？")) return;
-    state.imageUrl="";
-    state.imageKey="";
-    state.hotspots=[];
-    state.selectedId=null;
+    state.imageUrl = "";
+    state.imageKey = "";
+    state.hotspots = [];
+    state.selectedId = null;
     state.selectedIds.clear();
-    imgEl.src="";
+    imgEl.src = "";
 
-    btnImportEl.textContent="匯入圖片（自動壓縮）";
+    btnImportEl.textContent = "匯入圖片";
     btnImportEl.classList.remove("bg-emerald-600");
     btnImportEl.classList.add("bg-blue-600");
 
@@ -1120,50 +1213,121 @@
     scheduleHistory();
   });
 
-  window.addEventListener("keydown",(ev)=>{
-    if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase()==="z"){ ev.preventDefault(); undo(); return; }
-    if((ev.ctrlKey && ev.key.toLowerCase()==="y") || (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase()==="z")){ ev.preventDefault(); redo(); return; }
-    if(ev.key==="Delete"){ ev.preventDefault(); deleteSelectedAll(); }
-    if(ev.key==="Escape"){ clearSelection(); }
+  // ===== ✅ keyboard shortcuts（輸入框內不攔截，避免你覺得「不能打字」）=====
+  function isTypingTarget(){
+    const el = document.activeElement;
+    if(!el) return false;
+    const tag = (el.tagName || "").toLowerCase();
+    return tag === "input" || tag === "textarea" || el.isContentEditable;
+  }
+
+  window.addEventListener("keydown", (ev)=>{
+    if(isTypingTarget()){
+      // 仍允許 Ctrl+Z / Ctrl+Y 在 input 裡
+      if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase() === "z"){ ev.preventDefault(); undo(); return; }
+      if((ev.ctrlKey && ev.key.toLowerCase() === "y") || (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === "z")){ ev.preventDefault(); redo(); return; }
+      return;
+    }
+
+    if(ev.ctrlKey && !ev.shiftKey && ev.key.toLowerCase() === "z"){ ev.preventDefault(); undo(); return; }
+    if((ev.ctrlKey && ev.key.toLowerCase() === "y") || (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === "z")){ ev.preventDefault(); redo(); return; }
+    if(ev.key === "Delete"){ ev.preventDefault(); deleteSelectedAll(); }
+    if(ev.key === "Escape"){ clearSelection(); }
   });
 
-  // middle mouse panning
-  let panning=false;
-  let panStart={x:0,y:0,vx:0,vy:0};
-  workspaceEl.addEventListener("mousedown",(ev)=>{
-    if(ev.button===1){
+  // ===== middle mouse panning =====
+  let panning = false;
+  let panStart = { x:0,y:0,vx:0,vy:0 };
+
+  workspaceEl.addEventListener("mousedown", (ev)=>{
+    if(ev.button === 1){
       ev.preventDefault();
-      panning=true;
-      panStart={ x:ev.clientX, y:ev.clientY, vx:view.x, vy:view.y };
+      panning = true;
+      panStart = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y };
       window.addEventListener("mousemove", onPan);
       window.addEventListener("mouseup", endPan, { once:true });
     }
   });
+
   function onPan(ev){
     if(!panning) return;
     view.x = panStart.vx + (ev.clientX - panStart.x);
     view.y = panStart.vy + (ev.clientY - panStart.y);
     updateStage();
   }
-  function endPan(){ window.removeEventListener("mousemove", onPan); panning=false; }
+  function endPan(){
+    window.removeEventListener("mousemove", onPan);
+    panning = false;
+  }
 
-  // wheel zoom
-  workspaceEl.addEventListener("wheel",(ev)=>{
+  // ===== wheel zoom =====
+  workspaceEl.addEventListener("wheel", (ev)=>{
     ev.preventDefault();
     const factor = ev.deltaY < 0 ? 1.08 : 1/1.08;
     zoomBy(factor, ev.clientX, ev.clientY);
   }, { passive:false });
 
-  function closePage(){ window.location.href="index.html"; }
+  function closePage(){
+    window.location.href = "index.html";
+  }
 
+  // ===== 直覺切換 =====
+  async function refreshSwitchMenuDropdown(){
+    const base = normalizeWorkerUrl(workerUrlEl.value);
+    if(!base) return;
+    const j = await postJSON(base + "/richmenu/list", {});
+    if(!j.ok) return;
+
+    switchMenuSelectEl.innerHTML = `<option value="">（選擇要切換的選單）</option>`;
+    (j.items || []).forEach(it=>{
+      const opt = document.createElement("option");
+      opt.value = it.name;
+      opt.textContent = it.name + (it.isDefault ? "（預設）" : "");
+      switchMenuSelectEl.appendChild(opt);
+    });
+  }
+
+  async function loadMyUserId(){
+    try{
+      const j = await apiPost("/line/whoami", {});
+      if(j && j.ok && j.userId) myUserIdEl.value = j.userId;
+    }catch(e){}
+  }
+
+  async function switchMenuNow(){
+    try{
+      const userId = (myUserIdEl.value || "").trim();
+      if(!userId) return alert("抓不到 userId。\n請先在 LINE 跟機器人說一句話後再試一次。");
+
+      const name = (switchMenuSelectEl.value || "").trim();
+      if(!name) return alert("請先選擇要切換的選單");
+
+      setStatus("切換中...");
+      const j = await apiPost("/richmenu/link", { userId, name });
+      if(!j.ok) throw new Error(j.error || "切換失敗");
+
+      setStatus("已切換 ✅");
+      alert(`已切換到：${name}`);
+    }catch(e){
+      setStatus("切換失敗");
+      alert("切換失敗：\n" + e.message);
+    }
+  }
+
+  // ===== boot =====
   (function init(){
-    const savedUrl=(localStorage.getItem("line_worker_url")||"").trim();
-    if(savedUrl) workerUrlEl.value=savedUrl;
+    const savedUrl = (localStorage.getItem("line_worker_url") || "").trim();
+    if(savedUrl) workerUrlEl.value = savedUrl;
+
     initArtboard();
     resetView();
     renderAll(true);
     pushHistory();
+
     refreshMenuList();
+    refreshSwitchMenuDropdown();
+    loadMyUserId();
+
     setStatus("就緒 ✅");
   })();
 </script>
