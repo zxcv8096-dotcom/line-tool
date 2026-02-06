@@ -2,25 +2,31 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-  <title>AI 問卷後台（簡易版）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>AI 問卷後台（完整強化版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff); font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body{
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
     .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    /* ✅ 手機：避免 modal/textarea 被「鎖住」不能滑 */
-    .modal-scroll { max-height: calc(100dvh - 2.5rem); overflow: auto; -webkit-overflow-scrolling: touch; }
-    textarea { resize: vertical; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    /* 讓手機匯入框舒服可滑、不卡住 */
+    textarea { -webkit-overflow-scrolling: touch; }
+    /* modal 內部滾動 */
+    .modal-scroll { max-height: min(78vh, 720px); overflow: auto; -webkit-overflow-scrolling: touch; }
   </style>
 </head>
 
-<body class="min-h-screen">
+<body class="min-h-screen safe-bottom">
   <div class="max-w-6xl mx-auto p-4 md:p-8">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（簡易版）</h1>
-        <p class="text-slate-600 mt-1">可預覽互動、可存多份、可刪除、關鍵字綁問卷、Leads（含大頭照與 userId）</p>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台</h1>
+        <p class="text-slate-600 mt-1">多問卷｜關鍵字綁定｜一鍵刪除｜可預覽｜可匯入文字｜Leads 報告</p>
       </div>
       <div class="flex gap-2">
         <button id="btnOpenClient" class="hidden px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
@@ -36,6 +42,11 @@
           <label class="text-sm font-semibold text-slate-700">Worker 網址</label>
           <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
                  placeholder="https://api.xxx.workers.dev" />
+          <div class="text-xs text-slate-500 mt-2">
+            問卷：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
+            關鍵字表：<span class="mono font-semibold">AI_SURVEY:KW_MAP</span>　
+            Leads：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
+          </div>
         </div>
         <div class="flex gap-2">
           <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線</button>
@@ -49,7 +60,7 @@
           <input id="inLiffId" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：2001234567-abcDEF" />
         </div>
         <div class="md:col-span-2">
-          <label class="text-xs font-bold text-slate-500">客戶問卷頁檔名</label>
+          <label class="text-xs font-bold text-slate-500">客戶問卷頁檔名（固定）</label>
           <input disabled class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono bg-slate-50" value="liff_survey.html" />
         </div>
       </div>
@@ -66,7 +77,7 @@
         <div class="flex items-center justify-between">
           <div>
             <div class="text-xs text-slate-500">問卷清單</div>
-            <div class="text-sm text-slate-900 font-semibold">（可存多份）</div>
+            <div class="text-sm text-slate-900 font-semibold">（可存多份｜可刪除）</div>
           </div>
           <button id="btnNew" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增</button>
         </div>
@@ -79,9 +90,9 @@
 
         <hr class="my-4 border-slate-200" />
 
-        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 設定</button>
-        <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 預覽</button>
-        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads</button>
+        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定</button>
+        <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 預覽互動</button>
+        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads 報告</button>
 
         <div class="mt-4 text-xs text-slate-500">
           Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
@@ -95,44 +106,53 @@
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定</h2>
-              <p class="text-sm text-slate-600 mt-1">第 1 題可多選項；第 2 題後每題固定 4 選項。</p>
+              <p class="text-sm text-slate-600 mt-1">第 1 題可多選項；第 2 題後每題固定 4 個選項。</p>
             </div>
             <div class="flex gap-2 flex-wrap">
               <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次匯入</button>
               <button id="btnAddQ" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增題目</button>
-              <button id="btnOpenClientFromHere" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">產生入口</button>
+              <button id="btnCopyLinkTop" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">複製入口</button>
             </div>
           </div>
 
           <div class="mt-4 grid md:grid-cols-2 gap-4">
             <div>
-              <label class="text-sm font-semibold text-slate-700">問卷檔名</label>
-              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：健康分流_12題_v1" />
+              <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
+              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：健康需求分流_8題_第一版" />
             </div>
             <div>
-              <label class="text-sm font-semibold text-slate-700">問卷標題</label>
+              <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到）</label>
               <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你最想改善的方向" />
             </div>
 
-            <!-- ✅ 關鍵字（不寫說明，不占版面） -->
+            <!-- ✅ 關鍵字（不說明、不占版面） -->
             <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">關鍵字（可多個，用逗號）</label>
-              <input id="inKeywords" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                     placeholder="例如：健康,狀態,壓力" />
+              <div class="flex items-center justify-between gap-2">
+                <label class="text-sm font-semibold text-slate-700">關鍵字</label>
+                <div id="kwHint" class="text-xs font-semibold text-slate-500"></div>
+              </div>
+              <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                     placeholder="例如：健康問卷" />
             </div>
 
             <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">結尾報告模板</label>
+              <label class="text-sm font-semibold text-slate-700">結尾報告模板（你的口吻）</label>
               <textarea id="inReportHint" rows="4" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                placeholder="例如：用清楚但不醫療的方式，整理他的答案 → 給 1 個最優先方向＋2 個次要方向。最後引導他回『報告』。"></textarea>
+                placeholder="例如：用接地氣的方式整理他的答案，給 1~3 個方向，最後叫他回『報告』。"></textarea>
+            </div>
+
+            <!-- ✅ 入口連結（直接顯示＋一鍵複製，不再 prompt） -->
+            <div class="md:col-span-2">
+              <div class="flex items-center justify-between gap-2">
+                <label class="text-sm font-semibold text-slate-700">入口連結</label>
+                <button id="btnCopyLink" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold">複製</button>
+              </div>
+              <input id="inClientUrl" readonly class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono bg-slate-50" value="" />
             </div>
           </div>
 
           <div class="mt-5">
-            <div class="flex items-center justify-between">
-              <h3 class="font-bold text-slate-900">題目列表</h3>
-              <button id="btnFillHealth" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">一鍵套用健康問卷</button>
-            </div>
+            <h3 class="font-bold text-slate-900">題目列表</h3>
             <div class="mt-1 text-xs text-slate-500">第 1 題可多選項；第 2 題後每題 4 選項。</div>
             <div id="qWrap" class="mt-3 space-y-3"></div>
           </div>
@@ -143,7 +163,7 @@
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <h2 class="text-lg font-extrabold text-slate-900">② 預覽互動</h2>
-              <p class="text-sm text-slate-600 mt-1">像客戶一樣點選測試。</p>
+              <p class="text-sm text-slate-600 mt-1">你自己先試跑，確認流程和文字。</p>
             </div>
             <div class="flex gap-2">
               <button id="btnPreviewRestart" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">重來</button>
@@ -161,7 +181,7 @@
             </div>
 
             <div class="mt-4">
-              <h4 class="font-bold text-slate-900">已選答案</h4>
+              <h4 class="font-bold text-slate-900">你剛剛選的答案（預覽）</h4>
               <div id="pvAnswers" class="mt-2 text-sm text-slate-700 space-y-1"></div>
             </div>
 
@@ -176,7 +196,8 @@
         <section id="tabLeads" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">③ Leads</h2>
+              <h2 class="text-lg font-extrabold text-slate-900">③ Leads 報告</h2>
+              <p class="text-sm text-slate-600 mt-1">顯示：大頭照、暱稱、userId、問卷、時間、報告</p>
             </div>
             <div class="flex gap-2">
               <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
@@ -187,54 +208,56 @@
           <div id="leadList" class="mt-4 space-y-3"></div>
         </section>
 
+        <!-- TOAST -->
         <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
       </main>
     </div>
   </div>
 
   <!-- BULK MODAL -->
-  <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50 p-3 md:p-8">
-    <div class="max-w-3xl mx-auto">
-      <div class="card rounded-2xl shadow border border-slate-200 p-5 modal-scroll">
+  <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50">
+    <div class="max-w-3xl mx-auto p-4 md:p-8">
+      <div class="card rounded-2xl shadow border border-slate-200 p-5">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <div class="text-xl font-extrabold text-slate-900">批次貼上匯入</div>
+            <div class="text-xl font-extrabold text-slate-900">批次匯入</div>
+            <div class="text-sm text-slate-600 mt-1">貼上純文字 → 自動填入（檔名/標題/報告/題目/選項）</div>
           </div>
           <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
         </div>
 
-        <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-<pre class="p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 健康分流_12題_v1
-TITLE: 三分鐘找出你最想改善的方向
-KEYWORDS: 健康,狀態,壓力
+        <div class="mt-4 modal-scroll rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
+          <div class="font-bold">格式範例：</div>
+<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 健康問卷_第一版
+TITLE: 三分鐘了解你目前最想改善的方向
+KEYWORD: 健康問卷
 REPORT:
-我先用你的選擇整理成：1 個最優先方向＋2 個次要方向。
-我會給你 3 個立刻做得到的調整重點。
-如果你願意，回我「報告」，我再把你整理成一份更清楚的方向。
+我會用你的選擇整理成「一個優先方向＋兩個加分方向」。
+我會給你 3 個今天就能做的調整重點。
+如果你願意，回我「報告」，我幫你整理成更清楚的版本。
 ENDREPORT
 
-Q: 你最想先改善哪一塊？
+Q: 你現在最想先改善哪一塊？
 - 睡眠
 - 壓力
 - 精神
 - 腸胃
-- 代謝
-- 運動恢復
-- 體力
+- 體態
+- 運動
+- 免疫
 - 皮膚
 
-Q: 你最近的睡眠比較像？
-- 好
-- 普通
-- 淺
-- 難入睡</pre>
+Q: 你最近睡得怎麼樣？
+- 一覺到天亮
+- 會醒幾次
+- 很難入睡
+- 醒來還是累</pre>
         </div>
 
-        <!-- ✅ 這個 textarea 現在手機/電腦都可滑、可拉高 -->
-        <textarea id="bulkText" rows="16"
+        <textarea id="bulkText" rows="12"
           class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
-          style="min-height: 260px; max-height: 60dvh; overflow:auto; -webkit-overflow-scrolling:touch;"
-          placeholder="把你的問卷文字貼在這裡…"></textarea>
+          style="min-height: 260px; max-height: 48vh; overflow:auto;"
+          placeholder="把問卷文字貼這裡…"></textarea>
 
         <div class="mt-4 flex flex-wrap gap-2 justify-end">
           <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
@@ -280,32 +303,27 @@ Q: 你最近的睡眠比較像？
       .replaceAll("'","&#039;");
   }
 
+  function normKw(s){
+    return String(s||"").trim();
+  }
+
   function makeEmptySurvey(){
     return {
       name: "",
       title: "",
-      keywords: [],   // ✅ 關鍵字綁問卷
+      keyword: "",
       reportHint: "",
-      questions: []
+      questions: [
+        { q:"你現在最想先改善哪一塊？", a:["睡眠","壓力","精神","腸胃","體態","運動","免疫","皮膚"] },
+        { q:"你最近睡得怎麼樣？", a:["一覺到天亮","會醒幾次","很難入睡","醒來還是累"] },
+        { q:"你白天狀態比較像？", a:["精神穩定","下午下滑","注意力差","常想躺"] },
+        { q:"你飲食習慣較像？", a:["三餐固定","常外食","常跳餐","愛吃甜/炸"] },
+        { q:"你壓力感比較像？", a:["不太有","偶爾緊","常緊繃","腦停不下"] },
+        { q:"你腸胃狀態較像？", a:["很順","偶爾卡","常脹氣","忽快忽慢"] },
+        { q:"你運動後恢復？", a:["很快","普通","很久","很少運動"] },
+        { q:"你最想先做到？", a:["睡更好","更有精神","更輕盈","更穩定"] },
+      ]
     };
-  }
-
-  function setTab(tab){
-    $("tabBuilder").classList.toggle("hidden", tab!=="builder");
-    $("tabPreview").classList.toggle("hidden", tab!=="preview");
-    $("tabLeads").classList.toggle("hidden", tab!=="leads");
-
-    $("btnTabBuilder").className = tab==="builder"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold text-slate-900";
-
-    $("btnTabPreview").className = tab==="preview"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
-
-    $("btnTabLeads").className = tab==="leads"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
   }
 
   async function api(path, bodyObj){
@@ -321,44 +339,57 @@ Q: 你最近的睡眠比較像？
     return data;
   }
 
-  function parseKeywordsInput(v){
-    return (v||"")
-      .split(/[，,、\s]+/g)
-      .map(x=>x.trim())
-      .filter(Boolean)
-      .slice(0, 20);
+  function setTab(tab){
+    $("tabBuilder").classList.toggle("hidden", tab!=="builder");
+    $("tabPreview").classList.toggle("hidden", tab!=="preview");
+    $("tabLeads").classList.toggle("hidden", tab!=="leads");
+
+    $("btnTabBuilder").className = tab==="builder"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-0 font-semibold text-slate-900";
+
+    $("btnTabPreview").className = tab==="preview"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
+
+    $("btnTabLeads").className = tab==="leads"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
   }
 
-  async function loadKwMap(){
-    const r = await api("/loadAny", { namespace:"DB", keyword: KW_MAP_KEY });
-    const payload = r.payload || r;
-    KW_MAP = (payload && typeof payload === "object") ? payload : {};
+  // ========= KW Map =========
+  async function refreshKwMap(){
+    const data = await api("/kwMapGet", {});
+    KW_MAP = (data && data.payload && typeof data.payload === "object") ? data.payload : {};
   }
 
   async function saveKwMap(){
-    await api("/putAny", { namespace:"DB", keyword: KW_MAP_KEY, payload: KW_MAP });
+    await api("/kwMapPut", { payload: KW_MAP });
   }
 
-  function validateKeywordUniq(surveyName, newKeywords){
-    for (const kw of newKeywords) {
-      const bound = KW_MAP[kw];
-      if (bound && bound !== surveyName) {
-        throw new Error(`關鍵字「${kw}」已被使用`);
-      }
+  function keywordOwner(kw){
+    const k = normKw(kw);
+    if(!k) return "";
+    return KW_MAP[k] || "";
+  }
+
+  function updateKwHint(){
+    const kw = normKw($("inKeyword").value);
+    const name = normKw($("inName").value || CURRENT.name);
+    const owner = keywordOwner(kw);
+    const el = $("kwHint");
+    el.textContent = "";
+    el.className = "text-xs font-semibold text-slate-500";
+
+    if(!kw) return;
+
+    if(owner && owner !== name){
+      el.textContent = "已被使用";
+      el.className = "text-xs font-extrabold text-rose-600";
+    }else{
+      el.textContent = "可用";
+      el.className = "text-xs font-extrabold text-emerald-700";
     }
-  }
-
-  function removeKeywordsPointingToSurvey(surveyName){
-    for (const kw of Object.keys(KW_MAP)) {
-      if (KW_MAP[kw] === surveyName) delete KW_MAP[kw];
-    }
-  }
-
-  function bindKeywordsToSurvey(surveyName, newKeywords){
-    // 清掉舊的（指向同問卷的）
-    removeKeywordsPointingToSurvey(surveyName);
-    // 綁新的
-    newKeywords.forEach(kw => { KW_MAP[kw] = surveyName; });
   }
 
   // ========= Survey list =========
@@ -381,7 +412,7 @@ Q: 你最近的睡眠比較像？
     if(items.length===0){
       const d = document.createElement("div");
       d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
-      d.textContent = "目前沒有問卷。";
+      d.textContent = "目前沒有問卷。按「新增」建立。";
       wrap.appendChild(d);
       return;
     }
@@ -390,20 +421,18 @@ Q: 你最近的睡眠比較像？
       const row = document.createElement("div");
       row.className = "rounded-2xl bg-white/70 border border-slate-200 overflow-hidden";
 
-      row.innerHTML = `
-        <div class="flex items-center justify-between gap-2 p-3">
-          <button class="flex-1 text-left">
-            <div class="font-semibold text-slate-900">${escapeHtml(x.name)}</div>
-            <div class="text-xs text-slate-500 mono truncate">${escapeHtml(x.key)}</div>
-          </button>
-          <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold">刪除</button>
+      const btn = document.createElement("button");
+      btn.className = "w-full text-left px-4 py-3 hover:bg-white flex items-start justify-between gap-3";
+      btn.innerHTML = `
+        <div class="min-w-0">
+          <div class="font-semibold text-slate-900 truncate">${escapeHtml(x.name)}</div>
+          <div class="text-xs text-slate-500 mono truncate">${escapeHtml(x.key)}</div>
+        </div>
+        <div class="shrink-0 flex items-center gap-2">
+          <span class="text-xs px-2 py-1 rounded-full bg-slate-50 border border-slate-200 font-semibold text-slate-600">載入</span>
         </div>
       `;
-
-      const openBtn = row.querySelector("button.flex-1");
-      const delBtn = row.querySelector("button.bg-rose-600");
-
-      openBtn.onclick = async ()=>{
+      btn.onclick = async ()=>{
         try{
           const loaded = await api("/loadAny", { namespace:"DB", keyword: x.key });
           const payload = loaded.payload || loaded;
@@ -416,31 +445,29 @@ Q: 你最近的睡眠比較像？
         }
       };
 
-      delBtn.onclick = async ()=>{
-        if(!confirm(`確定刪除「${x.name}」？\n（會連同關鍵字一起從 Cloudflare 刪除）`)) return;
+      const del = document.createElement("button");
+      del.className = "w-full px-4 py-2 bg-rose-600 text-white hover:bg-rose-500 font-extrabold";
+      del.textContent = "刪除";
+      del.onclick = async ()=>{
+        const ok = confirm(`確定刪除「${x.name}」？（會連同關鍵字一起刪）`);
+        if(!ok) return;
         try{
-          setApiBaseFromInput();
-          await loadKwMap();
-
-          // 1) 刪問卷＋清關鍵字（走 worker 一次完成）
           await api("/surveyDelete", { surveyName: x.name });
-
-          // 2) 重新讀一次
-          await loadKwMap();
-          await refreshSurveyList();
-
-          // 如果剛好刪到正在編輯的
+          toast("已刪除：" + x.name);
+          // 若正在編輯同一份，清空
           if((CURRENT.name||"") === x.name){
             CURRENT = makeEmptySurvey();
             fillBuilder();
           }
-
-          toast("已刪除：" + x.name);
+          await refreshKwMap().catch(()=>{});
+          await refreshSurveyList();
         }catch(e){
           toast(e.message, "err");
         }
       };
 
+      row.appendChild(btn);
+      row.appendChild(del);
       wrap.appendChild(row);
     });
   }
@@ -450,23 +477,19 @@ Q: 你最近的睡眠比較像？
     if(obj && typeof obj === "object"){
       s.name = obj.name || s.name;
       s.title = obj.title || s.title;
-      s.reportHint = obj.reportHint || s.reportHint;
-      s.keywords = Array.isArray(obj.keywords) ? obj.keywords : (typeof obj.keywords === "string" ? parseKeywordsInput(obj.keywords) : []);
-      if(Array.isArray(obj.questions)) {
-        s.questions = obj.questions.map(q=>({
-          q: (q.q||"").toString(),
-          a: Array.isArray(q.a) ? q.a.map(x=>(x||"").toString()) : []
-        }));
-      }
+      s.keyword = obj.keyword || "";
+      s.reportHint = obj.reportHint || obj.reportHint;
+      if(Array.isArray(obj.questions)) s.questions = obj.questions.map(q=>({
+        q: (q.q||"").toString(),
+        a: Array.isArray(q.a) ? q.a.map(x=>(x||"").toString()) : []
+      }));
     }
-
     // 第 1 題：保留全部選項（至少 4）
     if(s.questions[0]){
       const a0 = (s.questions[0].a||[]);
       while(a0.length<4) a0.push("");
       s.questions[0].a = a0;
     }
-
     // 第 2 題後：固定 4
     s.questions = s.questions.map((q, idx)=>{
       const a = (q.a||[]);
@@ -474,7 +497,6 @@ Q: 你最近的睡眠比較像？
       while(a.length<4) a.push("");
       return { q:q.q, a:a.slice(0,4) };
     });
-
     return s;
   }
 
@@ -482,28 +504,22 @@ Q: 你最近的睡眠比較像？
   function fillBuilder(){
     $("inName").value = CURRENT.name || "";
     $("inTitle").value = CURRENT.title || "";
+    $("inKeyword").value = CURRENT.keyword || "";
     $("inReportHint").value = CURRENT.reportHint || "";
-    $("inKeywords").value = (CURRENT.keywords || []).join(",") || "";
     renderQuestions();
     updateClientBtn();
+    updateKwHint();
   }
 
   function renderQuestions(){
     const wrap = $("qWrap");
     wrap.innerHTML = "";
 
-    (CURRENT.questions||[]).forEach((item, idx)=>{
+    CURRENT.questions.forEach((item, idx)=>{
       const box = document.createElement("div");
       box.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
 
       const isFirst = idx===0;
-      if(!Array.isArray(item.a)) item.a = [];
-      if(isFirst){
-        while(item.a.length<4) item.a.push("");
-      }else{
-        while(item.a.length<4) item.a.push("");
-        item.a = item.a.slice(0,4);
-      }
 
       box.innerHTML = `
         <div class="flex items-center justify-between gap-2">
@@ -526,40 +542,48 @@ Q: 你最近的睡眠比較像？
         <div class="mt-3 grid md:grid-cols-2 gap-2" data-optwrap></div>
       `;
 
-      const qInp = box.querySelector('[data-k="q"]');
-      qInp.value = item.q || "";
-      qInp.oninput = (e)=>{ item.q = e.target.value; };
+      box.querySelector('[data-k="q"]').value = item.q || "";
+      box.querySelector('[data-k="q"]').oninput = (e)=>{ item.q = e.target.value; };
 
       const optWrap = box.querySelector("[data-optwrap]");
-      const draw = ()=>{
-        optWrap.innerHTML = "";
-        const n = isFirst ? item.a.length : 4;
+      const a = item.a || [];
 
+      if(isFirst){
+        while(a.length<4) a.push("");
+        item.a = a;
+      }else{
+        while(a.length<4) a.push("");
+        item.a = a.slice(0,4);
+      }
+
+      const drawOptions = ()=>{
+        optWrap.innerHTML = "";
+        const list = item.a || [];
+        const n = isFirst ? list.length : 4;
         for(let i=0;i<n;i++){
           const div = document.createElement("div");
           div.innerHTML = `
             <label class="text-xs font-bold text-slate-500">選項 ${i+1}</label>
             <div class="mt-1 flex gap-2">
-              <input class="flex-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="輸入選項" />
+              <input class="flex-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="請輸入選項" />
               ${isFirst && i>=4 ? `<button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">刪</button>` : ``}
             </div>
           `;
           const inp = div.querySelector("input");
-          inp.value = item.a[i] || "";
+          inp.value = list[i] || "";
           inp.oninput = (e)=>{ item.a[i] = e.target.value; };
 
           const delBtn = div.querySelector("button");
           if(delBtn){
             delBtn.onclick = ()=>{
-              item.a.splice(i,1);
-              draw();
+              item.a.splice(i, 1);
+              drawOptions();
             };
           }
-
           optWrap.appendChild(div);
         }
       };
-      draw();
+      drawOptions();
 
       box.querySelectorAll("button[data-act]").forEach(btn=>{
         btn.onclick = ()=>{
@@ -580,10 +604,10 @@ Q: 你最近的睡眠比較像？
       wrap.appendChild(box);
     });
 
-    if((CURRENT.questions||[]).length===0){
+    if(CURRENT.questions.length===0){
       const empty = document.createElement("div");
       empty.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
-      empty.textContent = "目前沒有題目。";
+      empty.textContent = "目前沒有題目。按上方「新增題目」。";
       wrap.appendChild(empty);
     }
   }
@@ -591,38 +615,38 @@ Q: 你最近的睡眠比較像？
   function validateSurvey(){
     const name = ($("inName").value||"").trim();
     const title = ($("inTitle").value||"").trim();
-    if(!name) throw new Error("請先填問卷檔名");
-    if(!title) throw new Error("請先填問卷標題");
-    if(!CURRENT.questions || CURRENT.questions.length<1) throw new Error("至少要有 1 題");
+    const kw = normKw($("inKeyword").value);
+
+    if(!name) throw new Error("請先填『問卷檔名』");
+    if(!title) throw new Error("請先填『問卷標題』");
+    if(!kw) throw new Error("請先填『關鍵字』");
+    if(CURRENT.questions.length<1) throw new Error("至少要有 1 題");
+
+    // 關鍵字不可被其他問卷使用
+    const owner = keywordOwner(kw);
+    if(owner && owner !== name) throw new Error("關鍵字已被其他問卷使用");
 
     CURRENT.questions.forEach((q,i)=>{
       if(!(q.q||"").trim()) throw new Error(`第 ${i+1} 題題目是空的`);
       const need = (i===0) ? Math.max(4, (q.a||[]).length) : 4;
       for(let k=0;k<need;k++){
-        if(!(q.a && q.a[k] && q.a[k].trim())) throw new Error(`第 ${i+1} 題的選項 ${k+1} 是空的`);
+        const v = (q.a && q.a[k]) ? String(q.a[k]).trim() : "";
+        if(!v) throw new Error(`第 ${i+1} 題的選項 ${k+1} 是空的`);
       }
     });
 
-    return { name, title };
+    return { name, title, kw };
   }
 
   async function saveSurvey(){
-    const { name, title } = validateSurvey();
+    const { name, title, kw } = validateSurvey();
 
-    setApiBaseFromInput();
-    await loadKwMap();
-
-    // keywords
-    const newKeywords = parseKeywordsInput($("inKeywords").value || "");
-    validateKeywordUniq(name, newKeywords);
-
-    // update CURRENT
+    // 1) 先存問卷本體
     CURRENT.name = name;
     CURRENT.title = title;
+    CURRENT.keyword = kw;
     CURRENT.reportHint = ($("inReportHint").value||"").trim();
-    CURRENT.keywords = newKeywords;
 
-    // normalize Q options
     CURRENT.questions = CURRENT.questions.map((q, idx)=>{
       if(idx===0){
         const a = (q.a||[]);
@@ -634,16 +658,30 @@ Q: 你最近的睡眠比較像？
       return { q:q.q, a:a.slice(0,4) };
     });
 
-    // 1) save survey
-    await api("/putAny", { namespace:"DB", keyword: Q_PREFIX + CURRENT.name, payload: CURRENT });
+    await api("/putAny", {
+      namespace: "DB",
+      keyword: Q_PREFIX + CURRENT.name,
+      payload: CURRENT
+    });
 
-    // 2) save KW_MAP (remove old -> bind new)
-    bindKeywordsToSurvey(CURRENT.name, newKeywords);
+    // 2) 同步關鍵字表：把「指向這份問卷的舊關鍵字」清掉，再寫入新的
+    // （這樣你改關鍵字也會自動更新，不需要你手動）
+    await refreshKwMap().catch(()=>{});
+    for(const k of Object.keys(KW_MAP)){
+      if(KW_MAP[k] === CURRENT.name && k !== kw){
+        delete KW_MAP[k];
+      }
+    }
+    KW_MAP[kw] = CURRENT.name;
     await saveKwMap();
 
-    toast("已儲存：" + CURRENT.name);
+    toast("已儲存（含關鍵字綁定）");
     $("txtLastSync").textContent = new Date().toLocaleString();
+
     await refreshSurveyList();
+    await refreshKwMap().catch(()=>{});
+    updateKwHint();
+    updateClientBtn();
   }
 
   // ========= Preview =========
@@ -678,7 +716,7 @@ Q: 你最近的睡眠比較像？
     const optWrap = $("pvOptions");
     optWrap.innerHTML = "";
 
-    const opts = (q.a||[]).filter(x=>String(x||"").trim()!=="");
+    const opts = (q.a||[]).map(x=>String(x||"").trim()).filter(Boolean);
     opts.forEach((txt)=>{
       const b = document.createElement("button");
       b.className = "px-4 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 text-left font-semibold";
@@ -713,7 +751,7 @@ Q: 你最近的睡眠比較像？
   function buildReportPreview(){
     const hint = ($("inReportHint").value||CURRENT.reportHint||"").trim();
     const bullets = PREVIEW.answers.map(x=>`- ${x.q}：${x.a}`).join("\n");
-    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || ""}\n\n【下一步】\n回我「報告」我再幫你整理得更清楚。`;
+    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || "（尚未填報告模板）"}\n\n【下一步】\n回我「報告」我幫你整理成更清楚的版本。`;
   }
 
   // ========= Leads =========
@@ -774,7 +812,7 @@ Q: 你最近的睡眠比較像？
             <div class="mt-1 text-xs text-slate-500 mono break-all">userId: ${escapeHtml(uid)}</div>
 
             <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 whitespace-pre-line">
-              ${escapeHtml(report || "")}
+              ${escapeHtml(report || "（沒有報告內容）")}
             </div>
           </div>
         </div>
@@ -784,41 +822,54 @@ Q: 你最近的睡眠比較像？
   }
 
   // ========= Client URL =========
+  function buildClientUrl(){
+    const liffId = ($("inLiffId").value || localStorage.getItem("line_liff_id") || "").trim();
+    const name = ($("inName").value||CURRENT.name||"").trim();
+    if(!liffId || !name) return "";
+    return `https://liff.line.me/${encodeURIComponent(liffId)}?page=liff_survey.html&survey=${encodeURIComponent(name)}`;
+  }
+
+  async function copyText(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      return true;
+    }catch{
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    }
+  }
+
   function updateClientBtn(){
     const liffId = ($("inLiffId").value || localStorage.getItem("line_liff_id") || "").trim();
     $("inLiffId").value = liffId;
 
-    const name = ($("inName").value||CURRENT.name||"").trim();
-    const btn = $("btnOpenClient");
-    const btn2 = $("btnOpenClientFromHere");
+    const url = buildClientUrl();
+    $("inClientUrl").value = url || "";
 
-    if(!liffId){
+    const btn = $("btnOpenClient");
+    if(!url){
       btn.classList.add("hidden");
       return;
     }
-
-    const url = `https://liff.line.me/${encodeURIComponent(liffId)}?page=liff_survey.html&survey=${encodeURIComponent(name||"")}`;
-
     btn.classList.remove("hidden");
-    btn.onclick = ()=> {
-      if(!name) return toast("請先填問卷檔名", "warn");
-      window.open(url, "_blank");
-    };
-
-    btn2.onclick = ()=> {
-      if(!name) return toast("請先填問卷檔名", "warn");
-      prompt("複製貼上這段：", url);
-      toast("已產生入口");
-    };
+    btn.onclick = ()=> window.open(url, "_blank");
   }
 
   // ========= Bulk Import =========
-  function openBulk(){ $("bulkModal").classList.remove("hidden"); document.body.style.overflow="hidden"; }
-  function closeBulk(){ $("bulkModal").classList.add("hidden"); document.body.style.overflow=""; }
+  function openBulk(){ $("bulkModal").classList.remove("hidden"); }
+  function closeBulk(){ $("bulkModal").classList.add("hidden"); }
 
   function parseBulk(text){
     const lines = (text||"").replace(/\r/g,"").split("\n");
-    const out = { name:"", title:"", reportHint:"", keywords:[], questions:[] };
+    const out = { name:"", title:"", keyword:"", reportHint:"", questions:[] };
 
     let i=0;
     for(; i<lines.length; i++){
@@ -827,10 +878,8 @@ Q: 你最近的睡眠比較像？
 
       if(/^NAME\s*:/i.test(line)){ out.name = line.split(":").slice(1).join(":").trim(); continue; }
       if(/^TITLE\s*:/i.test(line)){ out.title = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^KEYWORDS\s*:/i.test(line)){
-        out.keywords = parseKeywordsInput(line.split(":").slice(1).join(":").trim());
-        continue;
-      }
+      if(/^KEYWORD\s*:/i.test(line)){ out.keyword = line.split(":").slice(1).join(":").trim(); continue; }
+
       if(/^REPORT\s*:/i.test(line)){
         i++;
         const buf = [];
@@ -862,11 +911,13 @@ Q: 你最近的睡眠比較像？
       const m1 = line.match(/^\-\s*(.+)$/);
       const m2 = line.match(/^\d+\s*[\)\.、]\s*(.+)$/);
       const opt = (m1 ? m1[1] : (m2 ? m2[1] : ""));
-      if(opt && cur) cur.a.push(opt.trim());
+      if(opt && cur){
+        cur.a.push(opt.trim());
+      }
     }
     if(cur) out.questions.push(cur);
 
-    if(out.questions.length===0) throw new Error("沒有讀到題目（請用 Q: 開頭）");
+    if(out.questions.length===0) throw new Error("沒有讀到題目（請確認有 Q: 開頭）");
 
     out.questions = out.questions.map((q, idx)=>{
       const a = (q.a||[]).map(x=>String(x||"").trim()).filter(Boolean);
@@ -878,7 +929,6 @@ Q: 你最近的睡眠比較像？
         return { q: q.q || "", a: a.slice(0,4) };
       }
     });
-
     return out;
   }
 
@@ -886,30 +936,10 @@ Q: 你最近的睡眠比較像？
     CURRENT = makeEmptySurvey();
     CURRENT.name = parsed.name || "";
     CURRENT.title = parsed.title || "";
+    CURRENT.keyword = parsed.keyword || "";
     CURRENT.reportHint = parsed.reportHint || "";
-    CURRENT.keywords = parsed.keywords || [];
     CURRENT.questions = parsed.questions || [];
     fillBuilder();
-  }
-
-  // ========= One-click Health Survey (no medical terms, short options) =========
-  function fillHealthSurvey(){
-    CURRENT.questions = [
-      { q:"你最想先改善哪一塊？", a:["睡眠","壓力","精神","腸胃","代謝","運動恢復","體力","皮膚"] },
-      { q:"你最近睡眠比較像？", a:["好","普通","淺","難入睡"] },
-      { q:"你起床後的感覺？", a:["清醒","還想睡","覺得累","腦袋鈍"] },
-      { q:"你白天精神狀態？", a:["穩定","下午掉","常分心","提不起勁"] },
-      { q:"你最近壓力感？", a:["低","中","偏高","很緊繃"] },
-      { q:"你運動/活動後？", a:["恢復快","普通","痠很久","懶得動"] },
-      { q:"你的飲食節奏？", a:["規律","時好時壞","常外食","常跳餐"] },
-      { q:"你喝水習慣？", a:["足夠","普通","偏少","想到才喝"] },
-      { q:"你最常遇到腸胃感？", a:["順","容易脹","不穩定","偏卡"] },
-      { q:"你最近作息？", a:["固定","偶爾晚睡","常熬夜","很亂"] },
-      { q:"你平常的放鬆方式？", a:["有固定","偶爾","很少","幾乎沒有"] },
-      { q:"你接下來最想要？", a:["更有精神","更好睡","更穩定","更輕盈"] },
-    ];
-    toast("已套用健康問卷");
-    renderQuestions();
   }
 
   // ========= Init =========
@@ -934,7 +964,12 @@ Q: 你最近的睡眠比較像？
   }
 
   function bindInputs(){
-    $("inName").oninput = ()=> updateClientBtn();
+    $("inName").oninput = ()=>{ updateClientBtn(); updateKwHint(); };
+    $("inTitle").oninput = ()=>{};
+    $("inReportHint").oninput = ()=>{};
+
+    $("inKeyword").oninput = ()=> updateKwHint();
+
     $("inLiffId").oninput = (e)=>{
       localStorage.setItem("line_liff_id", (e.target.value||"").trim());
       updateClientBtn();
@@ -950,7 +985,7 @@ Q: 你最近的睡眠比較像？
     $("btnNew").onclick = ()=>{
       CURRENT = makeEmptySurvey();
       fillBuilder();
-      toast("已建立新問卷");
+      toast("已建立新問卷（尚未儲存）");
       setTab("builder");
     };
 
@@ -958,8 +993,6 @@ Q: 你最近的睡眠比較像？
       CURRENT.questions.push({ q:"", a:["","","",""] });
       renderQuestions();
     };
-
-    $("btnFillHealth").onclick = fillHealthSurvey;
 
     $("btnPreviewRestart").onclick = ()=> startPreview();
     $("btnPreviewToLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
@@ -973,10 +1006,11 @@ Q: 你最近的睡眠比較像？
         $("txtStatus").className = "font-semibold text-emerald-700";
         $("txtLastSync").textContent = new Date().toLocaleString();
 
-        await loadKwMap().catch(()=>{ KW_MAP = {}; });
+        await refreshKwMap().catch(()=>{});
         await refreshSurveyList();
         await refreshLeads().catch(()=>{});
         updateClientBtn();
+        updateKwHint();
         toast("連線成功");
       }catch(e){
         $("txtStatus").textContent = "連線失敗";
@@ -987,11 +1021,24 @@ Q: 你最近的睡眠比較像？
 
     $("btnSave").onclick = async ()=>{
       try{
+        setApiBaseFromInput();
+        // 先拿最新 KW_MAP，避免你開兩個視窗時衝突
+        await refreshKwMap().catch(()=>{});
         await saveSurvey();
       }catch(e){
         toast(e.message,"err");
       }
     };
+
+    // copy link buttons
+    const doCopy = async ()=>{
+      const url = buildClientUrl();
+      if(!url) return toast("請先填 LIFF ID + 問卷檔名", "warn");
+      const ok = await copyText(url);
+      toast(ok ? "已複製" : "複製失敗", ok ? "ok" : "err");
+    };
+    $("btnCopyLink").onclick = doCopy;
+    $("btnCopyLinkTop").onclick = doCopy;
 
     // bulk
     $("btnBulk").onclick = openBulk;
@@ -999,30 +1046,42 @@ Q: 你最近的睡眠比較像？
     $("bulkModal").addEventListener("click", (e)=>{ if(e.target === $("bulkModal")) closeBulk(); });
 
     $("btnBulkExample").onclick = ()=>{
-      $("bulkText").value = `NAME: 健康分流_12題_v1
-TITLE: 三分鐘找出你最想改善的方向
-KEYWORDS: 健康,狀態,壓力
+      $("bulkText").value = `NAME: 健康問卷_第一版
+TITLE: 三分鐘了解你目前最想改善的方向
+KEYWORD: 健康問卷
 REPORT:
-我先用你的選擇整理成：1 個最優先方向＋2 個次要方向。
-我會給你 3 個立刻做得到的調整重點。
-如果你願意，回我「報告」，我再把你整理成一份更清楚的方向。
+我會用你的選擇整理成「一個優先方向＋兩個加分方向」。
+我會給你 3 個今天就能做的調整重點。
+如果你願意，回我「報告」，我幫你整理成更清楚的版本。
 ENDREPORT
 
-Q: 你最想先改善哪一塊？
+Q: 你現在最想先改善哪一塊？
 - 睡眠
 - 壓力
 - 精神
 - 腸胃
-- 代謝
-- 運動恢復
-- 體力
+- 體態
+- 運動
+- 免疫
 - 皮膚
 
-Q: 你最近睡眠比較像？
-- 好
-- 普通
-- 淺
-- 難入睡`;
+Q: 你最近睡得怎麼樣？
+- 一覺到天亮
+- 會醒幾次
+- 很難入睡
+- 醒來還是累
+
+Q: 你白天狀態比較像？
+- 精神穩定
+- 下午下滑
+- 注意力差
+- 常想躺
+
+Q: 你飲食習慣較像？
+- 三餐固定
+- 常外食
+- 常跳餐
+- 愛吃甜/炸`;
       toast("已塞入範例");
     };
 
