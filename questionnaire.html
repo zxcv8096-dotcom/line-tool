@@ -2,19 +2,22 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
   <title>AI 問卷後台（簡易版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff); font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body{
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
     .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    textarea { max-height: 55vh; }
-    .chip { display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border-radius:999px; border:1px solid #e2e8f0; background:rgba(255,255,255,.7); }
-    .chip b{ font-weight:700; color:#0f172a; }
-    .chip small{ color:#64748b; }
-    .chip button{ border:1px solid #e2e8f0; background:#fff; border-radius:999px; padding:.1rem .45rem; font-weight:700; }
-    .chip button:hover{ background:#f1f5f9; }
+    textarea { resize: vertical; }
+    /* 手機：modal 內文可滑、textarea 可滑、不卡住 */
+    .modal-safe { max-height: calc(100dvh - 32px); overflow: auto; -webkit-overflow-scrolling: touch; }
+    .ta-safe { max-height: 52dvh; overflow: auto; -webkit-overflow-scrolling: touch; }
+    .no-scrollbar::-webkit-scrollbar{ width: 8px; height: 8px; }
   </style>
 </head>
 
@@ -40,8 +43,8 @@
           <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
                  placeholder="https://api.xxx.workers.dev" />
           <div class="text-xs text-slate-500 mt-2">
-            問卷會存到 key：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
-            Leads 會存到：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>　
+            問卷：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
+            Leads：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>　
             關鍵字表：<span class="mono font-semibold">AI_SURVEY:KW_MAP</span>
           </div>
         </div>
@@ -53,7 +56,7 @@
 
       <div class="mt-3 grid md:grid-cols-3 gap-3">
         <div>
-          <label class="text-xs font-bold text-slate-500">LIFF ID（用來產生客戶入口網址）</label>
+          <label class="text-xs font-bold text-slate-500">LIFF ID</label>
           <input id="inLiffId" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：2001234567-abcDEF" />
         </div>
         <div class="md:col-span-2">
@@ -94,10 +97,6 @@
         <div class="mt-4 text-xs text-slate-500">
           Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
         </div>
-
-        <div class="mt-3 text-xs text-slate-500">
-          全域關鍵字已綁定：<span id="txtKwCount" class="mono font-semibold">0</span> 筆
-        </div>
       </aside>
 
       <!-- RIGHT -->
@@ -106,15 +105,13 @@
         <section id="tabBuilder" class="card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（看得懂版本）</h2>
+              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定</h2>
               <p class="text-sm text-slate-600 mt-1">第 1 題可多選項；第 2 題後每題固定 4 個選項。</p>
             </div>
             <div class="flex gap-2 flex-wrap">
               <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次貼上匯入</button>
               <button id="btnAddQ" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增題目</button>
-              <button id="btnOpenClientFromHere" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
-                產生客戶入口網址
-              </button>
+              <button id="btnOpenClientFromHere" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">產生客戶入口網址</button>
             </div>
           </div>
 
@@ -122,50 +119,35 @@
             <div>
               <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
               <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：健康需求分流_8題_第一版" />
-              <p class="text-xs text-slate-500 mt-2">你會在清單裡看到它，可切換讀取。</p>
             </div>
             <div>
               <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到的）</label>
               <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你目前最需要改善的方向" />
             </div>
 
-            <!-- KEYWORDS -->
+            <!-- ✅ 關鍵字（不佔版面、不說明） -->
             <div class="md:col-span-2 rounded-2xl border border-slate-200 bg-white/70 p-4">
               <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div>
-                  <div class="font-extrabold text-slate-900">啟動關鍵字（綁定這份問卷）</div>
-                  <div class="text-xs text-slate-600 mt-1">
-                    使用者在 LINE OA 打這些字，你的 Worker 就能導到此問卷。<br/>
-                    <b>規則：</b>全域唯一（別份問卷用過就會被擋住）｜支援多個關鍵字
-                  </div>
-                </div>
+                <div class="font-extrabold text-slate-900">啟動關鍵字</div>
                 <div class="flex gap-2 w-full md:w-auto">
-                  <input id="inKw" class="flex-1 md:w-72 px-4 py-2 rounded-xl border border-slate-200" placeholder="例如：健康問卷 / 睡眠問卷 / 腸胃問卷" />
+                  <input id="inKw" class="flex-1 md:w-72 px-4 py-2 rounded-xl border border-slate-200"
+                         placeholder="輸入關鍵字後按加入" />
                   <button id="btnAddKw" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">加入</button>
                 </div>
               </div>
-
-              <div class="mt-3 text-xs text-slate-500">
-                你目前這份問卷的關鍵字：
-              </div>
-              <div id="kwChips" class="mt-2 flex flex-wrap gap-2"></div>
-
-              <div class="mt-3 text-xs text-slate-500">
-                提醒：你按「儲存」時，會把關鍵字同步到 KV 的全域表 <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>
-              </div>
+              <div id="kwChips" class="mt-3 flex flex-wrap gap-2"></div>
             </div>
 
             <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">結尾報告模板（你想要的口吻）</label>
+              <label class="text-sm font-semibold text-slate-700">結尾報告模板</label>
               <textarea id="inReportHint" rows="4" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                placeholder="例如：用接地氣但專業的方式，整理他的答案 → 推薦 1~3 個方案方向，最後叫他回『報告』或點連結。"></textarea>
-              <p class="text-xs text-slate-500 mt-2">這段會出現在客戶完成後的報告中（你之後也可再改）。</p>
+                placeholder="例如：用接地氣但專業的方式整理他的答案 → 推薦 1~3 個方向，最後引導他回『報告』或點連結。"></textarea>
             </div>
           </div>
 
           <div class="mt-5">
             <h3 class="font-bold text-slate-900">題目列表</h3>
-            <div class="mt-1 text-xs text-slate-500">第 1 題可多選項；第 2 題後每題 4 選項（不夠會補空白）。</div>
+            <div class="mt-1 text-xs text-slate-500">第 1 題可多選項；第 2 題後每題 4 選項。</div>
             <div id="qWrap" class="mt-3 space-y-3"></div>
           </div>
         </section>
@@ -174,7 +156,7 @@
         <section id="tabPreview" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">② 預覽互動（你自己先試跑）</h2>
+              <h2 class="text-lg font-extrabold text-slate-900">② 預覽互動</h2>
               <p class="text-sm text-slate-600 mt-1">你可以像客戶一樣點選，確認流程和文字對不對。</p>
             </div>
             <div class="flex gap-2">
@@ -193,7 +175,7 @@
             </div>
 
             <div class="mt-4">
-              <h4 class="font-bold text-slate-900">你剛剛選的答案（預覽用）</h4>
+              <h4 class="font-bold text-slate-900">你剛剛選的答案</h4>
               <div id="pvAnswers" class="mt-2 text-sm text-slate-700 space-y-1"></div>
             </div>
 
@@ -226,57 +208,50 @@
     </div>
   </div>
 
-  <!-- BULK MODAL (mobile-friendly) -->
-  <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50">
-    <div class="h-full w-full overflow-auto">
-      <div class="max-w-3xl mx-auto p-4 md:p-8">
-        <div class="card rounded-2xl shadow border border-slate-200 p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-xl font-extrabold text-slate-900">批次貼上匯入</div>
-              <div class="text-sm text-slate-600 mt-1">貼上純文字，它會自動填入「檔名 / 標題 / 報告 / 題目 / 選項」</div>
-            </div>
-            <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
+  <!-- BULK MODAL -->
+  <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50 p-4">
+    <div class="max-w-3xl mx-auto modal-safe">
+      <div class="card rounded-2xl shadow border border-slate-200 p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-xl font-extrabold text-slate-900">批次貼上匯入</div>
           </div>
+          <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
+        </div>
 
-          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-            <div class="font-bold">格式範例：</div>
-<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 健康需求分流_8題_第一版
+        <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
+<pre class="p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 健康需求分流_8題_第一版
 TITLE: 三分鐘找出你目前最需要改善的方向
+KEYWORDS: 報告,問卷,健康檢測
 REPORT:
-我先用你的選擇，把狀況整理成「一個最優先方向＋兩個次要方向」。
-如果你願意，回我「報告」，我把你的結果整理成一份更清楚的方向給你。
+我先用你的選擇，把狀況整理成「最優先方向＋次要方向」。
+如果你願意，回我「報告」，我把你的結果整理成更清楚的方向給你。
 ENDREPORT
 
 Q: 你現在最想改善哪一塊？
 - 睡眠（難睡、淺眠、常醒）
-- 壓力（緊繃、焦慮、腦子停不下來）
-- 精神專注（容易累、注意力差、提不起勁）
-- 腸胃消化（脹、拉、便秘、容易不舒服）
-- 代謝/體重（容易胖、卡住、很難瘦）
-- 運動恢復（痠痛久、體力差、恢復慢）
-- 免疫支持（容易感冒、反覆不舒服）
-- 皮膚狀態（暗沉、乾、爆痘、敏感）
+- 壓力（緊繃、焦慮）
+- 精神專注（容易累、提不起勁）
+- 腸胃消化（脹、便秘、容易不舒服）
+- 代謝/體重（卡住、很難瘦）
+- 運動恢復（痠痛久、恢復慢）
+- 免疫支持（容易感冒）
+- 皮膚狀態（乾、敏感、暗沉）
 
 Q: 你最近的睡眠狀況比較像哪一種？
-- 很好：一覺到天亮，醒來有精神
-- 普通：能睡，但醒來還是覺得累
+- 很好：一覺到天亮
+- 普通：能睡但還是累
 - 淺眠：容易醒、睡不深
-- 難入睡：躺很久才睡著 / 會想很多</pre>
-          </div>
+- 難入睡：躺很久才睡著</pre>
+        </div>
 
-          <textarea id="bulkText" rows="14"
-            class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono resize-y overflow-auto"
-            placeholder="把你的問卷文字貼在這裡…"></textarea>
+        <textarea id="bulkText" rows="16"
+          class="ta-safe mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono no-scrollbar"
+          placeholder="把你的問卷文字貼在這裡…"></textarea>
 
-          <div class="mt-4 flex flex-wrap gap-2 justify-end">
-            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
-            <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用到後台</button>
-          </div>
-
-          <div class="mt-3 text-xs text-slate-500">
-            規則：第 1 題可多選項；第 2 題後每題只保留前 4 個選項（不足會補空白）。
-          </div>
+        <div class="mt-4 flex flex-wrap gap-2 justify-end">
+          <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
+          <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用到後台</button>
         </div>
       </div>
     </div>
@@ -286,15 +261,15 @@ Q: 你最近的睡眠狀況比較像哪一種？
   // ========= KV Keys =========
   const Q_PREFIX = "AI_SURVEY:Q:";
   const LEAD_PREFIX = "AI_SURVEY:LEAD:";
-  const KW_MAP_KEY = "AI_SURVEY:KW_MAP"; // 全域關鍵字表（keyword -> surveyName）
+  const KW_MAP_KEY = "AI_SURVEY:KW_MAP"; // { "關鍵字": "問卷檔名" }
 
   // ========= State =========
   let API_BASE = "";
-  let SURVEYS = [];     // list of {name}
+  let SURVEYS = [];
   let CURRENT = makeEmptySurvey();
   let PREVIEW = { idx: 0, answers: [] };
   let LEADS = [];
-  let KW_MAP = {};      // keyword -> surveyName
+  let KW_MAP = {}; // loaded from KV
 
   // ========= Helpers =========
   const $ = (id)=>document.getElementById(id);
@@ -318,8 +293,18 @@ Q: 你最近的睡眠狀況比較像哪一種？
       .replaceAll("'","&#039;");
   }
 
-  function normalizeKeyword(k){
-    return (k||"").trim().replace(/\s+/g," "); // 保留中文字，但把多空白壓成 1
+  function uniq(arr){
+    const seen = new Set();
+    const out = [];
+    for(const x of arr){
+      const k = String(x||"").trim();
+      if(!k) continue;
+      const key = k.toLowerCase();
+      if(seen.has(key)) continue;
+      seen.add(key);
+      out.push(k);
+    }
+    return out;
   }
 
   function makeEmptySurvey(){
@@ -327,11 +312,11 @@ Q: 你最近的睡眠狀況比較像哪一種？
       name: "",
       title: "",
       reportHint: "",
-      keywords: [], // ✅ 新增：這份問卷的啟動關鍵字
+      keywords: [], // ✅ 綁定關鍵字（多個）
       questions: [
-        { q:"你目前最明顯的狀況是？", a:["下午很累","睡醒還是累","精神不集中","最近壓力大"] },
-        { q:"你的睡眠狀況？", a:["很好","普通","很淺","常失眠"] },
-        { q:"你的飲食規律？", a:["規律","偶爾不規律","常外食","常跳餐"] },
+        { q:"你現在最想改善哪一塊？", a:["睡眠","壓力","精神專注","腸胃消化","代謝/體重","運動恢復","免疫支持","皮膚狀態"] },
+        { q:"你最近的睡眠狀況比較像哪一種？", a:["很好","普通","淺眠","難入睡"] },
+        { q:"你最近壓力感受？", a:["不大","偶爾","偏大","很大"] },
       ]
     };
   }
@@ -369,108 +354,90 @@ Q: 你最近的睡眠狀況比較像哪一種？
 
   // ========= KW MAP =========
   async function loadKwMap(){
-    // 可能不存在：就當空物件
+    // 兼容：不存在就 {}
     try{
-      const r = await api("/loadAny", { namespace:"DB", keyword: KW_MAP_KEY });
-      const payload = r.payload || r;
+      const loaded = await api("/loadAny", { namespace:"DB", keyword: KW_MAP_KEY });
+      const payload = loaded.payload || loaded;
       KW_MAP = (payload && typeof payload === "object") ? payload : {};
     }catch{
       KW_MAP = {};
     }
-    $("txtKwCount").textContent = String(Object.keys(KW_MAP||{}).length);
   }
 
-  function renderKeywords(){
+  async function saveKwMap(){
+    await api("/putAny", { namespace:"DB", keyword: KW_MAP_KEY, payload: KW_MAP });
+  }
+
+  function normalizeKeyword(s){
+    return String(s||"").trim();
+  }
+
+  function renderKwChips(){
     const wrap = $("kwChips");
     wrap.innerHTML = "";
-    const list = Array.isArray(CURRENT.keywords) ? CURRENT.keywords : [];
-    if(list.length === 0){
+    const kws = Array.isArray(CURRENT.keywords) ? CURRENT.keywords : [];
+    if(kws.length===0){
       const d = document.createElement("div");
-      d.className = "text-sm text-slate-600";
-      d.textContent = "（尚未設定）你可以加入：健康問卷 / 睡眠問卷 / 腸胃問卷…";
+      d.className = "text-sm text-slate-500";
+      d.textContent = "（尚未加入）";
       wrap.appendChild(d);
       return;
     }
 
-    list.forEach((kw, idx)=>{
-      const owner = KW_MAP[kw];
-      const ok = !owner || owner === (CURRENT.name || $("inName").value || "").trim();
-      const chip = document.createElement("div");
-      chip.className = "chip " + (ok ? "" : "border-rose-200 bg-rose-50");
-      chip.innerHTML = `
-        <b>${escapeHtml(kw)}</b>
-        <small>${ok ? "可用" : ("已被「" + escapeHtml(owner||"") + "」使用")}</small>
-        <button title="移除">×</button>
-      `;
-      chip.querySelector("button").onclick = ()=>{
-        CURRENT.keywords.splice(idx, 1);
-        renderKeywords();
+    kws.forEach((kw)=>{
+      const chip = document.createElement("button");
+      chip.className = "px-3 py-2 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-100 font-semibold text-sm hover:bg-indigo-100";
+      chip.textContent = kw + "  ×";
+      chip.onclick = ()=>{
+        CURRENT.keywords = CURRENT.keywords.filter(x => x !== kw);
+        renderKwChips();
       };
       wrap.appendChild(chip);
     });
   }
 
-  function tryAddKeyword(){
-    const raw = $("inKw").value || "";
-    let kw = normalizeKeyword(raw);
-    if(!kw) return toast("請輸入關鍵字", "warn");
+  function tryAddKeyword(raw){
+    const kw = normalizeKeyword(raw);
+    if(!kw) return;
 
-    // 不允許一些容易誤觸的字
-    if(kw.length < 2) return toast("關鍵字太短（至少 2 個字）", "warn");
-
-    // 這份問卷的檔名（尚未存也用輸入框）
-    const currentName = (($("inName").value||"").trim() || CURRENT.name || "").trim();
-
-    // 還沒填問卷檔名就先擋（因為要綁定）
-    if(!currentName) return toast("請先填『問卷檔名』再加關鍵字", "warn");
-
-    // 同份不重複
-    CURRENT.keywords = Array.isArray(CURRENT.keywords) ? CURRENT.keywords : [];
-    if(CURRENT.keywords.includes(kw)) return toast("這個關鍵字已在此問卷中", "warn");
-
-    // 全域唯一檢查：如果 kw 已被別份問卷用過 => 擋
-    const owner = KW_MAP[kw];
-    if(owner && owner !== currentName){
-      return toast(`關鍵字「${kw}」已被「${owner}」使用，請換一個`, "err");
+    const name = ($("inName").value||CURRENT.name||"").trim();
+    if(!name){
+      toast("先填問卷檔名", "warn");
+      return;
     }
 
-    CURRENT.keywords.push(kw);
+    const owner = KW_MAP[String(kw)];
+    if(owner && owner !== name){
+      toast("關鍵字已被使用", "warn");
+      return;
+    }
+
+    const list = uniq([...(CURRENT.keywords||[]), kw]);
+    CURRENT.keywords = list;
+
+    // 先暫存到 KW_MAP（儲存時會正式寫回）
+    KW_MAP[String(kw)] = name;
+
     $("inKw").value = "";
-    renderKeywords();
-    toast("已加入關鍵字：" + kw);
+    renderKwChips();
   }
 
-  async function saveKwMapForCurrent(previousKeywords){
-    // previousKeywords: 這份問卷之前的 keywords（用於換檔名/刪關鍵字時清理）
-    const name = (($("inName").value||"").trim() || CURRENT.name || "").trim();
-    if(!name) throw new Error("缺少問卷檔名，無法寫入關鍵字表");
+  function reconcileKwMapForCurrent(){
+    const name = ($("inName").value||CURRENT.name||"").trim();
+    if(!name) return;
 
-    // 重新抓一次最新 KW_MAP，避免多人/多開頁面衝突
-    await loadKwMap();
-
-    const nowKeywords = (CURRENT.keywords||[]).map(normalizeKeyword).filter(Boolean);
-
-    // 先驗：任何 nowKeywords 若已屬於他問卷，擋
-    for(const kw of nowKeywords){
-      const owner = KW_MAP[kw];
-      if(owner && owner !== name){
-        throw new Error(`關鍵字「${kw}」已被「${owner}」使用，請先移除或換關鍵字`);
+    // 1) 先移除 KW_MAP 中「指向本問卷」但本問卷 keywords 已移除的
+    const currentSet = new Set((CURRENT.keywords||[]).map(x=>String(x)));
+    for(const [kw, owner] of Object.entries(KW_MAP||{})){
+      if(owner === name && !currentSet.has(kw)){
+        delete KW_MAP[kw];
       }
     }
 
-    // 清掉這份問卷舊的綁定（以 previousKeywords 為準）
-    const prev = (previousKeywords||[]).map(normalizeKeyword).filter(Boolean);
-    for(const kw of prev){
-      if(KW_MAP[kw] === name) delete KW_MAP[kw];
-    }
-
-    // 再寫入新的
-    for(const kw of nowKeywords){
-      KW_MAP[kw] = name;
-    }
-
-    await api("/putAny", { namespace:"DB", keyword: KW_MAP_KEY, payload: KW_MAP });
-    $("txtKwCount").textContent = String(Object.keys(KW_MAP||{}).length);
+    // 2) 再把本問卷 keywords 加回 KW_MAP（避免漏）
+    (CURRENT.keywords||[]).forEach(kw=>{
+      KW_MAP[String(kw)] = name;
+    });
   }
 
   // ========= Survey list =========
@@ -525,7 +492,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
       s.name = obj.name || s.name;
       s.title = obj.title || s.title;
       s.reportHint = obj.reportHint || obj.reportHint;
-      s.keywords = Array.isArray(obj.keywords) ? obj.keywords.map(normalizeKeyword).filter(Boolean) : [];
+      s.keywords = Array.isArray(obj.keywords) ? uniq(obj.keywords) : [];
       if(Array.isArray(obj.questions)) s.questions = obj.questions.map(q=>({
         q: (q.q||"").toString(),
         a: Array.isArray(q.a) ? q.a.map(x=>(x||"").toString()) : []
@@ -552,7 +519,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
     $("inName").value = CURRENT.name || "";
     $("inTitle").value = CURRENT.title || "";
     $("inReportHint").value = CURRENT.reportHint || "";
-    renderKeywords();
+    renderKwChips();
     renderQuestions();
     updateClientBtn();
   }
@@ -581,7 +548,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
         <input class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" data-k="q" placeholder="請輸入題目" />
 
         <div class="mt-3 flex items-center justify-between">
-          <div class="text-xs text-slate-500">${isFirst ? "第 1 題選項數可多（預覽會顯示全部）" : "固定 4 個選項"}</div>
+          <div class="text-xs text-slate-500">${isFirst ? "" : ""}</div>
           ${isFirst ? `<button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="addopt">+ 加選項</button>` : ``}
         </div>
 
@@ -592,8 +559,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
       box.querySelector('[data-k="q"]').value = item.q || "";
       box.querySelector('[data-k="q"]').oninput = (e)=>{ item.q = e.target.value; };
 
-      // options
-      const optWrap = box.querySelector("[data-optwrap]");
+      // options normalize
       const a = item.a || [];
       if(isFirst){
         while(a.length<4) a.push("");
@@ -603,10 +569,12 @@ Q: 你最近的睡眠狀況比較像哪一種？
         item.a = a.slice(0,4);
       }
 
+      const optWrap = box.querySelector("[data-optwrap]");
       const drawOptions = ()=>{
         optWrap.innerHTML = "";
         const list = item.a || [];
         const n = isFirst ? list.length : 4;
+
         for(let i=0;i<n;i++){
           const div = document.createElement("div");
           div.innerHTML = `
@@ -668,9 +636,15 @@ Q: 你最近的睡眠狀況比較像哪一種？
     if(!title) throw new Error("請先填『問卷標題』");
     if(CURRENT.questions.length<1) throw new Error("至少要有 1 題");
 
-    // 關鍵字至少 1 個（你想要也可以改成可為空，我先照「啟動問卷」直覺：至少要一個）
-    const kws = (CURRENT.keywords||[]).map(normalizeKeyword).filter(Boolean);
-    if(kws.length < 1) throw new Error("請至少加入 1 個『啟動關鍵字』");
+    // keywords 先整理
+    CURRENT.keywords = uniq(CURRENT.keywords||[]);
+    if((CURRENT.keywords||[]).length === 0) throw new Error("請加入至少 1 個啟動關鍵字");
+
+    // keyword uniqueness check (using KW_MAP)
+    for(const kw of CURRENT.keywords){
+      const owner = KW_MAP[String(kw)];
+      if(owner && owner !== name) throw new Error("關鍵字已被使用");
+    }
 
     CURRENT.questions.forEach((q,i)=>{
       if(!(q.q||"").trim()) throw new Error(`第 ${i+1} 題題目是空的`);
@@ -683,15 +657,10 @@ Q: 你最近的睡眠狀況比較像哪一種？
   }
 
   async function saveSurvey(){
-    // 先記錄這份問卷「儲存前」的 keywords（用於清理全域 KW_MAP）
-    const previousKeywords = Array.isArray(CURRENT.keywords) ? CURRENT.keywords.slice() : [];
-
-    validateSurvey();
-
+    // 同步 CURRENT ← inputs
     CURRENT.name = ($("inName").value||"").trim();
     CURRENT.title = ($("inTitle").value||"").trim();
     CURRENT.reportHint = ($("inReportHint").value||"").trim();
-    CURRENT.keywords = (CURRENT.keywords||[]).map(normalizeKeyword).filter(Boolean);
 
     // 第 2 題後固定 4
     CURRENT.questions = CURRENT.questions.map((q, idx)=>{
@@ -705,21 +674,24 @@ Q: 你最近的睡眠狀況比較像哪一種？
       return { q:q.q, a:a.slice(0,4) };
     });
 
-    // ✅ 先更新全域關鍵字表（會做唯一檢查）
-    await saveKwMapForCurrent(previousKeywords);
+    // ✅ 先確保 KW_MAP 最新 & 檢查
+    await loadKwMap();
+    reconcileKwMapForCurrent();
+    validateSurvey();
 
-    // ✅ 再存問卷本體
+    // ✅ 先存問卷
     await api("/putAny", {
       namespace: "DB",
       keyword: Q_PREFIX + CURRENT.name,
       payload: CURRENT
     });
 
+    // ✅ 再存 KW_MAP（關鍵字→問卷名）
+    await saveKwMap();
+
     toast("已儲存問卷：" + CURRENT.name);
     $("txtLastSync").textContent = new Date().toLocaleString();
     await refreshSurveyList();
-    await loadKwMap();      // 讓 KW_MAP 顯示最新
-    renderKeywords();       // 重新渲染 chip 狀態
   }
 
   // ========= Preview =========
@@ -789,7 +761,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
   function buildReportPreview(){
     const hint = ($("inReportHint").value||CURRENT.reportHint||"").trim();
     const bullets = PREVIEW.answers.map(x=>`- ${x.q}：${x.a}`).join("\n");
-    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || "（你尚未填結尾報告模板）"}\n\n【下一步】\n回我『報告』我幫你整理成一份更精準的方案。`;
+    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || ""}\n\n【下一步】\n回我『報告』我幫你整理成一份更精準的方案。`;
   }
 
   // ========= Leads =========
@@ -878,14 +850,14 @@ Q: 你最近的睡眠狀況比較像哪一種？
 
     btn.classList.remove("hidden");
     btn.onclick = ()=> {
-      if(!name) return toast("請先填問卷檔名（才能產生 survey 參數）", "warn");
+      if(!name) return toast("請先填問卷檔名", "warn");
       window.open(url, "_blank");
     };
 
     btn2.onclick = ()=> {
-      if(!name) return toast("請先填問卷檔名（才能產生 survey 參數）", "warn");
-      prompt("把這段貼到 RichMenu / Flex 連結：", url);
-      toast("已產生入口網址（已顯示可複製）");
+      if(!name) return toast("請先填問卷檔名", "warn");
+      prompt("", url);
+      toast("已產生入口網址");
     };
   }
 
@@ -895,16 +867,20 @@ Q: 你最近的睡眠狀況比較像哪一種？
 
   function parseBulk(text){
     const lines = (text||"").replace(/\r/g,"").split("\n");
-    const out = { name:"", title:"", reportHint:"", questions:[] };
+    const out = { name:"", title:"", reportHint:"", keywords:[], questions:[] };
 
     let i=0;
-    // read header
     for(; i<lines.length; i++){
       const line = (lines[i]||"").trim();
       if(!line) continue;
 
       if(/^NAME\s*:/i.test(line)){ out.name = line.split(":").slice(1).join(":").trim(); continue; }
       if(/^TITLE\s*:/i.test(line)){ out.title = line.split(":").slice(1).join(":").trim(); continue; }
+      if(/^KEYWORDS\s*:/i.test(line)){
+        const rhs = line.split(":").slice(1).join(":").trim();
+        out.keywords = uniq(rhs.split(/[，,]/g).map(x=>x.trim()));
+        continue;
+      }
       if(/^REPORT\s*:/i.test(line)){
         i++;
         const buf = [];
@@ -916,11 +892,9 @@ Q: 你最近的睡眠狀況比較像哪一種？
         out.reportHint = buf.join("\n").trim();
         continue;
       }
-      // start questions
       if(/^Q\s*:/i.test(line) || /^第\s*\d+\s*題[:：]/.test(line)) break;
     }
 
-    // read questions
     let cur = null;
     for(; i<lines.length; i++){
       const raw = lines[i] ?? "";
@@ -935,18 +909,15 @@ Q: 你最近的睡眠狀況比較像哪一種？
         continue;
       }
 
-      // option line: "- xxx" or "1) xxx" or "1. xxx"
       const m1 = line.match(/^\-\s*(.+)$/);
       const m2 = line.match(/^\d+\s*[\)\.、]\s*(.+)$/);
       const opt = (m1 ? m1[1] : (m2 ? m2[1] : ""));
-      if(opt && cur){
-        cur.a.push(opt.trim());
-      }
+      if(opt && cur) cur.a.push(opt.trim());
     }
     if(cur) out.questions.push(cur);
 
-    // normalize
-    if(out.questions.length===0) throw new Error("沒有讀到題目（請確認有 Q: 開頭）");
+    if(out.questions.length===0) throw new Error("沒有讀到題目");
+
     out.questions = out.questions.map((q, idx)=>{
       const a = (q.a||[]).map(x=>String(x||"").trim()).filter(Boolean);
       if(idx===0){
@@ -957,17 +928,32 @@ Q: 你最近的睡眠狀況比較像哪一種？
         return { q: q.q || "", a: a.slice(0,4) };
       }
     });
+
     return out;
   }
 
-  function applyBulkToCurrent(parsed){
+  async function applyBulkToCurrent(parsed){
+    // 先抓 KW_MAP，才知道有沒有被占用
+    await loadKwMap();
+
     CURRENT = makeEmptySurvey();
     CURRENT.name = parsed.name || "";
     CURRENT.title = parsed.title || "";
     CURRENT.reportHint = parsed.reportHint || "";
     CURRENT.questions = parsed.questions || [];
-    // keywords 不會自動產生，讓你手動加，避免誤綁
-    CURRENT.keywords = [];
+    CURRENT.keywords = uniq(parsed.keywords || []);
+
+    // 檢查 keyword 占用（如果被別份問卷用掉就直接移除，不讓卡死）
+    const name = CURRENT.name || ($("inName").value||"").trim();
+    if(name){
+      CURRENT.keywords = CURRENT.keywords.filter(kw=>{
+        const owner = KW_MAP[String(kw)];
+        return (!owner || owner === name);
+      });
+    }else{
+      CURRENT.keywords = [];
+    }
+
     fillBuilder();
   }
 
@@ -993,7 +979,13 @@ Q: 你最近的睡眠狀況比較像哪一種？
   }
 
   function bindInputs(){
-    $("inName").oninput = ()=>{ updateClientBtn(); renderKeywords(); };
+    $("inName").oninput = async ()=>{
+      updateClientBtn();
+      // 檔名變更：把 CURRENT.name 跟 KW_MAP owner 重新對齊（只對當前問卷的 keywords）
+      CURRENT.name = ($("inName").value||"").trim();
+      renderKwChips();
+    };
+
     $("inLiffId").oninput = (e)=>{
       localStorage.setItem("line_liff_id", (e.target.value||"").trim());
       updateClientBtn();
@@ -1030,11 +1022,10 @@ Q: 你最近的睡眠狀況比較像哪一種？
         $("txtStatus").className = "font-semibold text-emerald-700";
         $("txtLastSync").textContent = new Date().toLocaleString();
 
-        await loadKwMap();           // ✅ 先載全域關鍵字表
+        await loadKwMap();
         await refreshSurveyList();
         await refreshLeads().catch(()=>{});
         updateClientBtn();
-        renderKeywords();
         toast("連線成功");
       }catch(e){
         $("txtStatus").textContent = "連線失敗";
@@ -1052,15 +1043,6 @@ Q: 你最近的睡眠狀況比較像哪一種？
       }
     };
 
-    // keywords
-    $("btnAddKw").onclick = tryAddKeyword;
-    $("inKw").addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){
-        e.preventDefault();
-        tryAddKeyword();
-      }
-    });
-
     // bulk
     $("btnBulk").onclick = openBulk;
     $("btnBulkClose").onclick = closeBulk;
@@ -1069,40 +1051,67 @@ Q: 你最近的睡眠狀況比較像哪一種？
     $("btnBulkExample").onclick = ()=>{
       $("bulkText").value = `NAME: 健康需求分流_8題_第一版
 TITLE: 三分鐘找出你目前最需要改善的方向
+KEYWORDS: 報告,問卷,健康檢測
 REPORT:
-我先用你的選擇，把狀況整理成「一個最優先方向＋兩個次要方向」。
+我先用你的選擇，把狀況整理成「最優先方向＋次要方向」。
 我會給你 3 個立刻做得到的調整重點。
-如果你願意，回我「報告」，我把你的結果整理成一份更清楚的方向給你。
+如果你願意，回我「報告」，我把你的結果整理成更清楚的方向給你。
 ENDREPORT
 
 Q: 你現在最想改善哪一塊？
 - 睡眠（難睡、淺眠、常醒）
-- 壓力（緊繃、焦慮、腦子停不下來）
-- 精神專注（容易累、注意力差、提不起勁）
-- 腸胃消化（脹、拉、便秘、容易不舒服）
-- 代謝/體重（容易胖、卡住、很難瘦）
-- 運動恢復（痠痛久、體力差、恢復慢）
-- 免疫支持（容易感冒、反覆不舒服）
-- 皮膚狀態（暗沉、乾、爆痘、敏感）
+- 壓力（緊繃、焦慮）
+- 精神專注（容易累、提不起勁）
+- 腸胃消化（脹、便秘、容易不舒服）
+- 代謝/體重（卡住、很難瘦）
+- 運動恢復（痠痛久、恢復慢）
+- 免疫支持（容易感冒）
+- 皮膚狀態（乾、敏感、暗沉）
 
 Q: 你最近的睡眠狀況比較像哪一種？
-- 很好：一覺到天亮，醒來有精神
-- 普通：能睡，但醒來還是覺得累
+- 很好：一覺到天亮
+- 普通：能睡但還是累
 - 淺眠：容易醒、睡不深
-- 難入睡：躺很久才睡著 / 會想很多`;
-      toast("已塞入範例（你可直接改字）");
+- 難入睡：躺很久才睡著
+
+Q: 你最近壓力感受？
+- 不大：大致放鬆
+- 偶爾：事情多會緊
+- 偏大：常覺得卡住
+- 很大：一直繃著或焦慮`;
+      toast("已塞入範例");
     };
 
-    $("btnBulkApply").onclick = ()=>{
+    $("btnBulkApply").onclick = async ()=>{
       try{
         const parsed = parseBulk($("bulkText").value || "");
-        applyBulkToCurrent(parsed);
+        await applyBulkToCurrent(parsed);
         closeBulk();
-        toast("已套用匯入內容（記得設定關鍵字、再按儲存）", "warn");
+        toast("已套用匯入內容（記得按儲存）");
       }catch(e){
         toast(e.message, "err");
       }
     };
+
+    // keywords UI
+    $("btnAddKw").onclick = async ()=>{
+      try{
+        // 確保已載入 KW_MAP（第一次用）
+        if(!KW_MAP || typeof KW_MAP !== "object") await loadKwMap();
+        const v = $("inKw").value || "";
+        tryAddKeyword(v);
+      }catch(e){
+        toast(e.message, "err");
+      }
+    };
+
+    $("inKw").addEventListener("keydown", async (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        if(!KW_MAP || typeof KW_MAP !== "object") await loadKwMap();
+        tryAddKeyword($("inKw").value || "");
+      }
+    });
   }
 
   (function init(){
