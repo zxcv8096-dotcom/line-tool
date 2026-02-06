@@ -3,348 +3,213 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AI 問卷後台（簡單版）</title>
+  <title>AI 問卷後台（簡易版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body{
-      background: linear-gradient(135deg,#f8fafc,#eef2ff,#ecfeff);
-      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    }
-    .card{ background: rgba(255,255,255,.86); backdrop-filter: blur(10px); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .shadowSoft{ box-shadow: 0 12px 40px rgba(15,23,42,.10); }
-    .toast{ animation: pop .15s ease-out; }
-    @keyframes pop{ from{ transform: translateY(6px); opacity:.6 } to{ transform: translateY(0); opacity:1 } }
+    body { background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff); font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .btn { @apply px-4 py-2 rounded-xl font-semibold; }
   </style>
 </head>
 
 <body class="min-h-screen">
   <div class="max-w-6xl mx-auto p-4 md:p-8">
-    <!-- Header -->
-    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-slate-700 text-xs">
-          無密碼｜沿用你原本 Worker｜一般人可用
-        </div>
-        <h1 class="text-2xl md:text-3xl font-black text-slate-900 mt-2">AI 問卷後台（超簡單版）</h1>
-        <p class="text-slate-600 mt-1">照順序填完 1～5 步 → 按「儲存」→ 直接用在 LINE OA。</p>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（簡易版）</h1>
+        <p class="text-slate-600 mt-1">不看 JSON、可預覽互動、可存多份、可看 Leads（含大頭照與 userId）</p>
       </div>
       <div class="flex gap-2">
-        <button id="btnLoad" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
-          載入
-        </button>
-        <button id="btnSave" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
-          儲存
+        <button id="btnOpenClient" class="hidden px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
+          開啟客戶前台（LIFF 問卷）
         </button>
       </div>
     </header>
 
-    <!-- Step 0 -->
-    <section class="card shadowSoft rounded-2xl p-5 border border-slate-200 mb-4">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-        <div class="flex-1">
-          <h2 class="text-lg font-extrabold text-slate-900">0）先貼上你的 Worker 網址</h2>
-          <p class="text-slate-600 text-sm mt-1">你只要貼一次，之後會自動記住。</p>
-          <input id="apiBase" class="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 placeholder="https://api.xxx.workers.dev">
+    <!-- CONNECT -->
+    <section class="card rounded-2xl shadow p-5 mb-4 border border-slate-200">
+      <div class="grid md:grid-cols-3 gap-4 items-end">
+        <div class="md:col-span-2">
+          <label class="text-sm font-semibold text-slate-700">Worker 網址（會抓首頁的 line_worker_url）</label>
+          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 placeholder="https://api.xxx.workers.dev" />
           <div class="text-xs text-slate-500 mt-2">
-            設定會存到 KV(DB) 的 key：<span class="mono font-semibold">AI_SURVEY:CONFIG</span>，
-            Leads key 前綴：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
+            問卷會存到 key：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
+            Leads 會存到：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
           </div>
         </div>
         <div class="flex gap-2">
-          <button id="btnCheck" class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
-            測試連線
-          </button>
+          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線</button>
+          <button id="btnSave" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">儲存</button>
+        </div>
+      </div>
+
+      <div class="mt-3 grid md:grid-cols-3 gap-3">
+        <div>
+          <label class="text-xs font-bold text-slate-500">LIFF ID（用來產生客戶入口網址）</label>
+          <input id="inLiffId" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：2001234567-abcDEF" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="text-xs font-bold text-slate-500">客戶問卷頁檔名（固定）</label>
+          <input disabled class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono bg-slate-50" value="liff_survey.html" />
         </div>
       </div>
 
       <div class="mt-3 text-xs text-slate-500">
-        目前 API：<span id="txtApi" class="mono">-</span> ｜最後同步：<span id="txtSync" class="mono">-</span>
+        狀態：<span id="txtStatus" class="font-semibold">未連線</span>　
+        最後同步：<span id="txtLastSync" class="mono">-</span>
       </div>
     </section>
 
-    <!-- Main -->
     <div class="grid lg:grid-cols-3 gap-4">
-      <!-- Left: guide -->
-      <aside class="card shadowSoft rounded-2xl p-5 border border-slate-200 h-fit lg:sticky lg:top-4">
-        <h3 class="font-extrabold text-slate-900">你要做的事（照順序）</h3>
-        <ol class="mt-3 space-y-2 text-sm text-slate-700">
-          <li class="flex gap-2"><span class="font-black text-indigo-600">1</span> 設定「問卷連結、加好友連結、結尾說詞」</li>
-          <li class="flex gap-2"><span class="font-black text-indigo-600">2</span> 填「你要賣的產品/方案」</li>
-          <li class="flex gap-2"><span class="font-black text-indigo-600">3</span> 填「推薦規則」讓 AI 不亂推</li>
-          <li class="flex gap-2"><span class="font-black text-indigo-600">4</span> 一鍵建立「LINE 測試關鍵字：報告」</li>
-          <li class="flex gap-2"><span class="font-black text-indigo-600">5</span> 看 Leads（做過問卷的名單）</li>
-        </ol>
-
-        <div class="mt-5 p-4 rounded-2xl bg-white border border-slate-200">
-          <div class="text-sm font-bold text-slate-900">最快測試方式</div>
-          <div class="text-sm text-slate-700 mt-2 leading-relaxed">
-            先按 <span class="font-semibold">「一鍵套用範例」</span> → 再按 <span class="font-semibold">儲存</span> → 到 LINE 打 <span class="font-semibold">「報告」</span>。
+      <!-- LEFT -->
+      <aside class="card rounded-2xl shadow p-4 border border-slate-200 h-fit lg:sticky lg:top-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500">問卷清單</div>
+            <div class="text-sm text-slate-900 font-semibold">（可存多份檔案）</div>
           </div>
+          <button id="btnNew" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增問卷</button>
         </div>
 
-        <div class="mt-4 grid grid-cols-2 gap-2">
-          <button id="btnFillExample" class="px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">
-            一鍵套用範例
-          </button>
-          <button id="btnClear" class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
-            清空
-          </button>
+        <div class="mt-3">
+          <input id="qSearch" class="w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋問卷名稱…" />
+        </div>
+
+        <div id="surveyList" class="mt-3 space-y-2"></div>
+
+        <hr class="my-4 border-slate-200" />
+
+        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定</button>
+        <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 預覽互動</button>
+        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads 報告</button>
+
+        <div class="mt-4 text-xs text-slate-500">
+          Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
         </div>
       </aside>
 
-      <!-- Right -->
+      <!-- RIGHT -->
       <main class="lg:col-span-2 space-y-4">
-        <!-- Step 1: basic -->
-        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">1）系統設定（客戶會看到的連結）</h2>
-              <p class="text-sm text-slate-600 mt-1">先填這一區，最重要。</p>
-            </div>
-            <button id="btnOpenPublic" class="hidden px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold" target="_blank">
-              開啟前台
-            </button>
-          </div>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-semibold text-slate-700">前台網址（問答頁 URL）</label>
-              <input id="publicUrl" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="https://你的網域/survey">
-              <p class="text-xs text-slate-500 mt-2">你之後要讓「圖片/按鈕」導到這個網址。</p>
-            </div>
-            <div>
-              <label class="text-sm font-semibold text-slate-700">LINE 加好友連結（可選）</label>
-              <input id="addFriendUrl" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="https://lin.ee/xxxxxxx">
-            </div>
-
-            <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">AI 結尾 CTA（最後一段要怎麼引導）</label>
-              <textarea id="ctaTemplate" rows="6" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-placeholder="範例：
-我把你的狀況整理成一份「簡單方向」給你（不推銷，先讓你看方向）。
-1) 點這裡看方案：{{public_url}}
-2) 或直接加我 LINE：{{add_friend_url}}
-回我『方案』我就幫你做。"></textarea>
-              <div class="text-xs text-slate-500 mt-2">可用變數：<span class="mono">{{public_url}}</span>、<span class="mono">{{add_friend_url}}</span></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Step 2: survey style -->
-        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
-          <h2 class="text-lg font-extrabold text-slate-900">2）AI 問答設定（AI 要怎麼問）</h2>
-          <p class="text-sm text-slate-600 mt-1">你不用寫很專業，照範例改幾個字就行。</p>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-semibold text-slate-700">問卷標題（給你自己看）</label>
-              <input id="surveyTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你為什麼一直累">
-            </div>
-            <div>
-              <label class="text-sm font-semibold text-slate-700">建議題數</label>
-              <input id="surveyTurns" type="number" min="3" max="12" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200">
-            </div>
-
-            <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">AI 風格（不用懂，照範例改）</label>
-              <textarea id="surveyPrompt" rows="10" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-placeholder="你是健康狀態引導顧問，用繁中，語氣接地氣但專業。
-不做醫療診斷，不誇大療效，只用：支持/幫助/維持/改善習慣。
-每次只問一題，每題給 3~5 個可點選選項（短句）。
-最後輸出：狀態分類、可能原因、建議方向、推薦產品、下一步 CTA。"></textarea>
-              <p class="text-xs text-slate-500 mt-2">建議避免：診斷/治療/保證/一定有效 等字眼。</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Step 3: products simple -->
-        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">3）產品清單（你要 AI 推什麼）</h2>
-              <p class="text-sm text-slate-600 mt-1">一個產品＝一行。先放 2~3 個測試就好。</p>
-            </div>
-            <button id="btnAddProduct" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
-              + 新增一個產品
-            </button>
-          </div>
-
-          <div id="productList" class="mt-4 space-y-3"></div>
-
-          <template id="tplProduct">
-            <div class="rounded-2xl border border-slate-200 bg-white p-4">
-              <div class="grid md:grid-cols-2 gap-3">
-                <div>
-                  <label class="text-xs font-bold text-slate-600">產品名稱</label>
-                  <input data-k="name" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 font-semibold" placeholder="例如：能量支持方案">
-                </div>
-                <div>
-                  <label class="text-xs font-bold text-slate-600">SKU/代碼（你自己看）</label>
-                  <input data-k="sku" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：P001">
-                </div>
-
-                <div>
-                  <label class="text-xs font-bold text-slate-600">標籤（用逗號）</label>
-                  <input data-k="tags" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="疲勞,睡眠,腸胃">
-                </div>
-                <div>
-                  <label class="text-xs font-bold text-slate-600">產品/方案連結</label>
-                  <input data-k="link" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" placeholder="https://你的landingpage">
-                </div>
-
-                <div class="md:col-span-2">
-                  <label class="text-xs font-bold text-slate-600">一句話說明（別寫療效）</label>
-                  <textarea data-k="desc" rows="2" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200"
-                    placeholder="例如：支持日常能量與精神狀態，適合忙碌、作息不穩者。"></textarea>
-                </div>
-              </div>
-
-              <div class="mt-3 flex gap-2 justify-end">
-                <button data-act="up" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">上移</button>
-                <button data-act="down" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">下移</button>
-                <button data-act="del" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪除</button>
-              </div>
-            </div>
-          </template>
-        </section>
-
-        <!-- Step 4: rules -->
-        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">4）推薦規則（讓 AI 不亂推）</h2>
-              <p class="text-sm text-slate-600 mt-1">你只要改「關鍵字」和「SKU」就好。</p>
-            </div>
-            <button id="btnRuleExample" class="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">
-              套用規則範例
-            </button>
-          </div>
-
-          <textarea id="rulesJson" rows="14" class="mt-4 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-placeholder='[
-  {
-    "if_any_keywords": ["疲勞", "精神差", "下午累", "提不起勁"],
-    "recommend_skus": ["P001","P002"],
-    "summary_title": "能量下滑型",
-    "summary_hint": "偏向作息/壓力/能量利用不足的組合，建議先把節奏穩定，再做支持。"
-  }
-]'></textarea>
-
-          <div class="mt-2 text-xs text-slate-500">
-            這段必須是合法 JSON。你不想碰它也行：先用範例測通再說。
-          </div>
-        </section>
-
-        <!-- Step 5: build LINE test keywords -->
-        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
-          <h2 class="text-lg font-extrabold text-slate-900">5）一鍵建立 LINE 測試關鍵字（不用你寫任何 code）</h2>
-          <p class="text-sm text-slate-600 mt-1">
-            按一次就會幫你在 KV(DB) 建 4 個關鍵字：<span class="mono">報告</span>、<span class="mono">__AI_Q1__</span>、<span class="mono">__AI_Q2__:精神疲勞</span>、<span class="mono">__AI_Q3__:精神疲勞|最近</span>
-          </p>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-3">
-            <button id="btnBuildTestFlow" class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
-              一鍵建立「報告」測試流程
-            </button>
-            <button id="btnDeleteTestFlow" class="px-4 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
-              （可選）清除測試流程
-            </button>
-          </div>
-
-          <div class="mt-4 p-4 rounded-2xl bg-white border border-slate-200">
-            <div class="text-sm font-bold text-slate-900">建立後，你就這樣測：</div>
-            <ol class="mt-2 text-sm text-slate-700 list-decimal ml-5 space-y-1">
-              <li>到 LINE 官方帳號聊天室</li>
-              <li>打：<span class="font-semibold">報告</span></li>
-              <li>點：開始 → 選：精神疲勞 → 選：最近</li>
-              <li>會跳出一段「分析 + 下一步」</li>
-            </ol>
-          </div>
-        </section>
-
-        <!-- Leads -->
-        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
+        <!-- BUILDER -->
+        <section id="tabBuilder" class="card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">Leads 名單（已做過問卷的人）</h2>
-              <p class="text-sm text-slate-600 mt-1">只抓 DB 裡 key 以 <span class="mono">AI_SURVEY:LEAD:</span> 開頭的資料。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（看得懂版本）</h2>
+              <p class="text-sm text-slate-600 mt-1">每題固定 4 個選項。你只要填文字即可。</p>
             </div>
             <div class="flex gap-2">
-              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
-                刷新名單
+              <button id="btnAddQ" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增題目</button>
+              <button id="btnOpenClientFromHere" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
+                產生客戶入口網址
               </button>
-              <input id="leadsQ" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋（姓名/關鍵字）">
             </div>
           </div>
 
-          <div class="mt-4 overflow-auto border border-slate-200 rounded-2xl bg-white">
-            <table class="min-w-full text-sm">
-              <thead class="bg-slate-50 text-slate-600">
-                <tr>
-                  <th class="text-left py-2 px-3">時間</th>
-                  <th class="text-left py-2 px-3">User</th>
-                  <th class="text-left py-2 px-3">狀態</th>
-                  <th class="text-left py-2 px-3">推薦</th>
-                </tr>
-              </thead>
-              <tbody id="leadsTbody" class="text-slate-900"></tbody>
-            </table>
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
+              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：疲勞檢測_6題" />
+              <p class="text-xs text-slate-500 mt-2">你會在清單裡看到它，可切換讀取。</p>
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到的）</label>
+              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你為什麼一直累" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="text-sm font-semibold text-slate-700">結尾報告模板（你想要的口吻）</label>
+              <textarea id="inReportHint" rows="4" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                placeholder="例如：用接地氣但專業的方式，整理他的答案 → 推薦 1~3 個方案方向，最後叫他回『報告』或點連結。"></textarea>
+              <p class="text-xs text-slate-500 mt-2">這段會出現在客戶完成後的報告中（你之後也可再改）。</p>
+            </div>
           </div>
 
-          <div class="mt-3 flex items-center justify-between">
-            <button id="btnPrev" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">上一頁</button>
-            <div class="text-xs text-slate-500">page: <span id="txtPage" class="mono">1</span> ｜共 <span id="txtLeadCount" class="mono">0</span> 筆</div>
-            <button id="btnNext" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">下一頁</button>
+          <div class="mt-5">
+            <h3 class="font-bold text-slate-900">題目列表（每題 4 選項）</h3>
+            <div id="qWrap" class="mt-3 space-y-3"></div>
           </div>
         </section>
 
-        <!-- Preview JSON -->
-        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
-          <div class="flex items-center justify-between">
-            <h3 class="font-extrabold text-slate-900">目前設定（JSON 預覽）</h3>
-            <button id="btnCopyJson" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
-              複製 JSON
-            </button>
+        <!-- PREVIEW -->
+        <section id="tabPreview" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">② 預覽互動（你自己先試跑）</h2>
+              <p class="text-sm text-slate-600 mt-1">你可以像客戶一樣點選，確認流程和文字對不對。</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="btnPreviewRestart" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">重來</button>
+              <button id="btnPreviewToLeads" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">看 Leads</button>
+            </div>
           </div>
-          <pre id="jsonPreview" class="mt-3 p-4 rounded-2xl bg-slate-900 text-slate-50 text-xs overflow-auto mono"></pre>
+
+          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div id="pvTitle" class="text-lg font-extrabold text-slate-900">-</div>
+            <div id="pvStep" class="text-xs text-slate-500 mt-1">-</div>
+
+            <div class="mt-4 rounded-2xl bg-slate-900 text-white p-4">
+              <div id="pvQuestion" class="text-base font-semibold">-</div>
+              <div id="pvOptions" class="mt-3 grid md:grid-cols-2 gap-2"></div>
+            </div>
+
+            <div class="mt-4">
+              <h4 class="font-bold text-slate-900">你剛剛選的答案（預覽用）</h4>
+              <div id="pvAnswers" class="mt-2 text-sm text-slate-700 space-y-1"></div>
+            </div>
+
+            <div class="mt-4 hidden" id="pvReportBox">
+              <h4 class="font-bold text-slate-900">完成後報告（預覽）</h4>
+              <div id="pvReport" class="mt-2 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 whitespace-pre-line"></div>
+            </div>
+          </div>
         </section>
+
+        <!-- LEADS -->
+        <section id="tabLeads" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">③ Leads 報告</h2>
+              <p class="text-sm text-slate-600 mt-1">會顯示：大頭照、暱稱、userId、問卷名稱、完成時間、報告。</p>
+            </div>
+            <div class="flex gap-2">
+              <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋（暱稱/問卷/文字）" />
+              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">刷新</button>
+            </div>
+          </div>
+
+          <div id="leadList" class="mt-4 space-y-3"></div>
+        </section>
+
+        <!-- TOAST -->
+        <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
       </main>
     </div>
   </div>
 
-  <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
-
 <script>
-  // ====== keys ======
-  const CONFIG_KEY = "AI_SURVEY:CONFIG";
+  // ========= KV Keys =========
+  const Q_PREFIX = "AI_SURVEY:Q:";
   const LEAD_PREFIX = "AI_SURVEY:LEAD:";
-  const PAGE_SIZE = 20;
 
-  // ====== state ======
+  // ========= State =========
   let API_BASE = "";
-  let ALL_LEAD_KEYS = [];
-  let LEADS_CACHE = [];
-  let PAGE = 1;
+  let SURVEYS = [];     // list of {name}
+  let CURRENT = makeEmptySurvey();
+  let PREVIEW = { idx: 0, answers: [] };
+  let LEADS = [];
 
-  const model = {
-    survey: { title: "", turns: 6, prompt: "" },
-    products: [],
-    rules: [],
-    settings: { public_url: "", add_friend_url: "", cta_template: "" }
-  };
-
-  // ====== helpers ======
-  const el = (id)=>document.getElementById(id);
+  // ========= Helpers =========
+  const $ = (id)=>document.getElementById(id);
 
   function toast(msg, type="ok"){
-    const wrap = el("toastWrap");
+    const wrap = $("toastWrap");
     const div = document.createElement("div");
-    div.className = "toast card shadowSoft rounded-2xl border px-4 py-3 " + (
+    div.className = `card rounded-2xl shadow px-4 py-3 border ${
       type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
-    );
-    div.innerHTML = `<div class="text-sm font-semibold text-slate-900">${escapeHtml(msg)}</div>`;
+    }`;
+    div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
     wrap.appendChild(div);
     setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
     setTimeout(()=>{ div.remove(); }, 2600);
@@ -352,446 +217,490 @@ placeholder='[
 
   function escapeHtml(s){
     return (s ?? "").toString()
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
 
-  function setApiBase(){
-    const v = (el("apiBase").value || "").trim();
-    if(!v) throw new Error("請先貼上 Worker 網址");
-    API_BASE = v.replace(/\/$/,"");
-    localStorage.setItem("questionnaire_worker_url", API_BASE);
-    localStorage.setItem("line_worker_url", API_BASE); // 同步首頁用
-    el("txtApi").textContent = API_BASE;
+  function makeEmptySurvey(){
+    return {
+      name: "",
+      title: "",
+      reportHint: "",
+      questions: [
+        { q:"你目前最明顯的狀況是？", a:["下午很累","睡醒還是累","精神不集中","最近壓力大"] },
+        { q:"你的睡眠狀況？", a:["很好","普通","很淺","常失眠"] },
+        { q:"你的飲食規律？", a:["規律","偶爾不規律","常外食","常跳餐"] },
+      ]
+    };
   }
 
-  async function apiPost(path, bodyObj){
+  async function api(path, bodyObj){
     if(!API_BASE) throw new Error("Worker 網址未設定");
-    const res = await fetch(API_BASE + path, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
+    const res = await fetch(API_BASE.replace(/\/$/,"") + path, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
       body: JSON.stringify(bodyObj || {})
     });
     const data = await res.json().catch(()=>null);
-    if(!res.ok || data?.ok === false){
-      throw new Error(data?.error || data?.detail || res.statusText);
-    }
+    if(!res.ok) throw new Error((data && (data.error||data.detail)) || res.statusText);
+    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
     return data;
   }
 
-  function updatePreview(){
-    el("jsonPreview").textContent = JSON.stringify(model, null, 2);
+  function setTab(tab){
+    $("tabBuilder").classList.toggle("hidden", tab!=="builder");
+    $("tabPreview").classList.toggle("hidden", tab!=="preview");
+    $("tabLeads").classList.toggle("hidden", tab!=="leads");
 
-    const u = (model.settings.public_url || "").trim();
-    const btn = el("btnOpenPublic");
-    if(u){
-      btn.classList.remove("hidden");
-      btn.onclick = ()=> window.open(u, "_blank");
-    }else{
-      btn.classList.add("hidden");
-      btn.onclick = null;
-    }
+    $("btnTabBuilder").className = tab==="builder"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-0 font-semibold text-slate-900";
+
+    $("btnTabPreview").className = tab==="preview"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
+
+    $("btnTabLeads").className = tab==="leads"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
   }
 
-  // ====== bind UI ======
-  function bindSettings(){
-    el("publicUrl").value = model.settings.public_url || "";
-    el("addFriendUrl").value = model.settings.add_friend_url || "";
-    el("ctaTemplate").value = model.settings.cta_template || "";
-
-    el("publicUrl").oninput = e=>{ model.settings.public_url = e.target.value; updatePreview(); };
-    el("addFriendUrl").oninput = e=>{ model.settings.add_friend_url = e.target.value; updatePreview(); };
-    el("ctaTemplate").oninput = e=>{ model.settings.cta_template = e.target.value; updatePreview(); };
+  // ========= Survey list =========
+  async function refreshSurveyList(){
+    // 用你現成 /listAll 拿 DB keys，再過濾 Q_PREFIX
+    const data = await api("/listAll", {});
+    const db = data.db || [];
+    SURVEYS = db
+      .filter(k => k.startsWith(Q_PREFIX))
+      .map(k => ({ key:k, name:k.replace(Q_PREFIX,"") }))
+      .sort((a,b)=>a.name.localeCompare(b.name,"zh-Hant"));
+    renderSurveyList();
   }
 
-  function bindSurvey(){
-    el("surveyTitle").value = model.survey.title || "";
-    el("surveyTurns").value = model.survey.turns || 6;
-    el("surveyPrompt").value = model.survey.prompt || "";
-
-    el("surveyTitle").oninput = e=>{ model.survey.title = e.target.value; updatePreview(); };
-    el("surveyTurns").oninput = e=>{ model.survey.turns = Number(e.target.value || 6); updatePreview(); };
-    el("surveyPrompt").oninput = e=>{ model.survey.prompt = e.target.value; updatePreview(); };
-  }
-
-  function renderProducts(){
-    const wrap = el("productList");
+  function renderSurveyList(){
+    const wrap = $("surveyList");
     wrap.innerHTML = "";
-    const tpl = el("tplProduct");
+    const q = ($("qSearch").value || "").trim().toLowerCase();
+    const items = SURVEYS.filter(x => !q || x.name.toLowerCase().includes(q));
 
-    if(model.products.length===0){
-      const div = document.createElement("div");
-      div.className = "rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-slate-600";
-      div.innerHTML = "目前沒有產品。按右上角「新增一個產品」先放 2～3 個測試就好。";
-      wrap.appendChild(div);
+    if(items.length===0){
+      const d = document.createElement("div");
+      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
+      d.textContent = "目前沒有問卷。按「新增問卷」建立。";
+      wrap.appendChild(d);
       return;
     }
 
-    model.products.forEach((p, idx)=>{
-      const node = tpl.content.cloneNode(true);
-      const root = node.querySelector("div");
+    items.forEach(x=>{
+      const btn = document.createElement("button");
+      btn.className = "w-full text-left px-4 py-3 rounded-xl bg-white/70 hover:bg-white border border-slate-200";
+      btn.innerHTML = `<div class="font-semibold text-slate-900">${escapeHtml(x.name)}</div>
+                       <div class="text-xs text-slate-500 mono">${escapeHtml(x.key)}</div>`;
+      btn.onclick = async ()=>{
+        try{
+          const loaded = await api("/loadAny", { namespace:"DB", keyword: x.key });
+          const payload = loaded.payload || loaded;
+          CURRENT = normalizeSurvey(payload);
+          fillBuilder();
+          toast("已載入問卷：" + x.name);
+          setTab("builder");
+        }catch(e){
+          toast(e.message, "err");
+        }
+      };
+      wrap.appendChild(btn);
+    });
+  }
 
-      root.querySelectorAll("[data-k]").forEach(inp=>{
-        const k = inp.getAttribute("data-k");
-        inp.value = (p[k] ?? "");
-        inp.addEventListener("input", e=>{
-          p[k] = e.target.value;
-          updatePreview();
-        });
+  function normalizeSurvey(obj){
+    const s = makeEmptySurvey();
+    if(obj && typeof obj === "object"){
+      s.name = obj.name || s.name;
+      s.title = obj.title || s.title;
+      s.reportHint = obj.reportHint || obj.reportHint;
+      if(Array.isArray(obj.questions)) s.questions = obj.questions.map(q=>({
+        q: (q.q||"").toString(),
+        a: Array.isArray(q.a) ? q.a.slice(0,4).map(x=>(x||"").toString()) : ["","","",""]
+      }));
+    }
+    // 確保每題 4 個選項
+    s.questions = s.questions.map(q=>{
+      const a = (q.a||[]);
+      while(a.length<4) a.push("");
+      return { q:q.q, a:a.slice(0,4) };
+    });
+    return s;
+  }
+
+  // ========= Builder UI =========
+  function fillBuilder(){
+    $("inName").value = CURRENT.name || "";
+    $("inTitle").value = CURRENT.title || "";
+    $("inReportHint").value = CURRENT.reportHint || "";
+    renderQuestions();
+    updateClientBtn();
+  }
+
+  function renderQuestions(){
+    const wrap = $("qWrap");
+    wrap.innerHTML = "";
+
+    CURRENT.questions.forEach((item, idx)=>{
+      const box = document.createElement("div");
+      box.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
+      box.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="font-extrabold text-slate-900">第 ${idx+1} 題</div>
+          <div class="flex gap-2">
+            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="up">上移</button>
+            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="down">下移</button>
+            <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="del">刪除</button>
+          </div>
+        </div>
+
+        <label class="text-sm font-semibold text-slate-700 mt-3 block">題目</label>
+        <input class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" data-k="q" placeholder="請輸入題目" />
+
+        <div class="mt-3 grid md:grid-cols-2 gap-2">
+          ${[0,1,2,3].map(i=>`
+            <div>
+              <label class="text-xs font-bold text-slate-500">選項 ${i+1}</label>
+              <input class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" data-k="a${i}" placeholder="請輸入選項文字" />
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      // fill values
+      box.querySelector('[data-k="q"]').value = item.q || "";
+      [0,1,2,3].forEach(i=>{
+        box.querySelector(`[data-k="a${i}"]`).value = (item.a && item.a[i]) ? item.a[i] : "";
       });
 
-      root.querySelectorAll("[data-act]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
+      // bind
+      box.querySelector('[data-k="q"]').oninput = (e)=>{ item.q = e.target.value; };
+      [0,1,2,3].forEach(i=>{
+        box.querySelector(`[data-k="a${i}"]`).oninput = (e)=>{ item.a[i] = e.target.value; };
+      });
+
+      // actions
+      box.querySelectorAll("button[data-act]").forEach(btn=>{
+        btn.onclick = ()=>{
           const act = btn.getAttribute("data-act");
           if(act==="del"){
-            model.products.splice(idx,1);
+            CURRENT.questions.splice(idx,1);
           }else if(act==="up" && idx>0){
-            const t=model.products[idx-1]; model.products[idx-1]=model.products[idx]; model.products[idx]=t;
-          }else if(act==="down" && idx<model.products.length-1){
-            const t=model.products[idx+1]; model.products[idx+1]=model.products[idx]; model.products[idx]=t;
+            const t = CURRENT.questions[idx-1]; CURRENT.questions[idx-1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
+          }else if(act==="down" && idx<CURRENT.questions.length-1){
+            const t = CURRENT.questions[idx+1]; CURRENT.questions[idx+1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
           }
-          renderProducts();
-          updatePreview();
-        });
+          renderQuestions();
+        };
       });
 
-      wrap.appendChild(node);
+      wrap.appendChild(box);
     });
-  }
 
-  function bindRules(){
-    el("rulesJson").value = JSON.stringify(model.rules || [], null, 2);
-    el("rulesJson").addEventListener("input", e=>{
-      try{
-        const v = JSON.parse(e.target.value || "[]");
-        model.rules = Array.isArray(v) ? v : [];
-        updatePreview();
-      }catch{}
-    });
-  }
-
-  // ====== load/save config ======
-  async function loadConfig(){
-    const data = await apiPost("/load", { keyword: CONFIG_KEY });
-    const cfg = (data?.payload && typeof data.payload==="object") ? data.payload : data;
-
-    if(cfg?.survey) model.survey = cfg.survey;
-    if(Array.isArray(cfg?.products)) model.products = cfg.products;
-    if(Array.isArray(cfg?.rules)) model.rules = cfg.rules;
-    if(cfg?.settings) model.settings = cfg.settings;
-
-    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
-    el("txtSync").textContent = new Date().toLocaleString();
-    toast("已載入設定");
-  }
-
-  async function saveConfig(){
-    // validate rules json
-    try{ JSON.parse(el("rulesJson").value || "[]"); }
-    catch{ toast("推薦規則格式錯誤（不是 JSON）", "warn"); throw new Error("rules JSON invalid"); }
-
-    await apiPost("/save", { keyword: CONFIG_KEY, payload: model });
-    el("txtSync").textContent = new Date().toLocaleString();
-    toast("已儲存設定");
-  }
-
-  // ====== leads ======
-  function renderLeadsTable(items){
-    const tb = el("leadsTbody");
-    tb.innerHTML = "";
-
-    const q = (el("leadsQ").value || "").trim().toLowerCase();
-    const filtered = (items || []).filter(x => !q || JSON.stringify(x).toLowerCase().includes(q));
-
-    if(filtered.length===0){
-      tb.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">沒有資料</td></tr>`;
-      return;
+    if(CURRENT.questions.length===0){
+      const empty = document.createElement("div");
+      empty.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
+      empty.textContent = "目前沒有題目。按上方「新增題目」。";
+      wrap.appendChild(empty);
     }
-
-    filtered.forEach(x=>{
-      const tr = document.createElement("tr");
-      tr.className = "border-t border-slate-200";
-
-      const dt = x.created_at ? new Date(x.created_at).toLocaleString()
-                : x.createdAt ? new Date(x.createdAt).toLocaleString()
-                : "-";
-      const user = x.display_name || x.displayName || x.user_id || x.userId || "-";
-      const title = x.summary_title || x.summaryTitle || x.type || "-";
-      const rec = (x.recommend_skus || x.recommendSkus || x.recommendations || []).join?.(", ") || "-";
-
-      tr.innerHTML = `
-        <td class="py-2 px-3 text-slate-700">${escapeHtml(dt)}</td>
-        <td class="py-2 px-3 font-semibold">${escapeHtml(user)}</td>
-        <td class="py-2 px-3">${escapeHtml(title)}</td>
-        <td class="py-2 px-3 mono text-xs">${escapeHtml(rec)}</td>
-      `;
-      tb.appendChild(tr);
-    });
   }
 
-  async function loadLeadKeys(){
-    const data = await apiPost("/listAll", {});
-    const db = data?.db || [];
-    ALL_LEAD_KEYS = db.filter(k => k.startsWith(LEAD_PREFIX)).sort((a,b)=> b.localeCompare(a));
-    el("txtLeadCount").textContent = String(ALL_LEAD_KEYS.length);
-  }
-
-  async function loadLeadsPage(page){
-    PAGE = Math.max(1, page);
-    el("txtPage").textContent = String(PAGE);
-
-    const start = (PAGE-1)*PAGE_SIZE;
-    const keys = ALL_LEAD_KEYS.slice(start, start+PAGE_SIZE);
-
-    if(keys.length===0){
-      LEADS_CACHE = [];
-      renderLeadsTable([]);
-      return;
-    }
-
-    const promises = keys.map(k => apiPost("/loadAny", { namespace:"DB", keyword:k })
-      .then(r => r?.payload ?? r)
-      .catch(()=>null)
-    );
-
-    const rows = (await Promise.all(promises)).filter(Boolean);
-    LEADS_CACHE = rows;
-    renderLeadsTable(rows);
-  }
-
-  async function refreshLeads(){
-    await loadLeadKeys();
-    await loadLeadsPage(1);
-    toast("名單已更新");
-  }
-
-  // ====== one-click examples ======
-  function fillExample(){
-    model.settings.public_url = model.settings.public_url || "https://example.com/survey";
-    model.settings.add_friend_url = model.settings.add_friend_url || "https://lin.ee/xxxxxxx";
-    model.settings.cta_template = model.settings.cta_template || (
-`我把你的狀況整理成一份「簡單方向」給你（不推銷，先讓你看方向）。
-1) 點這裡看方案：{{public_url}}
-2) 或直接加我 LINE：{{add_friend_url}}
-回我『方案』我就幫你做。`
-    );
-
-    model.survey.title = model.survey.title || "三分鐘找出你為什麼一直累";
-    model.survey.turns = model.survey.turns || 6;
-    model.survey.prompt = model.survey.prompt || (
-`你是健康狀態引導顧問，用繁中，語氣接地氣但專業。
-不做醫療診斷，不誇大療效，只用：支持/幫助/維持/改善習慣。
-每次只問一題，每題給 3~5 個可點選選項（短句）。
-最後輸出：狀態分類、可能原因、建議方向、推薦產品、下一步 CTA。`
-    );
-
-    if(model.products.length===0){
-      model.products = [
-        { name:"能量支持方案", sku:"P001", tags:"疲勞,精神,忙碌", link:"https://example.com/p001", desc:"支持日常能量與精神狀態，適合忙碌、作息不穩者。" },
-        { name:"睡眠節奏方案", sku:"P002", tags:"睡眠,放鬆,作息", link:"https://example.com/p002", desc:"支持放鬆與睡眠節奏，適合壓力大、晚睡者。" }
-      ];
-    }
-
-    if(!Array.isArray(model.rules) || model.rules.length===0){
-      model.rules = [
-        {
-          if_any_keywords: ["疲勞","精神差","下午累","提不起勁"],
-          recommend_skus: ["P001"],
-          summary_title: "能量下滑型",
-          summary_hint: "偏向作息/壓力/能量利用不足，先穩定節奏，再做支持。"
-        },
-        {
-          if_any_keywords: ["睡不好","淺眠","難入睡","早醒"],
-          recommend_skus: ["P002"],
-          summary_title: "睡眠節奏型",
-          summary_hint: "偏向放鬆不足或作息不穩，先建立節奏，再做支持。"
-        }
-      ];
-    }
-
-    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
-    toast("已套用範例（你現在可以直接按「儲存」）");
-  }
-
-  function clearAll(){
-    model.survey = { title:"", turns: 6, prompt:"" };
-    model.products = [];
-    model.rules = [];
-    model.settings = { public_url:"", add_friend_url:"", cta_template:"" };
-    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
-    toast("已清空");
-  }
-
-  function setRulesExample(){
-    model.rules = [
-      {
-        if_any_keywords: ["疲勞","精神差","下午累","提不起勁"],
-        recommend_skus: ["P001","P002"],
-        summary_title: "能量下滑型",
-        summary_hint: "偏向作息/壓力/能量利用不足的組合，先穩定節奏，再做支持。"
+  function validateSurvey(){
+    const name = ($("inName").value||"").trim();
+    const title = ($("inTitle").value||"").trim();
+    if(!name) throw new Error("請先填『問卷檔名』");
+    if(!title) throw new Error("請先填『問卷標題』");
+    if(CURRENT.questions.length<1) throw new Error("至少要有 1 題");
+    CURRENT.questions.forEach((q,i)=>{
+      if(!(q.q||"").trim()) throw new Error(`第 ${i+1} 題題目是空的`);
+      for(let k=0;k<4;k++){
+        if(!(q.a[k]||"").trim()) throw new Error(`第 ${i+1} 題的選項 ${k+1} 是空的`);
       }
-    ];
-    bindRules(); updatePreview();
-    toast("已套用規則範例");
+    });
+    return { name, title };
   }
 
-  // ====== build LINE test flow keywords (using /save) ======
-  async function buildTestFlow(){
-    // 這些會存到 DB（你的 webhook 是用 userText 去 DB.get，所以要直接建 keyword）
-    const k0 = "報告";
-    const k1 = "__AI_Q1__";
-    const k2 = "__AI_Q2__:精神疲勞";
-    const k3 = "__AI_Q3__:精神疲勞|最近";
+  async function saveSurvey(){
+    validateSurvey();
+    CURRENT.name = ($("inName").value||"").trim();
+    CURRENT.title = ($("inTitle").value||"").trim();
+    CURRENT.reportHint = ($("inReportHint").value||"").trim();
 
-    const payload0 = {
-      mode: "text",
-      replyText: "我會幫你快速釐清狀況，先回答幾個問題👇",
-      quickReplies: [{ label:"開始", text:k1 }]
-    };
-
-    const payload1 = {
-      mode: "text",
-      replyText: "第一題：你目前最想改善哪一塊？",
-      quickReplies: [
-        { label:"精神疲勞", text:k2 },
-        { label:"睡眠狀況", text:"__AI_Q2__:睡眠" },
-        { label:"腸胃消化", text:"__AI_Q2__:腸胃" },
-        { label:"體態代謝", text:"__AI_Q2__:體態" }
-      ]
-    };
-
-    const payload2 = {
-      mode: "text",
-      replyText: "第二題：這個狀況大概多久了？",
-      quickReplies: [
-        { label:"最近", text:k3 },
-        { label:"幾週", text:"__AI_Q3__:精神疲勞|幾週" },
-        { label:"幾個月", text:"__AI_Q3__:精神疲勞|幾個月" }
-      ]
-    };
-
-    const payload3 = {
-      messages: [{
-        type:"text",
-        text:
-"我大概了解你的狀況了，先給你一個方向👇\n\n" +
-"【你的狀態】短期能量下滑型\n" +
-"【可能原因】作息緊、壓力高、恢復不足（偏可能/傾向，不是診斷）\n" +
-"【建議方向】\n" +
-"1) 先把睡眠節奏拉回來\n" +
-"2) 白天補水與規律進食\n" +
-"3) 減少連續高壓工作段\n\n" +
-"如果你願意，我可以把你的狀況整理成「1 份簡單方案」給你（不推銷，先讓你看方向）。\n" +
-"回我『方案』我就幫你做。"
-      }]
-    };
-
-    await apiPost("/save", { keyword:k0, payload:payload0 });
-    await apiPost("/save", { keyword:k1, payload:payload1 });
-    await apiPost("/save", { keyword:k2, payload:payload2 });
-    await apiPost("/save", { keyword:k3, payload:payload3 });
-
-    toast("已建立「報告」測試流程：去 LINE 打『報告』即可");
+    await api("/putAny", {
+      namespace: "DB",
+      keyword: Q_PREFIX + CURRENT.name,
+      payload: CURRENT
+    });
+    toast("已儲存問卷：" + CURRENT.name);
+    $("txtLastSync").textContent = new Date().toLocaleString();
+    await refreshSurveyList();
   }
 
-  async function deleteTestFlow(){
-    const keys = ["報告","__AI_Q1__","__AI_Q2__:精神疲勞","__AI_Q3__:精神疲勞|最近"];
-    // 你的 worker 有 /delete (DB)；也有 /deleteAny
-    // 這裡用 /delete（簡單）
-    for(const k of keys){
-      try{ await apiPost("/delete", { keyword:k }); }catch{}
+  // ========= Preview =========
+  function startPreview(){
+    // 直接用 CURRENT 來跑
+    const title = ($("inTitle").value||CURRENT.title||"").trim() || "（未命名問卷）";
+    $("pvTitle").textContent = title;
+    PREVIEW = { idx: 0, answers: [] };
+    $("pvReportBox").classList.add("hidden");
+    renderPreviewStep();
+    setTab("preview");
+  }
+
+  function renderPreviewStep(){
+    const qList = CURRENT.questions || [];
+    const idx = PREVIEW.idx;
+
+    $("pvStep").textContent = `進度：${Math.min(idx+1, qList.length)}/${qList.length}`;
+
+    if(idx >= qList.length){
+      // done -> make report preview
+      $("pvQuestion").textContent = "完成！以下是報告預覽";
+      $("pvOptions").innerHTML = "";
+
+      const report = buildReportPreview();
+      $("pvReport").textContent = report;
+      $("pvReportBox").classList.remove("hidden");
+      renderPreviewAnswers();
+      return;
     }
-    toast("已清除測試流程（如果之前有建）");
+
+    const q = qList[idx];
+    $("pvQuestion").textContent = q.q || "-";
+    const optWrap = $("pvOptions");
+    optWrap.innerHTML = "";
+
+    (q.a||[]).slice(0,4).forEach((txt, i)=>{
+      const b = document.createElement("button");
+      b.className = "px-4 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 text-left font-semibold";
+      b.textContent = txt || `選項 ${i+1}`;
+      b.onclick = ()=>{
+        PREVIEW.answers.push({ q: q.q, a: txt, idx: PREVIEW.idx });
+        PREVIEW.idx++;
+        renderPreviewStep();
+      };
+      optWrap.appendChild(b);
+    });
+
+    renderPreviewAnswers();
   }
 
-  // ====== init ======
-  (function init(){
-    // restore api
-    const fromHome = (localStorage.getItem("line_worker_url")||"").trim();
-    const fromSelf = (localStorage.getItem("questionnaire_worker_url")||"").trim();
+  function renderPreviewAnswers(){
+    const wrap = $("pvAnswers");
+    wrap.innerHTML = "";
+    if(PREVIEW.answers.length===0){
+      wrap.innerHTML = `<div class="text-slate-500">尚未作答</div>`;
+      return;
+    }
+    PREVIEW.answers.forEach(x=>{
+      const d = document.createElement("div");
+      d.className = "rounded-xl border border-slate-200 bg-white/70 px-3 py-2";
+      d.innerHTML = `<div class="text-xs text-slate-500">${escapeHtml(x.q)}</div>
+                     <div class="font-semibold text-slate-900">${escapeHtml(x.a)}</div>`;
+      wrap.appendChild(d);
+    });
+  }
+
+  function buildReportPreview(){
+    const hint = ($("inReportHint").value||CURRENT.reportHint||"").trim();
+    const bullets = PREVIEW.answers.map(x=>`- ${x.q}：${x.a}`).join("\n");
+    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || "（你尚未填結尾報告模板）"}\n\n【下一步】\n回我『報告』我幫你整理成一份更精準的方案。`;
+  }
+
+  // ========= Leads =========
+  async function refreshLeads(){
+    const data = await api("/listAll", {});
+    const db = data.db || [];
+    const keys = db.filter(k=>k.startsWith(LEAD_PREFIX)).sort((a,b)=>b.localeCompare(a));
+    $("txtLeadCount").textContent = String(keys.length);
+
+    // 載入前 30 筆避免太慢（你要更多我再加分頁）
+    const top = keys.slice(0, 30);
+    const rows = await Promise.all(top.map(k =>
+      api("/loadAny", { namespace:"DB", keyword:k })
+        .then(r=>r.payload||r)
+        .catch(()=>null)
+    ));
+    LEADS = rows.filter(Boolean);
+    renderLeads();
+  }
+
+  function renderLeads(){
+    const q = ($("leadSearch").value||"").trim().toLowerCase();
+    const items = LEADS.filter(x=> !q || JSON.stringify(x).toLowerCase().includes(q));
+
+    const wrap = $("leadList");
+    wrap.innerHTML = "";
+
+    if(items.length===0){
+      const d = document.createElement("div");
+      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
+      d.textContent = "目前沒有 Leads。";
+      wrap.appendChild(d);
+      return;
+    }
+
+    items.forEach(x=>{
+      const when = x.created_at ? new Date(x.created_at).toLocaleString() : (x.createdAt ? new Date(x.createdAt).toLocaleString() : "-");
+      const name = x.displayName || x.display_name || "-";
+      const pic = x.pictureUrl || x.picture_url || "";
+      const uid = x.userId || x.user_id || "-";
+      const survey = x.surveyName || x.survey_name || "-";
+      const report = x.report || x.summary || x.result || "";
+
+      const card = document.createElement("div");
+      card.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
+      card.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
+            ${pic ? `<img src="${escapeHtml(pic)}" class="w-full h-full object-cover">` : ``}
+          </div>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="font-extrabold text-slate-900">${escapeHtml(name)}</div>
+              <div class="text-xs text-slate-500">${escapeHtml(when)}</div>
+              <span class="text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 font-semibold">
+                ${escapeHtml(survey)}
+              </span>
+            </div>
+            <div class="mt-1 text-xs text-slate-500 mono break-all">userId: ${escapeHtml(uid)}</div>
+
+            <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 whitespace-pre-line">
+              ${escapeHtml(report || "（沒有報告內容）")}
+            </div>
+          </div>
+        </div>
+      `;
+      wrap.appendChild(card);
+    });
+  }
+
+  // ========= Client URL =========
+  function updateClientBtn(){
+    const liffId = ($("inLiffId").value || localStorage.getItem("line_liff_id") || "").trim();
+    $("inLiffId").value = liffId;
+
+    const name = ($("inName").value||CURRENT.name||"").trim();
+    const btn = $("btnOpenClient");
+    const btn2 = $("btnOpenClientFromHere");
+
+    if(!liffId){
+      btn.classList.add("hidden");
+      return;
+    }
+
+    // 這裡「page=liff_survey.html」是假設你把 liff_survey.html 跟 questionnaire.html 放同一個 GitHub Pages 網域底下
+    // 客戶真正打開的是 LIFF URL，裡面帶 survey=問卷名稱
+    const surveyParam = encodeURIComponent(name || "");
+    const url = `https://liff.line.me/${encodeURIComponent(liffId)}?page=liff_survey.html&survey=${surveyParam}`;
+
+    btn.classList.remove("hidden");
+    btn.onclick = ()=> {
+      if(!name) return toast("請先填問卷檔名（才能產生 survey 參數）", "warn");
+      window.open(url, "_blank");
+    };
+
+    btn2.onclick = ()=> {
+      if(!name) return toast("請先填問卷檔名（才能產生 survey 參數）", "warn");
+      prompt("把這段貼到 RichMenu / Flex 連結：", url);
+      toast("已產生入口網址（已顯示可複製）");
+    };
+  }
+
+  // ========= Init =========
+  function initApiBase(){
+    const fromHome = (localStorage.getItem("line_worker_url") || "").trim();
+    const fromSelf = (localStorage.getItem("questionnaire_worker_url") || "").trim();
     const v = fromHome || fromSelf;
     if(v){
-      el("apiBase").value = v;
-      API_BASE = v.replace(/\/$/,"");
-      el("txtApi").textContent = API_BASE;
+      API_BASE = v;
+      $("inApiBase").value = v;
     }
+    const liff = (localStorage.getItem("line_liff_id") || "").trim();
+    if(liff) $("inLiffId").value = liff;
+  }
 
-    // default prompt if empty
-    if(!model.survey.prompt){
-      model.survey.prompt =
-`你是健康狀態引導顧問，用繁中，語氣接地氣但專業。
-不做醫療診斷，不誇大療效，只用：支持/幫助/維持/改善習慣。
-每次只問一題，每題給 3~5 個可點選選項（短句）。
-最後輸出：狀態分類、可能原因、建議方向、推薦產品、下一步 CTA。`;
-    }
+  function setApiBaseFromInput(){
+    const v = ($("inApiBase").value || "").trim();
+    if(!v) throw new Error("請輸入 Worker 網址");
+    API_BASE = v;
+    localStorage.setItem("questionnaire_worker_url", v);
+    localStorage.setItem("line_worker_url", v);
+  }
 
-    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
+  function bindInputs(){
+    $("inName").oninput = ()=> updateClientBtn();
+    $("inLiffId").oninput = (e)=>{
+      localStorage.setItem("line_liff_id", (e.target.value||"").trim());
+      updateClientBtn();
+    };
 
-    // actions
-    el("btnCheck").onclick = async ()=>{
+    $("inTitle").oninput = ()=>{};
+    $("inReportHint").oninput = ()=>{};
+
+    $("qSearch").oninput = ()=> renderSurveyList();
+    $("leadSearch").oninput = ()=> renderLeads();
+
+    $("btnTabBuilder").onclick = ()=> setTab("builder");
+    $("btnTabPreview").onclick = ()=> startPreview();
+    $("btnTabLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
+
+    $("btnNew").onclick = ()=>{
+      CURRENT = makeEmptySurvey();
+      fillBuilder();
+      toast("已建立新問卷（尚未儲存）");
+      setTab("builder");
+    };
+
+    $("btnAddQ").onclick = ()=>{
+      CURRENT.questions.push({ q:"", a:["","","",""] });
+      renderQuestions();
+    };
+
+    $("btnPreviewRestart").onclick = ()=> startPreview();
+    $("btnPreviewToLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
+
+    $("btnLeadsReload").onclick = async ()=>{ await refreshLeads().catch(e=>toast(e.message,"err")); };
+
+    $("btnConnect").onclick = async ()=>{
       try{
-        setApiBase();
-        await apiPost("/listAll", {}); // 能跑就代表通
+        setApiBaseFromInput();
+        $("txtStatus").textContent = "已連線";
+        $("txtStatus").className = "font-semibold text-emerald-700";
+        $("txtLastSync").textContent = new Date().toLocaleString();
+
+        await refreshSurveyList();
+        await refreshLeads().catch(()=>{});
+        updateClientBtn();
         toast("連線成功");
       }catch(e){
-        toast(e.message || "連線失敗", "err");
+        $("txtStatus").textContent = "連線失敗";
+        $("txtStatus").className = "font-semibold text-rose-700";
+        toast(e.message, "err");
       }
     };
 
-    el("btnLoad").onclick = async ()=>{
+    $("btnSave").onclick = async ()=>{
       try{
-        setApiBase();
-        await loadConfig().catch(()=>toast("目前沒有設定資料（第一次使用）", "warn"));
-        await refreshLeads().catch(()=>{});
-      }catch(e){ toast(e.message, "err"); }
-    };
-
-    el("btnSave").onclick = async ()=>{
-      try{
-        setApiBase();
-        await saveConfig();
-      }catch(e){ toast(e.message, "err"); }
-    };
-
-    el("btnFillExample").onclick = ()=> fillExample();
-    el("btnClear").onclick = ()=> clearAll();
-    el("btnRuleExample").onclick = ()=> setRulesExample();
-
-    el("btnAddProduct").onclick = ()=>{
-      model.products.push({ name:"", sku:"", tags:"", link:"", desc:"" });
-      renderProducts(); updatePreview();
-    };
-
-    el("btnCopyJson").onclick = async ()=>{
-      try{
-        await navigator.clipboard.writeText(JSON.stringify(model, null, 2));
-        toast("已複製 JSON");
-      }catch{
-        toast("複製失敗（瀏覽器限制）", "warn");
+        setApiBaseFromInput();
+        await saveSurvey();
+      }catch(e){
+        toast(e.message,"err");
       }
     };
+  }
 
-    el("btnBuildTestFlow").onclick = async ()=>{
-      try{ setApiBase(); await buildTestFlow(); }
-      catch(e){ toast(e.message, "err"); }
-    };
-
-    el("btnDeleteTestFlow").onclick = async ()=>{
-      try{ setApiBase(); await deleteTestFlow(); }
-      catch(e){ toast(e.message, "err"); }
-    };
-
-    el("btnLeadsReload").onclick = async ()=>{
-      try{ setApiBase(); await refreshLeads(); }
-      catch(e){ toast(e.message, "err"); }
-    };
-
-    el("leadsQ").oninput = ()=> renderLeadsTable(LEADS_CACHE);
-    el("btnPrev").onclick = async ()=>{ try{ await loadLeadsPage(PAGE-1); }catch(e){ toast(e.message,"err"); } };
-    el("btnNext").onclick = async ()=>{ try{ await loadLeadsPage(PAGE+1); }catch(e){ toast(e.message,"err"); } };
-
-    // update open public
-    updatePreview();
+  (function init(){
+    initApiBase();
+    bindInputs();
+    fillBuilder();
+    setTab("builder");
+    updateClientBtn();
   })();
 </script>
 </body>
