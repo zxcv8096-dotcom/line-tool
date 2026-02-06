@@ -3,242 +3,310 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AI 問卷後台</title>
+  <title>AI 問卷後台（簡單版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root { --card: rgba(255,255,255,.9); }
-    body { background: linear-gradient(135deg, #eef2ff, #fdf2f8, #ecfeff); }
-    .glass { background: var(--card); backdrop-filter: blur(10px); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .toast { animation: pop .18s ease-out; }
-    @keyframes pop { from { transform: scale(.98); opacity: .6; } to { transform: scale(1); opacity: 1; } }
+    body{
+      background: linear-gradient(135deg,#f8fafc,#eef2ff,#ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .card{ background: rgba(255,255,255,.86); backdrop-filter: blur(10px); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .shadowSoft{ box-shadow: 0 12px 40px rgba(15,23,42,.10); }
+    .toast{ animation: pop .15s ease-out; }
+    @keyframes pop{ from{ transform: translateY(6px); opacity:.6 } to{ transform: translateY(0); opacity:1 } }
   </style>
 </head>
+
 <body class="min-h-screen">
   <div class="max-w-6xl mx-auto p-4 md:p-8">
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台</h1>
-        <p class="text-slate-600 mt-1">無密碼版（沿用你原本 Worker 的 /save /load /loadAny /listAll）</p>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-slate-700 text-xs">
+          無密碼｜沿用你原本 Worker｜一般人可用
+        </div>
+        <h1 class="text-2xl md:text-3xl font-black text-slate-900 mt-2">AI 問卷後台（超簡單版）</h1>
+        <p class="text-slate-600 mt-1">照順序填完 1～5 步 → 按「儲存」→ 直接用在 LINE OA。</p>
       </div>
       <div class="flex gap-2">
-        <a id="btnOpenPublic" target="_blank" class="hidden px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500">開啟前台（問答）</a>
+        <button id="btnLoad" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
+          載入
+        </button>
+        <button id="btnSave" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
+          儲存
+        </button>
       </div>
     </header>
 
-    <!-- BOOT / WORKER URL -->
-    <section class="glass rounded-2xl shadow p-5 mb-4">
-      <div class="grid md:grid-cols-3 gap-4 items-end">
-        <div class="md:col-span-2">
-          <label class="text-sm font-semibold text-slate-700">Worker 網址（會自動抓首頁儲存的 line_worker_url）</label>
-          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 placeholder="https://api.xxx.workers.dev" />
+    <!-- Step 0 -->
+    <section class="card shadowSoft rounded-2xl p-5 border border-slate-200 mb-4">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div class="flex-1">
+          <h2 class="text-lg font-extrabold text-slate-900">0）先貼上你的 Worker 網址</h2>
+          <p class="text-slate-600 text-sm mt-1">你只要貼一次，之後會自動記住。</p>
+          <input id="apiBase" class="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 placeholder="https://api.xxx.workers.dev">
           <div class="text-xs text-slate-500 mt-2">
-            目前 key：<span class="mono font-semibold">AI_SURVEY:CONFIG</span>（設定）、
-            <span class="mono font-semibold">AI_SURVEY:LEAD:</span>（名單前綴）
+            設定會存到 KV(DB) 的 key：<span class="mono font-semibold">AI_SURVEY:CONFIG</span>，
+            Leads key 前綴：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
           </div>
         </div>
         <div class="flex gap-2">
-          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">載入</button>
-          <button id="btnSave" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">儲存</button>
+          <button id="btnCheck" class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
+            測試連線
+          </button>
         </div>
       </div>
+
       <div class="mt-3 text-xs text-slate-500">
-        最後同步：<span id="txtLastSync" class="mono">-</span>
+        目前 API：<span id="txtApi" class="mono">-</span> ｜最後同步：<span id="txtSync" class="mono">-</span>
       </div>
     </section>
 
+    <!-- Main -->
     <div class="grid lg:grid-cols-3 gap-4">
-      <!-- LEFT: NAV -->
-      <aside class="glass rounded-2xl shadow p-4 lg:sticky lg:top-4 h-fit">
-        <div class="text-xs text-slate-500">API Base</div>
-        <div id="txtApiBase" class="mono text-sm text-slate-900 break-all">-</div>
+      <!-- Left: guide -->
+      <aside class="card shadowSoft rounded-2xl p-5 border border-slate-200 h-fit lg:sticky lg:top-4">
+        <h3 class="font-extrabold text-slate-900">你要做的事（照順序）</h3>
+        <ol class="mt-3 space-y-2 text-sm text-slate-700">
+          <li class="flex gap-2"><span class="font-black text-indigo-600">1</span> 設定「問卷連結、加好友連結、結尾說詞」</li>
+          <li class="flex gap-2"><span class="font-black text-indigo-600">2</span> 填「你要賣的產品/方案」</li>
+          <li class="flex gap-2"><span class="font-black text-indigo-600">3</span> 填「推薦規則」讓 AI 不亂推</li>
+          <li class="flex gap-2"><span class="font-black text-indigo-600">4</span> 一鍵建立「LINE 測試關鍵字：報告」</li>
+          <li class="flex gap-2"><span class="font-black text-indigo-600">5</span> 看 Leads（做過問卷的名單）</li>
+        </ol>
 
-        <div class="mt-4 space-y-2">
-          <button data-tab="survey" class="tabbtn w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white">AI 問答設定</button>
-          <button data-tab="products" class="tabbtn w-full text-left px-4 py-3 rounded-xl bg-white/70 hover:bg-white border border-slate-200 text-slate-900">產品清單</button>
-          <button data-tab="rules" class="tabbtn w-full text-left px-4 py-3 rounded-xl bg-white/70 hover:bg-white border border-slate-200 text-slate-900">推薦規則</button>
-          <button data-tab="leads" class="tabbtn w-full text-left px-4 py-3 rounded-xl bg-white/70 hover:bg-white border border-slate-200 text-slate-900">名單 Leads</button>
-          <button data-tab="settings" class="tabbtn w-full text-left px-4 py-3 rounded-xl bg-white/70 hover:bg-white border border-slate-200 text-slate-900">系統設定</button>
+        <div class="mt-5 p-4 rounded-2xl bg-white border border-slate-200">
+          <div class="text-sm font-bold text-slate-900">最快測試方式</div>
+          <div class="text-sm text-slate-700 mt-2 leading-relaxed">
+            先按 <span class="font-semibold">「一鍵套用範例」</span> → 再按 <span class="font-semibold">儲存</span> → 到 LINE 打 <span class="font-semibold">「報告」</span>。
+          </div>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-2">
-          <button id="btnReload" class="px-4 py-2 rounded-xl bg-white/70 hover:bg-white border border-slate-200">重新載入</button>
-          <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white/70 hover:bg-white border border-slate-200">刷新名單</button>
-        </div>
-
-        <div class="mt-3 text-xs text-slate-500">
-          Leads：<span id="txtLeadCount" class="mono">0</span> 筆（只抓 <span class="mono">AI_SURVEY:LEAD:</span>）
+          <button id="btnFillExample" class="px-3 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">
+            一鍵套用範例
+          </button>
+          <button id="btnClear" class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
+            清空
+          </button>
         </div>
       </aside>
 
-      <!-- RIGHT: CONTENT -->
+      <!-- Right -->
       <main class="lg:col-span-2 space-y-4">
-        <!-- TAB: SURVEY -->
-        <section id="tab-survey" class="glass rounded-2xl shadow p-5">
-          <h2 class="text-lg font-extrabold text-slate-900">AI 問答設定</h2>
-          <p class="text-sm text-slate-600 mt-1">控制 AI 怎麼問、問幾題、最後怎麼總結。</p>
-
-          <div class="mt-5 grid md:grid-cols-2 gap-4">
+        <!-- Step 1: basic -->
+        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
+          <div class="flex items-start justify-between gap-3">
             <div>
-              <label class="text-sm font-semibold text-slate-700">問答主題</label>
-              <input id="surveyTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                placeholder="例如：三分鐘找出你為什麼一直累" />
+              <h2 class="text-lg font-extrabold text-slate-900">1）系統設定（客戶會看到的連結）</h2>
+              <p class="text-sm text-slate-600 mt-1">先填這一區，最重要。</p>
+            </div>
+            <button id="btnOpenPublic" class="hidden px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold" target="_blank">
+              開啟前台
+            </button>
+          </div>
+
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-slate-700">前台網址（問答頁 URL）</label>
+              <input id="publicUrl" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="https://你的網域/survey">
+              <p class="text-xs text-slate-500 mt-2">你之後要讓「圖片/按鈕」導到這個網址。</p>
             </div>
             <div>
-              <label class="text-sm font-semibold text-slate-700">建議題數</label>
-              <input id="surveyTurns" type="number" min="3" max="12"
-                class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" />
+              <label class="text-sm font-semibold text-slate-700">LINE 加好友連結（可選）</label>
+              <input id="addFriendUrl" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="https://lin.ee/xxxxxxx">
             </div>
 
             <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">AI 角色/風格（System Prompt）</label>
-              <textarea id="surveyPrompt" rows="10" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-placeholder="你是『健康狀態引導顧問』，用繁中，語氣接地氣但專業，不做醫療診斷，不誇大療效。
-每次只問一題。每題都提供 3~5 個可點選選項（短句），也允許使用者自行補充。
-最後輸出：狀態分類、原因推測、建議方向、推薦產品（依規則）、下一步 CTA。"></textarea>
-              <p class="text-xs text-slate-500 mt-2">建議避免「診斷/治療/保證效果」類字眼。</p>
+              <label class="text-sm font-semibold text-slate-700">AI 結尾 CTA（最後一段要怎麼引導）</label>
+              <textarea id="ctaTemplate" rows="6" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+placeholder="範例：
+我把你的狀況整理成一份「簡單方向」給你（不推銷，先讓你看方向）。
+1) 點這裡看方案：{{public_url}}
+2) 或直接加我 LINE：{{add_friend_url}}
+回我『方案』我就幫你做。"></textarea>
+              <div class="text-xs text-slate-500 mt-2">可用變數：<span class="mono">{{public_url}}</span>、<span class="mono">{{add_friend_url}}</span></div>
             </div>
           </div>
         </section>
 
-        <!-- TAB: PRODUCTS -->
-        <section id="tab-products" class="hidden glass rounded-2xl shadow p-5">
+        <!-- Step 2: survey style -->
+        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
+          <h2 class="text-lg font-extrabold text-slate-900">2）AI 問答設定（AI 要怎麼問）</h2>
+          <p class="text-sm text-slate-600 mt-1">你不用寫很專業，照範例改幾個字就行。</p>
+
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-slate-700">問卷標題（給你自己看）</label>
+              <input id="surveyTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你為什麼一直累">
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-slate-700">建議題數</label>
+              <input id="surveyTurns" type="number" min="3" max="12" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="text-sm font-semibold text-slate-700">AI 風格（不用懂，照範例改）</label>
+              <textarea id="surveyPrompt" rows="10" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+placeholder="你是健康狀態引導顧問，用繁中，語氣接地氣但專業。
+不做醫療診斷，不誇大療效，只用：支持/幫助/維持/改善習慣。
+每次只問一題，每題給 3~5 個可點選選項（短句）。
+最後輸出：狀態分類、可能原因、建議方向、推薦產品、下一步 CTA。"></textarea>
+              <p class="text-xs text-slate-500 mt-2">建議避免：診斷/治療/保證/一定有效 等字眼。</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 3: products simple -->
+        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">產品清單</h2>
-              <p class="text-sm text-slate-600 mt-1">AI 最後會從這裡挑產品推薦。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">3）產品清單（你要 AI 推什麼）</h2>
+              <p class="text-sm text-slate-600 mt-1">一個產品＝一行。先放 2~3 個測試就好。</p>
             </div>
-            <button id="btnAddProduct" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增產品</button>
+            <button id="btnAddProduct" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
+              + 新增一個產品
+            </button>
           </div>
 
           <div id="productList" class="mt-4 space-y-3"></div>
 
           <template id="tplProduct">
-            <div class="rounded-2xl border border-slate-200 bg-white/60 p-4">
-              <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-                <div class="flex-1">
-                  <div class="flex gap-2 items-center">
-                    <input data-k="name" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-semibold"
-                      placeholder="產品名稱" />
-                    <input data-k="sku" class="w-40 px-3 py-2 rounded-xl border border-slate-200 mono"
-                      placeholder="SKU/代碼" />
-                  </div>
-                  <div class="mt-2 grid md:grid-cols-2 gap-2">
-                    <input data-k="tags" class="px-3 py-2 rounded-xl border border-slate-200"
-                      placeholder="標籤（逗號）例如：疲勞,精神,代謝" />
-                    <input data-k="link" class="px-3 py-2 rounded-xl border border-slate-200 mono"
-                      placeholder="產品連結（你的 landing page）" />
-                  </div>
-                  <textarea data-k="desc" rows="3" class="mt-2 w-full px-3 py-2 rounded-xl border border-slate-200"
-                    placeholder="一句話賣點（避免療效誇大，用『幫助/支持/維持』）"></textarea>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+              <div class="grid md:grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-bold text-slate-600">產品名稱</label>
+                  <input data-k="name" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 font-semibold" placeholder="例如：能量支持方案">
                 </div>
-                <div class="flex gap-2">
-                  <button data-act="up" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">上移</button>
-                  <button data-act="down" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">下移</button>
-                  <button data-act="del" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500">刪除</button>
+                <div>
+                  <label class="text-xs font-bold text-slate-600">SKU/代碼（你自己看）</label>
+                  <input data-k="sku" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：P001">
                 </div>
+
+                <div>
+                  <label class="text-xs font-bold text-slate-600">標籤（用逗號）</label>
+                  <input data-k="tags" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="疲勞,睡眠,腸胃">
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-slate-600">產品/方案連結</label>
+                  <input data-k="link" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" placeholder="https://你的landingpage">
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="text-xs font-bold text-slate-600">一句話說明（別寫療效）</label>
+                  <textarea data-k="desc" rows="2" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200"
+                    placeholder="例如：支持日常能量與精神狀態，適合忙碌、作息不穩者。"></textarea>
+                </div>
+              </div>
+
+              <div class="mt-3 flex gap-2 justify-end">
+                <button data-act="up" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">上移</button>
+                <button data-act="down" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">下移</button>
+                <button data-act="del" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪除</button>
               </div>
             </div>
           </template>
         </section>
 
-        <!-- TAB: RULES -->
-        <section id="tab-rules" class="hidden glass rounded-2xl shadow p-5">
-          <h2 class="text-lg font-extrabold text-slate-900">推薦規則</h2>
-          <p class="text-sm text-slate-600 mt-1">用「關鍵詞/類型 → 推薦哪些產品」來鎖 AI，不要亂推。</p>
+        <!-- Step 4: rules -->
+        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">4）推薦規則（讓 AI 不亂推）</h2>
+              <p class="text-sm text-slate-600 mt-1">你只要改「關鍵字」和「SKU」就好。</p>
+            </div>
+            <button id="btnRuleExample" class="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">
+              套用規則範例
+            </button>
+          </div>
 
-          <div class="mt-4">
-            <label class="text-sm font-semibold text-slate-700">規則 JSON</label>
-            <textarea id="rulesJson" rows="14" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+          <textarea id="rulesJson" rows="14" class="mt-4 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
 placeholder='[
   {
-    "if_any_keywords": ["疲勞", "下午累", "精神差", "提不起勁"],
+    "if_any_keywords": ["疲勞", "精神差", "下午累", "提不起勁"],
     "recommend_skus": ["P001","P002"],
     "summary_title": "能量下滑型",
-    "summary_hint": "偏向作息/壓力/能量利用不足的組合，建議先從支持能量代謝與日常節奏開始。"
+    "summary_hint": "偏向作息/壓力/能量利用不足的組合，建議先把節奏穩定，再做支持。"
   }
 ]'></textarea>
-            <p class="text-xs text-slate-500 mt-2">儲存前會檢查 JSON 格式。</p>
+
+          <div class="mt-2 text-xs text-slate-500">
+            這段必須是合法 JSON。你不想碰它也行：先用範例測通再說。
           </div>
         </section>
 
-        <!-- TAB: LEADS -->
-        <section id="tab-leads" class="hidden glass rounded-2xl shadow p-5">
+        <!-- Step 5: build LINE test keywords -->
+        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
+          <h2 class="text-lg font-extrabold text-slate-900">5）一鍵建立 LINE 測試關鍵字（不用你寫任何 code）</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            按一次就會幫你在 KV(DB) 建 4 個關鍵字：<span class="mono">報告</span>、<span class="mono">__AI_Q1__</span>、<span class="mono">__AI_Q2__:精神疲勞</span>、<span class="mono">__AI_Q3__:精神疲勞|最近</span>
+          </p>
+
+          <div class="mt-4 grid md:grid-cols-2 gap-3">
+            <button id="btnBuildTestFlow" class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
+              一鍵建立「報告」測試流程
+            </button>
+            <button id="btnDeleteTestFlow" class="px-4 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
+              （可選）清除測試流程
+            </button>
+          </div>
+
+          <div class="mt-4 p-4 rounded-2xl bg-white border border-slate-200">
+            <div class="text-sm font-bold text-slate-900">建立後，你就這樣測：</div>
+            <ol class="mt-2 text-sm text-slate-700 list-decimal ml-5 space-y-1">
+              <li>到 LINE 官方帳號聊天室</li>
+              <li>打：<span class="font-semibold">報告</span></li>
+              <li>點：開始 → 選：精神疲勞 → 選：最近</li>
+              <li>會跳出一段「分析 + 下一步」</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Leads -->
+        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">名單 Leads</h2>
-              <p class="text-sm text-slate-600 mt-1">從 DB 裡抓所有 key 前綴為 <span class="mono">AI_SURVEY:LEAD:</span> 的資料。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">Leads 名單（已做過問卷的人）</h2>
+              <p class="text-sm text-slate-600 mt-1">只抓 DB 裡 key 以 <span class="mono">AI_SURVEY:LEAD:</span> 開頭的資料。</p>
             </div>
             <div class="flex gap-2">
-              <input id="leadsQ" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋（姓名/標籤/關鍵字）" />
+              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
+                刷新名單
+              </button>
+              <input id="leadsQ" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋（姓名/關鍵字）">
             </div>
           </div>
 
-          <div class="mt-4 overflow-auto">
+          <div class="mt-4 overflow-auto border border-slate-200 rounded-2xl bg-white">
             <table class="min-w-full text-sm">
-              <thead class="text-slate-600">
+              <thead class="bg-slate-50 text-slate-600">
                 <tr>
-                  <th class="text-left py-2 pr-4">時間</th>
-                  <th class="text-left py-2 pr-4">User</th>
-                  <th class="text-left py-2 pr-4">狀態/標題</th>
-                  <th class="text-left py-2 pr-4">推薦</th>
-                  <th class="text-left py-2 pr-4">關鍵字</th>
+                  <th class="text-left py-2 px-3">時間</th>
+                  <th class="text-left py-2 px-3">User</th>
+                  <th class="text-left py-2 px-3">狀態</th>
+                  <th class="text-left py-2 px-3">推薦</th>
                 </tr>
               </thead>
               <tbody id="leadsTbody" class="text-slate-900"></tbody>
             </table>
           </div>
 
-          <div class="mt-4 flex items-center justify-between">
+          <div class="mt-3 flex items-center justify-between">
             <button id="btnPrev" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">上一頁</button>
-            <div class="text-xs text-slate-500">page: <span id="txtPage" class="mono">1</span></div>
+            <div class="text-xs text-slate-500">page: <span id="txtPage" class="mono">1</span> ｜共 <span id="txtLeadCount" class="mono">0</span> 筆</div>
             <button id="btnNext" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">下一頁</button>
           </div>
-
-          <div class="mt-2 text-xs text-slate-500">
-            每頁載入 <span class="mono">20</span> 筆（用 /loadAny 分批抓，速度取決於你名單數）
-          </div>
         </section>
 
-        <!-- TAB: SETTINGS -->
-        <section id="tab-settings" class="hidden glass rounded-2xl shadow p-5">
-          <h2 class="text-lg font-extrabold text-slate-900">系統設定</h2>
-          <p class="text-sm text-slate-600 mt-1">前台（問答頁）會用到的連結/參數。</p>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-semibold text-slate-700">前台網址（問答頁 URL）</label>
-              <input id="publicUrl" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                placeholder="https://你的網域/survey" />
-              <p class="text-xs text-slate-500 mt-2">右上角「開啟前台」會用這個。</p>
-            </div>
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">LINE 加好友連結（可選）</label>
-              <input id="addFriendUrl" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                placeholder="https://lin.ee/xxxxxxx" />
-            </div>
-
-            <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">AI 結尾 CTA 模板</label>
-              <textarea id="ctaTemplate" rows="6" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-placeholder="範例：
-如果你願意，我可以把你的狀況整理成「1 份簡單方案」給你（不推銷，先讓你看方向）。
-你可以：
-1) 點這裡看方案：{{public_url}}
-2) 或直接加我 LINE：{{add_friend_url}}
-回我『方案』我就幫你做。"></textarea>
-            </div>
-          </div>
-        </section>
-
-        <!-- RAW JSON -->
-        <section class="glass rounded-2xl shadow p-5">
+        <!-- Preview JSON -->
+        <section class="card shadowSoft rounded-2xl p-5 border border-slate-200">
           <div class="flex items-center justify-between">
-            <h3 class="font-bold text-slate-900">目前設定（JSON）</h3>
-            <button id="btnCopyJson" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200">複製 JSON</button>
+            <h3 class="font-extrabold text-slate-900">目前設定（JSON 預覽）</h3>
+            <button id="btnCopyJson" class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 font-semibold">
+              複製 JSON
+            </button>
           </div>
           <pre id="jsonPreview" class="mt-3 p-4 rounded-2xl bg-slate-900 text-slate-50 text-xs overflow-auto mono"></pre>
         </section>
@@ -246,118 +314,141 @@ placeholder="範例：
     </div>
   </div>
 
-  <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,520px)] space-y-2 z-50"></div>
+  <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
 
 <script>
+  // ====== keys ======
   const CONFIG_KEY = "AI_SURVEY:CONFIG";
   const LEAD_PREFIX = "AI_SURVEY:LEAD:";
-  const LEADS_PAGE_SIZE = 20;
+  const PAGE_SIZE = 20;
 
+  // ====== state ======
   let API_BASE = "";
   let ALL_LEAD_KEYS = [];
   let LEADS_CACHE = [];
   let PAGE = 1;
 
   const model = {
-    survey: { title: "三分鐘找出你為什麼一直累", turns: 6, prompt: "" },
+    survey: { title: "", turns: 6, prompt: "" },
     products: [],
     rules: [],
     settings: { public_url: "", add_friend_url: "", cta_template: "" }
   };
 
-  const els = (id) => document.getElementById(id);
-  const toastWrap = els("toastWrap");
+  // ====== helpers ======
+  const el = (id)=>document.getElementById(id);
 
-  function escapeHtml(s) {
-    return (s ?? "").toString()
-      .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function toast(msg, type="ok") {
+  function toast(msg, type="ok"){
+    const wrap = el("toastWrap");
     const div = document.createElement("div");
-    div.className = `toast glass rounded-2xl shadow px-4 py-3 border ${
+    div.className = "toast card shadowSoft rounded-2xl border px-4 py-3 " + (
       type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
-    }`;
-    div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
-    toastWrap.appendChild(div);
+    );
+    div.innerHTML = `<div class="text-sm font-semibold text-slate-900">${escapeHtml(msg)}</div>`;
+    wrap.appendChild(div);
     setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
     setTimeout(()=>{ div.remove(); }, 2600);
   }
 
-  async function api(path, bodyObj) {
-    if (!API_BASE) throw new Error("Worker 網址未設定");
-    const res = await fetch(API_BASE.replace(/\/$/,"") + path, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  function setApiBase(){
+    const v = (el("apiBase").value || "").trim();
+    if(!v) throw new Error("請先貼上 Worker 網址");
+    API_BASE = v.replace(/\/$/,"");
+    localStorage.setItem("questionnaire_worker_url", API_BASE);
+    localStorage.setItem("line_worker_url", API_BASE); // 同步首頁用
+    el("txtApi").textContent = API_BASE;
+  }
+
+  async function apiPost(path, bodyObj){
+    if(!API_BASE) throw new Error("Worker 網址未設定");
+    const res = await fetch(API_BASE + path, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(bodyObj || {})
     });
     const data = await res.json().catch(()=>null);
-    if (!res.ok || data?.ok === false) throw new Error(data?.error || data?.detail || res.statusText);
+    if(!res.ok || data?.ok === false){
+      throw new Error(data?.error || data?.detail || res.statusText);
+    }
     return data;
   }
 
-  function setTab(tab) {
-    document.querySelectorAll(".tabbtn").forEach(b=>{
-      const active = b.dataset.tab === tab;
-      b.classList.toggle("bg-slate-900", active);
-      b.classList.toggle("text-white", active);
-      b.classList.toggle("bg-white/70", !active);
-      b.classList.toggle("border", !active);
-      b.classList.toggle("border-slate-200", !active);
-    });
-
-    ["survey","products","rules","leads","settings"].forEach(t=>{
-      els("tab-"+t).classList.toggle("hidden", t !== tab);
-    });
-  }
-
-  function updatePreview() {
-    els("jsonPreview").textContent = JSON.stringify(model, null, 2);
+  function updatePreview(){
+    el("jsonPreview").textContent = JSON.stringify(model, null, 2);
 
     const u = (model.settings.public_url || "").trim();
-    const a = els("btnOpenPublic");
-    if (u) { a.href = u; a.classList.remove("hidden"); } else { a.classList.add("hidden"); }
+    const btn = el("btnOpenPublic");
+    if(u){
+      btn.classList.remove("hidden");
+      btn.onclick = ()=> window.open(u, "_blank");
+    }else{
+      btn.classList.add("hidden");
+      btn.onclick = null;
+    }
   }
 
-  function bindSurvey() {
-    els("surveyTitle").value = model.survey.title || "";
-    els("surveyTurns").value = model.survey.turns || 6;
-    els("surveyPrompt").value = model.survey.prompt || "";
+  // ====== bind UI ======
+  function bindSettings(){
+    el("publicUrl").value = model.settings.public_url || "";
+    el("addFriendUrl").value = model.settings.add_friend_url || "";
+    el("ctaTemplate").value = model.settings.cta_template || "";
 
-    els("surveyTitle").oninput = (e)=>{ model.survey.title = e.target.value; updatePreview(); };
-    els("surveyTurns").oninput = (e)=>{ model.survey.turns = Number(e.target.value||6); updatePreview(); };
-    els("surveyPrompt").oninput = (e)=>{ model.survey.prompt = e.target.value; updatePreview(); };
+    el("publicUrl").oninput = e=>{ model.settings.public_url = e.target.value; updatePreview(); };
+    el("addFriendUrl").oninput = e=>{ model.settings.add_friend_url = e.target.value; updatePreview(); };
+    el("ctaTemplate").oninput = e=>{ model.settings.cta_template = e.target.value; updatePreview(); };
   }
 
-  function renderProducts() {
-    const wrap = els("productList");
+  function bindSurvey(){
+    el("surveyTitle").value = model.survey.title || "";
+    el("surveyTurns").value = model.survey.turns || 6;
+    el("surveyPrompt").value = model.survey.prompt || "";
+
+    el("surveyTitle").oninput = e=>{ model.survey.title = e.target.value; updatePreview(); };
+    el("surveyTurns").oninput = e=>{ model.survey.turns = Number(e.target.value || 6); updatePreview(); };
+    el("surveyPrompt").oninput = e=>{ model.survey.prompt = e.target.value; updatePreview(); };
+  }
+
+  function renderProducts(){
+    const wrap = el("productList");
     wrap.innerHTML = "";
-    const tpl = els("tplProduct");
+    const tpl = el("tplProduct");
 
-    model.products.forEach((p, idx) => {
+    if(model.products.length===0){
+      const div = document.createElement("div");
+      div.className = "rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-slate-600";
+      div.innerHTML = "目前沒有產品。按右上角「新增一個產品」先放 2～3 個測試就好。";
+      wrap.appendChild(div);
+      return;
+    }
+
+    model.products.forEach((p, idx)=>{
       const node = tpl.content.cloneNode(true);
       const root = node.querySelector("div");
 
-      root.querySelectorAll("[data-k]").forEach(input => {
-        const k = input.getAttribute("data-k");
-        input.value = (p[k] ?? "");
-        input.addEventListener("input", (e)=>{
+      root.querySelectorAll("[data-k]").forEach(inp=>{
+        const k = inp.getAttribute("data-k");
+        inp.value = (p[k] ?? "");
+        inp.addEventListener("input", e=>{
           p[k] = e.target.value;
           updatePreview();
         });
       });
 
-      root.querySelectorAll("[data-act]").forEach(btn => {
+      root.querySelectorAll("[data-act]").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const act = btn.getAttribute("data-act");
-          if (act === "del") {
-            model.products.splice(idx, 1);
-          } else if (act === "up" && idx > 0) {
-            const tmp = model.products[idx-1]; model.products[idx-1] = model.products[idx]; model.products[idx] = tmp;
-          } else if (act === "down" && idx < model.products.length-1) {
-            const tmp = model.products[idx+1]; model.products[idx+1] = model.products[idx]; model.products[idx] = tmp;
+          if(act==="del"){
+            model.products.splice(idx,1);
+          }else if(act==="up" && idx>0){
+            const t=model.products[idx-1]; model.products[idx-1]=model.products[idx]; model.products[idx]=t;
+          }else if(act==="down" && idx<model.products.length-1){
+            const t=model.products[idx+1]; model.products[idx+1]=model.products[idx]; model.products[idx]=t;
           }
           renderProducts();
           updatePreview();
@@ -366,123 +457,99 @@ placeholder="範例：
 
       wrap.appendChild(node);
     });
-
-    if (model.products.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "rounded-2xl border border-dashed border-slate-300 bg-white/50 p-6 text-slate-600";
-      empty.innerHTML = "目前沒有產品。按右上角「新增產品」。";
-      wrap.appendChild(empty);
-    }
   }
 
-  function bindRules() {
-    els("rulesJson").value = JSON.stringify(model.rules || [], null, 2);
-    els("rulesJson").addEventListener("input", (e)=>{
-      try {
+  function bindRules(){
+    el("rulesJson").value = JSON.stringify(model.rules || [], null, 2);
+    el("rulesJson").addEventListener("input", e=>{
+      try{
         const v = JSON.parse(e.target.value || "[]");
         model.rules = Array.isArray(v) ? v : [];
         updatePreview();
-      } catch {}
+      }catch{}
     });
   }
 
-  function bindSettings() {
-    els("publicUrl").value = model.settings.public_url || "";
-    els("addFriendUrl").value = model.settings.add_friend_url || "";
-    els("ctaTemplate").value = model.settings.cta_template || "";
+  // ====== load/save config ======
+  async function loadConfig(){
+    const data = await apiPost("/load", { keyword: CONFIG_KEY });
+    const cfg = (data?.payload && typeof data.payload==="object") ? data.payload : data;
 
-    els("publicUrl").oninput = (e)=>{ model.settings.public_url = e.target.value; updatePreview(); };
-    els("addFriendUrl").oninput = (e)=>{ model.settings.add_friend_url = e.target.value; updatePreview(); };
-    els("ctaTemplate").oninput = (e)=>{ model.settings.cta_template = e.target.value; updatePreview(); };
-  }
+    if(cfg?.survey) model.survey = cfg.survey;
+    if(Array.isArray(cfg?.products)) model.products = cfg.products;
+    if(Array.isArray(cfg?.rules)) model.rules = cfg.rules;
+    if(cfg?.settings) model.settings = cfg.settings;
 
-  async function loadConfig() {
-    const data = await api("/load", { keyword: CONFIG_KEY });
-    // 你 /load 會直接回 payload 本體，不一定包 ok
-    // 所以做兩種相容：
-    const cfg = (data?.payload && typeof data.payload === "object") ? data.payload : data;
-    if (cfg?.survey) model.survey = cfg.survey;
-    if (Array.isArray(cfg?.products)) model.products = cfg.products;
-    if (Array.isArray(cfg?.rules)) model.rules = cfg.rules;
-    if (cfg?.settings) model.settings = cfg.settings;
-
-    bindSurvey();
-    renderProducts();
-    bindRules();
-    bindSettings();
-    updatePreview();
-
-    els("txtLastSync").textContent = new Date().toLocaleString();
+    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
+    el("txtSync").textContent = new Date().toLocaleString();
     toast("已載入設定");
   }
 
-  async function saveConfig() {
-    try { JSON.parse(els("rulesJson").value || "[]"); }
-    catch { toast("規則 JSON 格式錯誤，請先修正", "warn"); setTab("rules"); return; }
+  async function saveConfig(){
+    // validate rules json
+    try{ JSON.parse(el("rulesJson").value || "[]"); }
+    catch{ toast("推薦規則格式錯誤（不是 JSON）", "warn"); throw new Error("rules JSON invalid"); }
 
-    await api("/save", { keyword: CONFIG_KEY, payload: model });
-    els("txtLastSync").textContent = new Date().toLocaleString();
+    await apiPost("/save", { keyword: CONFIG_KEY, payload: model });
+    el("txtSync").textContent = new Date().toLocaleString();
     toast("已儲存設定");
   }
 
-  function renderLeadsTable(items) {
-    const tb = els("leadsTbody");
+  // ====== leads ======
+  function renderLeadsTable(items){
+    const tb = el("leadsTbody");
     tb.innerHTML = "";
 
-    const q = (els("leadsQ").value || "").trim().toLowerCase();
+    const q = (el("leadsQ").value || "").trim().toLowerCase();
     const filtered = (items || []).filter(x => !q || JSON.stringify(x).toLowerCase().includes(q));
+
+    if(filtered.length===0){
+      tb.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">沒有資料</td></tr>`;
+      return;
+    }
 
     filtered.forEach(x=>{
       const tr = document.createElement("tr");
       tr.className = "border-t border-slate-200";
 
-      const dt = x.created_at ? new Date(x.created_at).toLocaleString() : (x.createdAt ? new Date(x.createdAt).toLocaleString() : "-");
+      const dt = x.created_at ? new Date(x.created_at).toLocaleString()
+                : x.createdAt ? new Date(x.createdAt).toLocaleString()
+                : "-";
       const user = x.display_name || x.displayName || x.user_id || x.userId || "-";
       const title = x.summary_title || x.summaryTitle || x.type || "-";
       const rec = (x.recommend_skus || x.recommendSkus || x.recommendations || []).join?.(", ") || "-";
-      const kw = (x.keywords || x.keyword || []).join?.(", ") || (typeof x.keyword === "string" ? x.keyword : "-");
 
       tr.innerHTML = `
-        <td class="py-2 pr-4 text-slate-700">${escapeHtml(dt)}</td>
-        <td class="py-2 pr-4 font-semibold">${escapeHtml(user)}</td>
-        <td class="py-2 pr-4">${escapeHtml(title)}</td>
-        <td class="py-2 pr-4 mono text-xs">${escapeHtml(rec)}</td>
-        <td class="py-2 pr-4 text-slate-700">${escapeHtml(kw)}</td>
+        <td class="py-2 px-3 text-slate-700">${escapeHtml(dt)}</td>
+        <td class="py-2 px-3 font-semibold">${escapeHtml(user)}</td>
+        <td class="py-2 px-3">${escapeHtml(title)}</td>
+        <td class="py-2 px-3 mono text-xs">${escapeHtml(rec)}</td>
       `;
       tb.appendChild(tr);
     });
-
-    if (filtered.length === 0) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="5" class="py-6 text-center text-slate-500">沒有資料</td>`;
-      tb.appendChild(tr);
-    }
   }
 
-  async function loadLeadKeys() {
-    // 你的 worker 目前沒有 prefix list API，所以用 /listAll 拿全 keys，再自己 filter
-    const data = await api("/listAll", {});
+  async function loadLeadKeys(){
+    const data = await apiPost("/listAll", {});
     const db = data?.db || [];
-    ALL_LEAD_KEYS = db.filter(k => k.startsWith(LEAD_PREFIX))
-                      .sort((a,b)=> b.localeCompare(a)); // 新的在前
-    els("txtLeadCount").textContent = String(ALL_LEAD_KEYS.length);
+    ALL_LEAD_KEYS = db.filter(k => k.startsWith(LEAD_PREFIX)).sort((a,b)=> b.localeCompare(a));
+    el("txtLeadCount").textContent = String(ALL_LEAD_KEYS.length);
   }
 
-  async function loadLeadsPage(page) {
+  async function loadLeadsPage(page){
     PAGE = Math.max(1, page);
-    els("txtPage").textContent = String(PAGE);
+    el("txtPage").textContent = String(PAGE);
 
-    const start = (PAGE - 1) * LEADS_PAGE_SIZE;
-    const keys = ALL_LEAD_KEYS.slice(start, start + LEADS_PAGE_SIZE);
+    const start = (PAGE-1)*PAGE_SIZE;
+    const keys = ALL_LEAD_KEYS.slice(start, start+PAGE_SIZE);
 
-    if (keys.length === 0) {
+    if(keys.length===0){
       LEADS_CACHE = [];
       renderLeadsTable([]);
       return;
     }
 
-    // 分批抓（避免一次太多）
-    const promises = keys.map(k => api("/loadAny", { namespace: "DB", keyword: k })
+    const promises = keys.map(k => apiPost("/loadAny", { namespace:"DB", keyword:k })
       .then(r => r?.payload ?? r)
       .catch(()=>null)
     );
@@ -492,109 +559,239 @@ placeholder="範例：
     renderLeadsTable(rows);
   }
 
-  async function refreshLeads() {
+  async function refreshLeads(){
     await loadLeadKeys();
     await loadLeadsPage(1);
     toast("名單已更新");
   }
 
-  function initApiBase() {
-    // 優先抓首頁存的 line_worker_url
-    const fromHome = (localStorage.getItem("line_worker_url") || "").trim();
-    const fromSelf = (localStorage.getItem("questionnaire_worker_url") || "").trim();
-    const v = fromHome || fromSelf;
-    if (v) {
-      API_BASE = v;
-      els("inApiBase").value = v;
-      els("txtApiBase").textContent = v;
+  // ====== one-click examples ======
+  function fillExample(){
+    model.settings.public_url = model.settings.public_url || "https://example.com/survey";
+    model.settings.add_friend_url = model.settings.add_friend_url || "https://lin.ee/xxxxxxx";
+    model.settings.cta_template = model.settings.cta_template || (
+`我把你的狀況整理成一份「簡單方向」給你（不推銷，先讓你看方向）。
+1) 點這裡看方案：{{public_url}}
+2) 或直接加我 LINE：{{add_friend_url}}
+回我『方案』我就幫你做。`
+    );
+
+    model.survey.title = model.survey.title || "三分鐘找出你為什麼一直累";
+    model.survey.turns = model.survey.turns || 6;
+    model.survey.prompt = model.survey.prompt || (
+`你是健康狀態引導顧問，用繁中，語氣接地氣但專業。
+不做醫療診斷，不誇大療效，只用：支持/幫助/維持/改善習慣。
+每次只問一題，每題給 3~5 個可點選選項（短句）。
+最後輸出：狀態分類、可能原因、建議方向、推薦產品、下一步 CTA。`
+    );
+
+    if(model.products.length===0){
+      model.products = [
+        { name:"能量支持方案", sku:"P001", tags:"疲勞,精神,忙碌", link:"https://example.com/p001", desc:"支持日常能量與精神狀態，適合忙碌、作息不穩者。" },
+        { name:"睡眠節奏方案", sku:"P002", tags:"睡眠,放鬆,作息", link:"https://example.com/p002", desc:"支持放鬆與睡眠節奏，適合壓力大、晚睡者。" }
+      ];
     }
+
+    if(!Array.isArray(model.rules) || model.rules.length===0){
+      model.rules = [
+        {
+          if_any_keywords: ["疲勞","精神差","下午累","提不起勁"],
+          recommend_skus: ["P001"],
+          summary_title: "能量下滑型",
+          summary_hint: "偏向作息/壓力/能量利用不足，先穩定節奏，再做支持。"
+        },
+        {
+          if_any_keywords: ["睡不好","淺眠","難入睡","早醒"],
+          recommend_skus: ["P002"],
+          summary_title: "睡眠節奏型",
+          summary_hint: "偏向放鬆不足或作息不穩，先建立節奏，再做支持。"
+        }
+      ];
+    }
+
+    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
+    toast("已套用範例（你現在可以直接按「儲存」）");
   }
 
-  function setApiBaseFromInput() {
-    const v = (els("inApiBase").value || "").trim();
-    if (!v) throw new Error("請輸入 Worker 網址");
-    API_BASE = v;
-    localStorage.setItem("questionnaire_worker_url", v);
-    // 同步回首頁的 key（你想要統一就這樣）
-    localStorage.setItem("line_worker_url", v);
-
-    els("txtApiBase").textContent = v;
+  function clearAll(){
+    model.survey = { title:"", turns: 6, prompt:"" };
+    model.products = [];
+    model.rules = [];
+    model.settings = { public_url:"", add_friend_url:"", cta_template:"" };
+    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
+    toast("已清空");
   }
 
+  function setRulesExample(){
+    model.rules = [
+      {
+        if_any_keywords: ["疲勞","精神差","下午累","提不起勁"],
+        recommend_skus: ["P001","P002"],
+        summary_title: "能量下滑型",
+        summary_hint: "偏向作息/壓力/能量利用不足的組合，先穩定節奏，再做支持。"
+      }
+    ];
+    bindRules(); updatePreview();
+    toast("已套用規則範例");
+  }
+
+  // ====== build LINE test flow keywords (using /save) ======
+  async function buildTestFlow(){
+    // 這些會存到 DB（你的 webhook 是用 userText 去 DB.get，所以要直接建 keyword）
+    const k0 = "報告";
+    const k1 = "__AI_Q1__";
+    const k2 = "__AI_Q2__:精神疲勞";
+    const k3 = "__AI_Q3__:精神疲勞|最近";
+
+    const payload0 = {
+      mode: "text",
+      replyText: "我會幫你快速釐清狀況，先回答幾個問題👇",
+      quickReplies: [{ label:"開始", text:k1 }]
+    };
+
+    const payload1 = {
+      mode: "text",
+      replyText: "第一題：你目前最想改善哪一塊？",
+      quickReplies: [
+        { label:"精神疲勞", text:k2 },
+        { label:"睡眠狀況", text:"__AI_Q2__:睡眠" },
+        { label:"腸胃消化", text:"__AI_Q2__:腸胃" },
+        { label:"體態代謝", text:"__AI_Q2__:體態" }
+      ]
+    };
+
+    const payload2 = {
+      mode: "text",
+      replyText: "第二題：這個狀況大概多久了？",
+      quickReplies: [
+        { label:"最近", text:k3 },
+        { label:"幾週", text:"__AI_Q3__:精神疲勞|幾週" },
+        { label:"幾個月", text:"__AI_Q3__:精神疲勞|幾個月" }
+      ]
+    };
+
+    const payload3 = {
+      messages: [{
+        type:"text",
+        text:
+"我大概了解你的狀況了，先給你一個方向👇\n\n" +
+"【你的狀態】短期能量下滑型\n" +
+"【可能原因】作息緊、壓力高、恢復不足（偏可能/傾向，不是診斷）\n" +
+"【建議方向】\n" +
+"1) 先把睡眠節奏拉回來\n" +
+"2) 白天補水與規律進食\n" +
+"3) 減少連續高壓工作段\n\n" +
+"如果你願意，我可以把你的狀況整理成「1 份簡單方案」給你（不推銷，先讓你看方向）。\n" +
+"回我『方案』我就幫你做。"
+      }]
+    };
+
+    await apiPost("/save", { keyword:k0, payload:payload0 });
+    await apiPost("/save", { keyword:k1, payload:payload1 });
+    await apiPost("/save", { keyword:k2, payload:payload2 });
+    await apiPost("/save", { keyword:k3, payload:payload3 });
+
+    toast("已建立「報告」測試流程：去 LINE 打『報告』即可");
+  }
+
+  async function deleteTestFlow(){
+    const keys = ["報告","__AI_Q1__","__AI_Q2__:精神疲勞","__AI_Q3__:精神疲勞|最近"];
+    // 你的 worker 有 /delete (DB)；也有 /deleteAny
+    // 這裡用 /delete（簡單）
+    for(const k of keys){
+      try{ await apiPost("/delete", { keyword:k }); }catch{}
+    }
+    toast("已清除測試流程（如果之前有建）");
+  }
+
+  // ====== init ======
   (function init(){
-    // tab
-    document.querySelectorAll(".tabbtn").forEach(btn=>{
-      btn.addEventListener("click", ()=> setTab(btn.dataset.tab));
-    });
-    setTab("survey");
-
-    // buttons
-    els("btnConnect").addEventListener("click", async ()=>{
-      try {
-        setApiBaseFromInput();
-        await loadConfig().catch(async (e)=>{
-          // 如果沒有資料，直接用預設並提示
-          toast("目前沒有設定資料（第一次使用），可直接儲存建立", "warn");
-          bindSurvey(); renderProducts(); bindRules(); bindSettings(); updatePreview();
-        });
-        // 順便刷新 leads（不強制）
-        await refreshLeads().catch(()=>{});
-      } catch(e) {
-        toast(e.message, "err");
-      }
-    });
-
-    els("btnReload").addEventListener("click", async ()=>{
-      try { setApiBaseFromInput(); await loadConfig(); } catch(e){ toast(e.message, "err"); }
-    });
-
-    els("btnSave").addEventListener("click", async ()=>{
-      try { setApiBaseFromInput(); await saveConfig(); } catch(e){ toast(e.message, "err"); }
-    });
-
-    els("btnLeadsReload").addEventListener("click", async ()=>{
-      try { setApiBaseFromInput(); await refreshLeads(); } catch(e){ toast(e.message, "err"); }
-    });
-
-    els("btnPrev").addEventListener("click", async ()=>{
-      try { await loadLeadsPage(PAGE - 1); } catch(e){ toast(e.message, "err"); }
-    });
-    els("btnNext").addEventListener("click", async ()=>{
-      try { await loadLeadsPage(PAGE + 1); } catch(e){ toast(e.message, "err"); }
-    });
-
-    els("leadsQ").addEventListener("input", ()=> renderLeadsTable(LEADS_CACHE));
-
-    els("btnAddProduct").addEventListener("click", ()=>{
-      model.products.push({ name:"", sku:"", tags:"", link:"", desc:"" });
-      renderProducts();
-      updatePreview();
-    });
-
-    els("btnCopyJson").addEventListener("click", async ()=>{
-      try {
-        await navigator.clipboard.writeText(JSON.stringify(model, null, 2));
-        toast("已複製 JSON");
-      } catch {
-        toast("複製失敗（瀏覽器限制）", "warn");
-      }
-    });
+    // restore api
+    const fromHome = (localStorage.getItem("line_worker_url")||"").trim();
+    const fromSelf = (localStorage.getItem("questionnaire_worker_url")||"").trim();
+    const v = fromHome || fromSelf;
+    if(v){
+      el("apiBase").value = v;
+      API_BASE = v.replace(/\/$/,"");
+      el("txtApi").textContent = API_BASE;
+    }
 
     // default prompt if empty
-    if (!model.survey.prompt) {
+    if(!model.survey.prompt){
       model.survey.prompt =
-`你是『健康狀態引導顧問』，用繁中，語氣接地氣但專業，不做醫療診斷，不誇大療效。
-每次只問一題。每題都提供 3~5 個可點選選項（短句），也允許使用者自行補充。
-總結格式：
-【你的狀態】一句話
-【你為什麼會這樣】2~4 句（用可能/傾向）
-【建議方向】3 點（生活/補充方向）
-【適合的產品方向】依規則產生 1~3 個建議（不要承諾效果）
-【下一步】引導加 LINE 或看方案`;
+`你是健康狀態引導顧問，用繁中，語氣接地氣但專業。
+不做醫療診斷，不誇大療效，只用：支持/幫助/維持/改善習慣。
+每次只問一題，每題給 3~5 個可點選選項（短句）。
+最後輸出：狀態分類、可能原因、建議方向、推薦產品、下一步 CTA。`;
     }
 
-    initApiBase();
-    bindSurvey(); renderProducts(); bindRules(); bindSettings(); updatePreview();
+    bindSettings(); bindSurvey(); renderProducts(); bindRules(); updatePreview();
+
+    // actions
+    el("btnCheck").onclick = async ()=>{
+      try{
+        setApiBase();
+        await apiPost("/listAll", {}); // 能跑就代表通
+        toast("連線成功");
+      }catch(e){
+        toast(e.message || "連線失敗", "err");
+      }
+    };
+
+    el("btnLoad").onclick = async ()=>{
+      try{
+        setApiBase();
+        await loadConfig().catch(()=>toast("目前沒有設定資料（第一次使用）", "warn"));
+        await refreshLeads().catch(()=>{});
+      }catch(e){ toast(e.message, "err"); }
+    };
+
+    el("btnSave").onclick = async ()=>{
+      try{
+        setApiBase();
+        await saveConfig();
+      }catch(e){ toast(e.message, "err"); }
+    };
+
+    el("btnFillExample").onclick = ()=> fillExample();
+    el("btnClear").onclick = ()=> clearAll();
+    el("btnRuleExample").onclick = ()=> setRulesExample();
+
+    el("btnAddProduct").onclick = ()=>{
+      model.products.push({ name:"", sku:"", tags:"", link:"", desc:"" });
+      renderProducts(); updatePreview();
+    };
+
+    el("btnCopyJson").onclick = async ()=>{
+      try{
+        await navigator.clipboard.writeText(JSON.stringify(model, null, 2));
+        toast("已複製 JSON");
+      }catch{
+        toast("複製失敗（瀏覽器限制）", "warn");
+      }
+    };
+
+    el("btnBuildTestFlow").onclick = async ()=>{
+      try{ setApiBase(); await buildTestFlow(); }
+      catch(e){ toast(e.message, "err"); }
+    };
+
+    el("btnDeleteTestFlow").onclick = async ()=>{
+      try{ setApiBase(); await deleteTestFlow(); }
+      catch(e){ toast(e.message, "err"); }
+    };
+
+    el("btnLeadsReload").onclick = async ()=>{
+      try{ setApiBase(); await refreshLeads(); }
+      catch(e){ toast(e.message, "err"); }
+    };
+
+    el("leadsQ").oninput = ()=> renderLeadsTable(LEADS_CACHE);
+    el("btnPrev").onclick = async ()=>{ try{ await loadLeadsPage(PAGE-1); }catch(e){ toast(e.message,"err"); } };
+    el("btnNext").onclick = async ()=>{ try{ await loadLeadsPage(PAGE+1); }catch(e){ toast(e.message,"err"); } };
+
+    // update open public
+    updatePreview();
   })();
 </script>
 </body>
