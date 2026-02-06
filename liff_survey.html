@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI 問卷</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff); font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <div class="max-w-xl mx-auto p-4 md:p-8">
+    <div class="card rounded-2xl shadow p-5 border border-slate-200">
+      <div class="flex items-start gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 overflow-hidden border border-slate-200 shrink-0" id="avatarWrap"></div>
+        <div class="flex-1">
+          <div class="text-xs text-slate-500">AI 問卷</div>
+          <div id="title" class="text-xl font-extrabold text-slate-900">載入中…</div>
+          <div id="sub" class="text-sm text-slate-600 mt-1">請依序點選答案，完成後會出現你的整理報告。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 card rounded-2xl shadow p-5 border border-slate-200">
+      <div class="text-xs text-slate-500" id="stepTxt">-</div>
+      <div id="question" class="mt-2 text-lg font-extrabold text-slate-900">-</div>
+      <div id="options" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+
+      <div id="doneBox" class="hidden mt-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 whitespace-pre-line text-sm text-slate-800" id="report"></div>
+        <button id="btnClose" class="mt-4 w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">關閉</button>
+      </div>
+    </div>
+
+    <div class="mt-4 text-xs text-slate-500">
+      <span class="font-semibold">提示：</span>此頁需要用 LIFF 開啟（才能取得 userId/大頭照）。
+    </div>
+  </div>
+
+<script>
+  const Q_PREFIX = "AI_SURVEY:Q:";
+  const LEAD_PREFIX = "AI_SURVEY:LEAD:";
+
+  let API_BASE = "";
+  let surveyName = "";
+  let survey = null;
+
+  let profile = { userId:"", displayName:"", pictureUrl:"" };
+  let idx = 0;
+  let answers = [];
+
+  function qs(k){
+    const u = new URL(location.href);
+    return u.searchParams.get(k) || "";
+  }
+
+  async function post(path, body){
+    const res = await fetch(API_BASE.replace(/\/$/,"") + path, {
+      method:"POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(body||{})
+    });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok) throw new Error((data && (data.error||data.detail)) || res.statusText);
+    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
+    return data;
+  }
+
+  function setText(id, t){ document.getElementById(id).textContent = t; }
+
+  function render(){
+    if(!survey) return;
+    setText("title", survey.title || surveyName || "問卷");
+    document.getElementById("doneBox").classList.add("hidden");
+
+    const total = (survey.questions||[]).length;
+    document.getElementById("stepTxt").textContent = `進度：${Math.min(idx+1, total)}/${total}`;
+
+    if(idx >= total){
+      // done
+      document.getElementById("question").textContent = "完成！這是你的整理報告";
+      document.getElementById("options").innerHTML = "";
+      const rep = buildReport();
+      document.getElementById("report").textContent = rep;
+      document.getElementById("doneBox").classList.remove("hidden");
+      return;
+    }
+
+    const q = survey.questions[idx];
+    document.getElementById("question").textContent = q.q || "-";
+
+    const wrap = document.getElementById("options");
+    wrap.innerHTML = "";
+
+    (q.a||[]).slice(0,4).forEach(txt=>{
+      const b = document.createElement("button");
+      b.className = "px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-left font-semibold text-slate-900";
+      b.textContent = txt || "（空白）";
+      b.onclick = ()=>{
+        answers.push({ q: q.q, a: txt });
+        idx++;
+        render();
+      };
+      wrap.appendChild(b);
+    });
+  }
+
+  function buildReport(){
+    const hint = (survey.reportHint || "").trim();
+    const bullets = answers.map(x=>`- ${x.q}：${x.a}`).join("\n");
+    return `【你的答案】\n${bullets}\n\n【整理】\n${hint || "我已收到你的狀況，下一步我會給你一份簡單方案方向。"}\n\n【下一步】\n回我『報告』我幫你做更精準的建議。`;
+  }
+
+  async function saveLead(){
+    const ts = Date.now();
+    const key = `${LEAD_PREFIX}${ts}:${profile.userId || "no_user"}`;
+
+    const payload = {
+      created_at: ts,
+      surveyName: surveyName,
+      displayName: profile.displayName || "",
+      pictureUrl: profile.pictureUrl || "",
+      userId: profile.userId || "",
+      answers: answers,
+      report: buildReport()
+    };
+
+    await post("/putAny", { namespace:"DB", keyword:key, payload });
+  }
+
+  async function init(){
+    // Worker URL 來自首頁 localStorage
+    API_BASE = (localStorage.getItem("line_worker_url") || "").trim();
+    if(!API_BASE) {
+      setText("title", "缺少 Worker 網址");
+      setText("sub", "請先回到你的首頁控制台輸入 Worker 網址。");
+      return;
+    }
+
+    // survey 名稱從 querystring
+    surveyName = qs("survey") || "";
+    if(!surveyName){
+      setText("title", "缺少問卷名稱");
+      setText("sub", "網址需要帶 ?survey=問卷檔名");
+      return;
+    }
+
+    // LIFF：拿 profile（userId + 大頭照）
+    try{
+      await liff.init({ liffId: (localStorage.getItem("line_liff_id")||"").trim() || undefined });
+      if(!liff.isLoggedIn()) liff.login();
+      profile = await liff.getProfile();
+      const av = document.getElementById("avatarWrap");
+      if(profile.pictureUrl){
+        av.innerHTML = `<img src="${profile.pictureUrl}" class="w-full h-full object-cover">`;
+      }
+    }catch(e){
+      // 沒用 LIFF 打開也能測，但不會有 userId/大頭照
+      setText("sub", "（你現在不是用 LIFF 開啟，所以拿不到 userId/大頭照。測試仍可進行）");
+    }
+
+    // load survey
+    const loaded = await post("/loadAny", { namespace:"DB", keyword: Q_PREFIX + surveyName });
+    survey = loaded.payload || loaded;
+
+    idx = 0; answers = [];
+    render();
+
+    document.getElementById("btnClose").onclick = async ()=>{
+      try{
+        // 完成時才存 lead
+        if(answers.length === (survey.questions||[]).length){
+          await saveLead();
+        }
+      }catch(e){}
+      try{ liff.closeWindow(); }catch(e){ window.close(); }
+    };
+
+    // 存 lead：偵測完成
+    const observer = new MutationObserver(async ()=>{
+      const done = idx >= (survey.questions||[]).length;
+      if(done){
+        try{ await saveLead(); }catch(e){}
+      }
+    });
+    observer.observe(document.getElementById("doneBox"), { attributes:true, attributeFilter:["class"] });
+  }
+
+  init().catch(e=>{
+    setText("title","載入失敗");
+    setText("sub", e.message || String(e));
+  });
+</script>
+</body>
+</html>
