@@ -3,654 +3,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>大心AI Flow 夢想藝廊 | 財富加速器</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>大心 AI Flow | 數位資產計算機</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-dream: #6a11cb;
-            --secondary-dream: #2575fc;
-            --accent-gold: #d4af37;
-            --text-dark: #2c3e50;
-            --card-glass: rgba(255, 255, 255, 0.75);
-            --card-border: rgba(255, 255, 255, 0.6);
-            --tax-saving: #28a745;
-            --danger: #ff6b6b;
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #d4af37; /* 金色 */
+            --bg-grad: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #2d3436;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
         body {
-            font-family: 'Noto Sans TC', "Microsoft JhengHei", sans-serif;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%), radial-gradient(at 50% 50%, rgba(255,255,255,0.5) 0%, rgba(0,0,0,0) 50%);
-            background-attachment: fixed;
-            background-size: cover;
-            color: var(--text-dark);
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg-grad);
             margin: 0;
-            padding: 15px;
-            line-height: 1.6;
+            padding: 20px;
+            color: var(--text-main);
             min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding-bottom: 80px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-            padding: 10px;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 2.2em;
-            font-weight: 700;
-            background: linear-gradient(to right, var(--primary-dream), var(--secondary-dream), var(--accent-gold));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0px 4px 15px rgba(255,255,255,0.6);
-        }
-
-        header p { margin: 8px 0 0; font-size: 1em; color: #555; letter-spacing: 1px; }
-
-        .glass-card {
-            background: var(--card-glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--card-border);
-            padding: 25px;
-            margin-bottom: 25px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-            transition: transform 0.2s;
-        }
-
-        /* -------------------------------------------
-           儀表板 (Sticky)
-           ------------------------------------------- */
-        .summary-card {
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
-            border-left: 6px solid var(--secondary-dream);
-        }
-
-        @media (min-width: 769px) {
-            .summary-card {
-                position: sticky;
-                top: 0;
-                border-left: none;
-                border-bottom: 4px solid var(--secondary-dream);
-                border-radius: 0 0 20px 20px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 15px 30px;
-            }
-            .summary-grid {
-                display: flex; gap: 30px;
-            }
-            .stat-box {
-                text-align: left; border: none !important; padding: 0 !important; background: none !important;
-            }
-            .stat-label { font-size: 0.8em; margin-bottom: 2px; }
-            .stat-value { font-size: 1.4em; }
-        }
-
-        @media (max-width: 768px) {
-            .summary-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-            }
-            .stat-box {
-                background: rgba(240, 248, 255, 0.5);
-                padding: 10px;
-                border-radius: 12px;
-                text-align: center;
-                border: 1px solid rgba(255,255,255,0.6);
-            }
-        }
-
-        .stat-label { font-size: 0.8em; color: #666; font-weight: 600; }
-        .stat-value { font-size: 1.2em; font-weight: 800; color: var(--primary-dream); line-height: 1.2; }
-        .stat-value.highlight { color: #b8860b; text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-        
-        .motivation {
-            text-align: center; font-style: italic; color: var(--primary-dream);
-            margin-top: 15px; font-weight: 700; font-size: 0.95em;
-        }
-
-        h2 {
-            color: var(--primary-dream);
-            border-bottom: 2px solid var(--accent-gold);
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-size: 1.3em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .input-group { margin-bottom: 18px; }
-        .input-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9em; color: #444; }
-
-        .input-wrapper {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255, 0.6);
-            padding: 10px 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255, 0.5);
-            transition: all 0.3s;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-        }
-        
-        .input-wrapper:focus-within {
-            border-color: var(--secondary-dream);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.1);
-        }
-
-        input, select {
-            border: none; background: transparent;
-            font-size: 16px; width: 100%; color: var(--text-dark);
-            outline: none; font-weight: 500;
-        }
-
-        .unit { font-size: 0.85em; color: #888; white-space: nowrap; font-weight: bold; }
-        .preview-box {
-            font-size: 0.8em; color: var(--secondary-dream);
-            margin-top: 4px; padding-left: 5px; font-weight: bold; min-height: 1.2em;
-        }
-
-        .btn-add {
             width: 100%;
-            background: linear-gradient(135deg, var(--secondary-dream), var(--primary-dream));
-            color: white; border: none; padding: 14px;
-            cursor: pointer; border-radius: 50px;
-            font-weight: bold; font-size: 1em;
-            box-shadow: 0 4px 15px rgba(37, 117, 252, 0.3);
-            margin-top: 10px;
-            transition: transform 0.1s;
-        }
-        .btn-add:active { transform: scale(0.97); }
-
-        .btn-remove {
-            background: var(--danger); color: white; border: none;
-            width: 28px; height: 28px; border-radius: 50%;
-            font-weight: bold; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; flex-shrink: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .grid-2 { display: grid; gap: 25px; grid-template-columns: 1fr 1fr; }
-        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; gap: 15px; } }
-
-        .dynamic-item {
-            background: rgba(255,255,255,0.5); padding: 15px;
-            border-radius: 12px; margin-bottom: 12px;
-            border: 1px dashed rgba(106, 17, 203, 0.2);
-            animation: fadeIn 0.3s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .flex-row { display: flex; gap: 10px; align-items: flex-start; }
-        .flex-grow { flex-grow: 1; }
-
-        /* 結果顯示區 */
-        .dream-result-card {
-            padding: 20px;
-            border-radius: 16px;
-            margin-top: 15px;
+            max-width: 600px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            padding: 30px;
+            border: var(--glass-border);
             position: relative;
             overflow: hidden;
         }
-        .result-normal {
-            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(240,240,240,0.8));
-            border: 1px solid #ddd;
-        }
-        .result-boost {
-            background: linear-gradient(135deg, #fff9ea, #fff0c4);
-            border: 2px solid var(--accent-gold);
-            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.15);
-        }
 
-        .result-label { font-size: 0.9em; font-weight: bold; margin-bottom: 8px; display: block; }
-        .result-time { font-size: 1.5em; font-weight: 800; line-height: 1.2; }
-        .result-desc { font-size: 0.85em; margin-top: 5px; opacity: 0.8; }
-
-        .amway-boost-section {
-            border: 2px solid var(--accent-gold);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 250, 240, 0.9));
+        /* 頂部裝飾 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
         }
-
-        .tax-analysis-box {
-            background: #e8f5e9;
-            border-left: 5px solid var(--tax-saving);
-            border-radius: 8px;
-            padding: 12px 15px;
-            margin-top: 15px;
+        .header h1 {
+            margin: 0;
+            font-weight: 900;
+            font-size: 1.8em;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .header p {
+            margin: 5px 0 0;
             font-size: 0.9em;
-            display: none; 
-            color: #2e7d32;
+            color: #636e72;
         }
 
-        footer { text-align: center; margin-top: 40px; color: #888; font-size: 0.8em; }
-        
-        /* 視覺化進度條 */
-        .progress-container {
-            height: 10px; background: #eee; border-radius: 5px; margin-top: 10px; overflow: hidden;
+        /* 粉絲數滑桿區 */
+        .slider-container {
+            margin: 40px 0;
+            text-align: center;
         }
-        .progress-bar { height: 100%; border-radius: 5px; transition: width 1s ease; }
+        
+        .follower-display {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--secondary);
+            font-family: 'Arial', sans-serif; /* 數字用 Arial 比較好看 */
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .follower-unit {
+            font-size: 0.4em;
+            color: #666;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            background: #dfe6e9;
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 30px;
+            height: 30px;
+            background: var(--accent);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        /* 結果顯示區 */
+        .result-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(106, 17, 203, 0.05);
+            margin-bottom: 20px;
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+        }
+        
+        .income-main {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #eee;
+        }
+        .income-label { font-size: 0.9em; color: #888; font-weight: bold; }
+        .income-value { 
+            font-size: 3em; 
+            font-weight: 900; 
+            color: var(--accent); 
+            line-height: 1.1;
+            text-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+        }
+        
+        /* 詳細數據 Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-title { font-size: 0.8em; color: #666; margin-bottom: 5px; }
+        .stat-data { font-size: 1.2em; font-weight: bold; color: var(--text-main); }
+        .source-tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+        .tag-amway { background: #e3f2fd; color: #1565c0; }
+        .tag-fb { background: #e8f5e9; color: #2e7d32; }
+
+        /* 聘位徽章 */
+        .pin-badge {
+            text-align: center;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+        .badge-text {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 8px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(37, 117, 252, 0.3);
+            display: inline-block;
+        }
+
+        .motivation {
+            text-align: center;
+            font-size: 0.9em;
+            color: #555;
+            font-style: italic;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+        }
+
+        /* 隱藏內容 (用於JS切換) */
+        .hidden { display: none; }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.75em;
+            color: #999;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>大心 AI Flow 夢想藝廊</h1>
-        <p>不只是計算機，這是你通往皇冠大使的導航系統</p>
-    </header>
-
-    <div class="glass-card summary-card">
-        <div class="summary-title" style="font-weight:bold; color:var(--primary-dream);">
-            資產能量表
-        </div>
-        <div class="summary-grid">
-            <div class="stat-box">
-                <div class="stat-label">目前月自由現金</div>
-                <div class="stat-value" id="disp-monthly-surplus">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">預估年度稅金</div>
-                <div class="stat-value" id="disp-tax">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label" style="color:#b8860b;">AI 加速後月現金</div>
-                <div class="stat-value highlight" id="disp-amway-surplus">0</div>
-            </div>
-        </div>
-        <div class="motivation" id="motivation-text">輸入數據，預見未來</div>
+    <div class="header">
+        <h1>大心 AI 數位資產模擬器</h1>
+        <p>拖動滑桿，預見你「靠頭腦賺錢」的未來</p>
     </div>
 
-    <div class="glass-card">
-        <h2>✨ 1. 基礎能量 (單位：萬)</h2>
-        <div class="grid-2">
-            <div>
-                <div class="input-group">
-                    <label>本業年收入</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="income-active" step="0.1" placeholder="ex: 60" oninput="updatePreview(this, 'pre-income')">
-                        <span class="unit">萬/年</span>
-                    </div>
-                    <div class="preview-box" id="pre-income">0 元</div>
-                </div>
-                <div class="input-group">
-                    <label>年度總支出 (生活費/保險)</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="expense-total" step="0.1" placeholder="ex: 40" oninput="updatePreview(this, 'pre-expense')">
-                        <span class="unit">萬/年</span>
-                    </div>
-                    <div class="preview-box" id="pre-expense">0 元</div>
-                </div>
+    <div class="slider-container">
+        <div style="font-size: 0.9em; color:#888; margin-bottom:5px;">你的 FB 粉絲數目標</div>
+        <div class="follower-display">
+            <span id="disp-followers">5,300</span>
+            <span class="follower-unit">人</span>
+        </div>
+        <input type="range" id="follower-slider" min="0" max="11" step="1" value="0" oninput="updateDashboard()">
+    </div>
+
+    <div class="pin-badge">
+        <span class="badge-text" id="disp-pin">12% 績效獎金</span>
+    </div>
+
+    <div class="result-box">
+        <div class="income-main">
+            <div class="income-label">每月實領總收入 (預估)</div>
+            <div class="income-value">
+                <span style="font-size:0.5em;">$</span>
+                <span id="disp-total">2.7</span>
+                <span style="font-size:0.4em;">萬</span>
             </div>
-            <div>
-                <div class="input-group">
-                    <label>被動收入 (國內股息/房租)</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="income-passive-local" step="0.1" placeholder="0" oninput="updatePreview(this, 'pre-pas-local')">
-                        <span class="unit">萬/年</span>
-                    </div>
-                    <div class="preview-box" id="pre-pas-local">0 元</div>
-                </div>
-                <div class="input-group">
-                    <label>現有房貸/車貸 (年繳總額)</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="debt-annual" step="0.1" placeholder="ex: 30" oninput="updatePreview(this, 'pre-debt')">
-                        <span class="unit">萬/年</span>
-                    </div>
-                    <div class="preview-box" id="pre-debt">0 元</div>
-                </div>
+            <div id="disp-yearly" style="font-size:0.9em; color:#888; margin-top:5px;">年薪約 32 萬</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-title">安麗事業收入</div>
+                <div class="stat-data" id="disp-amway">$1.2 萬</div>
+                <div class="source-tag tag-amway">本業利潤</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">FB 廣告收益</div>
+                <div class="stat-data" id="disp-fb">$1.5 萬</div>
+                <div class="source-tag tag-fb">流量變現</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">組織規模 (消費者)</div>
+                <div class="stat-data" id="disp-consumers">53 人</div>
+                <div style="font-size:0.7em; color:#aaa;">轉化率 1%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-title">合作經營者 (線數)</div>
+                <div class="stat-data" id="disp-builders" style="color:var(--primary);">0 人</div>
+                <div style="font-size:0.7em; color:#aaa;">AI 複製模式</div>
             </div>
         </div>
     </div>
 
-    <div class="glass-card" style="border-color: var(--secondary-dream);">
-        <h2>🎨 2. 夢想藝廊 (目標清單)</h2>
-        <p style="color:#666; font-size:0.9em; margin-bottom:15px;">輸入你想買的房子、車子或退休基金，系統將計算「全部實現」所需時間。</p>
-        
-        <div id="dreams-container"></div>
-        <button class="btn-add" onclick="addDreamRow()">+ 添加一個夢想</button>
-        
-        <div class="dream-result-card result-normal">
-            <span class="result-label" style="color:#666;">🐢 依照目前現狀，實現夢想需要：</span>
-            <div id="dream-status-current" class="result-time" style="color:var(--text-dark);">請輸入資料...</div>
-            <div class="progress-container">
-                <div id="bar-current" class="progress-bar" style="width:0%; background:#ccc;"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="glass-card amway-boost-section">
-        <h2>🚀 3. AI 數位事業加速器</h2>
-        <div class="input-group">
-            <label style="color: #9c7c14; font-size: 1.1em;">選擇你的目標聘位 (被動收入來源)</label>
-            <div class="input-wrapper" style="background: rgba(255,255,255,0.8); border: 2px solid var(--accent-gold);">
-                <select id="amway-pin" onchange="calcAll()" style="font-weight:bold; color:#9c7c14; font-size:1.05em;">
-                    <option value="0" selected>⚪ 維持現狀 (基準線)</option>
-                    <option value="1">🥈 銀獎章 (Silver) - 增加約 4 萬/月</option>
-                    <option value="2">🥇 金獎章 (Gold) - 增加約 6 萬/月</option>
-                    <option value="3">🏆 白金 (Platinum) - 增加約 9 萬/月</option>
-                    <option value="101">🔴 紅寶石 (Ruby) - 增加約 11 萬/月</option>
-                    <option value="4">🎗️ 創辦人白金 (F.Platinum) - 增加約 13 萬/月</option>
-                    <option value="102">🔵 藍寶石 (Sapphire) - 增加約 15 萬/月</option>
-                    <option value="5">💎 翡翠 (Emerald) - 年收約 250 萬</option>
-                    <option value="6">💎 創辦人翡翠 (F.Emerald) - 年收約 360 萬</option>
-                    <option value="7">💎 鑽石 (Diamond) - 年收約 500 萬</option>
-                    <option value="8">💎 創辦人鑽石 (F.Diamond) - 年收約 600 萬</option>
-                    <option value="9">💎 EDC (執行專才鑽石) - 年收約 700 萬</option>
-                    <option value="10">💎 雙鑽石 (Double Diamond) - 年收約 800 萬</option>
-                    <option value="11">💎 參鑽石 (Triple Diamond) - 年收約 900 萬</option>
-                    <option value="12">👑 皇冠 (Crown) - 年收約 1000 萬</option>
-                    <option value="13">👑 皇冠大使 (FC) - 年收約 3000 萬</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="tax-analysis-container" class="tax-analysis-box">
-            <div style="font-weight:bold; margin-bottom:5px; display:flex; align-items:center;">
-                <span style="font-size:1.2em; margin-right:5px;">💡</span> 稅務籌劃建議
-            </div>
-            <div style="line-height:1.5;">
-                <span id="tax-recommendation-text">分析中...</span>
-            </div>
-        </div>
-
-        <div class="dream-result-card result-boost" style="margin-top:20px;">
-            <span class="result-label" style="color:#b8860b;">🔥 啟動 AI 系統加速後，實現夢想僅需：</span>
-            <div id="dream-status-amway" class="result-time" style="color:#b8860b;">請選擇聘位</div>
-            <div id="time-saved-msg" style="color:#d4af37; font-weight:bold; font-size:0.9em; margin-top:5px;"></div>
-            <div class="progress-container" style="background: rgba(212, 175, 55, 0.2);">
-                <div id="bar-amway" class="progress-bar" style="width:0%; background: linear-gradient(to right, #d4af37, #f9d423);"></div>
-            </div>
-        </div>
+    <div class="motivation" id="disp-msg">
+        萬事起頭難，但你已經擁有 AI 系統的地基！
     </div>
 
     <footer>
-        <p>此試算表僅供財務規劃參考，實際稅額與獎金依安麗公司制度與國稅局最新法規為準。</p>
-        &copy; 2026 大心 AI Flow 團隊專用
+        &copy; 2026 大心 AI Flow 團隊 | 數據基於數位轉型模型推估
     </footer>
 </div>
 
 <script>
-    // 2026 安麗獎金數據庫 (月均萬)
-    // 根據您提供的對話紀錄：Diamond=500萬/年, FC=3000萬/年
-    const amwayIncomes = {
-        0: 0,
-        1: 4,      // 銀獎章 (月)
-        2: 6,      // 金獎章
-        3: 9,      // 白金
-        101: 11,   // 紅寶石
-        4: 13,     // 創辦人白金
-        102: 15,   // 藍寶石
-        5: 20.8,   // 翡翠 (250/12)
-        6: 30,     // 創辦人翡翠 (360/12)
-        7: 41.6,   // 鑽石 (500/12)
-        8: 50,     // 創辦人鑽石 (600/12)
-        9: 58.3,   // EDC (700/12)
-        10: 66.6,  // 雙鑽 (800/12)
-        11: 75,    // 參鑽 (900/12)
-        12: 83.3,  // 皇冠 (1000/12)
-        13: 250    // FC (3000/12)
-    };
+    // 核心數據庫：完全依照對話紀錄中的 "簡易損益表" 邏輯
+    // Key: Index (0-11)
+    const dataPoints = [
+        { 
+            followers: 5300, 
+            pin: "12% 績效獎金", 
+            amway: 1.2, 
+            fb: 1.5, 
+            consumers: 53, 
+            builders: 0,
+            msg: "萬事起頭難，但你廣告費已經比本業高了！"
+        },
+        { 
+            followers: 10000, 
+            pin: "🥈 銀/金獎章", 
+            amway: 7.0, 
+            fb: 2.5, 
+            consumers: 100, 
+            builders: 1,
+            msg: "恭喜！第 1 位經營者出現，月入逼近 10 萬！"
+        },
+        { 
+            followers: 20000, 
+            pin: "🏆 白金 (Platinum)", 
+            amway: 14.0, // 內插估算
+            fb: 4.5, 
+            consumers: 200, 
+            builders: 2,
+            msg: "穩定的白金架構，已經超越一般主管薪資。"
+        },
+        { 
+            followers: 30000, 
+            pin: "💎 翡翠 (Emerald)", 
+            amway: 23.0, 
+            fb: 6.5, 
+            consumers: 300, 
+            builders: 3,
+            msg: "3 條線成型！月入 30 萬，真正進入富人圈。"
+        },
+        { 
+            followers: 50000, 
+            pin: "💎 準鑽石", 
+            amway: 45.0, 
+            fb: 11.0, 
+            consumers: 500, 
+            builders: 5,
+            msg: "準備好，鑽石級的被動收入即將爆發。"
+        },
+        { 
+            followers: 60000, 
+            pin: "💎 鑽石 (Diamond)", 
+            amway: 65.0, 
+            fb: 13.0, 
+            consumers: 600, 
+            builders: 6,
+            msg: "達成！月入 78 萬，六六大順，財富自由。"
+        },
+        { 
+            followers: 80000, 
+            pin: "💎 創辦人鑽石", 
+            amway: 90.0, 
+            fb: 18.0, 
+            consumers: 800, 
+            builders: 8,
+            msg: "你的組織正在自動分裂倍增中..."
+        },
+        { 
+            followers: 100000, 
+            pin: "💎 EDC (執行鑽石)", 
+            amway: 125.0, 
+            fb: 22.0, 
+            consumers: 1000, 
+            builders: 10,
+            msg: "月入 147 萬！這就是靠頭腦賺錢的威力。"
+        },
+        { 
+            followers: 150000, 
+            pin: "👑 皇冠 (Crown)", 
+            amway: 200.0, 
+            fb: 35.0, 
+            consumers: 1500, 
+            builders: 15,
+            msg: "全台灣頂尖 0.1% 的收入階層。"
+        },
+        { 
+            followers: 200000, 
+            pin: "👑 皇冠大使 (FC)", 
+            amway: 275.0, 
+            fb: 48.0, 
+            consumers: 2000, 
+            builders: 20,
+            msg: "王者降臨！月入 323 萬，人生完全自主。"
+        },
+        { 
+            followers: 300000, 
+            pin: "👑 終極 FC", 
+            amway: 450.0, 
+            fb: 65.0, 
+            consumers: 3000, 
+            builders: 30,
+            msg: "你的故事將激勵無數人！"
+        }
+    ];
 
-    window.onload = function() {
-        addDreamRow(); // 預設加入一行夢想
-    };
+    function updateDashboard() {
+        const slider = document.getElementById('follower-slider');
+        const index = slider.value;
+        const data = dataPoints[index];
 
-    function addDreamRow() {
-        const div = document.createElement('div');
-        div.className = 'dynamic-item';
-        const uniqueId = Date.now() + Math.random().toString(16).slice(2);
-        div.innerHTML = `
-            <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                <label style="font-weight:bold; color:var(--primary-dream);">夢想項目</label>
-                <button class="btn-remove" onclick="removeRow(this)">✕</button>
-            </div>
-            <div class="input-group" style="margin-bottom:10px;">
-                <div class="input-wrapper">
-                    <input type="text" class="dream-name" placeholder="名稱 (ex: 台中七期美宅)">
-                </div>
-            </div>
-            <div class="flex-row">
-                <div class="flex-grow">
-                    <div class="input-wrapper">
-                        <input type="number" class="dream-cost" step="0.1" placeholder="總價(萬)" oninput="updatePreview(this, 'pre-${uniqueId}'); calcAll();">
-                    </div>
-                    <div class="preview-box" id="pre-${uniqueId}">0 元</div>
-                </div>
-                <div class="flex-grow">
-                    <div class="input-wrapper">
-                        <select class="dream-type" onchange="calcAll()">
-                            <option value="full">全款買斷</option>
-                            <option value="house">房貸 (頭期3成)</option>
-                            <option value="car">車貸 (頭期1成)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.getElementById('dreams-container').appendChild(div);
-    }
+        // 更新粉絲數顯示
+        document.getElementById('disp-followers').innerText = data.followers.toLocaleString();
 
-    function removeRow(btn) {
-        btn.closest('.dynamic-item').remove();
-        calcAll();
-    }
-
-    function updatePreview(input, previewId) {
-        const val = parseFloat(input.value);
-        const el = document.getElementById(previewId);
-        if (isNaN(val)) el.innerText = "0 元";
-        else el.innerText = Math.round(val * 10000).toLocaleString() + " 元";
-        calcAll();
-    }
-
-    // --- 2025/2026 台灣綜所稅計算核心 ---
-    function calculatePersonalTax(income) {
-        // 免稅額 9.7 + 標扣 13.1 + 薪扣 21.8 = 44.6 (保守估計用45萬)
-        // 2025調整後約 47.4萬 免稅
-        let taxable = income - 47.4; 
-        if (taxable <= 0) return 0;
+        // 更新聘位
+        document.getElementById('disp-pin').innerText = data.pin;
         
-        let tax = 0;
-        // 級距 (萬)
-        if(taxable <= 59) {
-            tax = taxable * 0.05;
-        } else if(taxable <= 133) {
-            tax = taxable * 0.12 - 4.13;
-        } else if(taxable <= 266) {
-            tax = taxable * 0.20 - 14.77;
-        } else if(taxable <= 498) {
-            tax = taxable * 0.30 - 41.37;
+        // 更新主要收入 (小數點後1位)
+        const total = (data.amway + data.fb).toFixed(1);
+        document.getElementById('disp-total').innerText = total;
+
+        // 更新年薪估算
+        const yearly = Math.round(total * 12);
+        document.getElementById('disp-yearly').innerText = `年薪約 ${yearly} 萬`;
+
+        // 更新詳細數據
+        document.getElementById('disp-amway').innerText = `$${data.amway} 萬`;
+        document.getElementById('disp-fb').innerText = `$${data.fb} 萬`;
+        document.getElementById('disp-consumers').innerText = `${data.consumers.toLocaleString()} 人`;
+        document.getElementById('disp-builders').innerText = `${data.builders} 線`;
+
+        // 更新激勵語
+        document.getElementById('disp-msg').innerText = data.msg;
+
+        // 動態改變顏色 (越後面越金)
+        const badge = document.querySelector('.badge-text');
+        const incomeVal = document.querySelector('.income-value');
+        
+        if (index >= 5) { // 鑽石以上
+            badge.style.background = 'linear-gradient(135deg, #d4af37, #f9d423)';
+            badge.style.color = '#fff';
+            incomeVal.style.color = '#d4af37';
         } else {
-            tax = taxable * 0.40 - 91.17;
-        }
-        return tax;
-    }
-
-    function calcAll() {
-        // 1. 取得輸入值
-        const incomeActiveYear = parseFloat(document.getElementById('income-active').value) || 0;
-        const incomePassiveLocal = parseFloat(document.getElementById('income-passive-local').value) || 0;
-        const expenseTotalYear = parseFloat(document.getElementById('expense-total').value) || 0;
-        const debtAnnual = parseFloat(document.getElementById('debt-annual').value) || 0;
-        
-        const pinLevel = parseFloat(document.getElementById('amway-pin').value);
-        const amwayYearly = amwayIncomes[pinLevel] * 12;
-
-        // 2. 稅務計算 (一般情況 vs 公司模式)
-        const incomeBase = incomeActiveYear + incomePassiveLocal; // 不含安麗的基礎所得
-        const taxBase = calculatePersonalTax(incomeBase); // 基礎稅額
-
-        // 3. 安麗情境下的稅務優化
-        const totalIncomeAmway = incomeBase + amwayYearly;
-        const taxPersonalMode = calculatePersonalTax(totalIncomeAmway); // 方案A: 全部個人報
-
-        // 方案B: 安麗收入走公司 (營所稅20% + 記帳費)
-        let isCompanyMode = false;
-        let taxCompanyTotal = taxPersonalMode;
-        let taxSaved = 0;
-        
-        if (amwayYearly > 80) { // 年收超過80萬才考慮開公司 (記帳費成本)
-            const maintenance = 4.0; // 記帳費
-            // 公司部分稅: (收入-成本)*20%
-            let profit = amwayYearly - maintenance;
-            let corporateTax = (profit > 0) ? profit * 0.2 : 0;
-            
-            // 總稅負 = 個人基礎稅(本業) + 公司稅 + 維護費
-            let combinedTax = taxBase + corporateTax + maintenance;
-            
-            if (combinedTax < taxPersonalMode) {
-                isCompanyMode = true;
-                taxCompanyTotal = combinedTax;
-                taxSaved = taxPersonalMode - combinedTax;
-            }
-        }
-
-        const finalTaxAmway = isCompanyMode ? taxCompanyTotal : taxPersonalMode;
-
-        // 4. 計算淨現金流 (年)
-        const netCashflowBase = incomeBase - expenseTotalYear - debtAnnual - taxBase;
-        const netCashflowAmway = totalIncomeAmway - expenseTotalYear - debtAnnual - finalTaxAmway;
-
-        // 5. 換算月自由現金
-        const monthlySurplusBase = netCashflowBase / 12;
-        const monthlySurplusAmway = netCashflowAmway / 12;
-
-        // 6. 更新儀表板
-        document.getElementById('disp-monthly-surplus').innerText = Math.round(monthlySurplusBase * 10000).toLocaleString();
-        const dispTax = (pinLevel > 0) ? finalTaxAmway : taxBase;
-        document.getElementById('disp-tax').innerText = Math.round(dispTax * 10000).toLocaleString();
-        document.getElementById('disp-amway-surplus').innerText = Math.round(monthlySurplusAmway * 10000).toLocaleString();
-
-        // 7. 顯示稅務建議
-        const taxBox = document.getElementById('tax-analysis-container');
-        if (pinLevel > 0 && isCompanyMode) {
-            taxBox.style.display = 'block';
-            document.getElementById('tax-recommendation-text').innerHTML = 
-                `建議成立公司/行號申報安麗收入。<br>相較個人合併申報，每年約可省下 <strong style="color:#d32f2f; font-size:1.1em;">${taxSaved.toFixed(1)} 萬</strong> 稅金，已扣除記帳成本。`;
-        } else {
-            taxBox.style.display = 'none';
-        }
-
-        // 8. 夢想達成時間計算
-        let totalTarget = 0;
-        let totalMonthlyLoad = 0; // 買房買車後的未來月負擔
-        
-        const dreamCosts = document.getElementsByClassName('dream-cost');
-        const dreamTypes = document.getElementsByClassName('dream-type');
-        let hasDreams = false;
-
-        for(let i=0; i<dreamCosts.length; i++) {
-            const cost = parseFloat(dreamCosts[i].value) || 0;
-            const type = dreamTypes[i].value;
-            if(cost > 0) {
-                hasDreams = true;
-                if (type === 'house') {
-                    totalTarget += (cost * 0.3); // 頭期3成
-                    // 簡易房貸推算: 貸7成, 30年, 2.2% => 每百萬約3800
-                    totalMonthlyLoad += (cost * 0.7 * 3800 / 10000); 
-                } else if (type === 'car') {
-                    totalTarget += (cost * 0.1); // 頭期1成
-                    // 簡易車貸: 貸9成, 7年
-                    totalMonthlyLoad += (cost * 0.9 / 84) * 1.05; 
-                } else {
-                    totalTarget += cost; // 全額
-                }
-            }
-        }
-
-        updateResultUI(monthlySurplusBase, totalTarget, totalMonthlyLoad, 'dream-status-current', 'bar-current', false);
-        updateResultUI(monthlySurplusAmway, totalTarget, totalMonthlyLoad, 'dream-status-amway', 'bar-amway', true);
-
-        // 9. 更新激勵文字
-        const motivation = document.getElementById('motivation-text');
-        if (monthlySurplusAmway > monthlySurplusBase * 2 && monthlySurplusAmway > 5) {
-            motivation.innerHTML = "⚡ 你的財務能量正在指數級爆發！";
-            motivation.style.color = "#b8860b";
-        } else if (monthlySurplusAmway < 0) {
-            motivation.innerHTML = "⚠️ 警示：現金流為負，請調整支出或增加收入";
-            motivation.style.color = "#ff6b6b";
-        } else {
-            motivation.innerHTML = "輸入數據，繪製你的未來藍圖";
-            motivation.style.color = "var(--primary-dream)";
+            badge.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
+            incomeVal.style.color = 'var(--accent)';
         }
     }
 
-    function updateResultUI(monthlyNet, target, futureLoad, elId, barId, isBoost) {
-        const el = document.getElementById(elId);
-        const bar = document.getElementById(barId);
-        const msg = document.getElementById('time-saved-msg');
+    // 初始化
+    window.onload = updateDashboard;
 
-        if (!target) {
-            el.innerText = isBoost ? "請選擇聘位" : "請輸入夢想金額";
-            bar.style.width = "0%";
-            if(isBoost) msg.innerText = "";
-            return;
-        }
-
-        // 檢查：存到頭期款後，繳不繳得起貸款？
-        if (monthlyNet < futureLoad && futureLoad > 0) {
-            el.innerHTML = "<span style='font-size:0.6em; color:#d32f2f'>買得起，養不起 (月現流不足支付貸款)</span>";
-            bar.style.width = "5%";
-            bar.style.background = "#ff6b6b";
-            return;
-        }
-
-        if (monthlyNet <= 0) {
-            el.innerText = "無法達成 (現金流不足)";
-            bar.style.width = "0%";
-            return;
-        }
-
-        const monthsToGoal = target / (monthlyNet * 10000); // 萬轉元
-        const years = Math.floor(monthsToGoal / 12);
-        const months = Math.ceil(monthsToGoal % 12);
-
-        let timeText = "";
-        if (years > 60) timeText = "超過 60 年 (遙不可及)";
-        else if (years === 0 && months === 0) timeText = "立即可達成！";
-        else timeText = (years > 0 ? `${years}年 ` : "") + `${months}個月`;
-
-        el.innerText = timeText;
-
-        // 進度條邏輯：假設基準是 60年(720個月)
-        let percent = 0;
-        if (years > 60) percent = 100;
-        else percent = (monthsToGoal / 720) * 100;
-        
-        // 視覺呈現：時間越短，Bar 越滿? 不，Bar 代表時間長度。
-        // 這裡反過來做：顯示 "達成率"。這裡顯示 "時間佔比"
-        let visualWidth = Math.min(percent, 100);
-        bar.style.width = visualWidth + "%";
-        
-        // 顏色控制
-        if (years > 30) bar.style.background = "#ff6b6b"; // 紅色警示
-        else if (years > 10) bar.style.background = "#fbc02d"; // 黃色
-        else bar.style.background = "#66bb6a"; // 綠色
-
-        // 計算節省時間
-        if (isBoost) {
-            bar.style.background = "linear-gradient(to right, #d4af37, #f9d423)"; // 金色
-            // 這裡可以做一個比較
-            const currentText = document.getElementById('dream-status-current').innerText;
-            if (currentText.includes("年")) {
-                msg.innerText = "相較原況，你的人生省下了數十年的奮鬥時間！";
-            }
-        }
-    }
 </script>
 
 </body>
