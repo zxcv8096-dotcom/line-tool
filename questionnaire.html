@@ -3,13 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AI 問卷後台（簡易版）</title>
+  <title>AI 問卷後台（升級版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff); font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
+    body {
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .card { background: rgba(255,255,255,.94); backdrop-filter: blur(10px); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .btn { @apply px-4 py-2 rounded-xl font-semibold; }
+    .chip { border: 1px solid rgba(148,163,184,.6); background: rgba(255,255,255,.7); }
+    .btnBase { border: 1px solid rgba(148,163,184,.55); background: rgba(255,255,255,.75); }
+    .btnBase:hover { background: rgba(255,255,255,.95); }
+    .btnPrimary { background: #4f46e5; color: #fff; }
+    .btnPrimary:hover { background: #4338ca; }
+    .btnDark { background: #0f172a; color: #fff; }
+    .btnDark:hover { background: #000; }
+    .btnDanger { background: #e11d48; color: #fff; }
+    .btnDanger:hover { background: #be123c; }
+    .shadowSoft { box-shadow: 0 16px 40px rgba(15,23,42,.10); }
   </style>
 </head>
 
@@ -17,42 +29,49 @@
   <div class="max-w-6xl mx-auto p-4 md:p-8">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（簡易版）</h1>
-        <p class="text-slate-600 mt-1">不看 JSON、可預覽互動、可存多份、可看 Leads（含大頭照與 userId）</p>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（升級版）</h1>
+        <p class="text-slate-600 mt-1">不用看 JSON｜可 AI 生成｜可預覽｜可存多份｜可看 Leads（含 userId/大頭照/報告）</p>
       </div>
       <div class="flex gap-2">
-        <button id="btnOpenClient" class="hidden px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
+        <button id="btnOpenClient" class="hidden px-4 py-2 rounded-xl btnPrimary font-semibold shadowSoft">
           開啟客戶前台（LIFF 問卷）
         </button>
       </div>
     </header>
 
     <!-- CONNECT -->
-    <section class="card rounded-2xl shadow p-5 mb-4 border border-slate-200">
+    <section class="card rounded-2xl shadowSoft p-5 mb-4 border border-slate-200">
       <div class="grid md:grid-cols-3 gap-4 items-end">
         <div class="md:col-span-2">
           <label class="text-sm font-semibold text-slate-700">Worker 網址（會抓首頁的 line_worker_url）</label>
           <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
                  placeholder="https://api.xxx.workers.dev" />
           <div class="text-xs text-slate-500 mt-2">
-            問卷會存到 key：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
-            Leads 會存到：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
+            問卷儲存：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
+            Leads：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
           </div>
         </div>
         <div class="flex gap-2">
-          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線</button>
-          <button id="btnSave" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">儲存</button>
+          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl btnDark font-semibold shadowSoft">連線</button>
+          <button id="btnSave" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold shadowSoft">儲存</button>
         </div>
       </div>
 
       <div class="mt-3 grid md:grid-cols-3 gap-3">
         <div>
-          <label class="text-xs font-bold text-slate-500">LIFF ID（用來產生客戶入口網址）</label>
+          <label class="text-xs font-bold text-slate-500">LIFF ID（產生客戶入口網址用）</label>
           <input id="inLiffId" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：2001234567-abcDEF" />
         </div>
-        <div class="md:col-span-2">
+        <div>
           <label class="text-xs font-bold text-slate-500">客戶問卷頁檔名（固定）</label>
           <input disabled class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono bg-slate-50" value="liff_survey.html" />
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-500">Gemini API Key（只存你瀏覽器，不上傳）</label>
+          <div class="flex gap-2">
+            <input id="inGeminiKey" type="password" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="貼上你的 Gemini API Key" />
+            <button id="btnKeySave" class="mt-1 px-4 py-2 rounded-xl btnBase font-semibold">記住</button>
+          </div>
         </div>
       </div>
 
@@ -64,13 +83,13 @@
 
     <div class="grid lg:grid-cols-3 gap-4">
       <!-- LEFT -->
-      <aside class="card rounded-2xl shadow p-4 border border-slate-200 h-fit lg:sticky lg:top-4">
+      <aside class="card rounded-2xl shadowSoft p-4 border border-slate-200 h-fit lg:sticky lg:top-4">
         <div class="flex items-center justify-between">
           <div>
             <div class="text-xs text-slate-500">問卷清單</div>
             <div class="text-sm text-slate-900 font-semibold">（可存多份檔案）</div>
           </div>
-          <button id="btnNew" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增問卷</button>
+          <button id="btnNew" class="px-3 py-2 rounded-xl btnPrimary font-semibold shadowSoft">新增問卷</button>
         </div>
 
         <div class="mt-3">
@@ -81,27 +100,34 @@
 
         <hr class="my-4 border-slate-200" />
 
-        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定</button>
-        <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 預覽互動</button>
-        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads 報告</button>
+        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl btnDark font-semibold">① 問卷設定</button>
+        <button id="btnTabAIGen" class="w-full text-left px-4 py-3 rounded-xl btnBase mt-2 font-semibold text-slate-900">② AI 生成</button>
+        <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl btnBase mt-2 font-semibold text-slate-900">③ 預覽互動</button>
+        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl btnBase mt-2 font-semibold text-slate-900">④ Leads 報告</button>
 
         <div class="mt-4 text-xs text-slate-500">
           Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
+        </div>
+
+        <div class="mt-3 text-xs text-slate-500 leading-relaxed">
+          <div class="font-semibold text-slate-700">你要怎麼用（最簡單）：</div>
+          <div>1) 連線 → 2) 去「AI 生成」按一下 → 3) 去「預覽」確認 → 4) 按「儲存」</div>
+          <div>然後把「客戶入口網址」貼到 LINE RichMenu / 關鍵字回覆。</div>
         </div>
       </aside>
 
       <!-- RIGHT -->
       <main class="lg:col-span-2 space-y-4">
         <!-- BUILDER -->
-        <section id="tabBuilder" class="card rounded-2xl shadow p-5 border border-slate-200">
+        <section id="tabBuilder" class="card rounded-2xl shadowSoft p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（看得懂版本）</h2>
-              <p class="text-sm text-slate-600 mt-1">每題固定 4 個選項。你只要填文字即可。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（只要填文字）</h2>
+              <p class="text-sm text-slate-600 mt-1">客戶只能點選，不會出現自行輸入。第一題可很多選項，後面題目預設 4 選項。</p>
             </div>
             <div class="flex gap-2">
-              <button id="btnAddQ" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增題目</button>
-              <button id="btnOpenClientFromHere" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
+              <button id="btnAddQ" class="px-4 py-2 rounded-xl btnBase font-semibold">新增題目</button>
+              <button id="btnOpenClientFromHere" class="px-4 py-2 rounded-xl btnPrimary font-semibold shadowSoft">
                 產生客戶入口網址
               </button>
             </div>
@@ -110,38 +136,115 @@
           <div class="mt-4 grid md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
-              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：疲勞檢測_6題" />
-              <p class="text-xs text-slate-500 mt-2">你會在清單裡看到它，可切換讀取。</p>
+              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：健康需求分流_8題" />
+              <p class="text-xs text-slate-500 mt-2">你會在左側清單看到它，可切換讀取。</p>
             </div>
             <div>
               <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到的）</label>
-              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你為什麼一直累" />
+              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你最需要改善的方向" />
             </div>
 
             <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">結尾報告模板（你想要的口吻）</label>
+              <label class="text-sm font-semibold text-slate-700">結尾報告口吻（你想要的話術方向）</label>
               <textarea id="inReportHint" rows="4" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
                 placeholder="例如：用接地氣但專業的方式，整理他的答案 → 推薦 1~3 個方案方向，最後叫他回『報告』或點連結。"></textarea>
-              <p class="text-xs text-slate-500 mt-2">這段會出現在客戶完成後的報告中（你之後也可再改）。</p>
+            </div>
+          </div>
+
+          <div class="mt-4 grid md:grid-cols-3 gap-3">
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="text-xs text-slate-500 font-bold">第一題（很廣）選項數</div>
+              <div class="mt-2 flex items-center gap-2">
+                <input id="inFirstOptCount" type="number" min="4" max="12" class="w-28 px-3 py-2 rounded-xl border border-slate-200" />
+                <span class="text-xs text-slate-500">（可多，建議 6~10）</span>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="text-xs text-slate-500 font-bold">後續題目每題選項數</div>
+              <div class="mt-2 flex items-center gap-2">
+                <input id="inOptPerQ" type="number" min="3" max="6" class="w-28 px-3 py-2 rounded-xl border border-slate-200" />
+                <span class="text-xs text-slate-500">（你要 4 就填 4）</span>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="text-xs text-slate-500 font-bold">題目數（建議）</div>
+              <div class="mt-2 flex items-center gap-2">
+                <input id="inQCount" type="number" min="4" max="20" class="w-28 px-3 py-2 rounded-xl border border-slate-200" />
+                <span class="text-xs text-slate-500">（用 AI 生成時會用到）</span>
+              </div>
             </div>
           </div>
 
           <div class="mt-5">
-            <h3 class="font-bold text-slate-900">題目列表（每題 4 選項）</h3>
+            <h3 class="font-bold text-slate-900">題目列表</h3>
+            <div class="mt-2 text-xs text-slate-500">
+              第 1 題可很多選項（你可加/減）。第 2 題起用「後續題目選項數」控制。
+            </div>
             <div id="qWrap" class="mt-3 space-y-3"></div>
           </div>
         </section>
 
-        <!-- PREVIEW -->
-        <section id="tabPreview" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
+        <!-- AI GEN -->
+        <section id="tabAIGen" class="hidden card rounded-2xl shadowSoft p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">② 預覽互動（你自己先試跑）</h2>
-              <p class="text-sm text-slate-600 mt-1">你可以像客戶一樣點選，確認流程和文字對不對。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">② AI 生成（按一下就產生整份問卷）</h2>
+              <p class="text-sm text-slate-600 mt-1">你只要填「你想分流的方向」，AI 會生：第一題很廣＋後續聚焦題。</p>
             </div>
             <div class="flex gap-2">
-              <button id="btnPreviewRestart" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">重來</button>
-              <button id="btnPreviewToLeads" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">看 Leads</button>
+              <button id="btnAIGen" class="px-4 py-2 rounded-xl btnPrimary font-semibold shadowSoft">用 AI 生成問卷</button>
+              <button id="btnAIGenToBuilder" class="px-4 py-2 rounded-xl btnBase font-semibold">回到設定</button>
+            </div>
+          </div>
+
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-slate-700">你這份問卷主要想分流什麼？</label>
+              <textarea id="inAIGoal" rows="4" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                placeholder="例：我想把客戶分流成：睡眠/壓力/代謝/腸胃/體重管理/精神專注/運動恢復，最後給我一份接地氣的報告話術。"></textarea>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="text-sm font-semibold text-slate-700">生成規格（自動帶入你在「問卷設定」填的數字）</div>
+              <div class="mt-3 space-y-2 text-sm text-slate-700">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">第一題選項數</span>
+                  <span id="txtSpecFirst" class="mono font-semibold">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">後續題選項數</span>
+                  <span id="txtSpecOptPer" class="mono font-semibold">-</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">題目數</span>
+                  <span id="txtSpecCount" class="mono font-semibold">-</span>
+                </div>
+              </div>
+              <div class="mt-3 text-xs text-slate-500 leading-relaxed">
+                你按「用 AI 生成」後：會直接把題目填回「問卷設定」那一頁，然後你去預覽確認即可。
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div class="font-extrabold">提醒（很重要）</div>
+            <div class="mt-1">
+              這裡是「後台幫你生問卷」用你的 Gemini Key。
+              客戶端不會碰到你的 Key（安全）。
+            </div>
+          </div>
+        </section>
+
+        <!-- PREVIEW -->
+        <section id="tabPreview" class="hidden card rounded-2xl shadowSoft p-5 border border-slate-200">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">③ 預覽互動（你自己先試跑）</h2>
+              <p class="text-sm text-slate-600 mt-1">你可以像客戶一樣點選，確認流程、題目、選項、報告口吻。</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="btnPreviewRestart" class="px-4 py-2 rounded-xl btnBase font-semibold">重來</button>
+              <button id="btnPreviewToLeads" class="px-4 py-2 rounded-xl btnDark font-semibold shadowSoft">看 Leads</button>
             </div>
           </div>
 
@@ -167,15 +270,15 @@
         </section>
 
         <!-- LEADS -->
-        <section id="tabLeads" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
+        <section id="tabLeads" class="hidden card rounded-2xl shadowSoft p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">③ Leads 報告</h2>
-              <p class="text-sm text-slate-600 mt-1">會顯示：大頭照、暱稱、userId、問卷名稱、完成時間、報告。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">④ Leads 報告</h2>
+              <p class="text-sm text-slate-600 mt-1">顯示：大頭照、暱稱、userId、問卷名稱、完成時間、報告。</p>
             </div>
             <div class="flex gap-2">
               <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋（暱稱/問卷/文字）" />
-              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">刷新</button>
+              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl btnBase font-semibold">刷新</button>
             </div>
           </div>
 
@@ -195,7 +298,7 @@
 
   // ========= State =========
   let API_BASE = "";
-  let SURVEYS = [];     // list of {name}
+  let SURVEYS = [];
   let CURRENT = makeEmptySurvey();
   let PREVIEW = { idx: 0, answers: [] };
   let LEADS = [];
@@ -206,7 +309,7 @@
   function toast(msg, type="ok"){
     const wrap = $("toastWrap");
     const div = document.createElement("div");
-    div.className = `card rounded-2xl shadow px-4 py-3 border ${
+    div.className = `card rounded-2xl shadowSoft px-4 py-3 border ${
       type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
     }`;
     div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
@@ -222,15 +325,29 @@
       .replaceAll("'","&#039;");
   }
 
+  function n(v, d){
+    const x = Number(v);
+    return Number.isFinite(x) ? x : d;
+  }
+
+  function getSpec(){
+    const firstOpt = clamp(n($("inFirstOptCount").value, 8), 4, 12);
+    const optPerQ = clamp(n($("inOptPerQ").value, 4), 3, 6);
+    const qCount = clamp(n($("inQCount").value, 8), 4, 20);
+    return { firstOpt, optPerQ, qCount };
+  }
+  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+
   function makeEmptySurvey(){
     return {
       name: "",
       title: "",
       reportHint: "",
+      spec: { firstOpt: 8, optPerQ: 4, qCount: 8 },
       questions: [
-        { q:"你目前最明顯的狀況是？", a:["下午很累","睡醒還是累","精神不集中","最近壓力大"] },
-        { q:"你的睡眠狀況？", a:["很好","普通","很淺","常失眠"] },
-        { q:"你的飲食規律？", a:["規律","偶爾不規律","常外食","常跳餐"] },
+        { q:"你現在最想改善哪一塊？", a:["睡眠","壓力","精神專注","腸胃","代謝/體重","運動恢復","免疫支持","皮膚狀態"] },
+        { q:"你最近的睡眠感受？", a:["很好","普通","淺眠易醒","難入睡"] },
+        { q:"你白天精神狀態？", a:["很穩","下午會掉","常提不起勁","注意力差"] },
       ]
     };
   }
@@ -250,25 +367,30 @@
 
   function setTab(tab){
     $("tabBuilder").classList.toggle("hidden", tab!=="builder");
+    $("tabAIGen").classList.toggle("hidden", tab!=="aigen");
     $("tabPreview").classList.toggle("hidden", tab!=="preview");
     $("tabLeads").classList.toggle("hidden", tab!=="leads");
 
-    $("btnTabBuilder").className = tab==="builder"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-0 font-semibold text-slate-900";
-
-    $("btnTabPreview").className = tab==="preview"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
-
-    $("btnTabLeads").className = tab==="leads"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
+    // style buttons
+    const map = {
+      builder: $("btnTabBuilder"),
+      aigen: $("btnTabAIGen"),
+      preview: $("btnTabPreview"),
+      leads: $("btnTabLeads"),
+    };
+    Object.entries(map).forEach(([k, btn])=>{
+      const active = (k === tab);
+      btn.className = active
+        ? "w-full text-left px-4 py-3 rounded-xl btnDark font-semibold"
+        : "w-full text-left px-4 py-3 rounded-xl btnBase mt-2 font-semibold text-slate-900";
+      if(k==="builder") btn.className = active
+        ? "w-full text-left px-4 py-3 rounded-xl btnDark font-semibold"
+        : "w-full text-left px-4 py-3 rounded-xl btnBase font-semibold text-slate-900";
+    });
   }
 
   // ========= Survey list =========
   async function refreshSurveyList(){
-    // 用你現成 /listAll 拿 DB keys，再過濾 Q_PREFIX
     const data = await api("/listAll", {});
     const db = data.db || [];
     SURVEYS = db
@@ -318,18 +440,32 @@
     if(obj && typeof obj === "object"){
       s.name = obj.name || s.name;
       s.title = obj.title || s.title;
-      s.reportHint = obj.reportHint || obj.reportHint;
-      if(Array.isArray(obj.questions)) s.questions = obj.questions.map(q=>({
-        q: (q.q||"").toString(),
-        a: Array.isArray(q.a) ? q.a.slice(0,4).map(x=>(x||"").toString()) : ["","","",""]
-      }));
+      s.reportHint = obj.reportHint ?? s.reportHint;
+      s.spec = obj.spec && typeof obj.spec === "object" ? {
+        firstOpt: clamp(n(obj.spec.firstOpt, s.spec.firstOpt), 4, 12),
+        optPerQ: clamp(n(obj.spec.optPerQ, s.spec.optPerQ), 3, 6),
+        qCount: clamp(n(obj.spec.qCount, s.spec.qCount), 4, 20),
+      } : s.spec;
+
+      if(Array.isArray(obj.questions)) {
+        s.questions = obj.questions.map((q, idx)=>({
+          q: (q.q||"").toString(),
+          a: Array.isArray(q.a) ? q.a.map(x=>(x||"").toString()) : []
+        }));
+      }
     }
-    // 確保每題 4 個選項
-    s.questions = s.questions.map(q=>{
-      const a = (q.a||[]);
-      while(a.length<4) a.push("");
-      return { q:q.q, a:a.slice(0,4) };
+
+    // enforce options counts
+    s.questions = s.questions.map((q, idx)=>{
+      const need = (idx===0) ? s.spec.firstOpt : s.spec.optPerQ;
+      const a = (q.a||[]).filter(x=>x.trim().length>0);
+      while(a.length < need) a.push("");
+      return { q: q.q, a: a.slice(0, need) };
     });
+
+    if(s.questions.length === 0) {
+      s.questions = makeEmptySurvey().questions;
+    }
     return s;
   }
 
@@ -338,64 +474,147 @@
     $("inName").value = CURRENT.name || "";
     $("inTitle").value = CURRENT.title || "";
     $("inReportHint").value = CURRENT.reportHint || "";
+
+    // spec inputs
+    const spec = CURRENT.spec || getSpec();
+    $("inFirstOptCount").value = spec.firstOpt;
+    $("inOptPerQ").value = spec.optPerQ;
+    $("inQCount").value = spec.qCount;
+
     renderQuestions();
     updateClientBtn();
+    updateAISpecText();
+  }
+
+  function syncSpecFromInputsIntoCurrent(){
+    const spec = getSpec();
+    CURRENT.spec = spec;
+
+    // reshape options counts for all questions
+    CURRENT.questions = (CURRENT.questions||[]).map((q, idx)=>{
+      const need = (idx===0) ? spec.firstOpt : spec.optPerQ;
+      const a = (q.a||[]);
+
+      // keep existing, but ensure length
+      const arr = a.slice(0, need);
+      while(arr.length < need) arr.push("");
+      return { q: q.q, a: arr };
+    });
+
+    updateAISpecText();
+  }
+
+  function updateAISpecText(){
+    const spec = getSpec();
+    $("txtSpecFirst").textContent = spec.firstOpt;
+    $("txtSpecOptPer").textContent = spec.optPerQ;
+    $("txtSpecCount").textContent = spec.qCount;
   }
 
   function renderQuestions(){
     const wrap = $("qWrap");
     wrap.innerHTML = "";
+    syncSpecFromInputsIntoCurrent();
+
+    const spec = CURRENT.spec || getSpec();
 
     CURRENT.questions.forEach((item, idx)=>{
+      const isFirst = idx===0;
+      const need = isFirst ? spec.firstOpt : spec.optPerQ;
+
       const box = document.createElement("div");
       box.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
       box.innerHTML = `
-        <div class="flex items-center justify-between gap-2">
-          <div class="font-extrabold text-slate-900">第 ${idx+1} 題</div>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div>
+            <div class="font-extrabold text-slate-900">第 ${idx+1} 題 ${isFirst ? `<span class="ml-2 text-xs px-2 py-1 rounded-full chip text-slate-700 font-semibold">分流大題（可多選項）</span>` : ``}</div>
+            <div class="text-xs text-slate-500 mt-1">本題選項數：<span class="mono font-semibold">${need}</span></div>
+          </div>
           <div class="flex gap-2">
-            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="up">上移</button>
-            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="down">下移</button>
-            <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="del">刪除</button>
+            <button class="px-3 py-2 rounded-xl btnBase text-sm font-semibold" data-act="up">上移</button>
+            <button class="px-3 py-2 rounded-xl btnBase text-sm font-semibold" data-act="down">下移</button>
+            <button class="px-3 py-2 rounded-xl btnDanger text-sm font-semibold" data-act="del">刪除</button>
           </div>
         </div>
 
         <label class="text-sm font-semibold text-slate-700 mt-3 block">題目</label>
         <input class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" data-k="q" placeholder="請輸入題目" />
 
-        <div class="mt-3 grid md:grid-cols-2 gap-2">
-          ${[0,1,2,3].map(i=>`
-            <div>
-              <label class="text-xs font-bold text-slate-500">選項 ${i+1}</label>
-              <input class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" data-k="a${i}" placeholder="請輸入選項文字" />
+        <div class="mt-3">
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-semibold text-slate-700">選項（客戶只能點選）</div>
+            <div class="flex gap-2">
+              <button class="px-3 py-2 rounded-xl btnBase text-xs font-semibold" data-act="addOpt">＋加一個選項</button>
+              <button class="px-3 py-2 rounded-xl btnBase text-xs font-semibold" data-act="delOpt">－刪最後一個</button>
             </div>
-          `).join("")}
+          </div>
+          <div class="mt-2 grid md:grid-cols-2 gap-2" data-optwrap></div>
+          <div class="mt-2 text-xs text-slate-500">
+            ※ 第 1 題的選項數由「第一題選項數」控制；第 2 題起由「後續題目每題選項數」控制。<br>
+            ※ 你也可以用上面「＋/－」調整，但儲存時會以規格統一（避免亂掉）。
+          </div>
         </div>
       `;
 
       // fill values
-      box.querySelector('[data-k="q"]').value = item.q || "";
-      [0,1,2,3].forEach(i=>{
-        box.querySelector(`[data-k="a${i}"]`).value = (item.a && item.a[i]) ? item.a[i] : "";
-      });
+      const qInput = box.querySelector('[data-k="q"]');
+      qInput.value = item.q || "";
+      qInput.oninput = (e)=>{ item.q = e.target.value; };
 
-      // bind
-      box.querySelector('[data-k="q"]').oninput = (e)=>{ item.q = e.target.value; };
-      [0,1,2,3].forEach(i=>{
-        box.querySelector(`[data-k="a${i}"]`).oninput = (e)=>{ item.a[i] = e.target.value; };
-      });
+      const optWrap = box.querySelector("[data-optwrap]");
+      const renderOpts = ()=>{
+        optWrap.innerHTML = "";
+        const needNow = (idx===0) ? (CURRENT.spec?.firstOpt ?? spec.firstOpt) : (CURRENT.spec?.optPerQ ?? spec.optPerQ);
+        while((item.a||[]).length < needNow) item.a.push("");
+        item.a = item.a.slice(0, needNow);
+
+        item.a.forEach((val, i)=>{
+          const d = document.createElement("div");
+          d.innerHTML = `
+            <label class="text-xs font-bold text-slate-500">選項 ${i+1}</label>
+            <input class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="請輸入選項文字" />
+          `;
+          const inp = d.querySelector("input");
+          inp.value = val || "";
+          inp.oninput = (e)=>{ item.a[i] = e.target.value; };
+          optWrap.appendChild(d);
+        });
+      };
+      renderOpts();
 
       // actions
       box.querySelectorAll("button[data-act]").forEach(btn=>{
         btn.onclick = ()=>{
           const act = btn.getAttribute("data-act");
+
           if(act==="del"){
             CURRENT.questions.splice(idx,1);
-          }else if(act==="up" && idx>0){
-            const t = CURRENT.questions[idx-1]; CURRENT.questions[idx-1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
-          }else if(act==="down" && idx<CURRENT.questions.length-1){
-            const t = CURRENT.questions[idx+1]; CURRENT.questions[idx+1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
+            renderQuestions();
+            return;
           }
-          renderQuestions();
+          if(act==="up" && idx>0){
+            const t = CURRENT.questions[idx-1]; CURRENT.questions[idx-1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
+            renderQuestions();
+            return;
+          }
+          if(act==="down" && idx<CURRENT.questions.length-1){
+            const t = CURRENT.questions[idx+1]; CURRENT.questions[idx+1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
+            renderQuestions();
+            return;
+          }
+
+          if(act==="addOpt"){
+            // allow add, but will be normalized by spec on save
+            item.a.push("");
+            renderOpts();
+            return;
+          }
+          if(act==="delOpt"){
+            if(item.a.length<=3) return toast("至少保留 3 個選項", "warn");
+            item.a.pop();
+            renderOpts();
+            return;
+          }
         };
       });
 
@@ -415,11 +634,18 @@
     const title = ($("inTitle").value||"").trim();
     if(!name) throw new Error("請先填『問卷檔名』");
     if(!title) throw new Error("請先填『問卷標題』");
-    if(CURRENT.questions.length<1) throw new Error("至少要有 1 題");
+    if((CURRENT.questions||[]).length < 1) throw new Error("至少要有 1 題");
+
+    syncSpecFromInputsIntoCurrent();
+
+    const spec = CURRENT.spec || getSpec();
     CURRENT.questions.forEach((q,i)=>{
       if(!(q.q||"").trim()) throw new Error(`第 ${i+1} 題題目是空的`);
-      for(let k=0;k<4;k++){
-        if(!(q.a[k]||"").trim()) throw new Error(`第 ${i+1} 題的選項 ${k+1} 是空的`);
+      const need = (i===0) ? spec.firstOpt : spec.optPerQ;
+      const a = (q.a||[]);
+      if(a.length !== need) throw new Error(`第 ${i+1} 題選項數不正確（需要 ${need}）`);
+      for(let k=0;k<need;k++){
+        if(!(a[k]||"").trim()) throw new Error(`第 ${i+1} 題的選項 ${k+1} 是空的`);
       }
     });
     return { name, title };
@@ -427,9 +653,14 @@
 
   async function saveSurvey(){
     validateSurvey();
+
     CURRENT.name = ($("inName").value||"").trim();
     CURRENT.title = ($("inTitle").value||"").trim();
     CURRENT.reportHint = ($("inReportHint").value||"").trim();
+    CURRENT.spec = getSpec();
+
+    // normalize strictly before save
+    CURRENT = normalizeSurvey(CURRENT);
 
     await api("/putAny", {
       namespace: "DB",
@@ -443,8 +674,14 @@
 
   // ========= Preview =========
   function startPreview(){
-    // 直接用 CURRENT 來跑
-    const title = ($("inTitle").value||CURRENT.title||"").trim() || "（未命名問卷）";
+    // ensure latest builder edits are reflected
+    CURRENT.name = ($("inName").value||CURRENT.name||"").trim();
+    CURRENT.title = ($("inTitle").value||CURRENT.title||"").trim();
+    CURRENT.reportHint = ($("inReportHint").value||CURRENT.reportHint||"").trim();
+    CURRENT.spec = getSpec();
+    CURRENT = normalizeSurvey(CURRENT);
+
+    const title = (CURRENT.title||"").trim() || "（未命名問卷）";
     $("pvTitle").textContent = title;
     PREVIEW = { idx: 0, answers: [] };
     $("pvReportBox").classList.add("hidden");
@@ -459,7 +696,6 @@
     $("pvStep").textContent = `進度：${Math.min(idx+1, qList.length)}/${qList.length}`;
 
     if(idx >= qList.length){
-      // done -> make report preview
       $("pvQuestion").textContent = "完成！以下是報告預覽";
       $("pvOptions").innerHTML = "";
 
@@ -475,7 +711,7 @@
     const optWrap = $("pvOptions");
     optWrap.innerHTML = "";
 
-    (q.a||[]).slice(0,4).forEach((txt, i)=>{
+    (q.a||[]).forEach((txt, i)=>{
       const b = document.createElement("button");
       b.className = "px-4 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 text-left font-semibold";
       b.textContent = txt || `選項 ${i+1}`;
@@ -507,9 +743,9 @@
   }
 
   function buildReportPreview(){
-    const hint = ($("inReportHint").value||CURRENT.reportHint||"").trim();
+    const hint = (CURRENT.reportHint||"").trim();
     const bullets = PREVIEW.answers.map(x=>`- ${x.q}：${x.a}`).join("\n");
-    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || "（你尚未填結尾報告模板）"}\n\n【下一步】\n回我『報告』我幫你整理成一份更精準的方案。`;
+    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || "（你尚未填結尾報告口吻）"}\n\n【下一步】\n回我『報告』我幫你整理成一份更精準的方案。`;
   }
 
   // ========= Leads =========
@@ -519,7 +755,6 @@
     const keys = db.filter(k=>k.startsWith(LEAD_PREFIX)).sort((a,b)=>b.localeCompare(a));
     $("txtLeadCount").textContent = String(keys.length);
 
-    // 載入前 30 筆避免太慢（你要更多我再加分頁）
     const top = keys.slice(0, 30);
     const rows = await Promise.all(top.map(k =>
       api("/loadAny", { namespace:"DB", keyword:k })
@@ -540,7 +775,7 @@
     if(items.length===0){
       const d = document.createElement("div");
       d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
-      d.textContent = "目前沒有 Leads。";
+      d.textContent = "目前沒有 Leads。（客戶前台要把結果寫入 AI_SURVEY:LEAD: 才會出現）";
       wrap.appendChild(d);
       return;
     }
@@ -594,8 +829,6 @@
       return;
     }
 
-    // 這裡「page=liff_survey.html」是假設你把 liff_survey.html 跟 questionnaire.html 放同一個 GitHub Pages 網域底下
-    // 客戶真正打開的是 LIFF URL，裡面帶 survey=問卷名稱
     const surveyParam = encodeURIComponent(name || "");
     const url = `https://liff.line.me/${encodeURIComponent(liffId)}?page=liff_survey.html&survey=${surveyParam}`;
 
@@ -612,6 +845,109 @@
     };
   }
 
+  // ========= Gemini AI Generate =========
+  function getGeminiKey(){
+    return ($("inGeminiKey").value || localStorage.getItem("gemini_api_key") || "").trim();
+  }
+
+  async function geminiGenerateSurvey(){
+    const key = getGeminiKey();
+    if(!key) throw new Error("請先貼上 Gemini API Key（右上那格）");
+
+    // bring latest spec
+    syncSpecFromInputsIntoCurrent();
+    const spec = getSpec();
+    const goal = ($("inAIGoal").value || "").trim();
+    if(!goal) throw new Error("請先填『你想分流什麼』");
+
+    const title = ($("inTitle").value || CURRENT.title || "").trim() || "健康需求分流問卷";
+    const reportHint = ($("inReportHint").value || CURRENT.reportHint || "").trim() || "用接地氣但專業的方式整理，給 1~3 個方案方向，不做醫療診斷、不誇大效果，最後引導回『報告』。";
+
+    const sys = [
+      "你是『營養/健康需求分流問卷設計助手』，用繁體中文。",
+      "目標：用「全選擇題」引導使用者釐清需求，最後方便業務給方案方向。",
+      "禁止：醫療診斷、治療承諾、誇大療效、恐嚇式語言。",
+      "輸出必須是『純 JSON』，不可有任何多餘文字。"
+    ].join("\n");
+
+    const user = [
+      `請設計一份問卷：`,
+      `- 問卷標題：${title}`,
+      `- 題目數：${spec.qCount} 題`,
+      `- 第 1 題是「分流大題」，選項數 ${spec.firstOpt}，要很廣、覆蓋常見需求（例：睡眠、壓力、精神專注、腸胃、代謝/體重、運動恢復、免疫支持、皮膚狀態... 可自行調整）`,
+      `- 第 2~${spec.qCount} 題：每題選項數 ${spec.optPerQ}，依第 1 題的方向逐步聚焦（但仍要通用，不要硬綁某一個問題）`,
+      `- 問題內容要接地氣、容易懂、不要太專業術語`,
+      `- 使用者不能輸入，只能點選`,
+      ``,
+      `我想分流的目的/方向：${goal}`,
+      ``,
+      `請輸出 JSON 格式如下：`,
+      `{
+        "title": "...",
+        "reportHint": "${reportHint.replaceAll('"','\\"')}",
+        "spec": {"firstOpt": ${spec.firstOpt}, "optPerQ": ${spec.optPerQ}, "qCount": ${spec.qCount}},
+        "questions": [
+          {"q":"...","a":["...","..."]},
+          ...
+        ]
+      }`
+    ].join("\n");
+
+    // Per docs: v1beta/models/<model>:generateContent?key=...
+    const model = "gemini-1.5-flash-001";
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+
+    const body = {
+      contents: [
+        { role: "user", parts: [{ text: sys + "\n\n" + user }] }
+      ],
+      generationConfig: {
+        temperature: 0.6,
+        topP: 0.9,
+        maxOutputTokens: 2048
+      }
+    };
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json().catch(()=>null);
+    if(!res.ok){
+      const msg = (data && (data.error?.message || data.error?.status)) ? JSON.stringify(data.error) : (res.statusText || "Gemini API error");
+      throw new Error("Gemini 失敗：" + msg);
+    }
+
+    // extract text
+    const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join("") || "";
+    const jsonText = extractJson(text);
+    let obj;
+    try { obj = JSON.parse(jsonText); }
+    catch { throw new Error("AI 回覆不是可解析的 JSON（你可以再按一次生成）"); }
+
+    // merge into CURRENT
+    CURRENT.title = obj.title || title;
+    CURRENT.reportHint = obj.reportHint || reportHint;
+    CURRENT.spec = obj.spec || getSpec();
+    CURRENT.questions = Array.isArray(obj.questions) ? obj.questions : CURRENT.questions;
+
+    CURRENT = normalizeSurvey(CURRENT);
+    fillBuilder();
+    toast("AI 已生成問卷（已填回設定頁）");
+    setTab("builder");
+  }
+
+  function extractJson(s){
+    const t = (s||"").trim();
+    // try find first { ... } block
+    const i = t.indexOf("{");
+    const j = t.lastIndexOf("}");
+    if(i>=0 && j>i) return t.slice(i, j+1);
+    return t;
+  }
+
   // ========= Init =========
   function initApiBase(){
     const fromHome = (localStorage.getItem("line_worker_url") || "").trim();
@@ -623,6 +959,9 @@
     }
     const liff = (localStorage.getItem("line_liff_id") || "").trim();
     if(liff) $("inLiffId").value = liff;
+
+    const gk = (localStorage.getItem("gemini_api_key") || "").trim();
+    if(gk) $("inGeminiKey").value = gk;
   }
 
   function setApiBaseFromInput(){
@@ -640,13 +979,19 @@
       updateClientBtn();
     };
 
-    $("inTitle").oninput = ()=>{};
-    $("inReportHint").oninput = ()=>{};
+    ["inFirstOptCount","inOptPerQ","inQCount"].forEach(id=>{
+      $(id).oninput = ()=>{
+        syncSpecFromInputsIntoCurrent();
+        renderQuestions();
+        updateAISpecText();
+      };
+    });
 
     $("qSearch").oninput = ()=> renderSurveyList();
     $("leadSearch").oninput = ()=> renderLeads();
 
     $("btnTabBuilder").onclick = ()=> setTab("builder");
+    $("btnTabAIGen").onclick = ()=> { updateAISpecText(); setTab("aigen"); };
     $("btnTabPreview").onclick = ()=> startPreview();
     $("btnTabLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
 
@@ -658,8 +1003,12 @@
     };
 
     $("btnAddQ").onclick = ()=>{
-      CURRENT.questions.push({ q:"", a:["","","",""] });
+      syncSpecFromInputsIntoCurrent();
+      const spec = CURRENT.spec || getSpec();
+      // new question uses optPerQ
+      CURRENT.questions.push({ q:"", a:Array(spec.optPerQ).fill("") });
       renderQuestions();
+      toast("已新增題目");
     };
 
     $("btnPreviewRestart").onclick = ()=> startPreview();
@@ -693,6 +1042,26 @@
         toast(e.message,"err");
       }
     };
+
+    $("btnAIGen").onclick = async ()=>{
+      try{
+        await geminiGenerateSurvey();
+      }catch(e){
+        toast(e.message, "err");
+      }
+    };
+    $("btnAIGenToBuilder").onclick = ()=> setTab("builder");
+
+    $("btnKeySave").onclick = ()=>{
+      const k = ($("inGeminiKey").value||"").trim();
+      if(!k) return toast("請先貼上 Gemini API Key", "warn");
+      localStorage.setItem("gemini_api_key", k);
+      toast("Gemini Key 已記住（只存在你的瀏覽器）");
+    };
+
+    $("btnOpenClientFromHere").onclick = ()=> updateClientBtn();
+
+    $("btnKeySave").title = "只存在你的瀏覽器 localStorage";
   }
 
   (function init(){
