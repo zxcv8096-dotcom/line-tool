@@ -2,13 +2,45 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>AI 問卷後台（簡易版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff); font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body {
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
     .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* ✅ 手機可用度：輸入更好點、避免被 iOS 放大 */
+    input, textarea, button { font-size: 16px; }
+    button { touch-action: manipulation; }
+
+    /* ✅ 文字匯入框：可滑、可長、不卡住 */
+    #bulkText{
+      resize: vertical;
+      min-height: 240px;
+      max-height: 70vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* ✅ modal 內容：手機不爆版，可滾動 */
+    #bulkModal .modalCard{
+      max-height: calc(100vh - 24px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #bulkModal .modalBody{
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px;
+    }
+
+    /* ✅ 手機底部導覽（更直覺） */
+    .mobileNavSafe { padding-bottom: env(safe-area-inset-bottom); }
   </style>
 </head>
 
@@ -62,31 +94,40 @@
     </section>
 
     <div class="grid lg:grid-cols-3 gap-4">
-      <!-- LEFT -->
-      <aside class="card rounded-2xl shadow p-4 border border-slate-200 h-fit lg:sticky lg:top-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-xs text-slate-500">問卷清單</div>
-            <div class="text-sm text-slate-900 font-semibold">（可存多份檔案）</div>
+      <!-- LEFT（手機折疊更舒服，功能不刪） -->
+      <aside class="card rounded-2xl shadow p-0 border border-slate-200 h-fit lg:sticky lg:top-4 overflow-hidden">
+        <details id="sideDetails" class="open:bg-transparent" open>
+          <summary class="list-none cursor-pointer select-none p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500">問卷清單</div>
+              <div class="text-sm text-slate-900 font-semibold">（可存多份檔案）</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnNew" type="button" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
+                新增問卷
+              </button>
+              <span class="text-xs text-slate-400 lg:hidden">點收合/展開</span>
+            </div>
+          </summary>
+
+          <div class="px-4 pb-4">
+            <div class="mt-1">
+              <input id="qSearch" class="w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋問卷名稱…" />
+            </div>
+
+            <div id="surveyList" class="mt-3 space-y-2"></div>
+
+            <hr class="my-4 border-slate-200" />
+
+            <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定</button>
+            <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 預覽互動</button>
+            <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads 報告</button>
+
+            <div class="mt-4 text-xs text-slate-500">
+              Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
+            </div>
           </div>
-          <button id="btnNew" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增問卷</button>
-        </div>
-
-        <div class="mt-3">
-          <input id="qSearch" class="w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋問卷名稱…" />
-        </div>
-
-        <div id="surveyList" class="mt-3 space-y-2"></div>
-
-        <hr class="my-4 border-slate-200" />
-
-        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定</button>
-        <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 預覽互動</button>
-        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads 報告</button>
-
-        <div class="mt-4 text-xs text-slate-500">
-          Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
-        </div>
+        </details>
       </aside>
 
       <!-- RIGHT -->
@@ -189,10 +230,21 @@
     </div>
   </div>
 
+  <!-- ✅ 手機底部導覽（不刪功能，只是更好用） -->
+  <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 mobileNavSafe">
+    <div class="mx-auto max-w-6xl px-3 pb-3">
+      <div class="card border border-slate-200 shadow rounded-2xl p-2 flex gap-2">
+        <button id="mTabBuilder" class="flex-1 px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">問卷設定</button>
+        <button id="mTabPreview" class="flex-1 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold">預覽</button>
+        <button id="mTabLeads" class="flex-1 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold">Leads</button>
+      </div>
+    </div>
+  </div>
+
   <!-- BULK MODAL -->
   <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50">
-    <div class="max-w-3xl mx-auto p-4 md:p-8">
-      <div class="card rounded-2xl shadow border border-slate-200 p-5">
+    <div class="max-w-3xl mx-auto p-3 md:p-8 h-full">
+      <div class="modalCard card rounded-2xl shadow border border-slate-200 p-5">
         <div class="flex items-start justify-between gap-3">
           <div>
             <div class="text-xl font-extrabold text-slate-900">批次貼上匯入</div>
@@ -201,8 +253,9 @@
           <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
         </div>
 
-        <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-          <div class="font-bold">格式範例：</div>
+        <div class="modalBody mt-4">
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
+            <div class="font-bold">格式範例：</div>
 <pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 健康需求分流_8題_第一版
 TITLE: 三分鐘找出你目前最需要改善的方向
 REPORT:
@@ -225,18 +278,19 @@ Q: 你最近的睡眠狀況比較像哪一種？
 - 普通：能睡，但醒來還是覺得累
 - 淺眠：容易醒、睡不深
 - 難入睡：躺很久才睡著 / 會想很多</pre>
-        </div>
+          </div>
 
-        <textarea id="bulkText" rows="14" class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
-          placeholder="把你的問卷文字貼在這裡…"></textarea>
+          <textarea id="bulkText" class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
+            placeholder="把你的問卷文字貼在這裡…"></textarea>
 
-        <div class="mt-4 flex flex-wrap gap-2 justify-end">
-          <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
-          <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用到後台</button>
-        </div>
+          <div class="mt-4 flex flex-wrap gap-2 justify-end">
+            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
+            <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用到後台</button>
+          </div>
 
-        <div class="mt-3 text-xs text-slate-500">
-          規則：第 1 題可多選項；第 2 題後每題只保留前 4 個選項（不足會補空白）。
+          <div class="mt-3 text-xs text-slate-500">
+            規則：第 1 題可多選項；第 2 題後每題只保留前 4 個選項（不足會補空白）。
+          </div>
         </div>
       </div>
     </div>
@@ -318,6 +372,28 @@ Q: 你最近的睡眠狀況比較像哪一種？
     $("btnTabLeads").className = tab==="leads"
       ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
       : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
+
+    // ✅ 手機底部導覽同步
+    if($("mTabBuilder")){
+      $("mTabBuilder").className = tab==="builder"
+        ? "flex-1 px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
+        : "flex-1 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold";
+
+      $("mTabPreview").className = tab==="preview"
+        ? "flex-1 px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
+        : "flex-1 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold";
+
+      $("mTabLeads").className = tab==="leads"
+        ? "flex-1 px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
+        : "flex-1 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold";
+    }
+
+    // ✅ 手機切 tab 時，自動把左側折疊起來（不刪功能，只是更順）
+    const sd = $("sideDetails");
+    if(sd && window.innerWidth < 1024) sd.open = false;
+
+    // ✅ 避免被底部導覽蓋住
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   // ========= Survey list =========
@@ -411,15 +487,14 @@ Q: 你最近的睡眠狀況比較像哪一種？
       box.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
 
       const isFirst = idx===0;
-      const optCount = isFirst ? Math.max(4, (item.a||[]).length) : 4;
 
       box.innerHTML = `
         <div class="flex items-center justify-between gap-2">
           <div class="font-extrabold text-slate-900">第 ${idx+1} 題 ${isFirst ? "（可多選項）" : "（4 選項）"}</div>
           <div class="flex gap-2">
-            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="up">上移</button>
-            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="down">下移</button>
-            <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="del">刪除</button>
+            <button type="button" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="up">上移</button>
+            <button type="button" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="down">下移</button>
+            <button type="button" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="del">刪除</button>
           </div>
         </div>
 
@@ -428,7 +503,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
 
         <div class="mt-3 flex items-center justify-between">
           <div class="text-xs text-slate-500">${isFirst ? "第 1 題選項數可多（預覽會顯示全部）" : "固定 4 個選項"}</div>
-          ${isFirst ? `<button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="addopt">+ 加選項</button>` : ``}
+          ${isFirst ? `<button type="button" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="addopt">+ 加選項</button>` : ``}
         </div>
 
         <div class="mt-3 grid md:grid-cols-2 gap-2" data-optwrap></div>
@@ -459,7 +534,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
             <label class="text-xs font-bold text-slate-500">選項 ${i+1}</label>
             <div class="mt-1 flex gap-2">
               <input class="flex-1 w-full px-4 py-2 rounded-xl border border-slate-200" data-k="a${i}" placeholder="請輸入選項文字" />
-              ${isFirst && i>=4 ? `<button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-del="${i}">刪</button>` : ``}
+              ${isFirst && i>=4 ? `<button type="button" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-del="${i}">刪</button>` : ``}
             </div>
           `;
           const inp = div.querySelector(`[data-k="a${i}"]`);
@@ -586,6 +661,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
     const opts = (q.a||[]).filter(x=>String(x||"").trim()!=="");
     opts.forEach((txt)=>{
       const b = document.createElement("button");
+      b.type = "button";
       b.className = "px-4 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 text-left font-semibold";
       b.textContent = txt;
       b.onclick = ()=>{
@@ -719,15 +795,27 @@ Q: 你最近的睡眠狀況比較像哪一種？
   }
 
   // ========= Bulk Import =========
-  function openBulk(){ $("bulkModal").classList.remove("hidden"); }
-  function closeBulk(){ $("bulkModal").classList.add("hidden"); }
+  function lockBodyScroll(lock){
+    document.documentElement.style.overflow = lock ? "hidden" : "";
+    document.body.style.overflow = lock ? "hidden" : "";
+    document.body.style.touchAction = lock ? "none" : "";
+  }
+
+  function openBulk(){
+    $("bulkModal").classList.remove("hidden");
+    lockBodyScroll(true);
+    setTimeout(()=>{ $("bulkText")?.focus?.(); }, 50);
+  }
+  function closeBulk(){
+    $("bulkModal").classList.add("hidden");
+    lockBodyScroll(false);
+  }
 
   function parseBulk(text){
     const lines = (text||"").replace(/\r/g,"").split("\n");
     const out = { name:"", title:"", reportHint:"", questions:[] };
 
     let i=0;
-    // read header
     for(; i<lines.length; i++){
       const line = (lines[i]||"").trim();
       if(!line) continue;
@@ -745,11 +833,9 @@ Q: 你最近的睡眠狀況比較像哪一種？
         out.reportHint = buf.join("\n").trim();
         continue;
       }
-      // start questions
       if(/^Q\s*:/i.test(line) || /^第\s*\d+\s*題[:：]/.test(line)) break;
     }
 
-    // read questions
     let cur = null;
     for(; i<lines.length; i++){
       const raw = lines[i] ?? "";
@@ -764,7 +850,6 @@ Q: 你最近的睡眠狀況比較像哪一種？
         continue;
       }
 
-      // option line: "- xxx" or "1) xxx" or "1. xxx"
       const m1 = line.match(/^\-\s*(.+)$/);
       const m2 = line.match(/^\d+\s*[\)\.、]\s*(.+)$/);
       const opt = (m1 ? m1[1] : (m2 ? m2[1] : ""));
@@ -774,7 +859,6 @@ Q: 你最近的睡眠狀況比較像哪一種？
     }
     if(cur) out.questions.push(cur);
 
-    // normalize
     if(out.questions.length===0) throw new Error("沒有讀到題目（請確認有 Q: 開頭）");
     out.questions = out.questions.map((q, idx)=>{
       const a = (q.a||[]).map(x=>String(x||"").trim()).filter(Boolean);
@@ -809,6 +893,15 @@ Q: 你最近的睡眠狀況比較像哪一種？
     }
     const liff = (localStorage.getItem("line_liff_id") || "").trim();
     if(liff) $("inLiffId").value = liff;
+
+    // ✅ 大螢幕預設展開側欄，小螢幕預設收合
+    const sd = $("sideDetails");
+    if(sd){
+      sd.open = window.innerWidth >= 1024;
+      window.addEventListener("resize", ()=>{
+        if(window.innerWidth >= 1024) sd.open = true;
+      });
+    }
   }
 
   function setApiBaseFromInput(){
@@ -832,6 +925,11 @@ Q: 你最近的睡眠狀況比較像哪一種？
     $("btnTabBuilder").onclick = ()=> setTab("builder");
     $("btnTabPreview").onclick = ()=> startPreview();
     $("btnTabLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
+
+    // ✅ 手機底部導覽
+    $("mTabBuilder").onclick = ()=> setTab("builder");
+    $("mTabPreview").onclick = ()=> setTab("preview");
+    $("mTabLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
 
     $("btnNew").onclick = ()=>{
       CURRENT = makeEmptySurvey();
@@ -882,6 +980,11 @@ Q: 你最近的睡眠狀況比較像哪一種？
     $("btnBulkClose").onclick = closeBulk;
     $("bulkModal").addEventListener("click", (e)=>{ if(e.target === $("bulkModal")) closeBulk(); });
 
+    // ESC to close modal
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape" && !$("bulkModal").classList.contains("hidden")) closeBulk();
+    });
+
     $("btnBulkExample").onclick = ()=>{
       $("bulkText").value = `NAME: 健康需求分流_8題_第一版
 TITLE: 三分鐘找出你目前最需要改善的方向
@@ -907,6 +1010,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
 - 淺眠：容易醒、睡不深
 - 難入睡：躺很久才睡著 / 會想很多`;
       toast("已塞入範例（你可直接改字）");
+      setTimeout(()=>{ $("bulkText").focus(); }, 50);
     };
 
     $("btnBulkApply").onclick = ()=>{
@@ -915,6 +1019,7 @@ Q: 你最近的睡眠狀況比較像哪一種？
         applyBulkToCurrent(parsed);
         closeBulk();
         toast("已套用匯入內容（記得按儲存）");
+        setTab("builder");
       }catch(e){
         toast(e.message, "err");
       }
@@ -929,5 +1034,9 @@ Q: 你最近的睡眠狀況比較像哪一種？
     updateClientBtn();
   })();
 </script>
+
+<!-- ✅ 避免手機底部導覽遮住內容：留底部空間 -->
+<div class="lg:hidden h-24"></div>
+
 </body>
 </html>
