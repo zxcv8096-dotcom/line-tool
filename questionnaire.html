@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>AI 問卷後台（完整強化版）</title>
+  <title>AI 問卷後台（分支＋個人化報告版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body{
@@ -14,10 +14,10 @@
     .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
     .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-    /* 讓手機匯入框舒服可滑、不卡住 */
     textarea { -webkit-overflow-scrolling: touch; }
-    /* modal 內部滾動 */
     .modal-scroll { max-height: min(78vh, 720px); overflow: auto; -webkit-overflow-scrolling: touch; }
+    /* ✅ iOS/LINE 內建瀏覽器：Modal 打開時避免整頁卡住 */
+    body.modal-open { position: fixed; width: 100%; overflow: hidden; }
   </style>
 </head>
 
@@ -25,13 +25,14 @@
   <div class="max-w-6xl mx-auto p-4 md:p-8">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台</h1>
-        <p class="text-slate-600 mt-1">多問卷｜關鍵字綁定｜一鍵刪除｜可預覽｜可匯入文字｜Leads 報告</p>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（分支＋個人化報告）</h1>
+        <p class="text-slate-600 mt-1">多問卷｜關鍵字綁定｜分支題庫 nodes｜報告 templates｜一鍵刪除｜批次匯入</p>
       </div>
       <div class="flex gap-2">
-        <button id="btnOpenClient" class="hidden px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">
-          開啟客戶前台（LIFF 問卷）
-        </button>
+        <div class="text-xs text-slate-600 leading-5">
+          <div>✅ 客戶全程在 LINE 內點選，不跳轉網站</div>
+          <div>⚠️ 維生素/缺乏為「可能性提示」，非診斷</div>
+        </div>
       </div>
     </header>
 
@@ -51,17 +52,6 @@
         <div class="flex gap-2">
           <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線</button>
           <button id="btnSave" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">儲存</button>
-        </div>
-      </div>
-
-      <div class="mt-3 grid md:grid-cols-3 gap-3">
-        <div>
-          <label class="text-xs font-bold text-slate-500">LIFF ID</label>
-          <input id="inLiffId" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：2001234567-abcDEF" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="text-xs font-bold text-slate-500">客戶問卷頁檔名（固定）</label>
-          <input disabled class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono bg-slate-50" value="liff_survey.html" />
         </div>
       </div>
 
@@ -90,9 +80,15 @@
 
         <hr class="my-4 border-slate-200" />
 
-        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定</button>
-        <button id="btnTabPreview" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 預覽互動</button>
+        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定（分支）</button>
+        <button id="btnTabTemplates" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 報告模板（維生素＋產品建議）</button>
         <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads 報告</button>
+
+        <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 leading-5">
+          <div class="font-extrabold">提醒</div>
+          <div>你要「不要出現他選擇的狀況」：已內建。</div>
+          <div>LINE 最後只會送「個人化建議」模板，不會列出選項。</div>
+        </div>
 
         <div class="mt-4 text-xs text-slate-500">
           Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
@@ -105,89 +101,120 @@
         <section id="tabBuilder" class="card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定</h2>
-              <p class="text-sm text-slate-600 mt-1">第 1 題可多選項；第 2 題後每題固定 4 個選項。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（分支 nodes）</h2>
+              <p class="text-sm text-slate-600 mt-1">每個選項可以指向不同下一題，最後結束後會依 reportKey 送出你的個人化報告。</p>
             </div>
             <div class="flex gap-2 flex-wrap">
               <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次匯入</button>
-              <button id="btnAddQ" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增題目</button>
-              <button id="btnCopyLinkTop" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">複製入口</button>
+              <button id="btnAddNode" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增節點</button>
+              <button id="btnValidate" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">檢查設定</button>
             </div>
           </div>
 
           <div class="mt-4 grid md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
-              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：健康需求分流_8題_第一版" />
+              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：作息分流_第一版" />
             </div>
             <div>
               <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到）</label>
-              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：三分鐘找出你最想改善的方向" />
+              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：60 秒作息分析" />
             </div>
 
-            <!-- ✅ 關鍵字（不說明、不占版面） -->
             <div class="md:col-span-2">
               <div class="flex items-center justify-between gap-2">
-                <label class="text-sm font-semibold text-slate-700">關鍵字</label>
+                <label class="text-sm font-semibold text-slate-700">關鍵字（客戶輸入這個開始問卷）</label>
                 <div id="kwHint" class="text-xs font-semibold text-slate-500"></div>
               </div>
-              <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                     placeholder="例如：健康問卷" />
+              <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：作息分析" />
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold text-slate-700">起始節點 ID</label>
+              <input id="inStart" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="例如：q1" />
+              <div class="text-xs text-slate-500 mt-2">通常用 <span class="mono font-semibold">q1</span></div>
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold text-slate-700">結束後補充訊息（可空白）</label>
+              <input id="inFinalText" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：如果你願意，我可以再幫你做一份一週調整計畫。" />
+              <div class="text-xs text-slate-500 mt-2">這段會在報告後「再推送一次」</div>
             </div>
 
             <div class="md:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">結尾報告模板（你的口吻）</label>
-              <textarea id="inReportHint" rows="4" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                placeholder="例如：用接地氣的方式整理他的答案，給 1~3 個方向，最後叫他回『報告』。"></textarea>
-            </div>
-
-            <!-- ✅ 入口連結（直接顯示＋一鍵複製，不再 prompt） -->
-            <div class="md:col-span-2">
-              <div class="flex items-center justify-between gap-2">
-                <label class="text-sm font-semibold text-slate-700">入口連結</label>
-                <button id="btnCopyLink" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold">複製</button>
+              <label class="text-sm font-semibold text-slate-700">重要：報告不要顯示他選了什麼</label>
+              <div class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-6">
+                ✅ 已預設：LINE 報告只會送出「模板內容」，不會列出他的答案。<br/>
+                你只需要在「② 報告模板」填好各類別的維生素＋產品建議即可。
               </div>
-              <input id="inClientUrl" readonly class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono bg-slate-50" value="" />
             </div>
           </div>
 
-          <div class="mt-5">
-            <h3 class="font-bold text-slate-900">題目列表</h3>
-            <div class="mt-1 text-xs text-slate-500">第 1 題可多選項；第 2 題後每題 4 選項。</div>
-            <div id="qWrap" class="mt-3 space-y-3"></div>
+          <div class="mt-6">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-extrabold text-slate-900">nodes（分支題庫）</h3>
+              <div class="text-xs text-slate-500">建議：每題 2～6 個選項。選項 next 留空＝結束。</div>
+            </div>
+            <div id="nodesWrap" class="mt-3 space-y-3"></div>
           </div>
         </section>
 
-        <!-- PREVIEW -->
-        <section id="tabPreview" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
+        <!-- TEMPLATES -->
+        <section id="tabTemplates" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">② 預覽互動</h2>
-              <p class="text-sm text-slate-600 mt-1">你自己先試跑，確認流程和文字。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">② 報告模板（維生素＋產品建議）</h2>
+              <p class="text-sm text-slate-600 mt-1">依 <span class="mono font-semibold">reportKey</span> 分類出報告。報告內容不要提他選了什麼。</p>
             </div>
             <div class="flex gap-2">
-              <button id="btnPreviewRestart" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">重來</button>
-              <button id="btnPreviewToLeads" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">看 Leads</button>
+              <button id="btnPreset" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入常用模板</button>
+              <button id="btnAddReport" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增模板</button>
             </div>
           </div>
 
-          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div id="pvTitle" class="text-lg font-extrabold text-slate-900">-</div>
-            <div id="pvStep" class="text-xs text-slate-500 mt-1">-</div>
+          <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
+            <div class="font-extrabold">⚠️ 重要（避免踩醫療法規/爭議）</div>
+            <div>請用「可能不足 / 常見缺口 / 建議補充方向」描述，不要用「你缺乏」或「你有病」。</div>
+            <div>建議最後加一句：<span class="font-semibold">「若有慢性病/孕哺/用藥，請先詢問醫師或藥師。」</span></div>
+          </div>
 
-            <div class="mt-4 rounded-2xl bg-slate-900 text-white p-4">
-              <div id="pvQuestion" class="text-base font-semibold">-</div>
-              <div id="pvOptions" class="mt-3 grid md:grid-cols-2 gap-2"></div>
+          <div class="mt-4 grid md:grid-cols-2 gap-4 items-start">
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="text-sm font-extrabold text-slate-900">reportKey 清單</div>
+              <div class="text-xs text-slate-500 mt-1">nodes 的選項可設定 reportKey，例如：sleep / stress / gut / body / energy / immune</div>
+              <div id="reportList" class="mt-3 space-y-2"></div>
             </div>
 
-            <div class="mt-4">
-              <h4 class="font-bold text-slate-900">你剛剛選的答案（預覽）</h4>
-              <div id="pvAnswers" class="mt-2 text-sm text-slate-700 space-y-1"></div>
-            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <div class="text-sm font-extrabold text-slate-900">模板內容</div>
+                  <div class="text-xs text-slate-500 mt-1">送給客戶的內容（不顯示答案）</div>
+                </div>
+                <div class="flex gap-2">
+                  <button id="btnDeleteReport" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪</button>
+                </div>
+              </div>
 
-            <div class="mt-4 hidden" id="pvReportBox">
-              <h4 class="font-bold text-slate-900">完成後報告（預覽）</h4>
-              <div id="pvReport" class="mt-2 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 whitespace-pre-line"></div>
+              <div class="mt-3">
+                <label class="text-xs font-bold text-slate-500">reportKey</label>
+                <input id="inReportKey" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：sleep" />
+              </div>
+
+              <div class="mt-3">
+                <label class="text-xs font-bold text-slate-500">標題（可空白）</label>
+                <input id="inReportTitle" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="例如：睡眠補強建議" />
+              </div>
+
+              <div class="mt-3">
+                <label class="text-xs font-bold text-slate-500">內容（會直接送出）</label>
+                <textarea id="inReportBody" rows="12" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                  placeholder="範例：&#10;我會先用「睡眠」做優先補強方向。&#10;&#10;【可能的常見缺口】&#10;• 鎂：放鬆/入睡支持（很多人飲食不足）&#10;• 維生素B群：壓力期消耗較快&#10;• 維生素D：久待室內/日照少常見不足&#10;&#10;【今天就能做的 3 件事】&#10;1) …&#10;2) …&#10;3) …&#10;&#10;【適合你的產品搭配】&#10;A) …（你的產品/組合）&#10;B) …&#10;&#10;提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。"></textarea>
+              </div>
+
+              <div class="mt-3">
+                <button id="btnSaveReport" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">儲存到此問卷（會跟著問卷一起存）</button>
+              </div>
             </div>
           </div>
         </section>
@@ -197,7 +224,7 @@
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <h2 class="text-lg font-extrabold text-slate-900">③ Leads 報告</h2>
-              <p class="text-sm text-slate-600 mt-1">顯示：大頭照、暱稱、userId、問卷、時間、報告</p>
+              <p class="text-sm text-slate-600 mt-1">顯示：userId、問卷、時間、reportKey、報告（你可以複製再加工）</p>
             </div>
             <div class="flex gap-2">
               <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
@@ -220,44 +247,38 @@
       <div class="card rounded-2xl shadow border border-slate-200 p-5">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <div class="text-xl font-extrabold text-slate-900">批次匯入</div>
-            <div class="text-sm text-slate-600 mt-1">貼上純文字 → 自動填入（檔名/標題/報告/題目/選項）</div>
+            <div class="text-xl font-extrabold text-slate-900">批次匯入（分支 nodes）</div>
+            <div class="text-sm text-slate-600 mt-1">貼上純文字 → 自動生成 nodes（每題選項可寫 next / reportKey）</div>
           </div>
           <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
         </div>
 
         <div class="mt-4 modal-scroll rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
           <div class="font-bold">格式範例：</div>
-<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 健康問卷_第一版
-TITLE: 三分鐘了解你目前最想改善的方向
-KEYWORD: 健康問卷
-REPORT:
-我會用你的選擇整理成「一個優先方向＋兩個加分方向」。
-我會給你 3 個今天就能做的調整重點。
-如果你願意，回我「報告」，我幫你整理成更清楚的版本。
-ENDREPORT
+<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 作息分流_第一版
+TITLE: 60 秒作息分析
+KEYWORD: 作息分析
+START: q1
+FINAL: 如果你願意，我可以再幫你做一份一週調整計畫。
 
-Q: 你現在最想先改善哪一塊？
-- 睡眠
-- 壓力
-- 精神
-- 腸胃
-- 體態
-- 運動
-- 免疫
-- 皮膚
+NODE: q1
+Q: 你最近睡眠狀態比較像？
+- 很好 -> next=q2 report=sleep_good
+- 普通 -> next=q2 report=sleep_ok
+- 常醒/難睡 -> next=q2 report=sleep_low
+- 晚睡且日照少 -> next=q2 report=d_low
 
-Q: 你最近睡得怎麼樣？
-- 一覺到天亮
-- 會醒幾次
-- 很難入睡
-- 醒來還是累</pre>
+NODE: q2
+Q: 你的壓力感大概是？
+- 不太有 -> next=END report=balance
+- 偶爾緊 -> next=END report=stress_mid
+- 常緊繃 -> next=END report=stress_high</pre>
         </div>
 
         <textarea id="bulkText" rows="12"
           class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
           style="min-height: 260px; max-height: 48vh; overflow:auto;"
-          placeholder="把問卷文字貼這裡…"></textarea>
+          placeholder="把文字貼這裡…（在 LINE 內建瀏覽器也能滑）"></textarea>
 
         <div class="mt-4 flex flex-wrap gap-2 justify-end">
           <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
@@ -275,11 +296,11 @@ Q: 你最近睡得怎麼樣？
 
   // ========= State =========
   let API_BASE = "";
-  let SURVEYS = [];     // list of {key,name}
+  let SURVEYS = [];
   let CURRENT = makeEmptySurvey();
-  let PREVIEW = { idx: 0, answers: [] };
   let LEADS = [];
-  let KW_MAP = {};      // keyword -> surveyName
+  let KW_MAP = {};
+  let ACTIVE_REPORT_KEY = "";
 
   // ========= Helpers =========
   const $ = (id)=>document.getElementById(id);
@@ -304,7 +325,7 @@ Q: 你最近睡得怎麼樣？
   }
 
   function normKw(s){
-    return String(s||"").trim();
+    return String(s||"").trim().replace(/\s+/g,"").toLowerCase();
   }
 
   function makeEmptySurvey(){
@@ -312,17 +333,37 @@ Q: 你最近睡得怎麼樣？
       name: "",
       title: "",
       keyword: "",
-      reportHint: "",
-      questions: [
-        { q:"你現在最想先改善哪一塊？", a:["睡眠","壓力","精神","腸胃","體態","運動","免疫","皮膚"] },
-        { q:"你最近睡得怎麼樣？", a:["一覺到天亮","會醒幾次","很難入睡","醒來還是累"] },
-        { q:"你白天狀態比較像？", a:["精神穩定","下午下滑","注意力差","常想躺"] },
-        { q:"你飲食習慣較像？", a:["三餐固定","常外食","常跳餐","愛吃甜/炸"] },
-        { q:"你壓力感比較像？", a:["不太有","偶爾緊","常緊繃","腦停不下"] },
-        { q:"你腸胃狀態較像？", a:["很順","偶爾卡","常脹氣","忽快忽慢"] },
-        { q:"你運動後恢復？", a:["很快","普通","很久","很少運動"] },
-        { q:"你最想先做到？", a:["睡更好","更有精神","更輕盈","更穩定"] },
-      ]
+      start: "q1",
+      final: { text: "" },
+      // ✅ 分支問卷：nodes
+      nodes: {
+        "q1": {
+          q: "你最近睡眠狀態比較像？",
+          options: [
+            { t:"很OK", next:"q2", reportKey:"balance" },
+            { t:"普通", next:"q2", reportKey:"sleep_ok" },
+            { t:"常醒/難睡", next:"q2", reportKey:"sleep_low" },
+            { t:"晚睡且日照少", next:"q2", reportKey:"d_low" },
+          ]
+        },
+        "q2": {
+          q: "你的壓力感大概是？",
+          options: [
+            { t:"不太有", next:"", reportKey:"balance" },
+            { t:"偶爾緊", next:"", reportKey:"stress_mid" },
+            { t:"常緊繃", next:"", reportKey:"stress_high" },
+          ]
+        }
+      },
+      // ✅ 報告模板：reports[reportKey] = 文字（不顯示答案）
+      reports: {
+        "balance": "【整體方向】\n你現在的作息基礎不錯，我會先用「穩定續航」做目標。\n\n【可能的常見缺口】\n• 維生素D：室內族日照少常見不足\n• B群：忙碌/壓力期消耗較快\n\n【今天就能做的 3 件事】\n1) 固定起床時間\n2) 每天 10~20 分鐘日照或戶外走路\n3) 晚餐後避免含糖/高咖啡因\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "sleep_low": "【優先補強】\n我會先用「睡眠補強」做第一優先，讓恢復力先拉回來。\n\n【可能的常見缺口（方向提示）】\n• 鎂：放鬆支持（很多人飲食攝取不足）\n• B群：壓力期消耗較快\n• 維生素D：日照少常見不足\n\n【今天就能做的 3 件事】\n1) 睡前 60 分鐘降低螢幕/亮光\n2) 晚上咖啡因截止時間提前\n3) 睡前固定小儀式（熱水澡/伸展/呼吸）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "stress_high": "【優先補強】\n我會先用「壓力管理＋續航」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• B群：壓力期消耗較快\n• 維生素C：忙碌期常見不足\n• 鎂：放鬆/緊繃支持\n\n【今天就能做的 3 件事】\n1) 每天 2 次 3 分鐘呼吸（吸4吐6）\n2) 每餐先補蛋白質＋蔬菜\n3) 晚上留 20 分鐘無訊息時間\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "d_low": "【優先補強】\n你比較像「日照少＋作息晚」，我會先用「維生素D＋睡眠節律」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• 維生素D：室內族/晚睡族常見不足\n• B群：忙碌期消耗較快\n\n【今天就能做的 3 件事】\n1) 白天找 10~20 分鐘日照或戶外走路\n2) 晚上藍光降低\n3) 起床時間固定（比睡覺時間更重要）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "sleep_ok": "【方向】\n你目前睡眠還可以，我會先做「微調」讓白天續航更穩。\n\n【可能的常見缺口（方向提示）】\n• 維生素D：日照少常見不足\n• B群：忙碌期消耗較快\n\n【今天就能做的 3 件事】\n1) 固定起床時間\n2) 下午咖啡因不要太晚\n3) 晚餐不要太油/太甜\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "stress_mid": "【方向】\n你是「中度壓力」，我會用「穩定情緒＋續航」做優先。\n\n【可能的常見缺口（方向提示）】\n• B群：壓力期消耗較快\n• 維生素C：外食族常見不足\n\n【今天就能做的 3 件事】\n1) 每天 10 分鐘走路\n2) 早餐加蛋白質\n3) 晚上留 15 分鐘不看訊息\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。"
+      }
     };
   }
 
@@ -341,14 +382,14 @@ Q: 你最近睡得怎麼樣？
 
   function setTab(tab){
     $("tabBuilder").classList.toggle("hidden", tab!=="builder");
-    $("tabPreview").classList.toggle("hidden", tab!=="preview");
+    $("tabTemplates").classList.toggle("hidden", tab!=="templates");
     $("tabLeads").classList.toggle("hidden", tab!=="leads");
 
     $("btnTabBuilder").className = tab==="builder"
       ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
       : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-0 font-semibold text-slate-900";
 
-    $("btnTabPreview").className = tab==="preview"
+    $("btnTabTemplates").className = tab==="templates"
       ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
       : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
 
@@ -362,27 +403,22 @@ Q: 你最近睡得怎麼樣？
     const data = await api("/kwMapGet", {});
     KW_MAP = (data && data.payload && typeof data.payload === "object") ? data.payload : {};
   }
-
   async function saveKwMap(){
     await api("/kwMapPut", { payload: KW_MAP });
   }
-
   function keywordOwner(kw){
     const k = normKw(kw);
     if(!k) return "";
     return KW_MAP[k] || "";
   }
-
   function updateKwHint(){
     const kw = normKw($("inKeyword").value);
-    const name = normKw($("inName").value || CURRENT.name);
+    const name = String($("inName").value || CURRENT.name || "").trim();
     const owner = keywordOwner(kw);
     const el = $("kwHint");
     el.textContent = "";
     el.className = "text-xs font-semibold text-slate-500";
-
     if(!kw) return;
-
     if(owner && owner !== name){
       el.textContent = "已被使用";
       el.className = "text-xs font-extrabold text-rose-600";
@@ -438,6 +474,7 @@ Q: 你最近睡得怎麼樣？
           const payload = loaded.payload || loaded;
           CURRENT = normalizeSurvey(payload);
           fillBuilder();
+          renderReportsUI();
           toast("已載入：" + x.name);
           setTab("builder");
         }catch(e){
@@ -454,10 +491,10 @@ Q: 你最近睡得怎麼樣？
         try{
           await api("/surveyDelete", { surveyName: x.name });
           toast("已刪除：" + x.name);
-          // 若正在編輯同一份，清空
           if((CURRENT.name||"") === x.name){
             CURRENT = makeEmptySurvey();
             fillBuilder();
+            renderReportsUI();
           }
           await refreshKwMap().catch(()=>{});
           await refreshSurveyList();
@@ -473,31 +510,30 @@ Q: 你最近睡得怎麼樣？
   }
 
   function normalizeSurvey(obj){
-    const s = makeEmptySurvey();
+    const base = makeEmptySurvey();
     if(obj && typeof obj === "object"){
-      s.name = obj.name || s.name;
-      s.title = obj.title || s.title;
-      s.keyword = obj.keyword || "";
-      s.reportHint = obj.reportHint || obj.reportHint;
-      if(Array.isArray(obj.questions)) s.questions = obj.questions.map(q=>({
-        q: (q.q||"").toString(),
-        a: Array.isArray(q.a) ? q.a.map(x=>(x||"").toString()) : []
+      base.name = obj.name || base.name;
+      base.title = obj.title || base.title;
+      base.keyword = obj.keyword || base.keyword;
+      base.start = obj.start || base.start;
+      base.final = (obj.final && typeof obj.final==="object") ? obj.final : base.final;
+      base.nodes = (obj.nodes && typeof obj.nodes==="object") ? obj.nodes : base.nodes;
+      base.reports = (obj.reports && typeof obj.reports==="object") ? obj.reports : base.reports;
+    }
+    // 修補 nodes 結構
+    for(const nodeId of Object.keys(base.nodes||{})){
+      const n = base.nodes[nodeId] || {};
+      n.q = String(n.q || "").trim();
+      n.options = Array.isArray(n.options) ? n.options : [];
+      n.options = n.options.map(o=>({
+        t: String(o?.t || "").trim(),
+        next: String(o?.next || "").trim(),
+        reportKey: String(o?.reportKey || o?.tag || "").trim(),
       }));
+      base.nodes[nodeId] = n;
     }
-    // 第 1 題：保留全部選項（至少 4）
-    if(s.questions[0]){
-      const a0 = (s.questions[0].a||[]);
-      while(a0.length<4) a0.push("");
-      s.questions[0].a = a0;
-    }
-    // 第 2 題後：固定 4
-    s.questions = s.questions.map((q, idx)=>{
-      const a = (q.a||[]);
-      if(idx===0) return { q:q.q, a:a };
-      while(a.length<4) a.push("");
-      return { q:q.q, a:a.slice(0,4) };
-    });
-    return s;
+    base.reports = base.reports || {};
+    return base;
   }
 
   // ========= Builder UI =========
@@ -505,167 +541,197 @@ Q: 你最近睡得怎麼樣？
     $("inName").value = CURRENT.name || "";
     $("inTitle").value = CURRENT.title || "";
     $("inKeyword").value = CURRENT.keyword || "";
-    $("inReportHint").value = CURRENT.reportHint || "";
-    renderQuestions();
-    updateClientBtn();
+    $("inStart").value = CURRENT.start || "q1";
+    $("inFinalText").value = (CURRENT.final && CURRENT.final.text) ? CURRENT.final.text : "";
+    renderNodes();
     updateKwHint();
   }
 
-  function renderQuestions(){
-    const wrap = $("qWrap");
+  function renderNodes(){
+    const wrap = $("nodesWrap");
     wrap.innerHTML = "";
 
-    CURRENT.questions.forEach((item, idx)=>{
-      const box = document.createElement("div");
-      box.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
+    const nodeIds = Object.keys(CURRENT.nodes || {}).sort((a,b)=>a.localeCompare(b));
+    if(nodeIds.length===0){
+      const empty = document.createElement("div");
+      empty.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
+      empty.textContent = "目前沒有 nodes。按「新增節點」。";
+      wrap.appendChild(empty);
+      return;
+    }
 
-      const isFirst = idx===0;
+    nodeIds.forEach(nodeId=>{
+      const node = CURRENT.nodes[nodeId];
+      const card = document.createElement("div");
+      card.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
 
-      box.innerHTML = `
-        <div class="flex items-center justify-between gap-2">
-          <div class="font-extrabold text-slate-900">第 ${idx+1} 題 ${isFirst ? "（可多選項）" : "（4 選項）"}</div>
-          <div class="flex gap-2">
-            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="up">上移</button>
-            <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="down">下移</button>
-            <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="del">刪除</button>
+      const opts = Array.isArray(node.options) ? node.options : [];
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-xs text-slate-500">nodeId</div>
+            <div class="mono font-extrabold text-slate-900">${escapeHtml(nodeId)}</div>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <button data-act="addopt" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold">+ 選項</button>
+            <button data-act="delnode" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">刪節點</button>
           </div>
         </div>
 
-        <label class="text-sm font-semibold text-slate-700 mt-3 block">題目</label>
-        <input class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" data-k="q" placeholder="請輸入題目" />
-
-        <div class="mt-3 flex items-center justify-between">
-          <div class="text-xs text-slate-500">${isFirst ? "" : ""}</div>
-          ${isFirst ? `<button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold" data-act="addopt">+ 加選項</button>` : ``}
+        <div class="mt-3">
+          <label class="text-sm font-semibold text-slate-700">題目文字</label>
+          <input data-k="q" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="請輸入題目" />
         </div>
 
-        <div class="mt-3 grid md:grid-cols-2 gap-2" data-optwrap></div>
+        <div class="mt-4">
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-extrabold text-slate-900">選項（t / next / reportKey）</div>
+            <div class="text-xs text-slate-500">next 留空＝結束出報告</div>
+          </div>
+
+          <div class="mt-2 space-y-2" data-optwrap></div>
+        </div>
       `;
 
-      box.querySelector('[data-k="q"]').value = item.q || "";
-      box.querySelector('[data-k="q"]').oninput = (e)=>{ item.q = e.target.value; };
+      const qInput = card.querySelector('[data-k="q"]');
+      qInput.value = node.q || "";
+      qInput.oninput = (e)=>{ node.q = e.target.value; };
 
-      const optWrap = box.querySelector("[data-optwrap]");
-      const a = item.a || [];
-
-      if(isFirst){
-        while(a.length<4) a.push("");
-        item.a = a;
-      }else{
-        while(a.length<4) a.push("");
-        item.a = a.slice(0,4);
-      }
-
-      const drawOptions = ()=>{
+      const optWrap = card.querySelector("[data-optwrap]");
+      const drawOpts = ()=>{
         optWrap.innerHTML = "";
-        const list = item.a || [];
-        const n = isFirst ? list.length : 4;
-        for(let i=0;i<n;i++){
-          const div = document.createElement("div");
-          div.innerHTML = `
-            <label class="text-xs font-bold text-slate-500">選項 ${i+1}</label>
-            <div class="mt-1 flex gap-2">
-              <input class="flex-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="請輸入選項" />
-              ${isFirst && i>=4 ? `<button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">刪</button>` : ``}
+        if(opts.length===0){
+          const d = document.createElement("div");
+          d.className = "rounded-xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
+          d.textContent = "沒有選項，按「+ 選項」新增。";
+          optWrap.appendChild(d);
+          return;
+        }
+
+        opts.forEach((o, idx)=>{
+          const row = document.createElement("div");
+          row.className = "rounded-2xl border border-slate-200 bg-white p-3";
+          row.innerHTML = `
+            <div class="grid md:grid-cols-12 gap-2 items-end">
+              <div class="md:col-span-5">
+                <label class="text-xs font-bold text-slate-500">顯示文字 t</label>
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" data-k="t" placeholder="例如：常醒/難睡" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="text-xs font-bold text-slate-500">下一題 next</label>
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="next" placeholder="例如：q2（留空=結束）" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="text-xs font-bold text-slate-500">reportKey（決定報告）</label>
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="rk" placeholder="例如：sleep_low" />
+              </div>
+              <div class="md:col-span-1 flex justify-end">
+                <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="delopt">刪</button>
+              </div>
             </div>
           `;
-          const inp = div.querySelector("input");
-          inp.value = list[i] || "";
-          inp.oninput = (e)=>{ item.a[i] = e.target.value; };
+          const t = row.querySelector('[data-k="t"]');
+          const n = row.querySelector('[data-k="next"]');
+          const rk = row.querySelector('[data-k="rk"]');
+          t.value = o.t || "";
+          n.value = o.next || "";
+          rk.value = o.reportKey || "";
 
-          const delBtn = div.querySelector("button");
-          if(delBtn){
-            delBtn.onclick = ()=>{
-              item.a.splice(i, 1);
-              drawOptions();
-            };
-          }
-          optWrap.appendChild(div);
-        }
+          t.oninput = (e)=>{ o.t = e.target.value; };
+          n.oninput = (e)=>{ o.next = e.target.value; };
+          rk.oninput = (e)=>{ o.reportKey = e.target.value; };
+
+          row.querySelector('[data-act="delopt"]').onclick = ()=>{
+            opts.splice(idx,1);
+            node.options = opts;
+            drawOpts();
+          };
+          optWrap.appendChild(row);
+        });
       };
-      drawOptions();
+      drawOpts();
 
-      box.querySelectorAll("button[data-act]").forEach(btn=>{
-        btn.onclick = ()=>{
-          const act = btn.getAttribute("data-act");
-          if(act==="del"){
-            CURRENT.questions.splice(idx,1);
-          }else if(act==="up" && idx>0){
-            const t = CURRENT.questions[idx-1]; CURRENT.questions[idx-1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
-          }else if(act==="down" && idx<CURRENT.questions.length-1){
-            const t = CURRENT.questions[idx+1]; CURRENT.questions[idx+1]=CURRENT.questions[idx]; CURRENT.questions[idx]=t;
-          }else if(act==="addopt" && idx===0){
-            CURRENT.questions[0].a.push("");
-          }
-          renderQuestions();
-        };
-      });
+      card.querySelector('[data-act="addopt"]').onclick = ()=>{
+        opts.push({ t:"", next:"", reportKey:"" });
+        node.options = opts;
+        drawOpts();
+      };
 
-      wrap.appendChild(box);
+      card.querySelector('[data-act="delnode"]').onclick = ()=>{
+        const ok = confirm(`確定刪除 node「${nodeId}」？`);
+        if(!ok) return;
+        delete CURRENT.nodes[nodeId];
+        renderNodes();
+      };
+
+      wrap.appendChild(card);
     });
-
-    if(CURRENT.questions.length===0){
-      const empty = document.createElement("div");
-      empty.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
-      empty.textContent = "目前沒有題目。按上方「新增題目」。";
-      wrap.appendChild(empty);
-    }
   }
 
   function validateSurvey(){
     const name = ($("inName").value||"").trim();
     const title = ($("inTitle").value||"").trim();
     const kw = normKw($("inKeyword").value);
+    const start = ($("inStart").value||"").trim();
 
     if(!name) throw new Error("請先填『問卷檔名』");
     if(!title) throw new Error("請先填『問卷標題』");
     if(!kw) throw new Error("請先填『關鍵字』");
-    if(CURRENT.questions.length<1) throw new Error("至少要有 1 題");
+    if(!start) throw new Error("請先填『起始節點 ID』");
 
     // 關鍵字不可被其他問卷使用
     const owner = keywordOwner(kw);
     if(owner && owner !== name) throw new Error("關鍵字已被其他問卷使用");
 
-    CURRENT.questions.forEach((q,i)=>{
-      if(!(q.q||"").trim()) throw new Error(`第 ${i+1} 題題目是空的`);
-      const need = (i===0) ? Math.max(4, (q.a||[]).length) : 4;
-      for(let k=0;k<need;k++){
-        const v = (q.a && q.a[k]) ? String(q.a[k]).trim() : "";
-        if(!v) throw new Error(`第 ${i+1} 題的選項 ${k+1} 是空的`);
-      }
-    });
+    const nodes = CURRENT.nodes || {};
+    if(!nodes[start]) throw new Error(`起始節點不存在：${start}`);
 
-    return { name, title, kw };
+    // nodes 基本檢查
+    const usedReportKeys = new Set();
+    for(const nodeId of Object.keys(nodes)){
+      const node = nodes[nodeId];
+      if(!String(node.q||"").trim()) throw new Error(`node ${nodeId} 題目是空的`);
+      if(!Array.isArray(node.options) || node.options.length===0) throw new Error(`node ${nodeId} 沒有選項`);
+
+      node.options.forEach((o, i)=>{
+        if(!String(o.t||"").trim()) throw new Error(`node ${nodeId} 選項 ${i+1} 文字是空的`);
+        const rk = String(o.reportKey||"").trim();
+        if(!rk) throw new Error(`node ${nodeId} 選項 ${i+1} reportKey 是空的（報告會不知道用哪套）`);
+        usedReportKeys.add(rk);
+
+        const nx = String(o.next||"").trim();
+        if(nx && !nodes[nx]) throw new Error(`node ${nodeId} 選項 ${i+1} next 指向不存在：${nx}`);
+      });
+    }
+
+    // reports 檢查：至少要有用到的 reportKey
+    const reports = CURRENT.reports || {};
+    for(const rk of usedReportKeys){
+      if(!reports[rk] || !String(reports[rk]).trim()){
+        throw new Error(`缺少報告模板：reports["${rk}"]（去「② 報告模板」補上）`);
+      }
+    }
+
+    return { name, title, kw, start };
   }
 
   async function saveSurvey(){
-    const { name, title, kw } = validateSurvey();
+    const { name, title, kw, start } = validateSurvey();
 
-    // 1) 先存問卷本體
     CURRENT.name = name;
     CURRENT.title = title;
     CURRENT.keyword = kw;
-    CURRENT.reportHint = ($("inReportHint").value||"").trim();
+    CURRENT.start = start;
+    CURRENT.final = { text: ($("inFinalText").value||"").trim() };
 
-    CURRENT.questions = CURRENT.questions.map((q, idx)=>{
-      if(idx===0){
-        const a = (q.a||[]);
-        while(a.length<4) a.push("");
-        return { q:q.q, a:a };
-      }
-      const a = (q.a||[]);
-      while(a.length<4) a.push("");
-      return { q:q.q, a:a.slice(0,4) };
-    });
-
+    // 先存問卷本體
     await api("/putAny", {
       namespace: "DB",
       keyword: Q_PREFIX + CURRENT.name,
       payload: CURRENT
     });
 
-    // 2) 同步關鍵字表：把「指向這份問卷的舊關鍵字」清掉，再寫入新的
-    // （這樣你改關鍵字也會自動更新，不需要你手動）
+    // 同步 keyword map（自動更新）
     await refreshKwMap().catch(()=>{});
     for(const k of Object.keys(KW_MAP)){
       if(KW_MAP[k] === CURRENT.name && k !== kw){
@@ -675,83 +741,111 @@ Q: 你最近睡得怎麼樣？
     KW_MAP[kw] = CURRENT.name;
     await saveKwMap();
 
-    toast("已儲存（含關鍵字綁定）");
+    toast("已儲存（含關鍵字綁定＋分支＋報告模板）");
     $("txtLastSync").textContent = new Date().toLocaleString();
 
     await refreshSurveyList();
     await refreshKwMap().catch(()=>{});
     updateKwHint();
-    updateClientBtn();
   }
 
-  // ========= Preview =========
-  function startPreview(){
-    const title = ($("inTitle").value||CURRENT.title||"").trim() || "（未命名問卷）";
-    $("pvTitle").textContent = title;
-    PREVIEW = { idx: 0, answers: [] };
-    $("pvReportBox").classList.add("hidden");
-    renderPreviewStep();
-    setTab("preview");
-  }
+  // ========= Reports UI =========
+  function renderReportsUI(){
+    const list = $("reportList");
+    list.innerHTML = "";
 
-  function renderPreviewStep(){
-    const qList = CURRENT.questions || [];
-    const idx = PREVIEW.idx;
-
-    $("pvStep").textContent = `進度：${Math.min(idx+1, qList.length)}/${qList.length}`;
-
-    if(idx >= qList.length){
-      $("pvQuestion").textContent = "完成！以下是報告預覽";
-      $("pvOptions").innerHTML = "";
-
-      const report = buildReportPreview();
-      $("pvReport").textContent = report;
-      $("pvReportBox").classList.remove("hidden");
-      renderPreviewAnswers();
-      return;
-    }
-
-    const q = qList[idx];
-    $("pvQuestion").textContent = q.q || "-";
-    const optWrap = $("pvOptions");
-    optWrap.innerHTML = "";
-
-    const opts = (q.a||[]).map(x=>String(x||"").trim()).filter(Boolean);
-    opts.forEach((txt)=>{
-      const b = document.createElement("button");
-      b.className = "px-4 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 text-left font-semibold";
-      b.textContent = txt;
-      b.onclick = ()=>{
-        PREVIEW.answers.push({ q: q.q, a: txt, idx: PREVIEW.idx });
-        PREVIEW.idx++;
-        renderPreviewStep();
-      };
-      optWrap.appendChild(b);
-    });
-
-    renderPreviewAnswers();
-  }
-
-  function renderPreviewAnswers(){
-    const wrap = $("pvAnswers");
-    wrap.innerHTML = "";
-    if(PREVIEW.answers.length===0){
-      wrap.innerHTML = `<div class="text-slate-500">尚未作答</div>`;
-      return;
-    }
-    PREVIEW.answers.forEach(x=>{
+    const keys = Object.keys(CURRENT.reports || {}).sort((a,b)=>a.localeCompare(b));
+    if(keys.length===0){
       const d = document.createElement("div");
-      d.className = "rounded-xl border border-slate-200 bg-white/70 px-3 py-2";
-      d.innerHTML = `<div class="text-xs text-slate-500">${escapeHtml(x.q)}</div>
-                     <div class="font-semibold text-slate-900">${escapeHtml(x.a)}</div>`;
-      wrap.appendChild(d);
+      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
+      d.textContent = "目前沒有模板。按「新增模板」。";
+      list.appendChild(d);
+      return;
+    }
+
+    keys.forEach(k=>{
+      const row = document.createElement("button");
+      row.className = `w-full text-left rounded-2xl border px-4 py-3 hover:bg-white ${
+        k===ACTIVE_REPORT_KEY ? "border-slate-900 bg-white" : "border-slate-200 bg-white/70"
+      }`;
+      const preview = String(CURRENT.reports[k]||"").trim().slice(0, 60);
+      row.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="mono font-extrabold text-slate-900">${escapeHtml(k)}</div>
+            <div class="text-xs text-slate-500 mt-1 truncate">${escapeHtml(preview)}${preview.length>=60?"…":""}</div>
+          </div>
+          <div class="text-xs px-2 py-1 rounded-full bg-slate-50 border border-slate-200 font-semibold text-slate-600">編輯</div>
+        </div>
+      `;
+      row.onclick = ()=>{
+        ACTIVE_REPORT_KEY = k;
+        $("inReportKey").value = k;
+        $("inReportTitle").value = ""; // 你要標題可自己寫在 body 第一行；這邊保留欄位
+        $("inReportBody").value = CURRENT.reports[k] || "";
+        renderReportsUI();
+      };
+      list.appendChild(row);
     });
+
+    if(!ACTIVE_REPORT_KEY && keys[0]){
+      ACTIVE_REPORT_KEY = keys[0];
+      $("inReportKey").value = ACTIVE_REPORT_KEY;
+      $("inReportBody").value = CURRENT.reports[ACTIVE_REPORT_KEY] || "";
+    }
   }
 
-  function buildReportPreview(){
-    const hint = ($("inReportHint").value||CURRENT.reportHint||"").trim();
-    const bullets = PREVIEW.answers.map(x=>`- ${x.q}：${x.a}`).join("\n");
-    return `【你填的答案】\n${bullets}\n\n【整理方向】\n${hint || "（尚未填報告模板）"}\n\n【下一步】\n回我「報告」我幫你整理成更清楚的版本。`;
+  function saveCurrentReport(){
+    const k = String($("inReportKey").value||"").trim();
+    const body = String($("inReportBody").value||"").trim();
+    if(!k) return toast("reportKey 不可空白", "err");
+    if(!body) return toast("模板內容不可空白", "err");
+
+    CURRENT.reports = CURRENT.reports || {};
+    CURRENT.reports[k] = body;
+    ACTIVE_REPORT_KEY = k;
+    toast("已更新模板（記得按右上『儲存』才會寫入 KV）");
+    renderReportsUI();
+  }
+
+  function deleteCurrentReport(){
+    const k = String($("inReportKey").value||"").trim();
+    if(!k) return;
+    const ok = confirm(`確定刪除模板「${k}」？`);
+    if(!ok) return;
+    if(CURRENT.reports && CURRENT.reports[k] !== undefined){
+      delete CURRENT.reports[k];
+      $("inReportKey").value = "";
+      $("inReportBody").value = "";
+      ACTIVE_REPORT_KEY = "";
+      toast("已刪除模板（記得按右上『儲存』才會寫入 KV）");
+      renderReportsUI();
+    }
+  }
+
+  function addReportKey(){
+    const k = prompt("輸入新的 reportKey（例如：gut / energy / immune）");
+    if(!k) return;
+    const key = String(k).trim();
+    CURRENT.reports = CURRENT.reports || {};
+    if(CURRENT.reports[key]) return toast("這個 reportKey 已存在", "warn");
+    CURRENT.reports[key] = "【方向】\n（請填你的個人化建議，不要提他選了什麼）\n\n【可能的常見缺口（方向提示）】\n• …\n\n【今天就能做的 3 件事】\n1) …\n2) …\n3) …\n\n【適合你的產品搭配】\nA) …\nB) …\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。";
+    ACTIVE_REPORT_KEY = key;
+    $("inReportKey").value = key;
+    $("inReportBody").value = CURRENT.reports[key];
+    renderReportsUI();
+    toast("已新增模板（記得按右上『儲存』）");
+  }
+
+  function presetReports(){
+    if(!confirm("要用常用模板覆蓋/補齊嗎？（不會刪掉你現有的，但同 key 會覆蓋）")) return;
+    const preset = makeEmptySurvey().reports;
+    CURRENT.reports = CURRENT.reports || {};
+    for(const k of Object.keys(preset)){
+      CURRENT.reports[k] = preset[k];
+    }
+    toast("已塞入常用模板（記得按右上『儲存』）");
+    renderReportsUI();
   }
 
   // ========= Leads =========
@@ -774,7 +868,6 @@ Q: 你最近睡得怎麼樣？
   function renderLeads(){
     const q = ($("leadSearch").value||"").trim().toLowerCase();
     const items = LEADS.filter(x=> !q || JSON.stringify(x).toLowerCase().includes(q));
-
     const wrap = $("leadList");
     wrap.innerHTML = "";
 
@@ -787,148 +880,110 @@ Q: 你最近睡得怎麼樣？
     }
 
     items.forEach(x=>{
-      const when = x.created_at ? new Date(x.created_at).toLocaleString() : (x.createdAt ? new Date(x.createdAt).toLocaleString() : "-");
-      const name = x.displayName || x.display_name || "-";
-      const pic = x.pictureUrl || x.picture_url || "";
+      const when = x.createdAt ? new Date(x.createdAt).toLocaleString() : (x.created_at ? new Date(x.created_at).toLocaleString() : "-");
       const uid = x.userId || x.user_id || "-";
       const survey = x.surveyName || x.survey_name || "-";
+      const reportKey = x.reportKey || x.primaryTag || "";
       const report = x.report || x.summary || x.result || "";
 
       const card = document.createElement("div");
       card.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
       card.innerHTML = `
-        <div class="flex items-start gap-3">
-          <div class="w-12 h-12 rounded-2xl bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
-            ${pic ? `<img src="${escapeHtml(pic)}" class="w-full h-full object-cover">` : ``}
-          </div>
-          <div class="flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <div class="font-extrabold text-slate-900">${escapeHtml(name)}</div>
-              <div class="text-xs text-slate-500">${escapeHtml(when)}</div>
-              <span class="text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 font-semibold">
-                ${escapeHtml(survey)}
-              </span>
-            </div>
-            <div class="mt-1 text-xs text-slate-500 mono break-all">userId: ${escapeHtml(uid)}</div>
-
-            <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 whitespace-pre-line">
-              ${escapeHtml(report || "（沒有報告內容）")}
-            </div>
-          </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="text-xs text-slate-500">${escapeHtml(when)}</div>
+          <span class="text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 font-semibold">
+            ${escapeHtml(survey)}
+          </span>
+          ${reportKey ? `<span class="text-xs px-2 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-200 font-semibold mono">${escapeHtml(reportKey)}</span>` : ``}
+        </div>
+        <div class="mt-1 text-xs text-slate-500 mono break-all">userId: ${escapeHtml(uid)}</div>
+        <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 whitespace-pre-line">
+          ${escapeHtml(report || "（沒有報告內容）")}
         </div>
       `;
       wrap.appendChild(card);
     });
   }
 
-  // ========= Client URL =========
-  function buildClientUrl(){
-    const liffId = ($("inLiffId").value || localStorage.getItem("line_liff_id") || "").trim();
-    const name = ($("inName").value||CURRENT.name||"").trim();
-    if(!liffId || !name) return "";
-    return `https://liff.line.me/${encodeURIComponent(liffId)}?page=liff_survey.html&survey=${encodeURIComponent(name)}`;
-  }
-
-  async function copyText(text){
-    try{
-      await navigator.clipboard.writeText(text);
-      return true;
-    }catch{
-      // fallback
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.focus(); ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      return ok;
-    }
-  }
-
-  function updateClientBtn(){
-    const liffId = ($("inLiffId").value || localStorage.getItem("line_liff_id") || "").trim();
-    $("inLiffId").value = liffId;
-
-    const url = buildClientUrl();
-    $("inClientUrl").value = url || "";
-
-    const btn = $("btnOpenClient");
-    if(!url){
-      btn.classList.add("hidden");
-      return;
-    }
-    btn.classList.remove("hidden");
-    btn.onclick = ()=> window.open(url, "_blank");
-  }
-
   // ========= Bulk Import =========
-  function openBulk(){ $("bulkModal").classList.remove("hidden"); }
-  function closeBulk(){ $("bulkModal").classList.add("hidden"); }
+  function openBulk(){
+    $("bulkModal").classList.remove("hidden");
+    // ✅ iOS/LINE：避免背景頁面搶滾動造成卡住
+    document.body.classList.add("modal-open");
+  }
+  function closeBulk(){
+    $("bulkModal").classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }
 
+  // 格式：NODE: q1 / Q: ... / - opt -> next=... report=...
   function parseBulk(text){
     const lines = (text||"").replace(/\r/g,"").split("\n");
-    const out = { name:"", title:"", keyword:"", reportHint:"", questions:[] };
+    const out = { name:"", title:"", keyword:"", start:"q1", final:"", nodes:{}, reports:{} };
 
-    let i=0;
-    for(; i<lines.length; i++){
-      const line = (lines[i]||"").trim();
+    let curNodeId = "";
+    let curQ = "";
+    let curOpts = [];
+
+    const flushNode = ()=>{
+      if(!curNodeId) return;
+      out.nodes[curNodeId] = out.nodes[curNodeId] || { q:"", options:[] };
+      out.nodes[curNodeId].q = curQ || out.nodes[curNodeId].q || "";
+      out.nodes[curNodeId].options = curOpts.slice();
+    };
+
+    for(let i=0;i<lines.length;i++){
+      const raw = lines[i] ?? "";
+      const line = raw.trim();
       if(!line) continue;
 
       if(/^NAME\s*:/i.test(line)){ out.name = line.split(":").slice(1).join(":").trim(); continue; }
       if(/^TITLE\s*:/i.test(line)){ out.title = line.split(":").slice(1).join(":").trim(); continue; }
       if(/^KEYWORD\s*:/i.test(line)){ out.keyword = line.split(":").slice(1).join(":").trim(); continue; }
+      if(/^START\s*:/i.test(line)){ out.start = line.split(":").slice(1).join(":").trim(); continue; }
+      if(/^FINAL\s*:/i.test(line)){ out.final = line.split(":").slice(1).join(":").trim(); continue; }
 
-      if(/^REPORT\s*:/i.test(line)){
-        i++;
-        const buf = [];
-        for(; i<lines.length; i++){
-          const l = lines[i];
-          if((l||"").trim()==="ENDREPORT") break;
-          buf.push(l);
+      if(/^NODE\s*:/i.test(line)){
+        flushNode();
+        curNodeId = line.split(":").slice(1).join(":").trim();
+        curQ = "";
+        curOpts = [];
+        continue;
+      }
+
+      if(/^Q\s*:/i.test(line)){
+        curQ = line.split(":").slice(1).join(":").trim();
+        continue;
+      }
+
+      // option: - text -> next=q2 report=sleep_low
+      const optm = line.match(/^\-\s*(.+)$/);
+      if(optm && curNodeId){
+        const full = optm[1].trim();
+        const parts = full.split("->").map(x=>x.trim());
+        const t = parts[0] || "";
+        let next = "";
+        let reportKey = "";
+
+        if(parts[1]){
+          const p = parts[1];
+          const nextm = p.match(/next\s*=\s*([A-Za-z0-9_\-]+)/i);
+          const repm = p.match(/report\s*=\s*([A-Za-z0-9_\-]+)/i);
+          next = nextm ? nextm[1] : "";
+          reportKey = repm ? repm[1] : "";
+          if(String(next).toUpperCase() === "END") next = "";
         }
-        out.reportHint = buf.join("\n").trim();
+
+        curOpts.push({ t, next, reportKey });
         continue;
       }
-      if(/^Q\s*:/i.test(line) || /^第\s*\d+\s*題[:：]/.test(line)) break;
     }
+    flushNode();
 
-    let cur = null;
-    for(; i<lines.length; i++){
-      const raw = lines[i] ?? "";
-      const line = raw.trim();
-      if(!line) continue;
+    if(!out.name || !out.title || !out.keyword) throw new Error("缺少 NAME/TITLE/KEYWORD");
+    if(!Object.keys(out.nodes).length) throw new Error("沒有讀到 NODE");
+    if(!out.start) out.start = "q1";
 
-      const isQ = /^Q\s*:/i.test(line) || /^第\s*\d+\s*題[:：]/.test(line);
-      if(isQ){
-        if(cur) out.questions.push(cur);
-        const qText = line.replace(/^Q\s*:/i,"").replace(/^第\s*\d+\s*題[:：]/,"").trim();
-        cur = { q: qText, a: [] };
-        continue;
-      }
-
-      const m1 = line.match(/^\-\s*(.+)$/);
-      const m2 = line.match(/^\d+\s*[\)\.、]\s*(.+)$/);
-      const opt = (m1 ? m1[1] : (m2 ? m2[1] : ""));
-      if(opt && cur){
-        cur.a.push(opt.trim());
-      }
-    }
-    if(cur) out.questions.push(cur);
-
-    if(out.questions.length===0) throw new Error("沒有讀到題目（請確認有 Q: 開頭）");
-
-    out.questions = out.questions.map((q, idx)=>{
-      const a = (q.a||[]).map(x=>String(x||"").trim()).filter(Boolean);
-      if(idx===0){
-        while(a.length<4) a.push("");
-        return { q: q.q || "", a };
-      }else{
-        while(a.length<4) a.push("");
-        return { q: q.q || "", a: a.slice(0,4) };
-      }
-    });
     return out;
   }
 
@@ -937,22 +992,21 @@ Q: 你最近睡得怎麼樣？
     CURRENT.name = parsed.name || "";
     CURRENT.title = parsed.title || "";
     CURRENT.keyword = parsed.keyword || "";
-    CURRENT.reportHint = parsed.reportHint || "";
-    CURRENT.questions = parsed.questions || [];
+    CURRENT.start = parsed.start || "q1";
+    CURRENT.final = { text: parsed.final || "" };
+    CURRENT.nodes = parsed.nodes || {};
+    // reports 先保留既有，不動
     fillBuilder();
+    renderReportsUI();
   }
 
   // ========= Init =========
   function initApiBase(){
-    const fromHome = (localStorage.getItem("line_worker_url") || "").trim();
     const fromSelf = (localStorage.getItem("questionnaire_worker_url") || "").trim();
-    const v = fromHome || fromSelf;
-    if(v){
-      API_BASE = v;
-      $("inApiBase").value = v;
+    if(fromSelf){
+      API_BASE = fromSelf;
+      $("inApiBase").value = fromSelf;
     }
-    const liff = (localStorage.getItem("line_liff_id") || "").trim();
-    if(liff) $("inLiffId").value = liff;
   }
 
   function setApiBaseFromInput(){
@@ -960,44 +1014,51 @@ Q: 你最近睡得怎麼樣？
     if(!v) throw new Error("請輸入 Worker 網址");
     API_BASE = v;
     localStorage.setItem("questionnaire_worker_url", v);
-    localStorage.setItem("line_worker_url", v);
   }
 
   function bindInputs(){
-    $("inName").oninput = ()=>{ updateClientBtn(); updateKwHint(); };
-    $("inTitle").oninput = ()=>{};
-    $("inReportHint").oninput = ()=>{};
-
+    $("inName").oninput = ()=> updateKwHint();
     $("inKeyword").oninput = ()=> updateKwHint();
-
-    $("inLiffId").oninput = (e)=>{
-      localStorage.setItem("line_liff_id", (e.target.value||"").trim());
-      updateClientBtn();
-    };
-
     $("qSearch").oninput = ()=> renderSurveyList();
     $("leadSearch").oninput = ()=> renderLeads();
 
     $("btnTabBuilder").onclick = ()=> setTab("builder");
-    $("btnTabPreview").onclick = ()=> startPreview();
+    $("btnTabTemplates").onclick = ()=>{ setTab("templates"); renderReportsUI(); };
     $("btnTabLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
 
     $("btnNew").onclick = ()=>{
       CURRENT = makeEmptySurvey();
       fillBuilder();
+      renderReportsUI();
       toast("已建立新問卷（尚未儲存）");
       setTab("builder");
     };
 
-    $("btnAddQ").onclick = ()=>{
-      CURRENT.questions.push({ q:"", a:["","","",""] });
-      renderQuestions();
+    $("btnAddNode").onclick = ()=>{
+      const nid = prompt("輸入 nodeId（例如：q3 / gut1）");
+      if(!nid) return;
+      const id = String(nid).trim();
+      CURRENT.nodes = CURRENT.nodes || {};
+      if(CURRENT.nodes[id]) return toast("這個 nodeId 已存在", "warn");
+      CURRENT.nodes[id] = { q:"", options:[{t:"", next:"", reportKey:""}] };
+      renderNodes();
+      toast("已新增節點（記得按儲存）");
     };
 
-    $("btnPreviewRestart").onclick = ()=> startPreview();
-    $("btnPreviewToLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
-
-    $("btnLeadsReload").onclick = async ()=>{ await refreshLeads().catch(e=>toast(e.message,"err")); };
+    $("btnValidate").onclick = ()=>{
+      try{
+        // 同步 UI -> CURRENT
+        CURRENT.name = ($("inName").value||"").trim();
+        CURRENT.title = ($("inTitle").value||"").trim();
+        CURRENT.keyword = ($("inKeyword").value||"").trim();
+        CURRENT.start = ($("inStart").value||"").trim();
+        CURRENT.final = { text: ($("inFinalText").value||"").trim() };
+        validateSurvey();
+        toast("檢查通過 ✅");
+      }catch(e){
+        toast(e.message, "err");
+      }
+    };
 
     $("btnConnect").onclick = async ()=>{
       try{
@@ -1009,8 +1070,8 @@ Q: 你最近睡得怎麼樣？
         await refreshKwMap().catch(()=>{});
         await refreshSurveyList();
         await refreshLeads().catch(()=>{});
-        updateClientBtn();
         updateKwHint();
+        renderReportsUI();
         toast("連線成功");
       }catch(e){
         $("txtStatus").textContent = "連線失敗";
@@ -1022,7 +1083,6 @@ Q: 你最近睡得怎麼樣？
     $("btnSave").onclick = async ()=>{
       try{
         setApiBaseFromInput();
-        // 先拿最新 KW_MAP，避免你開兩個視窗時衝突
         await refreshKwMap().catch(()=>{});
         await saveSurvey();
       }catch(e){
@@ -1030,15 +1090,11 @@ Q: 你最近睡得怎麼樣？
       }
     };
 
-    // copy link buttons
-    const doCopy = async ()=>{
-      const url = buildClientUrl();
-      if(!url) return toast("請先填 LIFF ID + 問卷檔名", "warn");
-      const ok = await copyText(url);
-      toast(ok ? "已複製" : "複製失敗", ok ? "ok" : "err");
-    };
-    $("btnCopyLink").onclick = doCopy;
-    $("btnCopyLinkTop").onclick = doCopy;
+    // reports
+    $("btnSaveReport").onclick = saveCurrentReport;
+    $("btnDeleteReport").onclick = deleteCurrentReport;
+    $("btnAddReport").onclick = addReportKey;
+    $("btnPreset").onclick = presetReports;
 
     // bulk
     $("btnBulk").onclick = openBulk;
@@ -1046,42 +1102,24 @@ Q: 你最近睡得怎麼樣？
     $("bulkModal").addEventListener("click", (e)=>{ if(e.target === $("bulkModal")) closeBulk(); });
 
     $("btnBulkExample").onclick = ()=>{
-      $("bulkText").value = `NAME: 健康問卷_第一版
-TITLE: 三分鐘了解你目前最想改善的方向
-KEYWORD: 健康問卷
-REPORT:
-我會用你的選擇整理成「一個優先方向＋兩個加分方向」。
-我會給你 3 個今天就能做的調整重點。
-如果你願意，回我「報告」，我幫你整理成更清楚的版本。
-ENDREPORT
+      $("bulkText").value = `NAME: 作息分流_第一版
+TITLE: 60 秒作息分析
+KEYWORD: 作息分析
+START: q1
+FINAL: 如果你願意，我可以再幫你做一份一週調整計畫。
 
-Q: 你現在最想先改善哪一塊？
-- 睡眠
-- 壓力
-- 精神
-- 腸胃
-- 體態
-- 運動
-- 免疫
-- 皮膚
+NODE: q1
+Q: 你最近睡眠狀態比較像？
+- 很好 -> next=q2 report=balance
+- 普通 -> next=q2 report=sleep_ok
+- 常醒/難睡 -> next=q2 report=sleep_low
+- 晚睡且日照少 -> next=q2 report=d_low
 
-Q: 你最近睡得怎麼樣？
-- 一覺到天亮
-- 會醒幾次
-- 很難入睡
-- 醒來還是累
-
-Q: 你白天狀態比較像？
-- 精神穩定
-- 下午下滑
-- 注意力差
-- 常想躺
-
-Q: 你飲食習慣較像？
-- 三餐固定
-- 常外食
-- 常跳餐
-- 愛吃甜/炸`;
+NODE: q2
+Q: 你的壓力感大概是？
+- 不太有 -> next=END report=balance
+- 偶爾緊 -> next=END report=stress_mid
+- 常緊繃 -> next=END report=stress_high`;
       toast("已塞入範例");
     };
 
@@ -1095,14 +1133,17 @@ Q: 你飲食習慣較像？
         toast(e.message, "err");
       }
     };
+
+    // Leads
+    $("btnLeadsReload").onclick = async ()=>{ await refreshLeads().catch(e=>toast(e.message,"err")); };
   }
 
   (function init(){
     initApiBase();
     bindInputs();
     fillBuilder();
+    renderReportsUI();
     setTab("builder");
-    updateClientBtn();
   })();
 </script>
 </body>
