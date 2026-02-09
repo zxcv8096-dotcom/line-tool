@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>商品分類｜Gavin 團隊</title>
+
+  <!-- LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    :root { --bd:#e5e7eb; --tx:#0f172a; --muted:#64748b; }
+    body{font-family:system-ui,"Microsoft JhengHei";max-width:760px;margin:auto;padding:22px;color:var(--tx);}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    h1{font-size:20px;margin:0}
+    .me{font-size:13px;color:var(--muted)}
+    .card{border:1px solid var(--bd);border-radius:16px;padding:14px 14px;margin:12px 0}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    a.btn{display:flex;justify-content:space-between;align-items:center;
+      padding:14px 14px;border:1px solid var(--bd);border-radius:14px;text-decoration:none;color:var(--tx);
+      background:#fff;
+    }
+    a.btn:active{transform:scale(.99)}
+    .tag{font-size:12px;color:var(--muted)}
+    .warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:14px;padding:12px;font-size:13px}
+    .small{font-size:12px;color:var(--muted);line-height:1.5}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    input{flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--bd);border-radius:12px}
+    button{padding:10px 12px;border:1px solid var(--bd);border-radius:12px;background:#fff;cursor:pointer}
+  </style>
+</head>
+
+<body>
+  <div class="top">
+    <h1>商品分類</h1>
+    <div class="me" id="me">載入中…</div>
+  </div>
+
+  <div class="warn" id="hint" style="display:none;">
+    目前不是在 LINE 內開啟，或尚未完成登入。請從 LINE OA 內點開此頁，才能正常導購與歸屬。
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <!-- 你可以自由改名稱、分類代碼 sku 不要亂改（之後 Worker 會用它判斷） -->
+      <a class="btn" id="btn_default" href="#">
+        <div>
+          <div>熱門組合</div>
+          <div class="tag">sku: default</div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a class="btn" id="btn_PACK1" href="#">
+        <div>
+          <div>保健組</div>
+          <div class="tag">sku: PACK1</div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a class="btn" id="btn_PACK2" href="#">
+        <div>
+          <div>體態組</div>
+          <div class="tag">sku: PACK2</div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a class="btn" id="btn_PACK3" href="#">
+        <div>
+          <div>美容組</div>
+          <div class="tag">sku: PACK3</div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a class="btn" id="btn_PACK4" href="#">
+        <div>
+          <div>能量/運動組</div>
+          <div class="tag">sku: PACK4</div>
+        </div>
+        <div>›</div>
+      </a>
+    </div>
+
+    <p class="small">
+      ＊點選分類後，會由系統依你的歸屬夥伴自動導到對應購物連結。<br/>
+      ＊若你尚未綁定介紹人，系統會導到提示頁（之後由 Worker 控制）。
+    </p>
+  </div>
+
+  <!-- 可選：臨時測試用（沒有 Worker 時也能先跑流程） -->
+  <div class="card">
+    <div class="small">測試設定（先不用也沒關係，等你 Worker 做好再換）</div>
+    <div class="row" style="margin-top:8px;">
+      <input id="workerBase" class="mono" placeholder="WORKER_BASE（之後填）" />
+      <button id="btnSave">儲存</button>
+    </div>
+    <div class="small" style="margin-top:8px;">
+      目前 WORKER_BASE：<span class="mono" id="wbNow">（尚未設定）</span>
+    </div>
+  </div>
+
+<script>
+/**
+ * 你現在要改的只有這兩個：
+ * 1) LIFF_ID：你的 LIFF ID
+ * 2) WORKER_BASE：先留空，等你 Worker 做好再填（或用下方測試設定暫存）
+ */
+const LIFF_ID = "YOUR_LIFF_ID";              // TODO: 改成你的 LIFF ID
+const WORKER_BASE_DEFAULT = "";              // TODO: 之後改成 https://xxx.workers.dev
+
+const SKU_LIST = ["default","PACK1","PACK2","PACK3","PACK4"];
+
+function getWorkerBase(){
+  return localStorage.getItem("WORKER_BASE") || WORKER_BASE_DEFAULT || "";
+}
+function setWorkerBase(v){
+  localStorage.setItem("WORKER_BASE", v);
+}
+
+function setHrefForSku(sku, token){
+  const wb = getWorkerBase();
+  const id = sku === "default" ? "btn_default" : ("btn_" + sku);
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  if(!wb){
+    // Worker 還沒設定時先讓它不可點（避免跳錯）
+    el.href = "#";
+    el.onclick = (e)=>{ e.preventDefault(); alert("尚未設定 WORKER_BASE，等 Worker 做好再啟用。"); };
+    return;
+  }
+  const t = encodeURIComponent(token || "");
+  el.href = `${wb}/go?sku=${encodeURIComponent(sku)}&t=${t}`;
+}
+
+(async () => {
+  // 顯示目前 worker base
+  document.getElementById("wbNow").textContent = getWorkerBase() || "（尚未設定）";
+  document.getElementById("workerBase").value = getWorkerBase();
+
+  document.getElementById("btnSave").onclick = () => {
+    const v = document.getElementById("workerBase").value.trim();
+    setWorkerBase(v);
+    document.getElementById("wbNow").textContent = getWorkerBase() || "（尚未設定）";
+    alert("已儲存 WORKER_BASE");
+  };
+
+  try {
+    await liff.init({ liffId: LIFF_ID });
+
+    if (!liff.isLoggedIn()) {
+      // 若不是在 LINE 內，liff.login 可能會失敗或跳出
+      // 仍然嘗試登入，讓在 LINE 內開啟時可正常
+      liff.login();
+      return;
+    }
+
+    const profile = await liff.getProfile();
+    document.getElementById("me").textContent = `已登入：${profile.displayName}`;
+
+    const token = liff.getIDToken();
+    if(!token){
+      document.getElementById("hint").style.display = "block";
+      document.getElementById("hint").textContent = "拿不到 LINE 登入憑證（idToken）。請從 LINE OA 內開啟此頁。";
+      return;
+    }
+
+    // 把每個分類按鈕指向 Worker /go
+    SKU_LIST.forEach(sku => setHrefForSku(sku, token));
+
+  } catch (e) {
+    document.getElementById("me").textContent = "尚未登入";
+    document.getElementById("hint").style.display = "block";
+    document.getElementById("hint").textContent = "LIFF 初始化失敗或不在 LINE 內開啟。請從 LINE OA 內點開此頁。";
+  }
+})();
+</script>
+</body>
+</html>
