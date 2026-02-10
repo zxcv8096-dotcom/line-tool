@@ -1,1 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>問卷管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 p-5">
+  <div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900">🧾 問卷管理</h1>
+        <p class="text-sm text-slate-600 mt-1">這裡只做入口，真正的問卷後台你已經有了。</p>
+      </div>
+      <a href="settings.html" class="px-4 py-2 rounded-xl bg-white border border-slate-200 font-bold">← 返回</a>
+    </div>
+
+    <div class="mt-6 bg-white rounded-2xl shadow p-6">
+      <div class="text-sm text-slate-600">
+        你的問卷後台頁面（建議放在：<span class="font-mono font-bold">/pages/questionnaire/index.html</span> 或你目前的 questionnaire.html）
+      </div>
+
+      <div class="mt-4">
+        <label class="text-sm font-semibold text-slate-700">問卷後台路徑（相對路徑）</label>
+        <input id="path" class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 font-mono"
+               placeholder="../questionnaire/index.html 或 ../questionnaire.html">
+      </div>
+
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button onclick="save()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold">儲存</button>
+        <button onclick="openIt()" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold">開啟問卷後台</button>
+      </div>
+
+      <div class="mt-4 text-xs text-slate-500">
+        ✅ 這樣做的目的：避免「問卷這層重複」，你的問卷只保留一份，admin 只是入口。
+      </div>
+    </div>
+  </div>
+
+<script>
+  function guard(){
+    if(localStorage.getItem("admin_logged_in")!=="1") location.href="login.html";
+  }
+  guard();
+
+  const KEY="admin_survey_path";
+  const el=(id)=>document.getElementById(id);
+
+  el("path").value = localStorage.getItem(KEY) || "../questionnaire.html";
+
+  function save(){
+    const v = (el("path").value||"").trim();
+    if(!v) return alert("請填路徑");
+    localStorage.setItem(KEY, v);
+    alert("已儲存");
+  }
+
+  function openIt(){
+    const v = (el("path").value||"").trim();
+    if(!v) return alert("請填路徑");
+    location.href = v;
+  }
+</script>
+</body>
+</html>
 
