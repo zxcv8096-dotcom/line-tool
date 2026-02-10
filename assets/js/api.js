@@ -1,114 +1,127 @@
-/* assets/js/api.js
- * 全站共用：Worker API Base 設定 + fetch 包裝
- * 用法：
- *   api.setBase("https://api.xxx.workers.dev"); // 存到 localStorage
- *   const r = await api.post("/save", {a:1});
+/* /assets/js/api.js
+ * 全站共用：Worker URL 記憶 + API 呼叫 + 需要 API 的頁面自動防呆
+ * - 讀取 localStorage: line_worker_url
+ * - 沒設定就 redirect 回首頁（預設 /index.html）
+ * - 提供 api.get / api.post / api.setBase / api.base
  */
 
 (function () {
-  const STORE_KEY = "line_worker_url"; // ✅ 全站共用同一把 key（你首頁那段也用這個）
-  const DEFAULT_BASE = ""; // 可留空；你想預設固定也可填 "https://api.zxcv8096.workers.dev"
+  const STORAGE_KEY = "line_worker_url";
 
-  function normalizeBase(base) {
-    base = String(base || "").trim();
+  // 你入口頁在 repo 根目錄：/index.html
+  // 如果你未來把入口搬到 /pages/tools/index.html，再改這行就好
+  const DEFAULT_HOME = "/index.html";
+
+  function trimSlashEnd(s) {
+    return String(s || "").trim().replace(/\/+$/, "");
+  }
+
+  function readBase() {
+    return trimSlashEnd(localStorage.getItem(STORAGE_KEY) || "");
+  }
+
+  function setBase(url) {
+    const v = trimSlashEnd(url);
+    if (!v) return;
+    localStorage.setItem(STORAGE_KEY, v);
+  }
+
+  function clearBase() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function buildUrl(path) {
+    const base = readBase();
+    const p = String(path || "");
     if (!base) return "";
-    // 去掉尾巴的 /
-    base = base.replace(/\/+$/, "");
-    return base;
+    if (!p) return base;
+    if (p.startsWith("http://") || p.startsWith("https://")) return p;
+    return base + (p.startsWith("/") ? p : "/" + p);
   }
 
-  function getStoredBase() {
-    const v = localStorage.getItem(STORE_KEY);
-    return normalizeBase(v) || normalizeBase(DEFAULT_BASE);
-  }
-
-  function setStoredBase(base) {
-    const v = normalizeBase(base);
-    if (!v) throw new Error("Worker 網址不可空白");
-    localStorage.setItem(STORE_KEY, v);
-    return v;
-  }
-
-  function requireBase() {
-    const base = getStoredBase();
+  // ✅ 讓「需要 API 的頁面」自動檢查（沒設定就回首頁）
+  function requireWorkerUrl(options = {}) {
+    const home = options.home || DEFAULT_HOME;
+    const base = readBase();
     if (!base) {
-      throw new Error("尚未設定 Worker 網址（請先到任一頁輸入並儲存）");
+      // 你想顯示訊息，可以用 querystring 帶回去
+      const msg = encodeURIComponent("請先在入口頁設定 Worker API 網址");
+      window.location.href = `${home}?needWorker=1&msg=${msg}`;
+      return false;
     }
-    return base;
+    return true;
   }
 
-  async function request(path, opts = {}) {
-    const base = requireBase();
-    const url = base + (path.startsWith("/") ? path : ("/" + path));
+  async function request(method, path, body, opts = {}) {
+    const url = buildUrl(path);
+    if (!url) throw new Error("尚未設定 Worker API 網址（line_worker_url）");
 
-    const method = (opts.method || "GET").toUpperCase();
-    const headers = Object.assign({}, opts.headers || {});
-    const isJson = opts.json !== undefined;
+    const headers = Object.assign(
+      { "Content-Type": "application/json" },
+      opts.headers || {}
+    );
 
-    let body = opts.body;
-    if (isJson) {
-      headers["Content-Type"] = "application/json";
-      body = JSON.stringify(opts.json);
-    }
-
-    const res = await fetch(url, {
+    const init = {
       method,
       headers,
-      body,
-      mode: "cors",
-    });
+    };
 
-    const contentType = res.headers.get("content-type") || "";
+    if (method !== "GET" && method !== "HEAD") {
+      init.body = body === undefined ? "{}" : JSON.stringify(body);
+    }
+
+    const res = await fetch(url, init);
+
+    // 兼容：有些 endpoint 回 text
     const text = await res.text();
-
-    // 盡量解析 JSON
     let data = null;
-    if (contentType.includes("application/json")) {
-      try { data = JSON.parse(text); } catch (_) {}
-    } else {
-      // 某些 Worker 可能回 text 但其實是 JSON
-      try { data = JSON.parse(text); } catch (_) {}
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (e) {
+      data = text; // 非 JSON
     }
 
     if (!res.ok) {
       const msg =
-        (data && (data.error || data.detail || data.message)) ||
-        text ||
+        (data && data.error) ||
+        (typeof data === "string" ? data : "") ||
         `HTTP ${res.status}`;
       throw new Error(msg);
     }
 
-    return data !== null ? data : text;
+    // 若你的 API 統一回 {ok:false,error:""} 也擋掉
+    if (data && typeof data === "object" && data.ok === false) {
+      throw new Error(data.error || "API 回傳失敗");
+    }
+
+    return data;
   }
 
-  // 小工具：帶 querystring
-  function qs(obj = {}) {
-    const p = new URLSearchParams();
-    Object.entries(obj).forEach(([k, v]) => {
-      if (v === undefined || v === null) return;
-      p.append(k, String(v));
-    });
-    const s = p.toString();
-    return s ? `?${s}` : "";
-  }
-
-  // 對外 API
+  // ✅ 對外暴露全站可用的 api
   window.api = {
+    storageKey: STORAGE_KEY,
+
     // base
-    getBase: () => getStoredBase(),
-    setBase: (base) => setStoredBase(base),
-    clearBase: () => localStorage.removeItem(STORE_KEY),
+    base() {
+      return readBase();
+    },
+    setBase(url) {
+      setBase(url);
+      return readBase();
+    },
+    clearBase() {
+      clearBase();
+    },
 
-    // request
-    request,
-    get: (path) => request(path, { method: "GET" }),
-    post: (path, json) => request(path, { method: "POST", json }),
-    put: (path, json) => request(path, { method: "PUT", json }),
-    del: (path, json) => request(path, { method: "DELETE", json }),
+    // guard
+    requireWorkerUrl,
 
-    // helper
-    qs,
-    // health check（你現在有 /health）
-    health: () => request("/health", { method: "GET" }),
+    // http
+    get(path, opts) {
+      return request("GET", path, undefined, opts);
+    },
+    post(path, body, opts) {
+      return request("POST", path, body, opts);
+    },
   };
 })();
