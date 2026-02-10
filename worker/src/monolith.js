@@ -12,7 +12,7 @@
 // - CHANNEL_ACCESS_TOKEN (必填)
 // - CHANNEL_SECRET (可選：有就驗簽)
 
-export default {
+export async function handleMonolith(request, env, ctx) {
   async fetch(request, env) {
     const url = new URL(request.url);
 
