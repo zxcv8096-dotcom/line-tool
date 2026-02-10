@@ -1,1 +1,214 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>LINE OA 系統入口（總控台）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+  </style>
+</head>
 
+<body class="min-h-screen">
+  <div class="max-w-5xl mx-auto p-4 md:p-8">
+    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">LINE OA 系統入口（總控台）</h1>
+        <p class="text-slate-600 mt-1">你只要記得：工具/管理員/夥伴，三條路固定不亂。</p>
+      </div>
+      <div class="text-xs text-slate-500">
+        建議：先把入口整理好，再做夥伴綁定與權限
+      </div>
+    </header>
+
+    <!-- Worker URL -->
+    <section class="card rounded-2xl shadow p-5 border border-slate-200 mb-4">
+      <div class="flex flex-col md:flex-row md:items-center gap-3">
+        <div class="flex-1">
+          <label class="text-sm font-semibold text-slate-700">Worker API 網址（記憶用）</label>
+          <input id="inWorker" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 placeholder="https://api.zxcv8096.workers.dev" />
+          <div class="text-xs text-slate-500 mt-2">
+            會記在瀏覽器：<span class="mono font-semibold">line_worker_url</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnSaveWorker"
+            class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
+            儲存
+          </button>
+          <button id="btnClearWorker"
+            class="px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+            清除
+          </button>
+        </div>
+      </div>
+      <div class="mt-3 text-xs text-slate-600">
+        狀態：<span id="txtWorkerStatus" class="font-semibold">未設定</span>
+      </div>
+    </section>
+
+    <!-- 3 main entrances -->
+    <section class="grid md:grid-cols-3 gap-4">
+      <!-- Tools -->
+      <div class="card rounded-2xl shadow border border-slate-200 p-5">
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">🧰</div>
+          <div>
+            <div class="text-lg font-extrabold text-slate-900">工具（你自己用）</div>
+            <div class="text-xs text-slate-500 mt-1">問卷後台 / RichMenu / 各種工具</div>
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-2">
+          <button class="w-full px-4 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold"
+            onclick="goNeedWorker('/pages/questionnaire/index.html')">
+            進入問卷後台
+          </button>
+
+          <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
+            onclick="goNeedWorker('/pages/questionnaire/preview.html')">
+            問卷預覽頁
+          </button>
+
+          <div class="pt-2 text-xs text-slate-500">
+            你其他工具頁也都可以加在這裡（之後再擴充）。
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin -->
+      <div class="card rounded-2xl shadow border border-slate-200 p-5">
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">🛡️</div>
+          <div>
+            <div class="text-lg font-extrabold text-slate-900">管理員（你用）</div>
+            <div class="text-xs text-slate-500 mt-1">管理夥伴、問卷清單、權限</div>
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-2">
+          <button class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold"
+            onclick="go('/pages/admin/login.html')">
+            管理員登入
+          </button>
+
+          <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
+            onclick="goNeedWorker('/pages/admin/surveys.html')">
+            問卷清單管理（建議只做清單）
+          </button>
+
+          <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
+            onclick="goNeedWorker('/pages/admin/partners.html')">
+            夥伴管理（之後做）
+          </button>
+        </div>
+      </div>
+
+      <!-- Partner -->
+      <div class="card rounded-2xl shadow border border-slate-200 p-5">
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">🤝</div>
+          <div>
+            <div class="text-lg font-extrabold text-slate-900">夥伴（給夥伴用）</div>
+            <div class="text-xs text-slate-500 mt-1">填顧問 LINE、產品連結、看名下客戶</div>
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-2">
+          <button class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold"
+            onclick="go('/pages/partner/login.html')">
+            夥伴登入
+          </button>
+
+          <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
+            onclick="goNeedWorker('/pages/partner/profile.html')">
+            夥伴資料設定（之後做）
+          </button>
+
+          <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
+            onclick="goNeedWorker('/pages/partner/products.html')">
+            產品連結管理（之後做）
+          </button>
+
+          <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
+            onclick="goNeedWorker('/pages/partner/customers.html')">
+            名下客戶清單（之後做）
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-8 text-xs text-slate-500">
+      <div class="card rounded-2xl border border-slate-200 p-4">
+        ✅ 你現在只要記得三條入口：<span class="font-bold">工具 / 管理員 / 夥伴</span>。<br/>
+        ✅ 下一步我會帶你做：<span class="font-bold">Partner Profile（夥伴資料）+ Worker API 存取</span>，讓顧問資料與產品連結能被綁定。
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const KEY = "line_worker_url";
+
+    function $(id){ return document.getElementById(id); }
+
+    function setStatus(){
+      const v = (localStorage.getItem(KEY) || "").trim();
+      if(v){
+        $("txtWorkerStatus").textContent = "已設定：" + v;
+        $("txtWorkerStatus").className = "font-semibold text-emerald-700";
+      }else{
+        $("txtWorkerStatus").textContent = "未設定（需要用到 API 的頁面會先要求你填）";
+        $("txtWorkerStatus").className = "font-semibold text-rose-700";
+      }
+    }
+
+    function go(path){
+      window.location.href = path;
+    }
+
+    function goNeedWorker(path){
+      const v = ($("inWorker").value || "").trim() || (localStorage.getItem(KEY) || "").trim();
+      if(!v){
+        alert("請先填 Worker API 網址（例如：https://api.zxcv8096.workers.dev）再進入需要 API 的頁面");
+        $("inWorker").focus();
+        return;
+      }
+      // 寫回記憶
+      localStorage.setItem(KEY, v);
+      setStatus();
+      window.location.href = path;
+    }
+
+    // init
+    window.addEventListener("load", ()=>{
+      const saved = (localStorage.getItem(KEY) || "").trim();
+      if(saved) $("inWorker").value = saved;
+      setStatus();
+    });
+
+    $("btnSaveWorker").addEventListener("click", ()=>{
+      const v = ($("inWorker").value || "").trim();
+      if(!v) return alert("請輸入 Worker API 網址");
+      localStorage.setItem(KEY, v);
+      setStatus();
+      alert("已儲存 Worker API");
+    });
+
+    $("btnClearWorker").addEventListener("click", ()=>{
+      localStorage.removeItem(KEY);
+      $("inWorker").value = "";
+      setStatus();
+      alert("已清除");
+    });
+  </script>
+</body>
+</html>
