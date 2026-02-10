@@ -1,1 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>夥伴登入</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-slate-100">
+
+  <div class="bg-white p-8 rounded-2xl shadow max-w-sm w-full">
+    <h1 class="text-2xl font-extrabold text-center mb-4">🤝 夥伴登入</h1>
+
+    <label class="text-sm font-semibold">夥伴識別碼（Email / 編號）</label>
+    <input id="pid" class="w-full mt-2 px-4 py-3 border rounded-xl"
+           placeholder="例如：partner001" />
+
+    <button onclick="login()"
+      class="w-full mt-6 px-4 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500">
+      登入
+    </button>
+
+    <p class="text-xs text-slate-500 mt-4 text-center">
+      ※ 目前為簡化登入，之後可接 LINE Login
+    </p>
+  </div>
+
+<script>
+function login(){
+  const v = document.getElementById('pid').value.trim();
+  if(!v) return alert('請輸入夥伴識別碼');
+  localStorage.setItem('partner_id', v);
+  location.href = 'dashboard.html';
+}
+</script>
+</body>
+</html>
 
