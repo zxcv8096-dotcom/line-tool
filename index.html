@@ -63,18 +63,18 @@
           <div class="text-3xl">🧰</div>
           <div>
             <div class="text-lg font-extrabold text-slate-900">工具（你自己用）</div>
-            <div class="text-xs text-slate-500 mt-1">問卷後台 / RichMenu / 各種工具</div>
+            <div class="text-xs text-slate-500 mt-1">問卷後台 / 預覽頁</div>
           </div>
         </div>
 
         <div class="mt-4 space-y-2">
           <button class="w-full px-4 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold"
-            onclick="goNeedWorker('/pages/questionnaire/index.html')">
+            onclick="goNeedWorker('pages/questionnaire/index.html')">
             進入問卷後台
           </button>
 
           <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
-            onclick="goNeedWorker('/pages/questionnaire/preview.html')">
+            onclick="goNeedWorker('pages/questionnaire/preview.html')">
             問卷預覽頁
           </button>
 
@@ -96,17 +96,17 @@
 
         <div class="mt-4 space-y-2">
           <button class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold"
-            onclick="go('/pages/admin/login.html')">
+            onclick="go('pages/admin/login.html')">
             管理員登入
           </button>
 
           <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
-            onclick="goNeedWorker('/pages/admin/surveys.html')">
+            onclick="goNeedWorker('pages/admin/surveys.html')">
             問卷清單管理（建議只做清單）
           </button>
 
           <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
-            onclick="goNeedWorker('/pages/admin/partners.html')">
+            onclick="goNeedWorker('pages/admin/partners.html')">
             夥伴管理（之後做）
           </button>
         </div>
@@ -124,22 +124,22 @@
 
         <div class="mt-4 space-y-2">
           <button class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold"
-            onclick="go('/pages/partner/login.html')">
+            onclick="go('pages/partner/login.html')">
             夥伴登入
           </button>
 
           <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
-            onclick="goNeedWorker('/pages/partner/profile.html')">
+            onclick="goNeedWorker('pages/partner/profile.html')">
             夥伴資料設定（之後做）
           </button>
 
           <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
-            onclick="goNeedWorker('/pages/partner/products.html')">
+            onclick="goNeedWorker('pages/partner/products.html')">
             產品連結管理（之後做）
           </button>
 
           <button class="w-full px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold"
-            onclick="goNeedWorker('/pages/partner/customers.html')">
+            onclick="goNeedWorker('pages/partner/customers.html')">
             名下客戶清單（之後做）
           </button>
         </div>
@@ -150,7 +150,7 @@
     <footer class="mt-8 text-xs text-slate-500">
       <div class="card rounded-2xl border border-slate-200 p-4">
         ✅ 你現在只要記得三條入口：<span class="font-bold">工具 / 管理員 / 夥伴</span>。<br/>
-        ✅ 下一步我會帶你做：<span class="font-bold">Partner Profile（夥伴資料）+ Worker API 存取</span>，讓顧問資料與產品連結能被綁定。
+        ✅ 下一步我會帶你做：<span class="font-bold">api.js + 讓每頁自動讀 worker_url</span>，全站就穩了。
       </div>
     </footer>
   </div>
@@ -172,6 +172,7 @@
     }
 
     function go(path){
+      // ✅ 相對路徑（不要 / 開頭）才能同時支援 GitHub Pages / Cloudflare Pages
       window.location.href = path;
     }
 
@@ -182,13 +183,11 @@
         $("inWorker").focus();
         return;
       }
-      // 寫回記憶
       localStorage.setItem(KEY, v);
       setStatus();
       window.location.href = path;
     }
 
-    // init
     window.addEventListener("load", ()=>{
       const saved = (localStorage.getItem(KEY) || "").trim();
       if(saved) $("inWorker").value = saved;
