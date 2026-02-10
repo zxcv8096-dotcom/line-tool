@@ -1,1 +1,85 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>系統設定</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 p-5">
+  <div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-extrabold text-slate-900">⚙️ 系統設定</h1>
+      <button onclick="logout()" class="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-500">
+        登出
+      </button>
+    </div>
+
+    <div class="mt-4 grid md:grid-cols-2 gap-4">
+      <a href="partners.html" class="card">👥 夥伴管理</a>
+      <a href="surveys.html" class="card">🧾 問卷管理</a>
+    </div>
+
+    <div class="mt-6 bg-white rounded-2xl shadow p-6">
+      <div class="text-sm text-slate-600 mb-4">
+        這裡的設定會存到你的瀏覽器（localStorage），不會影響別人。
+      </div>
+
+      <label class="block text-sm font-semibold text-slate-700">Worker URL</label>
+      <input id="worker" class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 font-mono"
+             placeholder="https://api.xxx.workers.dev" />
+
+      <label class="block text-sm font-semibold text-slate-700 mt-5">Admin Token（可先留空）</label>
+      <input id="token" class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 font-mono"
+             placeholder="之後 Worker 驗證用，例如：ADMIN_xxx" />
+
+      <button onclick="save()" class="w-full mt-6 px-4 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500">
+        儲存設定
+      </button>
+
+      <div class="mt-4 text-xs text-slate-500">
+        ✅ 建議：先只填 Worker URL，Token 之後接 Worker 再補。
+      </div>
+    </div>
+  </div>
+
+<style>
+  .card{
+    display:block;background:#fff;border-radius:16px;padding:18px;
+    box-shadow:0 10px 18px rgba(0,0,0,.07);
+    font-weight:800;color:#0f172a;
+  }
+  .card:hover{ background:#f8fafc }
+</style>
+
+<script>
+  function guard(){
+    if(localStorage.getItem("admin_logged_in")!=="1"){
+      location.href="login.html";
+    }
+  }
+  guard();
+
+  const K_WORKER="admin_worker_url";
+  const K_TOKEN="admin_token";
+
+  worker.value = localStorage.getItem(K_WORKER) || "";
+  token.value  = localStorage.getItem(K_TOKEN) || "";
+
+  function save(){
+    const w = (worker.value||"").trim().replace(/\/$/,"");
+    const t = (token.value||"").trim();
+    if(!w) return alert("請填 Worker URL");
+    localStorage.setItem(K_WORKER, w);
+    localStorage.setItem(K_TOKEN, t);
+    alert("已儲存");
+  }
+
+  function logout(){
+    localStorage.removeItem("admin_logged_in");
+    location.href="login.html";
+  }
+</script>
+</body>
+</html>
 
