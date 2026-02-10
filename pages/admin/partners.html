@@ -1,1 +1,194 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>夥伴管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 p-5">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900">👥 夥伴管理</h1>
+        <p class="text-sm text-slate-600 mt-1">先用本機儲存，之後再接 Cloudflare Worker/KV。</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="settings.html" class="px-4 py-2 rounded-xl bg-white border border-slate-200 font-bold">← 返回</a>
+        <button onclick="exportJson()" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold">匯出</button>
+      </div>
+    </div>
+
+    <div class="mt-5 bg-white rounded-2xl shadow p-5">
+      <div class="grid md:grid-cols-4 gap-3">
+        <div>
+          <label class="text-sm font-semibold">夥伴ID（唯一）</label>
+          <input id="pid" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200" placeholder="partner001">
+        </div>
+        <div>
+          <label class="text-sm font-semibold">姓名</label>
+          <input id="name" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200" placeholder="王小明">
+        </div>
+        <div>
+          <label class="text-sm font-semibold">LINE（ID或連結）</label>
+          <input id="line" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200" placeholder="@abc / https://line.me/R/...">
+        </div>
+        <div>
+          <label class="text-sm font-semibold">狀態</label>
+          <select id="status" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200">
+            <option value="active">啟用</option>
+            <option value="disabled">停用</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button onclick="addPartner()"
+          class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500">
+          新增/更新
+        </button>
+        <button onclick="clearForm()"
+          class="px-4 py-2 rounded-xl bg-white border border-slate-200 font-bold">
+          清空
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-5 bg-white rounded-2xl shadow p-5">
+      <div class="flex items-center justify-between">
+        <div class="font-extrabold text-slate-900">夥伴清單</div>
+        <input id="q" class="px-3 py-2 rounded-xl border border-slate-200" placeholder="搜尋…">
+      </div>
+      <div id="list" class="mt-4 space-y-2"></div>
+    </div>
+  </div>
+
+<script>
+  function guard(){
+    if(localStorage.getItem("admin_logged_in")!=="1") location.href="login.html";
+  }
+  guard();
+
+  const KEY="admin_partners";
+  let partners = JSON.parse(localStorage.getItem(KEY) || "[]");
+
+  const el = (id)=>document.getElementById(id);
+
+  function saveAll(){
+    localStorage.setItem(KEY, JSON.stringify(partners));
+  }
+
+  function clearForm(){
+    el("pid").value="";
+    el("name").value="";
+    el("line").value="";
+    el("status").value="active";
+  }
+
+  function addPartner(){
+    const pid = (el("pid").value||"").trim();
+    const name = (el("name").value||"").trim();
+    const line = (el("line").value||"").trim();
+    const status = el("status").value;
+
+    if(!pid) return alert("請填夥伴ID");
+    if(!name) return alert("請填姓名");
+
+    const i = partners.findIndex(x=>x.pid===pid);
+    const obj = { pid, name, line, status, updatedAt: Date.now() };
+
+    if(i>=0) partners[i]=obj; else partners.unshift(obj);
+    saveAll();
+    render();
+    alert(i>=0 ? "已更新" : "已新增");
+    clearForm();
+  }
+
+  function delPartner(pid){
+    if(!confirm("確定刪除 "+pid+" ?")) return;
+    partners = partners.filter(x=>x.pid!==pid);
+    saveAll();
+    render();
+  }
+
+  function editPartner(pid){
+    const x = partners.find(p=>p.pid===pid);
+    if(!x) return;
+    el("pid").value = x.pid;
+    el("name").value = x.name;
+    el("line").value = x.line || "";
+    el("status").value = x.status || "active";
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  function exportJson(){
+    const text = JSON.stringify(partners, null, 2);
+    try{
+      navigator.clipboard.writeText(text);
+      alert("已複製到剪貼簿（也可貼到檔案備份）");
+    }catch(e){
+      prompt("複製這段 JSON：", text);
+    }
+  }
+
+  function fmt(ts){
+    const d = new Date(ts);
+    return d.toLocaleString();
+  }
+
+  function render(){
+    const q = (el("q").value||"").trim().toLowerCase();
+    const list = el("list");
+    list.innerHTML = "";
+
+    const items = partners.filter(x=>{
+      if(!q) return true;
+      return JSON.stringify(x).toLowerCase().includes(q);
+    });
+
+    if(items.length===0){
+      list.innerHTML = `<div class="text-slate-500 text-sm">目前沒有夥伴資料。</div>`;
+      return;
+    }
+
+    items.forEach(x=>{
+      const badge = x.status==="active"
+        ? `<span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold">啟用</span>`
+        : `<span class="text-xs px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100 font-bold">停用</span>`;
+
+      const row = document.createElement("div");
+      row.className = "rounded-2xl border border-slate-200 bg-slate-50 p-4";
+
+      row.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-extrabold text-slate-900">${x.pid}　${badge}</div>
+            <div class="text-sm text-slate-700 mt-1">姓名：${escapeHtml(x.name)}</div>
+            <div class="text-sm text-slate-700">LINE：${escapeHtml(x.line||"-")}</div>
+            <div class="text-xs text-slate-500 mt-1">更新：${fmt(x.updatedAt||Date.now())}</div>
+          </div>
+          <div class="shrink-0 flex gap-2">
+            <button class="px-3 py-2 rounded-xl bg-white border border-slate-200 font-bold" onclick="editPartner('${x.pid}')">編輯</button>
+            <button class="px-3 py-2 rounded-xl bg-rose-600 text-white font-bold" onclick="delPartner('${x.pid}')">刪除</button>
+          </div>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  function escapeHtml(s){
+    return (s??"").toString()
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  el("q").addEventListener("input", render);
+  render();
+</script>
+</body>
+</html>
 
