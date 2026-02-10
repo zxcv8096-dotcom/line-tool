@@ -1,1 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>管理者登入</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+  <div class="w-full max-w-sm bg-white rounded-2xl shadow p-6">
+    <h1 class="text-2xl font-extrabold text-slate-900">🛠️ 管理者登入</h1>
+    <p class="text-sm text-slate-600 mt-2">先用簡化登入，上線後再換成更安全的方式。</p>
 
+    <label class="block text-sm font-semibold text-slate-700 mt-5">管理密碼</label>
+    <input id="pw" type="password" class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200"
+           placeholder="輸入管理密碼" />
+
+    <button id="btn" class="w-full mt-5 px-4 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-black">
+      登入
+    </button>
+
+    <p class="text-xs text-slate-500 mt-4 leading-5">
+      預設密碼：<span class="font-bold">1234</span><br>
+      （之後可在 settings.html 改成 Token 方式）
+    </p>
+  </div>
+
+<script>
+  const DEFAULT_PW = "1234";
+
+  function go(){
+    const pw = (document.getElementById("pw").value || "").trim();
+    if(!pw) return alert("請輸入管理密碼");
+    if(pw !== DEFAULT_PW) return alert("密碼錯誤");
+    localStorage.setItem("admin_logged_in", "1");
+    location.href = "settings.html";
+  }
+
+  document.getElementById("btn").addEventListener("click", go);
+  document.getElementById("pw").addEventListener("keydown", (e)=>{ if(e.key==="Enter") go(); });
+
+  // 已登入就直進
+  if(localStorage.getItem("admin_logged_in")==="1"){
+    location.href = "settings.html";
+  }
+</script>
+</body>
+</html>
