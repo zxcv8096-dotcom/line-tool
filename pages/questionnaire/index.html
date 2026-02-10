@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>問卷後台管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen">
+  <div class="max-w-5xl mx-auto p-6 space-y-6">
+
+    <header>
+      <h1 class="text-2xl font-extrabold text-slate-900">問卷後台管理</h1>
+      <p class="text-sm text-slate-600 mt-1">
+        編輯問卷 JSON → 儲存到 Cloudflare KV → 預覽給客戶看
+      </p>
+    </header>
+
+    <!-- Worker 設定 -->
+    <section class="bg-white rounded-xl shadow p-5 space-y-3">
+      <label class="text-sm font-bold text-slate-700">Cloudflare Worker API</label>
+      <input id="apiBase"
+        class="w-full px-4 py-3 rounded-lg border"
+        placeholder="https://api.xxx.workers.dev" />
+      <button id="btnSaveApi"
+        class="px-4 py-2 rounded-lg bg-slate-900 text-white font-bold">
+        儲存連線
+      </button>
+      <div id="apiStatus" class="text-sm"></div>
+    </section>
+
+    <!-- 問卷設定 -->
+    <section class="bg-white rounded-xl shadow p-5 space-y-4">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-bold">問卷名稱（key）</label>
+          <input id="surveyKey"
+            class="w-full px-4 py-2 border rounded-lg"
+            placeholder="sleep_survey_v1" />
+        </div>
+        <div>
+          <label class="text-sm font-bold">啟動關鍵字</label>
+          <input id="surveyKeyword"
+            class="w-full px-4 py-2 border rounded-lg"
+            placeholder="作息分析" />
+        </div>
+      </div>
+
+      <label class="text-sm font-bold">問卷 JSON（完整結構）</label>
+      <textarea id="surveyJson"
+        class="w-full h-[360px] p-4 border rounded-lg font-mono text-sm"
+        placeholder='{
+  "title": "60 秒作息分析",
+  "start": "q1",
+  "nodes": {
+    "q1": {
+      "q": "你最近最想改善哪一塊？",
+      "options": [
+        { "t": "睡眠", "next": "q2" },
+        { "t": "壓力", "next": "q2" }
+      ]
+    }
+  }
+}'></textarea>
+
+      <div class="flex flex-wrap gap-3">
+        <button id="btnSave"
+          class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold">
+          儲存問卷
+        </button>
+
+        <button id="btnPreview"
+          class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-bold">
+          預覽問卷
+        </button>
+      </div>
+
+      <div id="msg" class="text-sm"></div>
+    </section>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+let API = localStorage.getItem("survey_api") || "";
+
+$("apiBase").value = API;
+
+$("btnSaveApi").onclick = async () => {
+  API = $("apiBase").value.trim();
+  if (!API) return;
+  localStorage.setItem("survey_api", API);
+  $("apiStatus").textContent = "已儲存";
+};
+
+$("btnSave").onclick = async () => {
+  try {
+    const key = $("surveyKey").value.trim();
+    const keyword = $("surveyKeyword").value.trim();
+    if (!key || !keyword) throw "請填問卷名稱與關鍵字";
+
+    const json = JSON.parse($("surveyJson").value);
+
+    const payload = {
+      name: key,
+      keyword,
+      ...json
+    };
+
+    const res = await fetch(API + "/putAny", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        namespace: "DB",
+        keyword: "AI_SURVEY:Q:" + key,
+        payload
+      })
+    });
+
+    if (!res.ok) throw await res.text();
+    $("msg").textContent = "✅ 已儲存到 Cloudflare KV";
+  } catch (e) {
+    $("msg").textContent = "❌ 錯誤：" + e;
+  }
+};
+
+$("btnPreview").onclick = () => {
+  const key = $("surveyKey").value.trim();
+  if (!key) return alert("請先填問卷名稱");
+  window.open(`preview.html?key=${encodeURIComponent(key)}`, "_blank");
+};
+</script>
+</body>
+</html>
