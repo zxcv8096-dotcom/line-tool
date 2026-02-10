@@ -1,0 +1,31 @@
+.partner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.partner-id {
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.partner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 16px;
+}
+
+.partner-tile {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,.06);
+}
+
+.partner-tile:hover {
+  background: #f8fafc;
+}
