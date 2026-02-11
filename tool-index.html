@@ -77,7 +77,7 @@
           <div>
             <div class="text-lg font-extrabold leading-tight">LINE 工具中控台</div>
             <div class="text-sm mt-1" style="color:var(--muted2)">
-              首頁｜工具固定在 <span class="kbd">/line-tool/pages/tools/</span>
+              首頁
             </div>
           </div>
         </div>
@@ -97,7 +97,6 @@
         <div>
           <div class="text-base font-bold">快速入口</div>
           <div class="mt-1 text-sm" style="color:var(--muted)">
-            所有工具連結都會指向：<span class="kbd" id="toolsRootText"></span>　
             按 <span class="kbd">/</span> 直接聚焦搜尋。
           </div>
           <div class="mt-3 flex flex-wrap gap-2 text-sm">
@@ -116,26 +115,12 @@
         </div>
       </div>
 
-      <div class="mt-4 grid lg:grid-cols-3 gap-3 text-sm">
-        <div class="pill rounded-2xl p-4">
-          <div class="font-semibold">目前位置</div>
-          <div class="mt-1" style="color:var(--muted)">
-            Host：<span id="host" class="font-mono"></span><br/>
-            Path：<span id="path" class="font-mono"></span>
-          </div>
+      <!-- ✅ 保留一個「一鍵測試」就好（把 Host/Path/Root 顯示全拿掉） -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="text-sm" style="color:var(--muted)">
+          小工具：開新分頁快速確認工具是否可開啟
         </div>
-        <div class="pill rounded-2xl p-4">
-          <div class="font-semibold">工具根目錄</div>
-          <div class="mt-1" style="color:var(--muted)">
-            <span class="font-mono" id="toolsRootHint"></span>
-          </div>
-        </div>
-        <div class="pill rounded-2xl p-4">
-          <div class="font-semibold">一鍵測試</div>
-          <div class="mt-2">
-            <button id="btnTest" class="btn text-sm px-4 py-2 rounded-2xl">開新分頁測試工具</button>
-          </div>
-        </div>
+        <button id="btnTest" class="btn text-sm px-4 py-2 rounded-2xl">開新分頁測試（快速回覆）</button>
       </div>
     </section>
 
@@ -192,7 +177,7 @@
           <div>
             <div class="text-lg font-extrabold">使用說明</div>
             <div class="text-sm mt-1" style="color:var(--muted)">
-              我已把所有連結固定指向：<span class="kbd" id="toolsRootText2"></span>
+              點卡片會跳到對應工具頁；搜尋支援中文關鍵字。
             </div>
           </div>
           <button id="btnClose" class="btn text-sm px-4 py-2 rounded-2xl">關閉</button>
@@ -200,15 +185,16 @@
 
         <div class="mt-4 space-y-3 text-sm">
           <div class="pill rounded-2xl p-4">
-            <div class="font-bold">✅ 你指定的工具位置</div>
+            <div class="font-bold">✅ 工具固定放置位置</div>
             <div class="mt-1" style="color:var(--muted)">
-              /line-tool/pages/tools/xxxx.html
+              <span class="kbd">/line-tool/pages/tools/</span>
             </div>
           </div>
+
           <div class="pill rounded-2xl p-4">
-            <div class="font-bold">✅ 這份首頁做了什麼</div>
+            <div class="font-bold">✅ 使用方式</div>
             <div class="mt-1" style="color:var(--muted)">
-              不管首頁在哪一層，點工具都會跳到固定網址（不會因為相對路徑壞掉）。
+              1) 按 <span class="kbd">/</span> 直接搜尋　2) 點卡片進入工具　3) 需要測試就按「開新分頁測試」
             </div>
           </div>
         </div>
@@ -218,18 +204,18 @@
   </div>
 
   <script>
-    // 你指定的工具根目錄：固定使用 /line-tool/pages/tools/
+    // 工具根目錄：固定使用 /line-tool/pages/tools/
     const TOOLS_ROOT = "/line-tool/pages/tools/";
 
     const TOOLS = [
-      { key:"lab",      icon:"🚦", title:"儀表板",         desc:"狀態、測試、彙整入口",         tag:"Dashboard", file:"lab_dashboard.html",  keywords:["儀表板","dashboard","lab","狀態","測試"] },
-      { key:"quick",    icon:"⚡", title:"快速回覆",       desc:"建立 / 管理 Quick Reply",      tag:"Reply",     file:"quickreply.html",      keywords:["快速回覆","quick","reply","回覆"] },
-      { key:"auto",     icon:"🤖", title:"自動回覆",       desc:"關鍵字 → 規則庫回覆",          tag:"Rules",     file:"auto_reply.html",      keywords:["自動回覆","auto","關鍵字","規則","rules"] },
-      { key:"carousel", icon:"🧩", title:"輪播卡片",       desc:"Carousel 卡片組裝 / 產生",      tag:"Cards",     file:"tool_carousel.html",   keywords:["carousel","輪播","卡片"] },
-      { key:"flow",     icon:"🧭", title:"流程工具",       desc:"節點 / 流程視覺化工具頁",       tag:"Flow",      file:"tool_flow.html",       keywords:["流程","flow","節點","視覺化"] },
-      { key:"map",      icon:"🗺️", title:"Imagemap 熱區",  desc:"熱區 / 點擊區域配置",          tag:"Map",       file:"tool_imagemap.html",   keywords:["imagemap","熱區","點擊","圖片","map"] },
-      { key:"meta",     icon:"🧾", title:"設定編輯器",     desc:"Meta / 設定內容編輯",           tag:"Config",    file:"tool_meta_editor.html",keywords:["meta","設定","config","參數","json"] },
-      { key:"rich",     icon:"📌", title:"Rich Menu",      desc:"圖文選單設計 / 管理",           tag:"Menu",      file:"tool_richmenu.html",   keywords:["rich","menu","選單","圖文","richmenu"] },
+      { key:"lab",      icon:"🚦", title:"儀表板",     desc:"狀態、測試、彙整入口",     tag:"Dashboard", file:"lab_dashboard.html",  keywords:["儀表板","dashboard","lab","狀態","測試"] },
+      { key:"quick",    icon:"⚡", title:"快速回覆",   desc:"建立 / 管理 Quick Reply",  tag:"Reply",     file:"quickreply.html",      keywords:["快速回覆","quick","reply","回覆"] },
+      { key:"auto",     icon:"🤖", title:"自動回覆",   desc:"關鍵字 → 規則庫回覆",      tag:"Rules",     file:"auto_reply.html",      keywords:["自動回覆","auto","關鍵字","規則","rules"] },
+      { key:"carousel", icon:"🧩", title:"輪播卡片",   desc:"Carousel 卡片組裝 / 產生",  tag:"Cards",     file:"tool_carousel.html",   keywords:["carousel","輪播","卡片"] },
+      { key:"flow",     icon:"🧭", title:"流程工具",   desc:"節點 / 流程視覺化工具頁",   tag:"Flow",      file:"tool_flow.html",       keywords:["流程","flow","節點","視覺化"] },
+      { key:"map",      icon:"🗺️", title:"Imagemap 熱區", desc:"熱區 / 點擊區域配置",    tag:"Map",       file:"tool_imagemap.html",   keywords:["imagemap","熱區","點擊","圖片","map"] },
+      { key:"meta",     icon:"🧾", title:"設定編輯器", desc:"Meta / 設定內容編輯",       tag:"Config",    file:"tool_meta_editor.html",keywords:["meta","設定","config","參數","json"] },
+      { key:"rich",     icon:"📌", title:"Rich Menu",  desc:"圖文選單設計 / 管理",       tag:"Menu",      file:"tool_richmenu.html",   keywords:["rich","menu","選單","圖文","richmenu"] },
     ];
 
     function urlFor(file){
@@ -263,9 +249,6 @@
             </div>
             <span class="pill text-xs px-3 py-1 rounded-2xl whitespace-nowrap">${t.tag}</span>
           </div>
-          <div class="mt-4 text-xs" style="color:var(--muted2)">
-            連結：<span class="font-mono">${TOOLS_ROOT}${t.file}</span>
-          </div>
         </button>
       `;
     }
@@ -273,9 +256,7 @@
     function render(list){
       grid.innerHTML = list.map(cardHTML).join("");
       grid.querySelectorAll("[data-key]").forEach(el=>{
-        el.addEventListener("click", ()=>{
-          go(el.dataset.key);
-        });
+        el.addEventListener("click", ()=> go(el.dataset.key));
       });
       empty.classList.toggle("hidden", list.length !== 0);
     }
@@ -297,24 +278,17 @@
     q.addEventListener("input", applyFilter);
     clear.addEventListener("click", ()=>{ q.value=""; q.focus(); render(TOOLS); });
 
-    // diag
-    document.getElementById("host").textContent = location.host;
-    document.getElementById("path").textContent = location.pathname;
-
+    // env badge（保留一個就好）
     const envBadge = document.getElementById("envBadge");
     if (location.host === "github.com"){
-      envBadge.textContent = "你現在在 GitHub Code 頁（不是網站）";
+      envBadge.textContent = "GitHub Code（不是網站）";
     } else if (location.host.endsWith("github.io")){
-      envBadge.textContent = "你現在在 GitHub Pages（✅ 連結會正常）";
+      envBadge.textContent = "GitHub Pages ✅";
     } else {
       envBadge.textContent = "一般網站模式";
     }
 
-    const toolsRootAbs = location.origin + TOOLS_ROOT;
-    document.getElementById("toolsRootHint").textContent = toolsRootAbs;
-    document.getElementById("toolsRootText").textContent = toolsRootAbs;
-    document.getElementById("toolsRootText2").textContent = toolsRootAbs;
-
+    // test
     document.getElementById("btnTest").addEventListener("click", ()=>{
       window.open(urlFor("quickreply.html"), "_blank");
     });
