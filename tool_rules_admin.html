@@ -1,1340 +1,381 @@
 <!doctype html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>問券規則後台 Pro（KV 版本化・可視化・可測試）</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LINE 全工具中控台｜首頁</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     :root{
-      --ring: 0 0 0 4px rgba(59,130,246,.18);
-      --bd: rgba(15,23,42,.12);
-      --muted: rgba(15,23,42,.58);
+      --ink:#0f172a;
+      --muted:#475569;
+      --muted2:#64748b;
+      --bd:rgba(15,23,42,.10);
+      --bg:#f8fafc;
+      --glass: rgba(255,255,255,.80);
+      --glass2: rgba(255,255,255,.66);
+      --shadow: 0 18px 55px rgba(15,23,42,.10);
+      --shadow2: 0 8px 24px rgba(15,23,42,.08);
     }
-    body{ font-family: ui-sans-serif, system-ui, "Microsoft JhengHei"; }
-
-    /* ===== Background ===== */
-    .bg-app{
+    body{
+      color:var(--ink);
       background:
-        radial-gradient(circle at 10% 10%, rgba(59,130,246,.12), transparent 35%),
-        radial-gradient(circle at 90% 20%, rgba(16,185,129,.10), transparent 40%),
-        radial-gradient(circle at 30% 90%, rgba(244,63,94,.08), transparent 35%),
-        linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        radial-gradient(1200px 600px at 10% 0%, rgba(59,130,246,.18), transparent 55%),
+        radial-gradient(950px 520px at 90% 12%, rgba(16,185,129,.16), transparent 55%),
+        radial-gradient(1000px 650px at 50% 110%, rgba(245,158,11,.14), transparent 60%),
+        var(--bg);
     }
-
-    /* ===== Reusable UI ===== */
-    .glass{ background: rgba(255,255,255,.88); backdrop-filter: blur(10px); }
-    .card{
-      background:#fff; border-radius: 18px; border:1px solid var(--bd);
-      box-shadow: 0 1px 2px rgba(2,6,23,.06);
-    }
-    .chip{
-      font-size: 11px; padding: 6px 10px; border-radius: 999px;
-      background: rgba(248,250,252,.9);
+    .glass{
+      background: var(--glass);
       border:1px solid var(--bd);
-      color: rgba(15,23,42,.70);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+    }
+    .glass-soft{
+      background: var(--glass2);
+      border:1px solid var(--bd);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow2);
+    }
+    .btn{ border:1px solid var(--bd); background: white; }
+    .btn:hover{ background:#f1f5f9; }
+    .pill{ border:1px solid var(--bd); background: rgba(255,255,255,.70); }
+    .toolcard{
+      background: rgba(255,255,255,.84);
+      border: 1px solid var(--bd);
+      box-shadow: 0 10px 26px rgba(15,23,42,.06);
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .toolcard:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 16px 38px rgba(15,23,42,.10);
+      background: rgba(255,255,255,.95);
     }
     .kbd{
-      padding:.22rem .5rem; border-radius:.6rem;
-      border:1px solid var(--bd); background:#f8fafc; font-size:11px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-
-    .btn{
-      padding: .55rem .85rem;
-      border-radius: 14px;
-      font-weight: 900;
-      font-size: .875rem;
-      border: 1px solid var(--bd);
-      background: #fff;
-      transition: transform .08s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease, filter .15s ease;
-      user-select:none;
-      display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
-      white-space:nowrap;
-    }
-    .btn:hover{ background:#f8fafc; transform: translateY(-1px); }
-    .btn:active{ transform: translateY(0px); }
-
-    .btn-primary{
-      background: linear-gradient(135deg,#2563eb,#0ea5e9);
-      border-color: transparent; color:#fff;
-      box-shadow: 0 12px 30px rgba(37,99,235,.22);
-    }
-    .btn-primary:hover{ filter: brightness(1.03); background: linear-gradient(135deg,#1d4ed8,#0284c7); }
-
-    .btn-dark{
-      background:#0f172a; border-color:#0f172a; color:#fff;
-      box-shadow: 0 10px 26px rgba(2,6,23,.16);
-    }
-    .btn-dark:hover{ background:#000; border-color:#000; filter: brightness(1.02); }
-
-    .btn-ghost{ background:#fff; }
-    .btn-danger{
-      background: rgba(225,29,72,.10);
-      border-color: rgba(225,29,72,.28);
-      color:#be123c;
-    }
-    .btn-danger:hover{ background: rgba(225,29,72,.14); }
-
-    .field{
-      width:100%;
-      border:1px solid rgba(15,23,42,.14);
-      border-radius: 14px;
-      padding: .62rem .80rem;
-      background:#fff;
-      outline:none;
-    }
-    .field:focus{ box-shadow: var(--ring); border-color: rgba(59,130,246,.55); }
-
-    .tab{
-      padding: .62rem .80rem;
-      border-radius: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
       border:1px solid var(--bd);
-      font-size:.875rem;
-      font-weight:900;
-      background:#fff;
-      transition: background .15s ease, color .15s ease, border-color .15s ease;
+      background: rgba(255,255,255,.75);
+      padding:.12rem .45rem;
+      border-radius: .7rem;
+      font-size: .82em;
+      color:#0f172a;
     }
-    .tab:hover{ background:#f8fafc; }
-    .tab-active{
-      background: linear-gradient(135deg,#2563eb,#0ea5e9);
-      border-color: transparent;
-      color:#fff;
-      box-shadow: 0 12px 30px rgba(37,99,235,.18);
-    }
-
-    .help a{ text-decoration: underline; }
-
-    /* ===== Toast ===== */
-    .toast{ position: fixed; right: 16px; bottom: 16px; z-index: 50; min-width: 260px; max-width: 380px; }
-    .toast-item{ border-radius: 18px; border:1px solid var(--bd); background:#fff; box-shadow: 0 12px 30px rgba(2,6,23,.12); }
   </style>
 </head>
 
-<body class="bg-app text-slate-800 min-h-screen">
-  <!-- Top -->
-  <div class="sticky top-0 z-40">
-    <div class="glass border-b">
-      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+<body class="min-h-screen">
+  <header class="sticky top-0 z-30">
+    <div class="mx-auto max-w-6xl px-4 pt-4">
+      <div class="glass rounded-3xl px-5 py-4 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center font-black shadow-sm">
-            KV
+          <div class="h-12 w-12 rounded-2xl flex items-center justify-center"
+               style="background: linear-gradient(135deg, rgba(59,130,246,.20), rgba(16,185,129,.18)); border:1px solid var(--bd);">
+            <span class="text-2xl">🧰</span>
           </div>
           <div>
-            <div class="text-lg font-black leading-tight">問券規則後台 Pro</div>
-            <div class="text-xs text-slate-500">版本化・分頁編輯・一鍵測試・KV 即時生效（不用改 worker.js）</div>
+            <div class="text-lg font-extrabold leading-tight">LINE 全工具中控台</div>
+            <div class="text-sm mt-1" style="color:var(--muted2)">
+              入口網站：<span class="kbd" id="siteText"></span>
+            </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap justify-end">
-          <button id="btnGuide" class="btn btn-ghost">📘 教學</button>
-          <button id="btnHealth" class="btn btn-ghost">✅ 連線檢查</button>
-          <button id="btnLoad" class="btn btn-dark">讀取</button>
-          <button id="btnSave" class="btn btn-primary">儲存</button>
+        <div class="flex items-center gap-2">
+          <span id="envBadge" class="pill text-xs px-3 py-2 rounded-2xl">偵測中…</span>
+          <button id="btnHelp" class="btn text-sm px-4 py-2 rounded-2xl">教學 / 說明</button>
         </div>
       </div>
     </div>
+  </header>
 
-    <!-- Config Bar -->
-    <div class="bg-white border-b">
-      <div class="max-w-7xl mx-auto px-4 py-3 grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-        <label class="lg:col-span-5">
-          <div class="text-xs font-black text-slate-500 mb-1">Worker API Base（自動支援同網域 / ?api=）</div>
-          <input id="apiBase" class="field" placeholder="自動偵測中…">
-          <div class="text-[11px] text-slate-500 mt-1">
-            不要加路徑，只填網域（例如 <span class="kbd">https://api.xxx.workers.dev</span>）。
-            若你把此頁放在同一網域，會自動用 <span class="kbd">location.origin</span>。
+  <main class="mx-auto max-w-6xl px-4 pb-24">
+    <section class="mt-4 glass-soft rounded-3xl p-5">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <div class="text-base font-bold">快速入口</div>
+          <div class="mt-1 text-sm" style="color:var(--muted)">
+            這是「全部工具」的後台入口。所有工具連結固定跳到：<span class="kbd" id="toolsRootText"></span>　
+            按 <span class="kbd">/</span> 聚焦搜尋。
           </div>
-        </label>
 
-        <label class="lg:col-span-3">
-          <div class="text-xs font-black text-slate-500 mb-1">ADMIN_KEY（有設才填）</div>
-          <input id="adminKey" class="field" placeholder="可留空">
-          <div class="text-[11px] text-slate-500 mt-1">
-            建議在 Cloudflare 設 Secret：<span class="kbd">ADMIN_KEY</span> 以免被亂改
+          <div class="mt-3 flex flex-wrap gap-2 text-sm">
+            <span class="pill px-3 py-2 rounded-2xl">⚡ 快速回覆</span>
+            <span class="pill px-3 py-2 rounded-2xl">🤖 自動回覆</span>
+            <span class="pill px-3 py-2 rounded-2xl">📌 Rich Menu</span>
+            <span class="pill px-3 py-2 rounded-2xl">🗺️ Imagemap</span>
+            <span class="pill px-3 py-2 rounded-2xl">🧭 流程工具</span>
           </div>
-        </label>
+        </div>
 
-        <label class="lg:col-span-2">
-          <div class="text-xs font-black text-slate-500 mb-1">問券 Key</div>
-          <input id="surveyKey" class="field font-black" value="health_v1">
-          <div class="text-[11px] text-slate-500 mt-1">例如：health_v1 / health_v2 / women_v1</div>
-        </label>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="go('quick')">⚡ 進入快速回覆</button>
+          <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="go('auto')">🤖 進入自動回覆</button>
+          <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="go('rich')">📌 進入 Rich Menu</button>
+        </div>
+      </div>
 
-        <div class="lg:col-span-2 flex gap-2">
-          <button id="btnNew" class="btn btn-ghost w-full">➕ 新規則</button>
-          <button id="btnClone" class="btn btn-ghost w-full">🧬 複製</button>
+      <div class="mt-4 grid lg:grid-cols-3 gap-3 text-sm">
+        <div class="pill rounded-2xl p-4">
+          <div class="font-semibold">你目前開啟的位置</div>
+          <div class="mt-1" style="color:var(--muted)">
+            Host：<span id="host" class="font-mono"></span><br/>
+            Path：<span id="path" class="font-mono"></span>
+          </div>
+        </div>
+        <div class="pill rounded-2xl p-4">
+          <div class="font-semibold">工具根目錄</div>
+          <div class="mt-1" style="color:var(--muted)">
+            <span class="font-mono" id="toolsRootHint"></span>
+          </div>
+        </div>
+        <div class="pill rounded-2xl p-4">
+          <div class="font-semibold">一鍵測試</div>
+          <div class="mt-2">
+            <button id="btnTest" class="btn text-sm px-4 py-2 rounded-2xl">開新分頁測試工具</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-5 glass-soft rounded-3xl p-5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <div class="text-base font-bold">工具列表（中文）</div>
+          <div class="text-sm" style="color:var(--muted)">搜尋：回覆 / 選單 / 圖 / 流程 / 設定</div>
+        </div>
+
+        <div class="flex items-center gap-2 w-full md:w-[420px]">
+          <input id="q" class="w-full rounded-2xl px-4 py-3 border bg-white/80"
+                 style="border-color:var(--bd)"
+                 placeholder="搜尋工具…（按 / 聚焦）" autocomplete="off" />
+          <button id="clear" class="btn px-4 py-3 rounded-2xl text-sm">清除</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-4">
+      <div id="grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+      <div id="empty" class="hidden mt-5 glass-soft rounded-3xl p-6 text-center">
+        <div class="text-lg font-bold">找不到符合的工具</div>
+        <div class="mt-2 text-sm" style="color:var(--muted)">換個關鍵字：回覆 / rich / 圖文 / 流程</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="fixed bottom-0 left-0 right-0 z-30">
+    <div class="mx-auto max-w-6xl px-4 pb-4">
+      <div class="glass rounded-3xl px-4 py-3 flex items-center justify-between gap-3">
+        <div class="text-xs" style="color:var(--muted)">
+          快捷鍵：<span class="kbd">/</span> 搜尋　<span class="kbd">Esc</span> 關閉教學
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="go('lab')">儀表板</button>
+          <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="go('quick')">快速回覆</button>
+          <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="go('auto')">自動回覆</button>
         </div>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <!-- Main -->
-  <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 xl:grid-cols-12 gap-4">
-    <!-- Left -->
-    <div class="xl:col-span-4 space-y-4">
-      <!-- Status -->
-      <div class="card p-4">
-        <div class="flex items-center justify-between gap-2">
-          <div class="font-black">狀態</div>
-          <div id="statusChip" class="chip">尚未連線</div>
-        </div>
+  <!-- ✅ 修好：教學框可捲動 + 置頂/置底操作 -->
+  <div id="modal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/40"></div>
 
-        <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
-          <div class="p-3 rounded-xl bg-slate-50 border">
-            <div class="text-xs text-slate-500 font-black">目前版本</div>
-            <div id="metaVersion" class="font-black mt-1">—</div>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 border">
-            <div class="text-xs text-slate-500 font-black">最後更新</div>
-            <div id="metaUpdated" class="font-black mt-1">—</div>
-          </div>
-        </div>
-
-        <div class="mt-3 p-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-900 text-sm help">
-          <div class="font-black mb-1">最佳實務（避免爆炸）</div>
-          <ul class="list-disc pl-5 space-y-1 text-[13px]">
-            <li>每次大改先按 <b>複製</b> 做新版本：<span class="kbd">health_v2</span></li>
-            <li>程式不動、規則動：修 bug 改這裡就好</li>
-            <li>先用「一鍵測試」跑過再儲存</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div class="card p-3">
-        <div class="font-black px-1">編輯區塊</div>
-        <div class="mt-3 grid grid-cols-2 gap-2">
-          <button class="tab tab-active" data-tab="dimensions">① 維度/題目</button>
-          <button class="tab" data-tab="thresholds">② 門檻</button>
-          <button class="tab" data-tab="tips">③ 今日調整</button>
-          <button class="tab" data-tab="nutrients">④ 營養素/連結</button>
-          <button class="tab" data-tab="report">⑤ 報告設定</button>
-          <button class="tab" data-tab="json">⑥ 進階 JSON</button>
-        </div>
-      </div>
-
-      <!-- Test -->
-      <div class="card p-4">
-        <div class="flex items-center justify-between">
-          <div class="font-black">一鍵測試</div>
-          <button id="btnRunTest" class="btn btn-dark">▶️ 送出測試</button>
-        </div>
-        <div class="text-sm text-slate-500 mt-1">直接呼叫 <span class="kbd">/survey/submit</span> 看報告結果。</div>
-
-        <div class="mt-3">
-          <div class="flex items-center justify-between">
-            <div class="text-xs font-black text-slate-500">測試答案（JSON）</div>
-            <button id="btnGenTemplateAns" class="btn btn-ghost" style="padding:.35rem .6rem; font-size:12px;">生成範本</button>
-          </div>
-          <textarea id="testAnswers" class="field mono h-[160px] text-xs mt-1" placeholder='{"q_sleep_quality":2,"q_sleep_latency":1}'></textarea>
-        </div>
-
-        <div class="mt-3">
-          <div class="text-xs font-black text-slate-500 mb-1">測試結果（預覽）</div>
-          <div id="testResult" class="p-3 rounded-xl bg-slate-50 border text-sm text-slate-700 whitespace-pre-wrap min-h-[90px]">尚未測試</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right -->
-    <div class="xl:col-span-8 space-y-4">
-      <!-- Dimensions -->
-      <div id="panel-dimensions" class="card p-4">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div>
-            <div class="font-black text-lg">① 維度 / 題目權重</div>
-            <div class="text-sm text-slate-500">設定每題選項對應分數（分數越低＝越需要優先改善）</div>
-          </div>
-          <div class="flex gap-2">
-            <button id="btnAddDim" class="btn btn-ghost">➕ 新增維度</button>
-            <button id="btnAddQ" class="btn btn-ghost">➕ 新增題目映射</button>
+    <!-- 外層容器：置中 + 留白 -->
+    <div class="relative mx-auto max-w-2xl px-4 py-6 sm:py-10 h-full flex items-center">
+      <!-- 內容卡：限制高度 -->
+      <div class="glass rounded-3xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+        <!-- Header 固定 -->
+        <div class="px-5 py-4 border-b" style="border-color:var(--bd);">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-lg font-extrabold">教學 / 說明（全工具後台）</div>
+              <div class="text-sm mt-1" style="color:var(--muted)">
+                這不是問卷後台，是「所有工具」的入口與管理頁。
+              </div>
+            </div>
+            <button id="btnCloseTop" class="btn text-sm px-4 py-2 rounded-2xl">關閉</button>
           </div>
         </div>
 
-        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div>
-            <div class="text-xs font-black text-slate-500 mb-2">維度列表</div>
-            <div id="dimList" class="space-y-2"></div>
-          </div>
-
-          <div class="p-3 rounded-2xl bg-slate-50 border">
-            <div class="flex items-center justify-between">
-              <div class="font-black">編輯維度</div>
-              <div id="dimHint" class="text-xs text-slate-500">選一個維度開始</div>
+        <!-- ✅ Body 可捲動 -->
+        <div class="px-5 py-4 overflow-auto">
+          <div class="space-y-3 text-sm">
+            <div class="pill rounded-2xl p-4">
+              <div class="font-bold">✅ 工具固定位置</div>
+              <div class="mt-1" style="color:var(--muted)">
+                所有工具頁都在：<span class="kbd" id="toolsRootHint2"></span>
+              </div>
             </div>
 
-            <div id="dimEditor" class="mt-3 hidden space-y-3">
-              <label>
-                <div class="text-xs font-black text-slate-500 mb-1">維度 Key（英文/底線）</div>
-                <input id="dimKey" class="field mono" placeholder="sleep">
-              </label>
-              <label>
-                <div class="text-xs font-black text-slate-500 mb-1">維度標題（顯示給使用者）</div>
-                <input id="dimTitle" class="field" placeholder="睡眠恢復">
-              </label>
-
-              <div class="p-3 rounded-xl bg-white border">
-                <div class="flex items-center justify-between">
-                  <div class="font-black text-sm">題目映射（questions）</div>
-                  <div class="text-xs text-slate-500">qid → 選項值 → 分數</div>
-                </div>
-                <textarea id="dimQuestions" class="field mono h-[210px] text-xs mt-2"
-                  placeholder='{"q_sleep_quality":{"0":0,"1":-1,"2":-2,"3":-3}}'></textarea>
-                <div class="mt-2 flex items-center justify-between gap-2">
-                  <button id="btnApplyDim" class="btn btn-primary">套用到規則</button>
-                  <button id="btnDeleteDim" class="btn btn-danger">刪除此維度</button>
-                </div>
+            <div class="pill rounded-2xl p-4">
+              <div class="font-bold">✅ 你要怎麼用</div>
+              <div class="mt-2" style="color:var(--muted)">
+                1) 在首頁搜尋你要的工具（例如：回覆 / Rich / 流程）<br/>
+                2) 點卡片進入工具頁開始操作<br/>
+                3) 每個工具都是獨立頁面：互不影響
               </div>
+            </div>
 
-              <div class="text-[11px] text-slate-500">
-                小技巧：qid 建議固定命名，例如 <span class="kbd">q_sleep_quality</span>。
+            <div class="pill rounded-2xl p-4">
+              <div class="font-bold">✅ 快捷鍵</div>
+              <div class="mt-2" style="color:var(--muted)">
+                <span class="kbd">/</span> 聚焦搜尋　<span class="kbd">Esc</span> 關閉教學
+              </div>
+            </div>
+
+            <div class="pill rounded-2xl p-4">
+              <div class="font-bold">✅ 常見問題（你剛遇到的）</div>
+              <div class="mt-2" style="color:var(--muted)">
+                • 如果你在 github.io 開首頁也沒關係：我已把所有工具連結固定跳到 workers.dev。<br/>
+                • 如果某個工具 404：通常是工具檔名不一致（大小寫/底線），直接改檔名或改這頁的 file 即可。
+              </div>
+            </div>
+
+            <div class="pill rounded-2xl p-4">
+              <div class="font-bold">✅ 入口站點</div>
+              <div class="mt-2" style="color:var(--muted)">
+                站點：<span class="kbd" id="siteText2"></span>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Thresholds -->
-      <div id="panel-thresholds" class="card p-4 hidden">
-        <div class="font-black text-lg">② 門檻（分級）</div>
-        <div class="text-sm text-slate-500 mt-1">分數 ≥ goodMin → good；分數 ≥ okMin → ok；其餘 → low。</div>
-
-        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div class="p-3 rounded-2xl bg-slate-50 border">
-            <div class="flex items-center justify-between">
-              <div class="font-black text-sm">預設門檻（_default）</div>
-              <button id="btnApplyDefaultTh" class="btn btn-primary">套用</button>
-            </div>
-            <div class="mt-2 grid grid-cols-2 gap-2">
-              <label>
-                <div class="text-xs font-black text-slate-500 mb-1">goodMin</div>
-                <input id="thDefaultGood" class="field mono" type="number" value="0">
-              </label>
-              <label>
-                <div class="text-xs font-black text-slate-500 mb-1">okMin</div>
-                <input id="thDefaultOk" class="field mono" type="number" value="-2">
-              </label>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-2">若某維度沒有單獨設定，就會吃 _default。</div>
+        <!-- Footer 固定 -->
+        <div class="px-5 py-4 border-t flex items-center justify-between gap-3" style="border-color:var(--bd);">
+          <div class="text-xs" style="color:var(--muted)">
+            小技巧：手機也能滑動看完內容（已修好）
           </div>
-
-          <div class="p-3 rounded-2xl bg-white border">
-            <div class="flex items-center justify-between">
-              <div class="font-black text-sm">各維度門檻</div>
-              <button id="btnRebuildThList" class="btn btn-ghost">重新生成列表</button>
-            </div>
-            <div id="thList" class="mt-2 space-y-2"></div>
-            <div class="text-[11px] text-slate-500 mt-2">覺得判斷不準，多數時改門檻就會改善。</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tips -->
-      <div id="panel-tips" class="card p-4 hidden">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <div class="font-black text-lg">③ 今日可做調整（Tips）</div>
-            <div class="text-sm text-slate-500">key：<span class="kbd">維度_level</span>（例 sleep_low / stress_ok）</div>
-          </div>
-          <div class="flex gap-2">
-            <button id="btnAddTipKey" class="btn btn-ghost">➕ 新增 key</button>
-            <button id="btnApplyTips" class="btn btn-primary">檢查整區</button>
-          </div>
-        </div>
-
-        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div>
-            <div class="text-xs font-black text-slate-500 mb-2">Tips keys</div>
-            <div id="tipKeyList" class="space-y-2"></div>
-          </div>
-          <div class="p-3 rounded-2xl bg-slate-50 border">
-            <div class="flex items-center justify-between">
-              <div class="font-black text-sm">編輯內容（陣列）</div>
-              <div id="tipHint" class="text-xs text-slate-500">選一個 key</div>
-            </div>
-            <textarea id="tipEditor" class="field mono h-[260px] text-xs mt-2" placeholder='["今晚提早30分鐘上床","睡前2小時不喝含咖啡因"]'></textarea>
-            <div class="mt-2 flex items-center justify-between">
-              <button id="btnDeleteTipKey" class="btn btn-danger">刪除此 key</button>
-              <button id="btnApplyTipOne" class="btn btn-primary">套用此 key</button>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-2">建議每個 key 2–5 條，短句、可立刻做到、不要醫療用語。</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nutrients -->
-      <div id="panel-nutrients" class="card p-4 hidden">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <div class="font-black text-lg">④ 建議營養素 & 產品連結</div>
-            <div class="text-sm text-slate-500">nutrients 放名稱；products 放 url。</div>
-          </div>
-          <div class="flex gap-2">
-            <button id="btnApplyNutrients" class="btn btn-primary">套用營養素</button>
-            <button id="btnApplyProducts" class="btn btn-primary">套用目錄</button>
-          </div>
-        </div>
-
-        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div class="p-3 rounded-2xl bg-slate-50 border">
-            <div class="flex items-center justify-between">
-              <div class="font-black text-sm">Nutrients（key → 陣列）</div>
-              <button id="btnGenNutKeys" class="btn btn-ghost">生成常用 keys</button>
-            </div>
-            <textarea id="nutrientsJson" class="field mono h-[310px] text-xs mt-2"
-              placeholder='{"sleep_low":["鎂","維生素B群"]}'></textarea>
-            <div class="text-[11px] text-slate-500 mt-2">這裡只放名稱，連結在右側 products。</div>
-          </div>
-
-          <div class="p-3 rounded-2xl bg-white border">
-            <div class="flex items-center justify-between">
-              <div class="font-black text-sm">Products（營養素 → {name,url}）</div>
-            </div>
-            <textarea id="productsJson" class="field mono h-[310px] text-xs mt-2"
-              placeholder='{"鎂":{"name":"鎂（產品）","url":"https://..."} }'></textarea>
-            <div class="text-[11px] text-slate-500 mt-2">url 可換成你專屬連結。</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Report -->
-      <div id="panel-report" class="card p-4 hidden">
-        <div class="font-black text-lg">⑤ 報告設定</div>
-        <div class="text-sm text-slate-500 mt-1">控制摘要、優先方向數量、語氣（避免硬推）。</div>
-
-        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div class="p-3 rounded-2xl bg-slate-50 border">
-            <div class="font-black text-sm">基本</div>
-            <label class="block mt-2">
-              <div class="text-xs font-black text-slate-500 mb-1">優先方向數量 topPriorityCount</div>
-              <input id="topPriorityCount" class="field mono" type="number" min="1" max="8" value="3">
-            </label>
-            <label class="block mt-3">
-              <div class="text-xs font-black text-slate-500 mb-1">一般摘要 summaryDefault</div>
-              <textarea id="summaryDefault" class="field h-[110px]"></textarea>
-            </label>
-            <label class="block mt-3">
-              <div class="text-xs font-black text-slate-500 mb-1">狀態很好摘要 summaryAllGood</div>
-              <textarea id="summaryAllGood" class="field h-[110px]"></textarea>
-            </label>
-            <div class="mt-3 flex justify-end">
-              <button id="btnApplyReport" class="btn btn-primary">套用報告設定</button>
-            </div>
-          </div>
-
-          <div class="p-3 rounded-2xl bg-white border help">
-            <div class="font-black text-sm">建議寫法（教學）</div>
-            <ul class="list-disc pl-5 mt-2 space-y-2 text-sm text-slate-700 leading-relaxed">
-              <li><b>短句、可執行</b>：例如「晚餐後散步 10 分鐘」</li>
-              <li><b>避免醫療用語</b>：不要寫「診斷」「治療」</li>
-              <li><b>狀態很好不硬推</b>：用「維持建議」語氣</li>
-              <li>結構：<span class="kbd">摘要</span> + <span class="kbd">優先方向</span> + <span class="kbd">今日可做</span> + <span class="kbd">營養素</span> + <span class="kbd">產品連結</span></li>
-            </ul>
-            <div class="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-900">
-              <div class="font-black mb-1">省事關鍵</div>
-              <div class="text-sm">判斷準度：改 <span class="kbd">dimensions/questions</span> 或 <span class="kbd">thresholds</span>。說法：改 <span class="kbd">tips/nutrients/report</span>。</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- JSON -->
-      <div id="panel-json" class="card p-4 hidden">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <div class="font-black text-lg">⑥ 進階 JSON（完整 rules）</div>
-            <div class="text-sm text-slate-500">進階用：貼整份 rules / 匯入匯出 / 檢查。</div>
-          </div>
-          <div class="flex gap-2 flex-wrap">
-            <button id="btnValidate" class="btn btn-ghost">🔎 檢查</button>
-            <button id="btnExport" class="btn btn-ghost">⬇️ 匯出</button>
-            <label class="btn btn-ghost cursor-pointer">
-              ⬆️ 匯入
-              <input id="importFile" type="file" accept="application/json" class="hidden">
-            </label>
-            <button id="btnApplyJson" class="btn btn-primary">套用到表單</button>
-          </div>
-        </div>
-
-        <textarea id="rulesJson" class="field mono h-[520px] text-xs mt-4" placeholder="完整 rules JSON..."></textarea>
-        <div id="validateResult" class="mt-3 text-sm text-slate-600"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Guide Modal -->
-  <div id="guideModal" class="fixed inset-0 bg-black/45 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-3xl shadow-xl max-w-3xl w-full overflow-hidden">
-      <div class="p-4 border-b flex items-center justify-between">
-        <div class="font-black text-lg">📘 教學（3 分鐘上手）</div>
-        <button id="btnCloseGuide" class="btn btn-ghost">關閉</button>
-      </div>
-      <div class="p-5 space-y-4 text-sm text-slate-700">
-        <div class="p-4 rounded-2xl bg-slate-50 border">
-          <div class="font-black">你在做什麼？</div>
-          <div class="mt-1 leading-relaxed">
-            這頁是在編輯「rules 規則」，並存到 Cloudflare KV。Worker 只讀 rules 來產報告，
-            所以修 bug 或改文案時，不用再改 worker.js。
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="p-4 rounded-2xl bg-blue-50 border border-blue-100">
-            <div class="font-black text-blue-900">① 維度/題目</div>
-            <div class="mt-1 text-blue-900/90 leading-relaxed">
-              維度=方向（睡眠/壓力/腸胃）。qid 對應選項分數。<b>分數越低＝越需要優先改善</b>。
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-            <div class="font-black text-emerald-900">② 門檻</div>
-            <div class="mt-1 text-emerald-900/90 leading-relaxed">
-              控制 low/ok/good 分界。覺得太嚴格或太寬鬆，只改門檻。
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-100">
-            <div class="font-black text-amber-900">③ 今日調整</div>
-            <div class="mt-1 text-amber-900/90 leading-relaxed">
-              key：<span class="kbd">sleep_low</span>，放 2–5 條短句，生活化、可執行。
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-rose-50 border border-rose-100">
-            <div class="font-black text-rose-900">④ 營養素/連結</div>
-            <div class="mt-1 text-rose-900/90 leading-relaxed">
-              nutrients 放名稱（如「鎂」），products 放 url。要換連結不用改程式。
-            </div>
-          </div>
-        </div>
-
-        <div class="p-4 rounded-2xl bg-slate-50 border">
-          <div class="font-black">推薦流程（不踩雷）</div>
-          <ol class="list-decimal pl-5 mt-2 space-y-1">
-            <li>先按 <b>讀取</b> 取得目前版本</li>
-            <li>大改先按 <b>複製</b> → 新 key（如 health_v2）</li>
-            <li>改完按 <b>送出測試</b></li>
-            <li>OK 再按 <b>儲存</b>（KV 立即生效）</li>
-          </ol>
+          <button id="btnClose" class="btn text-sm px-4 py-2 rounded-2xl">關閉</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Toast -->
-  <div class="toast space-y-2 pointer-events-none" id="toastWrap"></div>
+  <script>
+    // ✅ 你指定的正確站點
+    const SITE_ORIGIN = "https://api.zxcv8096.workers.dev";
+    const TOOLS_ROOT  = SITE_ORIGIN + "/pages/tools/";
 
-<script>
-/* ======================
-   Endpoints needed:
-   - GET  /health
-   - POST /survey/rules/get   {surveyKey}
-   - POST /survey/rules/set   {surveyKey, rules}   (X-Admin-Key optional)
-   - POST /survey/submit      {surveyKey, answers}
-   ====================== */
+    const TOOLS = [
+      { key:"lab",      icon:"🚦", title:"儀表板",         desc:"狀態、測試、彙整入口",         tag:"Dashboard", file:"lab_dashboard.html",   keywords:["儀表板","dashboard","lab","狀態","測試"] },
+      { key:"quick",    icon:"⚡", title:"快速回覆",       desc:"建立 / 管理 Quick Reply",      tag:"Reply",     file:"quickreply.html",        keywords:["快速回覆","quick","reply","回覆"] },
+      { key:"auto",     icon:"🤖", title:"自動回覆",       desc:"關鍵字 → 規則庫回覆",          tag:"Rules",     file:"auto_reply.html",        keywords:["自動回覆","auto","關鍵字","規則","rules"] },
+      { key:"carousel", icon:"🧩", title:"輪播卡片",       desc:"Carousel 卡片組裝 / 產生",      tag:"Cards",     file:"tool_carousel.html",     keywords:["carousel","輪播","卡片"] },
+      { key:"flow",     icon:"🧭", title:"流程工具",       desc:"節點 / 流程視覺化工具頁",       tag:"Flow",      file:"tool_flow.html",         keywords:["流程","flow","節點","視覺化"] },
+      { key:"map",      icon:"🗺️", title:"Imagemap 熱區",  desc:"熱區 / 點擊區域配置",          tag:"Map",       file:"tool_imagemap.html",     keywords:["imagemap","熱區","點擊","圖片","map"] },
+      { key:"meta",     icon:"🧾", title:"設定編輯器",     desc:"Meta / 設定內容編輯",           tag:"Config",    file:"tool_meta_editor.html",  keywords:["meta","設定","config","參數","json"] },
+      { key:"rich",     icon:"📌", title:"Rich Menu",      desc:"圖文選單設計 / 管理",           tag:"Menu",      file:"tool_richmenu.html",     keywords:["rich","menu","選單","圖文","richmenu"] },
+    ];
 
-const $ = (id) => document.getElementById(id);
-
-const state = {
-  rules: null,
-  selectedDimKey: null,
-  selectedTipKey: null,
-  lastLoadedText: "",
-};
-
-/* ---------- Utils ---------- */
-function toast(msg, type="ok"){
-  const wrap = $("toastWrap");
-  const el = document.createElement("div");
-  el.className = "pointer-events-auto toast-item p-3 flex items-start gap-3";
-  el.innerHTML = `
-    <div class="w-9 h-9 rounded-2xl flex items-center justify-center font-black ${
-      type==="ok" ? "bg-emerald-600 text-white" :
-      type==="warn" ? "bg-amber-500 text-white" :
-      "bg-rose-600 text-white"
-    }">${type==="ok"?"✓":type==="warn"?"!":"×"}</div>
-    <div class="flex-1">
-      <div class="font-black text-sm">${escapeHtml(msg)}</div>
-      <div class="text-xs text-slate-500 mt-0.5">${new Date().toLocaleString()}</div>
-    </div>
-  `;
-  wrap.appendChild(el);
-  setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .35s"; }, 2800);
-  setTimeout(()=>{ el.remove(); }, 3300);
-}
-function escapeHtml(s){
-  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-function normalizeBase(s){
-  s = (s||"").trim();
-  if(!s) return "";
-  if(!/^https?:\/\//i.test(s)) s = "https://" + s;
-  return s.replace(/\/+$/,"");
-}
-function apiBase(){ return normalizeBase($("apiBase").value); }
-function adminKey(){ return ($("adminKey").value||"").trim(); }
-function surveyKey(){ return ($("surveyKey").value||"").trim(); }
-
-/* ---------- Auto API Base (same origin / ?api= / localStorage) ---------- */
-function autoResolveApiBase(){
-  const u = new URL(location.href);
-
-  // 1) ?api= 一次綁定
-  const q = (u.searchParams.get("api") || "").trim();
-  if(q){
-    const v = normalizeBase(q);
-    localStorage.setItem("kv_admin_apiBase", v);
-    $("apiBase").value = v;
-    return;
-  }
-
-  // 2) saved
-  const saved = localStorage.getItem("kv_admin_apiBase");
-  if(saved){
-    $("apiBase").value = saved;
-    return;
-  }
-
-  // 3) default to same origin (按連線檢查會驗證)
-  $("apiBase").value = normalizeBase(location.origin);
-}
-
-/* ---------- Network ---------- */
-async function postJSON(path, body){
-  const base = apiBase();
-  if(!base) throw new Error("請先填 Worker API Base");
-  const headers = { "Content-Type": "application/json" };
-  const k = adminKey();
-  if(k) headers["X-Admin-Key"] = k;
-
-  const res = await fetch(base + path, { method:"POST", headers, body: JSON.stringify(body) });
-  const ct = res.headers.get("content-type") || "";
-  const payload = ct.includes("application/json") ? await res.json().catch(()=>null) : await res.text().catch(()=>null);
-  if(!res.ok){
-    const msg = typeof payload === "string" ? payload : (payload?.error || ("HTTP " + res.status));
-    throw new Error(msg);
-  }
-  return payload;
-}
-
-async function getHealth(){
-  const base = apiBase();
-  if(!base) throw new Error("請先填 Worker API Base");
-
-  const res = await fetch(base + "/health", { cache:"no-store" });
-  const ct = res.headers.get("content-type") || "";
-  const payload = ct.includes("application/json") ? await res.json().catch(()=>null) : await res.text().catch(()=>null);
-
-  if(!res.ok){
-    const msg = typeof payload === "string" ? payload : (payload?.error || JSON.stringify(payload));
-    throw new Error("health 失敗：" + msg);
-  }
-  return payload;
-}
-
-/* ---------- Status ---------- */
-function setStatus(text, type="neutral"){
-  const chip = $("statusChip");
-  chip.textContent = text;
-  chip.className = "chip " + (
-    type==="ok" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-    type==="bad" ? "bg-rose-50 border-rose-200 text-rose-700" :
-    type==="warn" ? "bg-amber-50 border-amber-200 text-amber-700" :
-    "bg-slate-100 border text-slate-600"
-  );
-}
-function setMeta(versionText="—", updatedText="—"){
-  $("metaVersion").textContent = versionText;
-  $("metaUpdated").textContent = updatedText;
-}
-
-/* ---------- Rules model ---------- */
-function ensureRules(){
-  if(!state.rules){
-    state.rules = {
-      report: {
-        topPriorityCount: 3,
-        summaryDefault: "以下是你目前最優先可以調整的方向，先做簡單的日常微調就會有感。",
-        summaryAllGood: "整體狀態很不錯，建議維持目前節奏，專注在規律作息與足量水分。"
-      },
-      thresholds: { _default: { goodMin: 0, okMin: -2 } },
-      dimensions: {},
-      tips: {},
-      nutrients: {},
-      products: {}
-    };
-  }
-  state.rules.report ||= { topPriorityCount: 3, summaryDefault:"", summaryAllGood:"" };
-  state.rules.thresholds ||= { _default:{ goodMin:0, okMin:-2 } };
-  state.rules.dimensions ||= {};
-  state.rules.tips ||= {};
-  state.rules.nutrients ||= {};
-  state.rules.products ||= {};
-}
-function rulesToText(){
-  ensureRules();
-  return JSON.stringify(state.rules, null, 2);
-}
-function loadTextToRules(txt){
-  const obj = JSON.parse(txt);
-  if(!obj || typeof obj !== "object") throw new Error("rules 必須是 object");
-  if(!obj.dimensions || typeof obj.dimensions !== "object") throw new Error("rules.dimensions 必須存在");
-  state.rules = obj;
-  ensureRules();
-}
-function validateRulesObj(obj){
-  const errs = [];
-  if(!obj || typeof obj !== "object") errs.push("rules 不是 object");
-  if(!obj.dimensions || typeof obj.dimensions !== "object") errs.push("rules.dimensions 缺少或不是 object");
-  if(!obj.thresholds || typeof obj.thresholds !== "object") errs.push("rules.thresholds 缺少或不是 object");
-  if(!obj.report || typeof obj.report !== "object") errs.push("rules.report 缺少或不是 object");
-
-  if(obj.dimensions && typeof obj.dimensions === "object"){
-    for(const [dk, dim] of Object.entries(obj.dimensions)){
-      if(!dim.title) errs.push(`dimensions.${dk}.title 缺少`);
-      if(!dim.questions || typeof dim.questions !== "object") errs.push(`dimensions.${dk}.questions 缺少或不是 object`);
+    function urlFor(file){ return TOOLS_ROOT + file; }
+    function go(key){
+      const t = TOOLS.find(x=>x.key===key);
+      if(!t) return alert("找不到工具：" + key);
+      location.href = urlFor(t.file);
     }
-  }
-  if(obj.products && typeof obj.products === "object"){
-    for(const [nut, p] of Object.entries(obj.products)){
-      if(p && typeof p === "object" && p.url){
-        if(!/^https?:\/\//i.test(String(p.url))) errs.push(`products["${nut}"].url 不是 http(s)`);
+    window.go = go;
+
+    // render
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+
+    function cardHTML(t){
+      return `
+        <button class="toolcard rounded-3xl p-5 text-left w-full" data-key="${t.key}">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div class="h-12 w-12 rounded-2xl flex items-center justify-center"
+                   style="background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(16,185,129,.12)); border:1px solid var(--bd);">
+                <span class="text-2xl">${t.icon}</span>
+              </div>
+              <div>
+                <div class="text-lg font-extrabold leading-tight">${t.title}</div>
+                <div class="text-sm mt-1" style="color:var(--muted)">${t.desc}</div>
+              </div>
+            </div>
+            <span class="pill text-xs px-3 py-1 rounded-2xl whitespace-nowrap">${t.tag}</span>
+          </div>
+          <div class="mt-4 text-xs" style="color:var(--muted2)">
+            連結：<span class="font-mono">${TOOLS_ROOT}${t.file}</span>
+          </div>
+        </button>
+      `;
+    }
+
+    function render(list){
+      grid.innerHTML = list.map(cardHTML).join("");
+      grid.querySelectorAll("[data-key]").forEach(el=>{
+        el.addEventListener("click", ()=> go(el.dataset.key));
+      });
+      empty.classList.toggle("hidden", list.length !== 0);
+    }
+    render(TOOLS);
+
+    // search
+    const q = document.getElementById("q");
+    const clear = document.getElementById("clear");
+    function norm(s){ return (s||"").toLowerCase().trim(); }
+    function applyFilter(){
+      const query = norm(q.value);
+      if(!query) return render(TOOLS);
+      const filtered = TOOLS.filter(t=>{
+        const hay = [t.title,t.desc,t.tag,t.key,t.file,...(t.keywords||[])].join(" ").toLowerCase();
+        return hay.includes(query);
+      });
+      render(filtered);
+    }
+    q.addEventListener("input", applyFilter);
+    clear.addEventListener("click", ()=>{ q.value=""; q.focus(); render(TOOLS); });
+
+    // diag text
+    document.getElementById("host").textContent = location.host;
+    document.getElementById("path").textContent = location.pathname;
+
+    const envBadge = document.getElementById("envBadge");
+    if (location.origin === SITE_ORIGIN){
+      envBadge.textContent = "你現在在 Workers 網站（✅ 正確）";
+    } else if (location.host.endsWith("github.io")){
+      envBadge.textContent = "你現在在 github.io（會跳轉到 Workers）";
+    } else if (location.host === "github.com"){
+      envBadge.textContent = "你現在在 GitHub Code 頁（不是網站）";
+    } else {
+      envBadge.textContent = "一般網站模式（會跳轉到 Workers）";
+    }
+
+    document.getElementById("siteText").textContent = SITE_ORIGIN;
+    document.getElementById("siteText2").textContent = SITE_ORIGIN;
+
+    document.getElementById("toolsRootText").textContent = TOOLS_ROOT;
+    document.getElementById("toolsRootHint").textContent = TOOLS_ROOT;
+    document.getElementById("toolsRootHint2").textContent = TOOLS_ROOT;
+
+    document.getElementById("btnTest").addEventListener("click", ()=>{
+      window.open(urlFor("quickreply.html"), "_blank");
+    });
+
+    // ✅ modal open/close + 修復滾動
+    const modal = document.getElementById("modal");
+    const openModal = ()=> modal.classList.remove("hidden");
+    const closeModal = ()=> modal.classList.add("hidden");
+
+    document.getElementById("btnHelp").addEventListener("click", openModal);
+    document.getElementById("btnClose").addEventListener("click", closeModal);
+    document.getElementById("btnCloseTop").addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
+
+    // shortcuts
+    window.addEventListener("keydown", (e)=>{
+      if (e.key === "/" && document.activeElement !== q){
+        e.preventDefault(); q.focus();
       }
-    }
-  }
-  return errs;
-}
-
-/* ---------- Tabs ---------- */
-const panels = ["dimensions","thresholds","tips","nutrients","report","json"];
-function showTab(name){
-  panels.forEach(p => $("panel-"+p).classList.toggle("hidden", p!==name));
-  document.querySelectorAll(".tab").forEach(btn=>{
-    btn.classList.toggle("tab-active", btn.dataset.tab === name);
-  });
-  if(name === "json"){
-    $("rulesJson").value = rulesToText();
-    $("validateResult").textContent = "";
-  }
-}
-document.querySelectorAll(".tab").forEach(btn=>{
-  btn.addEventListener("click", ()=> showTab(btn.dataset.tab));
-});
-
-/* ---------- Renderers ---------- */
-function renderDimList(){
-  ensureRules();
-  const box = $("dimList");
-  box.innerHTML = "";
-  const entries = Object.entries(state.rules.dimensions);
-  if(entries.length === 0){
-    box.innerHTML = `<div class="text-sm text-slate-500">尚未建立維度，按「新增維度」開始。</div>`;
-    return;
-  }
-  for(const [key, dim] of entries){
-    const row = document.createElement("button");
-    row.className = "w-full text-left p-3 rounded-2xl border bg-white hover:bg-slate-50 transition";
-    const active = state.selectedDimKey === key;
-    if(active) row.classList.add("ring-2","ring-blue-200","border-blue-300");
-    row.innerHTML = `
-      <div class="flex items-center justify-between">
-        <div class="font-black">${escapeHtml(dim.title || key)}</div>
-        <span class="chip">${escapeHtml(key)}</span>
-      </div>
-      <div class="text-xs text-slate-500 mt-1">題目數：${Object.keys(dim.questions||{}).length}</div>
-    `;
-    row.onclick = ()=> selectDim(key);
-    box.appendChild(row);
-  }
-}
-function selectDim(key){
-  state.selectedDimKey = key;
-  $("dimEditor").classList.remove("hidden");
-  $("dimHint").textContent = `正在編輯：${key}`;
-  const dim = state.rules.dimensions[key];
-  $("dimKey").value = key;
-  $("dimTitle").value = dim.title || "";
-  $("dimQuestions").value = JSON.stringify(dim.questions || {}, null, 2);
-  renderDimList();
-}
-
-function renderThresholds(){
-  ensureRules();
-  const th = state.rules.thresholds || {};
-  const def = th._default || { goodMin:0, okMin:-2 };
-  $("thDefaultGood").value = Number(def.goodMin ?? 0);
-  $("thDefaultOk").value = Number(def.okMin ?? -2);
-
-  const list = $("thList");
-  list.innerHTML = "";
-  const dims = Object.keys(state.rules.dimensions || {});
-  if(dims.length === 0){
-    list.innerHTML = `<div class="text-sm text-slate-500">先建立維度，才能生成各維度門檻。</div>`;
-    return;
-  }
-
-  for(const dk of dims){
-    const cur = th[dk] || {};
-    const good = Number(cur.goodMin ?? def.goodMin ?? 0);
-    const ok = Number(cur.okMin ?? def.okMin ?? -2);
-
-    const row = document.createElement("div");
-    row.className = "p-3 rounded-2xl border bg-slate-50";
-    row.innerHTML = `
-      <div class="flex items-center justify-between">
-        <div class="font-black">${escapeHtml(state.rules.dimensions[dk]?.title || dk)} <span class="chip ml-2">${dk}</span></div>
-        <button class="btn btn-ghost" style="padding:.35rem .6rem; font-size:12px;" data-reset="${dk}">重置</button>
-      </div>
-      <div class="mt-2 grid grid-cols-2 gap-2">
-        <label>
-          <div class="text-xs font-black text-slate-500 mb-1">goodMin</div>
-          <input class="field mono" type="number" data-good="${dk}" value="${good}">
-        </label>
-        <label>
-          <div class="text-xs font-black text-slate-500 mb-1">okMin</div>
-          <input class="field mono" type="number" data-ok="${dk}" value="${ok}">
-        </label>
-      </div>
-    `;
-    list.appendChild(row);
-  }
-
-  list.querySelectorAll("input[data-good]").forEach(inp=>{
-    inp.oninput = ()=>{
-      const dk = inp.getAttribute("data-good");
-      state.rules.thresholds[dk] ||= {};
-      state.rules.thresholds[dk].goodMin = Number(inp.value);
-    };
-  });
-  list.querySelectorAll("input[data-ok]").forEach(inp=>{
-    inp.oninput = ()=>{
-      const dk = inp.getAttribute("data-ok");
-      state.rules.thresholds[dk] ||= {};
-      state.rules.thresholds[dk].okMin = Number(inp.value);
-    };
-  });
-  list.querySelectorAll("button[data-reset]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const dk = btn.getAttribute("data-reset");
-      delete state.rules.thresholds[dk];
-      renderThresholds();
-      toast(`已重置 ${dk} 門檻（改用 _default）`, "ok");
-    };
-  });
-}
-
-function renderTipKeys(){
-  ensureRules();
-  const box = $("tipKeyList");
-  box.innerHTML = "";
-  const keys = Object.keys(state.rules.tips || {}).sort();
-  if(keys.length === 0){
-    box.innerHTML = `<div class="text-sm text-slate-500">尚未建立 tips，按「新增 key」開始。</div>`;
-    return;
-  }
-  keys.forEach(k=>{
-    const active = state.selectedTipKey === k;
-    const btn = document.createElement("button");
-    btn.className = "w-full text-left p-3 rounded-2xl border bg-white hover:bg-slate-50 transition";
-    if(active) btn.classList.add("ring-2","ring-blue-200","border-blue-300");
-    const count = Array.isArray(state.rules.tips[k]) ? state.rules.tips[k].length : 0;
-    btn.innerHTML = `
-      <div class="flex items-center justify-between">
-        <div class="font-black">${escapeHtml(k)}</div>
-        <span class="chip">條目 ${count}</span>
-      </div>
-    `;
-    btn.onclick = ()=> selectTipKey(k);
-    box.appendChild(btn);
-  });
-}
-function selectTipKey(k){
-  state.selectedTipKey = k;
-  $("tipHint").textContent = `正在編輯：${k}`;
-  $("tipEditor").value = JSON.stringify(state.rules.tips[k] || [], null, 2);
-  renderTipKeys();
-}
-
-function applyReportFormFromRules(){
-  ensureRules();
-  $("topPriorityCount").value = Number(state.rules.report?.topPriorityCount ?? 3);
-  $("summaryDefault").value = state.rules.report?.summaryDefault || "";
-  $("summaryAllGood").value = state.rules.report?.summaryAllGood || "";
-}
-function applyRulesFromReportForm(){
-  ensureRules();
-  state.rules.report.topPriorityCount = Number($("topPriorityCount").value || 3);
-  state.rules.report.summaryDefault = $("summaryDefault").value || "";
-  state.rules.report.summaryAllGood = $("summaryAllGood").value || "";
-}
-
-/* ---------- Dimension Buttons ---------- */
-$("btnAddDim").onclick = ()=>{
-  ensureRules();
-  const base = "new_dim";
-  let i = 1, key = base + "_" + i;
-  while(state.rules.dimensions[key]){ i++; key = base + "_" + i; }
-  state.rules.dimensions[key] = { title: "新維度", questions: {} };
-  toast("已新增維度（請編輯 key / title / questions）", "ok");
-  renderDimList(); selectDim(key);
-};
-$("btnAddQ").onclick = ()=>{
-  if(!state.selectedDimKey) return toast("請先選一個維度", "warn");
-  const dim = state.rules.dimensions[state.selectedDimKey];
-  dim.questions ||= {};
-  const qid = prompt("輸入題目 ID（例如 q_sleep_quality）");
-  if(!qid) return;
-  if(dim.questions[qid]) return toast("這個 qid 已存在", "warn");
-  dim.questions[qid] = { "0": 0, "1": -1, "2": -2, "3": -3 };
-  $("dimQuestions").value = JSON.stringify(dim.questions, null, 2);
-  toast("已新增題目映射（預設 0/-1/-2/-3，可自行調）", "ok");
-  renderDimList();
-};
-$("btnApplyDim").onclick = ()=>{
-  try{
-    ensureRules();
-    const oldKey = state.selectedDimKey;
-    const newKey = ($("dimKey").value||"").trim();
-    const title = ($("dimTitle").value||"").trim();
-    if(!newKey) return toast("維度 key 不能空", "warn");
-    if(!/^[a-z0-9_]+$/i.test(newKey)) return toast("維度 key 建議只用英文/數字/底線", "warn");
-    if(!title) return toast("維度標題不能空", "warn");
-
-    let questions;
-    try{ questions = JSON.parse($("dimQuestions").value || "{}"); }catch{ return toast("questions JSON 格式錯誤", "bad"); }
-    if(!questions || typeof questions !== "object") return toast("questions 必須是 object", "bad");
-
-    if(oldKey !== newKey){
-      if(state.rules.dimensions[newKey]) return toast("新 key 已存在，請換一個", "warn");
-      state.rules.dimensions[newKey] = state.rules.dimensions[oldKey];
-      delete state.rules.dimensions[oldKey];
-      state.selectedDimKey = newKey;
-    }
-
-    state.rules.dimensions[state.selectedDimKey].title = title;
-    state.rules.dimensions[state.selectedDimKey].questions = questions;
-
-    toast("已套用維度設定", "ok");
-    renderDimList();
-  }catch(e){
-    toast(e.message || "套用失敗", "bad");
-  }
-};
-$("btnDeleteDim").onclick = ()=>{
-  if(!state.selectedDimKey) return;
-  const k = state.selectedDimKey;
-  if(!confirm(`確定刪除維度 ${k}？（tips/nutrients/thresholds 不會自動刪）`)) return;
-  delete state.rules.dimensions[k];
-  delete state.rules.thresholds?.[k];
-  state.selectedDimKey = null;
-  $("dimEditor").classList.add("hidden");
-  $("dimHint").textContent = "選一個維度開始";
-  toast("已刪除維度", "ok");
-  renderDimList();
-};
-
-/* ---------- Thresholds ---------- */
-$("btnApplyDefaultTh").onclick = ()=>{
-  ensureRules();
-  state.rules.thresholds._default = {
-    goodMin: Number($("thDefaultGood").value ?? 0),
-    okMin: Number($("thDefaultOk").value ?? -2),
-  };
-  toast("已套用預設門檻 _default", "ok");
-  renderThresholds();
-};
-$("btnRebuildThList").onclick = ()=>{
-  renderThresholds();
-  toast("已重新生成門檻列表", "ok");
-};
-
-/* ---------- Tips ---------- */
-function suggestTipKey(){
-  const dims = Object.keys(state.rules.dimensions||{});
-  if(dims.length === 0) return "sleep_low";
-  return `${dims[0]}_low`;
-}
-$("btnAddTipKey").onclick = ()=>{
-  ensureRules();
-  const suggested = suggestTipKey();
-  const k = prompt("輸入 tips key（例如 sleep_low）", suggested);
-  if(!k) return;
-  if(state.rules.tips[k]) return toast("此 key 已存在", "warn");
-  state.rules.tips[k] = ["在這裡輸入 2–5 條短句建議"];
-  toast("已新增 tips key", "ok");
-  renderTipKeys();
-  selectTipKey(k);
-};
-$("btnApplyTipOne").onclick = ()=>{
-  if(!state.selectedTipKey) return toast("請先選一個 tips key", "warn");
-  try{
-    const arr = JSON.parse($("tipEditor").value || "[]");
-    if(!Array.isArray(arr)) return toast("tips 必須是陣列", "bad");
-    state.rules.tips[state.selectedTipKey] = arr;
-    toast("已套用此 tips key", "ok");
-    renderTipKeys();
-  }catch{
-    toast("tips JSON 格式錯誤", "bad");
-  }
-};
-$("btnDeleteTipKey").onclick = ()=>{
-  if(!state.selectedTipKey) return;
-  const k = state.selectedTipKey;
-  if(!confirm(`確定刪除 tips key：${k}？`)) return;
-  delete state.rules.tips[k];
-  state.selectedTipKey = null;
-  $("tipHint").textContent = "選一個 key";
-  $("tipEditor").value = "";
-  toast("已刪除 tips key", "ok");
-  renderTipKeys();
-};
-$("btnApplyTips").onclick = ()=>{
-  try{
-    ensureRules();
-    for(const [k,v] of Object.entries(state.rules.tips)){
-      if(!Array.isArray(v)) throw new Error(`tips.${k} 不是陣列`);
-    }
-    toast("tips 區塊檢查通過 ✅", "ok");
-  }catch(e){
-    toast(e.message, "bad");
-  }
-};
-
-/* ---------- Nutrients / Products ---------- */
-$("btnGenNutKeys").onclick = ()=>{
-  ensureRules();
-  const dims = Object.keys(state.rules.dimensions||{});
-  if(dims.length === 0) return toast("請先建立維度", "warn");
-  const obj = {};
-  dims.forEach(d=>{
-    obj[`${d}_low`] ||= [];
-    obj[`${d}_ok`]  ||= [];
-    obj[`${d}_good`] ||= [];
-  });
-  state.rules.nutrients ||= {};
-  for(const [k,v] of Object.entries(state.rules.nutrients)) obj[k] = v;
-  $("nutrientsJson").value = JSON.stringify(obj, null, 2);
-  toast("已生成常用 nutrients keys（可自行刪改）", "ok");
-};
-$("btnApplyNutrients").onclick = ()=>{
-  try{
-    ensureRules();
-    const obj = JSON.parse($("nutrientsJson").value || "{}");
-    if(!obj || typeof obj !== "object") return toast("nutrients 必須是 object", "bad");
-    for(const [k,v] of Object.entries(obj)){
-      if(!Array.isArray(v)) return toast(`nutrients.${k} 必須是陣列`, "bad");
-    }
-    state.rules.nutrients = obj;
-    toast("已套用 nutrients", "ok");
-  }catch{
-    toast("nutrients JSON 格式錯誤", "bad");
-  }
-};
-$("btnApplyProducts").onclick = ()=>{
-  try{
-    ensureRules();
-    const obj = JSON.parse($("productsJson").value || "{}");
-    if(!obj || typeof obj !== "object") return toast("products 必須是 object", "bad");
-    for(const [nut,p] of Object.entries(obj)){
-      if(p && typeof p === "object" && p.url && !/^https?:\/\//i.test(String(p.url))){
-        return toast(`products["${nut}"].url 不是 http(s)`, "bad");
+      if (e.key === "Escape"){
+        closeModal();
       }
-    }
-    state.rules.products = obj;
-    toast("已套用 products 目錄", "ok");
-  }catch{
-    toast("products JSON 格式錯誤", "bad");
-  }
-};
-
-/* ---------- Report ---------- */
-$("btnApplyReport").onclick = ()=>{
-  applyRulesFromReportForm();
-  toast("已套用報告設定", "ok");
-};
-
-/* ---------- JSON Advanced ---------- */
-$("btnValidate").onclick = ()=>{
-  try{
-    const obj = JSON.parse($("rulesJson").value || "{}");
-    const errs = validateRulesObj(obj);
-    if(errs.length){
-      $("validateResult").innerHTML = `<div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700">
-        <div class="font-black">檢查失敗</div>
-        <ul class="list-disc pl-5 mt-2">${errs.map(e=>`<li>${escapeHtml(e)}</li>`).join("")}</ul>
-      </div>`;
-      toast("檢查失敗（看下方原因）", "bad");
-    }else{
-      $("validateResult").innerHTML = `<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700">
-        <div class="font-black">檢查通過 ✅</div>
-        <div class="text-sm mt-1">可以儲存或套用到表單。</div>
-      </div>`;
-      toast("檢查通過 ✅", "ok");
-    }
-  }catch(e){
-    $("validateResult").innerHTML = `<div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700">
-      <div class="font-black">JSON 解析失敗</div>
-      <div class="text-sm mt-1">${escapeHtml(e.message || "格式錯誤")}</div>
-    </div>`;
-    toast("JSON 解析失敗", "bad");
-  }
-};
-$("btnApplyJson").onclick = ()=>{
-  try{
-    loadTextToRules($("rulesJson").value || "{}");
-    hydrateFormsFromRules();
-    toast("已套用完整 JSON 到表單", "ok");
-  }catch(e){
-    toast(e.message || "套用失敗", "bad");
-  }
-};
-$("btnExport").onclick = ()=>{
-  try{
-    ensureRules();
-    const blob = new Blob([rulesToText()], { type:"application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    const sk = surveyKey() || "rules";
-    a.download = `${sk}_rules_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast("已匯出 JSON 檔", "ok");
-  }catch(e){
-    toast(e.message || "匯出失敗", "bad");
-  }
-};
-$("importFile").addEventListener("change", async (e)=>{
-  const f = e.target.files?.[0];
-  if(!f) return;
-  try{
-    const txt = await f.text();
-    $("rulesJson").value = txt;
-    showTab("json");
-    toast("已載入匯入檔案（請先按檢查，再套用/儲存）", "ok");
-  }catch{
-    toast("讀取檔案失敗", "bad");
-  }finally{
-    e.target.value = "";
-  }
-});
-
-/* ---------- Top actions ---------- */
-$("btnGuide").onclick = ()=>{ $("guideModal").classList.remove("hidden"); $("guideModal").classList.add("flex"); };
-$("btnCloseGuide").onclick = ()=>{ $("guideModal").classList.add("hidden"); $("guideModal").classList.remove("flex"); };
-$("guideModal").addEventListener("click", (e)=>{ if(e.target === $("guideModal")) $("btnCloseGuide").click(); });
-
-$("btnHealth").onclick = async ()=>{
-  try{
-    setStatus("檢查中…", "warn");
-    await getHealth();
-    setStatus("連線正常", "ok");
-    toast("Worker 連線正常 ✅", "ok");
-    persistConfig();
-  }catch(e){
-    setStatus("連線失敗", "bad");
-    toast(e.message || "連線失敗", "bad");
-  }
-};
-
-$("btnLoad").onclick = async ()=>{
-  try{
-    setStatus("讀取中…", "warn");
-    const sk = surveyKey();
-    if(!sk) return toast("請填問券 Key", "warn");
-    const out = await postJSON("/survey/rules/get", { surveyKey: sk });
-    if(!out.rules){
-      state.rules = null;
-      ensureRules();
-      setMeta(sk, "KV 尚無規則");
-      hydrateFormsFromRules();
-      $("rulesJson").value = rulesToText();
-      state.lastLoadedText = "";
-      setStatus("可建立新規則", "warn");
-      toast("KV 尚無 rules：可按「新規則」或直接編輯後儲存", "warn");
-    }else{
-      state.rules = out.rules;
-      ensureRules();
-      const v = state.rules.__meta?.version || sk;
-      const u = state.rules.__meta?.updatedAt || "（未提供）";
-      setMeta(v, u);
-      hydrateFormsFromRules();
-      $("rulesJson").value = rulesToText();
-      state.lastLoadedText = rulesToText();
-      setStatus("已讀取", "ok");
-      toast("讀取成功 ✅", "ok");
-    }
-    persistConfig();
-  }catch(e){
-    setStatus("讀取失敗", "bad");
-    toast("讀取失敗：" + (e.message || ""), "bad");
-  }
-};
-
-$("btnSave").onclick = async ()=>{
-  try{
-    ensureRules();
-    applyRulesFromReportForm();
-
-    // Sync from textareas (if user edited)
-    if($("nutrientsJson").value.trim()){
-      try{ state.rules.nutrients = JSON.parse($("nutrientsJson").value || "{}"); }
-      catch{ throw new Error("營養素 JSON 格式錯誤"); }
-    }
-    if($("productsJson").value.trim()){
-      try{ state.rules.products = JSON.parse($("productsJson").value || "{}"); }
-      catch{ throw new Error("產品目錄 JSON 格式錯誤"); }
-    }
-
-    state.rules.__meta ||= {};
-    state.rules.__meta.version = surveyKey();
-    state.rules.__meta.updatedAt = new Date().toISOString();
-
-    const errs = validateRulesObj(state.rules);
-    if(errs.length){
-      showTab("json");
-      $("rulesJson").value = rulesToText();
-      $("validateResult").innerHTML = `<div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700">
-        <div class="font-black">儲存前檢查失敗</div>
-        <ul class="list-disc pl-5 mt-2">${errs.map(e=>`<li>${escapeHtml(e)}</li>`).join("")}</ul>
-      </div>`;
-      return toast("儲存被阻止：規則有錯（看原因）", "bad");
-    }
-
-    setStatus("儲存中…", "warn");
-    await postJSON("/survey/rules/set", { surveyKey: surveyKey(), rules: state.rules });
-    setMeta(state.rules.__meta.version, state.rules.__meta.updatedAt);
-    setStatus("已儲存", "ok");
-    state.lastLoadedText = rulesToText();
-    toast("儲存成功 ✅（KV 立即生效）", "ok");
-    persistConfig();
-  }catch(e){
-    setStatus("儲存失敗", "bad");
-    toast("儲存失敗：" + (e.message || ""), "bad");
-  }
-};
-
-$("btnNew").onclick = ()=>{
-  state.rules = null;
-  ensureRules();
-  state.rules.__meta = { version: surveyKey() || "health_v1", updatedAt: new Date().toISOString() };
-  hydrateFormsFromRules();
-  toast("已建立新規則（尚未寫入 KV，記得按儲存）", "ok");
-};
-
-$("btnClone").onclick = ()=>{
-  ensureRules();
-  const from = surveyKey() || "health_v1";
-  const to = prompt("輸入新版本 surveyKey（例如 health_v2）", from.replace(/_v(\d+)$/i, (_,n)=> `_v${Number(n)+1}`));
-  if(!to) return;
-  $("surveyKey").value = to;
-  state.rules.__meta ||= {};
-  state.rules.__meta.version = to;
-  state.rules.__meta.updatedAt = new Date().toISOString();
-  hydrateFormsFromRules();
-  toast("已複製到新版本（現在按儲存會寫到新的 surveyKey）", "ok");
-  persistConfig();
-};
-
-/* ---------- Test ---------- */
-$("btnGenTemplateAns").onclick = ()=>{
-  ensureRules();
-  const ans = {};
-  for(const dim of Object.values(state.rules.dimensions)){
-    for(const qid of Object.keys(dim.questions || {})){
-      const optMap = dim.questions[qid] || {};
-      const opts = Object.keys(optMap);
-      ans[qid] = opts.includes("2") ? 2 : (opts.includes("1") ? 1 : (opts[0] ?? 0));
-    }
-  }
-  $("testAnswers").value = JSON.stringify(ans, null, 2);
-  toast("已生成測試答案範本", "ok");
-};
-
-$("btnRunTest").onclick = async ()=>{
-  try{
-    const sk = surveyKey();
-    if(!sk) return toast("請填問券 Key", "warn");
-    let answers;
-    try{ answers = JSON.parse($("testAnswers").value || "{}"); }
-    catch{ return toast("測試答案 JSON 格式錯誤", "bad"); }
-
-    setStatus("測試中…", "warn");
-    const out = await postJSON("/survey/submit", { surveyKey: sk, answers });
-    const rep = out.report;
-    $("testResult").textContent = formatReportPreview(rep);
-    setStatus("測試完成", "ok");
-    toast("測試完成 ✅", "ok");
-  }catch(e){
-    setStatus("測試失敗", "bad");
-    $("testResult").textContent = "測試失敗：\n" + (e.message || "");
-    toast("測試失敗：" + (e.message || ""), "bad");
-  }
-};
-
-function formatReportPreview(rep){
-  if(!rep) return "無 report 回傳";
-  const lines = [];
-  lines.push("【摘要】");
-  lines.push(rep.summary || "—");
-  lines.push("");
-  lines.push("【優先方向】");
-  (rep.priorities || []).forEach((p,i)=>{
-    lines.push(`${i+1}. ${p.title}（level: ${p.level}, score: ${p.score}）`);
-    if(Array.isArray(p.tips) && p.tips.length){
-      lines.push("  - 今日可做：");
-      p.tips.slice(0,6).forEach(t=> lines.push("    • " + t));
-    }
-    if(Array.isArray(p.nutrients) && p.nutrients.length){
-      lines.push("  - 建議營養素：" + p.nutrients.join("、"));
-    }
-    if(Array.isArray(p.products) && p.products.length){
-      lines.push("  - 產品連結：");
-      p.products.slice(0,6).forEach(x=> lines.push(`    • ${x.name} (${x.nutrient}) → ${x.url}`));
-    }
-    lines.push("");
-  });
-  return lines.join("\n");
-}
-
-/* ---------- Hydration ---------- */
-function hydrateFormsFromRules(){
-  ensureRules();
-  renderDimList();
-  renderThresholds();
-  renderTipKeys();
-  $("nutrientsJson").value = JSON.stringify(state.rules.nutrients || {}, null, 2);
-  $("productsJson").value = JSON.stringify(state.rules.products || {}, null, 2);
-  applyReportFormFromRules();
-  $("rulesJson").value = rulesToText();
-
-  if(state.selectedDimKey && !state.rules.dimensions[state.selectedDimKey]) state.selectedDimKey = null;
-  if(state.selectedTipKey && !state.rules.tips[state.selectedTipKey]) state.selectedTipKey = null;
-}
-
-/* ---------- Persist config ---------- */
-function persistConfig(){
-  localStorage.setItem("kv_admin_apiBase", apiBase());
-  localStorage.setItem("kv_admin_surveyKey", surveyKey());
-  // adminKey 不自動保存（避免你借電腦被偷），要就自己開
-}
-function restoreConfig(){
-  const base = localStorage.getItem("kv_admin_apiBase");
-  const sk = localStorage.getItem("kv_admin_surveyKey");
-  if(base) $("apiBase").value = base;
-  if(sk) $("surveyKey").value = sk;
-}
-
-/* ---------- Init ---------- */
-window.addEventListener("load", ()=>{
-  autoResolveApiBase();
-  restoreConfig();
-
-  showTab("dimensions");
-  setStatus("尚未連線", "neutral");
-  setMeta("—","—");
-
-  ensureRules();
-  hydrateFormsFromRules();
-});
-</script>
+    });
+  </script>
 </body>
 </html>
