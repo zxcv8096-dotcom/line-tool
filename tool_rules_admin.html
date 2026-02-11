@@ -47,7 +47,7 @@
       <div class="font-bold text-slate-900">這頁在做什麼？</div>
       <div class="mt-2 text-slate-600">
         這是「Cloudflare 指令控制台」，不是工具跳轉頁。<br/>
-        你在這裡按按鈕，會直接對 Worker 發送指令（例如 KV 設定、讀寫、列出 Key、清除快取…）。<br/>
+        你在這裡按按鈕，會直接對 Worker 發送指令（例如 KV 設定、讀寫、列出 Key…）。<br/>
         <span class="font-bold">如果按了沒反應＝通常是 Worker 沒開 CORS</span>（下面會顯示錯誤原因）。
       </div>
     </div>
@@ -66,6 +66,26 @@
           <button class="btn px-4 py-3 rounded-2xl text-sm font-semibold" onclick="UI.saveGW()">儲存</button>
           <button class="btn px-4 py-3 rounded-2xl text-sm" onclick="UI.resetGW()">重置</button>
         </div>
+      </div>
+
+      <!-- ✅ 新增：問卷串聯（只加這塊） -->
+      <div class="mt-4 flex flex-col md:flex-row gap-2 md:items-center justify-between">
+        <div class="text-sm text-slate-700">
+          一鍵串聯問卷：把 Gateway 同步給問卷中控台使用，並直接開啟問卷頁。
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.openQuestionnaire()">
+            開 問卷中控台
+          </button>
+          <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.syncQuestionnaireOnly()">
+            只同步（不開啟）
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-2 text-xs text-slate-500">
+        同步到問卷用的儲存鍵：<span class="kbd">q_console_api_base_pretty</span>
+        （問卷也會收到網址參數 <span class="kbd">?api=</span> 當雙保險）
       </div>
     </div>
 
@@ -138,6 +158,13 @@ const UI = (() => {
   const K_GW = "GW_BASE";
   const DEFAULT_GW = "https://api.zxcv8096.workers.dev";
 
+  // ✅ 問卷頁使用的 localStorage key（你問卷 code 裡面就是這個）
+  const Q_LS_API  = "q_console_api_base_pretty";
+  // （可選）問卷 admin key
+  const Q_LS_KEY  = "q_console_admin_key_pretty";
+  // ✅ 問卷固定位置
+  const Q_URL = "https://zxcv8096-dotcom.github.io/line-tool/pages/questionnaire/index.html";
+
   const $ = (id)=>document.getElementById(id);
   const logEl = $("log");
 
@@ -176,6 +203,30 @@ const UI = (() => {
     log(`🔁 已重置 Gateway = ${GW}`);
   }
 
+  // ✅ 串聯：只同步（不開啟）
+  function syncQuestionnaireOnly(){
+    // 確保 GW 是最新
+    const v = normalizeGW($("gw").value) || GW;
+    GW = v;
+    localStorage.setItem(K_GW, GW);
+
+    localStorage.setItem(Q_LS_API, GW);
+
+    // 如果你之後也想同步 admin key：你可以把這行打開，並把 admin key 放在統一窗口自己存一份
+    // localStorage.setItem(Q_LS_KEY, localStorage.getItem("ADMIN_KEY") || "");
+
+    log(`🔗 已同步給問卷：${Q_LS_API} = ${GW}`);
+    alert("已同步給問卷 ✅");
+  }
+
+  // ✅ 串聯：同步 + 打開問卷（雙保險帶 ?api=）
+  function openQuestionnaire(){
+    syncQuestionnaireOnly();
+    const url = Q_URL + "?api=" + encodeURIComponent(GW);
+    log(`🧾 開啟問卷：${url}`);
+    window.open(url, "_blank");
+  }
+
   function clearLog(){ logEl.textContent = ""; }
 
   async function call(path, body){
@@ -189,7 +240,6 @@ const UI = (() => {
       });
       const text = await res.text();
       log(`⬅️ HTTP ${res.status} ${res.ok ? "OK" : "ERR"}`);
-      // 嘗試 parse JSON，失敗就原樣顯示
       try{
         const j = JSON.parse(text);
         log(`📦 ${JSON.stringify(j, null, 2)}`);
@@ -205,7 +255,6 @@ const UI = (() => {
     }
   }
 
-  // ===== KV actions =====
   async function kvGet(){
     const key = $("kvKey").value.trim();
     if(!key) return alert("Key 不能空白");
@@ -215,7 +264,6 @@ const UI = (() => {
     const key = $("kvKey").value.trim();
     if(!key) return alert("Key 不能空白");
     const valRaw = $("kvVal").value;
-    // 如果是 JSON，保持 JSON；不是就當字串
     let value = valRaw;
     try{ value = JSON.parse(valRaw); }catch{}
     await call("/api/kv/put", { key, value });
@@ -236,7 +284,12 @@ const UI = (() => {
     catch{ prompt("請手動複製：", t); }
   }
 
-  return { toggleHelp, saveGW, resetGW, clearLog, copyLog, kvGet, kvPut, kvDel, kvList };
+  return {
+    toggleHelp, saveGW, resetGW,
+    syncQuestionnaireOnly, openQuestionnaire,
+    clearLog, copyLog,
+    kvGet, kvPut, kvDel, kvList
+  };
 })();
 </script>
 </body>
