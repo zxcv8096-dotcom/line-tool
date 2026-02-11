@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chairman's Office | Berkshire Model</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Helvetica Neue', sans-serif; }
+        .zen-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .btn-black { background-color: #000; color: white; transition: all 0.2s; }
+        .btn-black:hover { background-color: #333; transform: translateY(-1px); }
+    </style>
+</head>
+<body class="min-h-screen p-8 max-w-5xl mx-auto">
+
+    <header class="flex justify-between items-end mb-10 border-b border-gray-200 pb-6">
+        <div>
+            <p class="text-sm text-gray-500 font-medium tracking-widest uppercase mb-1">The Holding Company</p>
+            <h1 class="text-3xl font-bold text-gray-900">Chairman's Control</h1>
+        </div>
+        <div class="text-right">
+            <p class="text-3xl font-serif font-bold text-gray-800">3,140,592</p>
+            <p class="text-xs text-gray-400">本月流量池 (Traffic Capital)</p>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <div class="md:col-span-2 space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800"><i class="fa-regular fa-comments mr-2"></i> 夥伴對焦請求 (Focus Requests)</h2>
+                <span class="bg-black text-white text-xs px-2 py-1 rounded-full">3 則待處理</span>
+            </div>
+
+            <div class="zen-card p-6 border-l-4 border-black">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex gap-4">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lily" class="w-12 h-12 rounded-full bg-gray-100">
+                        <div>
+                            <h3 class="font-bold text-lg">雅鈞 (Lily)</h3>
+                            <p class="text-sm text-gray-500">銀獎章 (Silver) • 團隊人數：15</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-400">2小時前</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p class="text-gray-700 text-sm">「課長，我有一個做醫美的客戶對 21 天套組有興趣，但他卡在覺得安麗品牌老氣。我記得你有一個關於『科研與品牌』的切入點，能不能跟你約 10 分鐘對焦一下怎麼講？」</p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button class="text-sm text-gray-500 hover:text-black px-3 py-2">稍後處理</button>
+                    <button class="btn-black px-5 py-2 rounded text-sm font-medium">
+                        <i class="fa-solid fa-phone mr-1"></i> 批准對焦 (Send Booking Link)
+                    </button>
+                </div>
+            </div>
+
+            <div class="zen-card p-6 border-l-4 border-gray-200 opacity-75 hover:opacity-100 transition">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">J</div>
+                        <div>
+                            <h3 class="font-bold text-lg">Jason</h3>
+                            <p class="text-sm text-gray-500">新人 (0%) • 團隊人數：0</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-400">昨天</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p class="text-gray-700 text-sm">「系統的自動連結我會用了，但我不知道第一篇 FB 貼文該怎麼開頭比較自然？想請教你的意見。」</p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button class="btn-black px-5 py-2 rounded text-sm font-medium">
+                        <i class="fa-solid fa-reply mr-1"></i> 丟教學包給他 (Auto Reply)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-faucet mr-2"></i> 流量分配 (Traffic Flow)</h2>
+            
+            <div class="zen-card p-6">
+                <p class="text-sm text-gray-500 mb-4">系統自動分配模式：<span class="font-bold text-green-600">開啟中 (Smart Mode)</span></p>
+                
+                <div class="space-y-5">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-bold">雅鈞 (Lily)</span>
+                            <span class="text-gray-500">50% 流量</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-black h-2 rounded-full" style="width: 50%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">轉化率高，系統自動加碼</p>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-bold">Jason</span>
+                            <span class="text-gray-500">10% 流量</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-gray-500 h-2 rounded-full" style="width: 10%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">新人扶持期</p>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-bold">公海池 (未分配)</span>
+                            <span class="text-gray-500">40%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-gray-300 h-2 rounded-full" style="width: 40%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <button class="w-full border border-gray-300 text-gray-700 py-2 rounded text-sm hover:bg-gray-50">
+                        調整分配權重 (Adjust)
+                    </button>
+                </div>
+            </div>
+
+            <div class="zen-card p-6">
+                <h3 class="font-bold text-gray-800 mb-2">系統狀態</h3>
+                <div class="flex items-center gap-2 text-sm text-green-600 mb-1">
+                    <i class="fa-solid fa-circle text-xs"></i> Cloudflare Workers: 正常
+                </div>
+                <div class="flex items-center gap-2 text-sm text-green-600 mb-1">
+                    <i class="fa-solid fa-circle text-xs"></i> LINE Messaging API: 正常
+                </div>
+                <div class="flex items-center gap-2 text-sm text-green-600">
+                    <i class="fa-solid fa-circle text-xs"></i> 業績歸屬追蹤: 正常
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
