@@ -3,311 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LINE 工具中控台｜首頁</title>
+  <title>LINE 工具首頁</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <style>
-    :root{
-      --ink:#0f172a;
-      --muted:#475569;
-      --muted2:#64748b;
-      --bd:rgba(15,23,42,.10);
-      --bg:#f8fafc;
-      --glass: rgba(255,255,255,.80);
-      --glass2: rgba(255,255,255,.66);
-      --shadow: 0 18px 55px rgba(15,23,42,.10);
-      --shadow2: 0 8px 24px rgba(15,23,42,.08);
-    }
-    body{
-      color:var(--ink);
-      background:
-        radial-gradient(1200px 600px at 10% 0%, rgba(59,130,246,.18), transparent 55%),
-        radial-gradient(950px 520px at 90% 12%, rgba(16,185,129,.16), transparent 55%),
-        radial-gradient(1000px 650px at 50% 110%, rgba(245,158,11,.14), transparent 60%),
-        var(--bg);
-    }
-    .glass{
-      background: var(--glass);
-      border:1px solid var(--bd);
-      backdrop-filter: blur(12px);
-      box-shadow: var(--shadow);
-    }
-    .glass-soft{
-      background: var(--glass2);
-      border:1px solid var(--bd);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow2);
-    }
-    .btn{ border:1px solid var(--bd); background: white; }
-    .btn:hover{ background:#f1f5f9; }
-    .pill{ border:1px solid var(--bd); background: rgba(255,255,255,.70); }
-    .toolcard{
-      background: rgba(255,255,255,.84);
-      border: 1px solid var(--bd);
-      box-shadow: 0 10px 26px rgba(15,23,42,.06);
-      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-    }
-    .toolcard:hover{
-      transform: translateY(-2px);
-      box-shadow: 0 16px 38px rgba(15,23,42,.10);
-      background: rgba(255,255,255,.95);
-    }
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      border:1px solid var(--bd);
-      background: rgba(255,255,255,.75);
-      padding:.12rem .45rem;
-      border-radius: .7rem;
-      font-size: .82em;
-      color:#0f172a;
-    }
-  </style>
 </head>
 
-<body class="min-h-screen">
-  <!-- Top -->
-  <header class="sticky top-0 z-30">
-    <div class="mx-auto max-w-6xl px-4 pt-4">
-      <div class="glass rounded-3xl px-5 py-4 flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="h-12 w-12 rounded-2xl flex items-center justify-center"
-               style="background: linear-gradient(135deg, rgba(59,130,246,.20), rgba(16,185,129,.18)); border:1px solid var(--bd);">
-            <span class="text-2xl">🧰</span>
-          </div>
-          <div>
-            <div class="text-lg font-extrabold leading-tight">LINE 工具中控台</div>
-            <div class="text-sm mt-1" style="color:var(--muted2)">
-              首頁
-            </div>
-          </div>
-        </div>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+  <main class="max-w-2xl mx-auto p-4 sm:p-6">
+    <header class="mb-4 sm:mb-6">
+      <h1 class="text-xl sm:text-2xl font-extrabold">LINE 工具首頁</h1>
+      <p class="text-sm text-slate-600 mt-1">點一下就進工具</p>
+    </header>
 
-        <div class="flex items-center gap-2">
-          <span id="envBadge" class="pill text-xs px-3 py-2 rounded-2xl">偵測中…</span>
-          <button id="btnHelp" class="btn text-sm px-4 py-2 rounded-2xl">使用說明</button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main class="mx-auto max-w-6xl px-4 pb-24">
-    <!-- Quick -->
-    <section class="mt-4 glass-soft rounded-3xl p-5">
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <div class="text-base font-bold">快速入口</div>
-          <div class="mt-1 text-sm" style="color:var(--muted)">
-            按 <span class="kbd">/</span> 直接聚焦搜尋。
-          </div>
-          <div class="mt-3 flex flex-wrap gap-2 text-sm">
-            <span class="pill px-3 py-2 rounded-2xl">⚡ 快速回覆</span>
-            <span class="pill px-3 py-2 rounded-2xl">🤖 自動回覆</span>
-            <span class="pill px-3 py-2 rounded-2xl">📌 Rich Menu</span>
-            <span class="pill px-3 py-2 rounded-2xl">🗺️ Imagemap</span>
-            <span class="pill px-3 py-2 rounded-2xl">🧭 流程工具</span>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap gap-2">
-          <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="go('quick')">⚡ 進入快速回覆</button>
-          <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="go('auto')">🤖 進入自動回覆</button>
-          <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="go('rich')">📌 進入 Rich Menu</button>
-        </div>
-      </div>
-
-      <!-- ✅ 保留一個「一鍵測試」就好（把 Host/Path/Root 顯示全拿掉） -->
-      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="text-sm" style="color:var(--muted)">
-          小工具：開新分頁快速確認工具是否可開啟
-        </div>
-        <button id="btnTest" class="btn text-sm px-4 py-2 rounded-2xl">開新分頁測試（快速回覆）</button>
-      </div>
-    </section>
-
-    <!-- Search -->
-    <section class="mt-5 glass-soft rounded-3xl p-5">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <div class="text-base font-bold">工具列表（中文）</div>
-          <div class="text-sm" style="color:var(--muted)">搜尋：回覆 / 選單 / 圖 / 流程 / 設定</div>
-        </div>
-
-        <div class="flex items-center gap-2 w-full md:w-[420px]">
-          <input id="q" class="w-full rounded-2xl px-4 py-3 border bg-white/80"
-                 style="border-color:var(--bd)"
-                 placeholder="搜尋工具…（按 / 聚焦）" autocomplete="off" />
-          <button id="clear" class="btn px-4 py-3 rounded-2xl text-sm">清除</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Grid -->
-    <section class="mt-4">
-      <div id="grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-
-      <div id="empty" class="hidden mt-5 glass-soft rounded-3xl p-6 text-center">
-        <div class="text-lg font-bold">找不到符合的工具</div>
-        <div class="mt-2 text-sm" style="color:var(--muted)">換個關鍵字：回覆 / rich / 圖文 / 流程</div>
-      </div>
-    </section>
+    <section id="grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></section>
   </main>
 
-  <!-- Bottom -->
-  <nav class="fixed bottom-0 left-0 right-0 z-30">
-    <div class="mx-auto max-w-6xl px-4 pb-4">
-      <div class="glass rounded-3xl px-4 py-3 flex items-center justify-between gap-3">
-        <div class="text-xs" style="color:var(--muted)">
-          快捷鍵：<span class="kbd">/</span> 搜尋　<span class="kbd">Esc</span> 關閉說明
-        </div>
-        <div class="flex items-center gap-2">
-          <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="go('lab')">儀表板</button>
-          <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="go('quick')">快速回覆</button>
-          <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="go('auto')">自動回覆</button>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Help modal -->
-  <div id="modal" class="hidden fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40"></div>
-    <div class="relative mx-auto max-w-xl px-4 py-10">
-      <div class="glass rounded-3xl p-6">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <div class="text-lg font-extrabold">使用說明</div>
-            <div class="text-sm mt-1" style="color:var(--muted)">
-              點卡片會跳到對應工具頁；搜尋支援中文關鍵字。
-            </div>
-          </div>
-          <button id="btnClose" class="btn text-sm px-4 py-2 rounded-2xl">關閉</button>
-        </div>
-
-        <div class="mt-4 space-y-3 text-sm">
-          <div class="pill rounded-2xl p-4">
-            <div class="font-bold">✅ 工具固定放置位置</div>
-            <div class="mt-1" style="color:var(--muted)">
-              <span class="kbd">/line-tool/pages/tools/</span>
-            </div>
-          </div>
-
-          <div class="pill rounded-2xl p-4">
-            <div class="font-bold">✅ 使用方式</div>
-            <div class="mt-1" style="color:var(--muted)">
-              1) 按 <span class="kbd">/</span> 直接搜尋　2) 點卡片進入工具　3) 需要測試就按「開新分頁測試」
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
   <script>
-    // 工具根目錄：固定使用 /line-tool/pages/tools/
+    // ✅ 工具固定根目錄（你的工具都放在這）
     const TOOLS_ROOT = "/line-tool/pages/tools/";
 
+    // ✅ 你要的工具清單（要增減就改這裡）
     const TOOLS = [
-      { key:"lab",      icon:"🚦", title:"儀表板",     desc:"狀態、測試、彙整入口",     tag:"Dashboard", file:"lab_dashboard.html",  keywords:["儀表板","dashboard","lab","狀態","測試"] },
-      { key:"quick",    icon:"⚡", title:"快速回覆",   desc:"建立 / 管理 Quick Reply",  tag:"Reply",     file:"quickreply.html",      keywords:["快速回覆","quick","reply","回覆"] },
-      { key:"auto",     icon:"🤖", title:"自動回覆",   desc:"關鍵字 → 規則庫回覆",      tag:"Rules",     file:"auto_reply.html",      keywords:["自動回覆","auto","關鍵字","規則","rules"] },
-      { key:"carousel", icon:"🧩", title:"輪播卡片",   desc:"Carousel 卡片組裝 / 產生",  tag:"Cards",     file:"tool_carousel.html",   keywords:["carousel","輪播","卡片"] },
-      { key:"flow",     icon:"🧭", title:"流程工具",   desc:"節點 / 流程視覺化工具頁",   tag:"Flow",      file:"tool_flow.html",       keywords:["流程","flow","節點","視覺化"] },
-      { key:"map",      icon:"🗺️", title:"Imagemap 熱區", desc:"熱區 / 點擊區域配置",    tag:"Map",       file:"tool_imagemap.html",   keywords:["imagemap","熱區","點擊","圖片","map"] },
-      { key:"meta",     icon:"🧾", title:"設定編輯器", desc:"Meta / 設定內容編輯",       tag:"Config",    file:"tool_meta_editor.html",keywords:["meta","設定","config","參數","json"] },
-      { key:"rich",     icon:"📌", title:"Rich Menu",  desc:"圖文選單設計 / 管理",       tag:"Menu",      file:"tool_richmenu.html",   keywords:["rich","menu","選單","圖文","richmenu"] },
+      { icon:"🚦", title:"儀表板",   file:"lab_dashboard.html" },
+      { icon:"⚡", title:"快速回覆", file:"quickreply.html" },
+      { icon:"🤖", title:"自動回覆", file:"auto_reply.html" },
+      { icon:"📌", title:"Rich Menu",file:"tool_richmenu.html" },
+      { icon:"🗺️", title:"Imagemap", file:"tool_imagemap.html" },
+      { icon:"🧭", title:"流程工具", file:"tool_flow.html" },
+      { icon:"🧩", title:"輪播卡片", file:"tool_carousel.html" },
+      { icon:"🧾", title:"設定編輯", file:"tool_meta_editor.html" },
     ];
 
     function urlFor(file){
       return location.origin + TOOLS_ROOT + file;
     }
 
-    function go(key){
-      const t = TOOLS.find(x=>x.key===key);
-      if(!t) return alert("找不到工具：" + key);
-      location.href = urlFor(t.file);
-    }
-    window.go = go;
-
-    // render
     const grid = document.getElementById("grid");
-    const empty = document.getElementById("empty");
-
-    function cardHTML(t){
-      return `
-        <button class="toolcard rounded-3xl p-5 text-left w-full" data-key="${t.key}">
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-start gap-3">
-              <div class="h-12 w-12 rounded-2xl flex items-center justify-center"
-                   style="background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(16,185,129,.12)); border:1px solid var(--bd);">
-                <span class="text-2xl">${t.icon}</span>
-              </div>
-              <div>
-                <div class="text-lg font-extrabold leading-tight">${t.title}</div>
-                <div class="text-sm mt-1" style="color:var(--muted)">${t.desc}</div>
-              </div>
-            </div>
-            <span class="pill text-xs px-3 py-1 rounded-2xl whitespace-nowrap">${t.tag}</span>
-          </div>
-        </button>
-      `;
-    }
-
-    function render(list){
-      grid.innerHTML = list.map(cardHTML).join("");
-      grid.querySelectorAll("[data-key]").forEach(el=>{
-        el.addEventListener("click", ()=> go(el.dataset.key));
-      });
-      empty.classList.toggle("hidden", list.length !== 0);
-    }
-    render(TOOLS);
-
-    // search
-    const q = document.getElementById("q");
-    const clear = document.getElementById("clear");
-    function norm(s){ return (s||"").toLowerCase().trim(); }
-    function applyFilter(){
-      const query = norm(q.value);
-      if(!query) return render(TOOLS);
-      const filtered = TOOLS.filter(t=>{
-        const hay = [t.title,t.desc,t.tag,t.key,t.file,...(t.keywords||[])].join(" ").toLowerCase();
-        return hay.includes(query);
-      });
-      render(filtered);
-    }
-    q.addEventListener("input", applyFilter);
-    clear.addEventListener("click", ()=>{ q.value=""; q.focus(); render(TOOLS); });
-
-    // env badge（保留一個就好）
-    const envBadge = document.getElementById("envBadge");
-    if (location.host === "github.com"){
-      envBadge.textContent = "GitHub Code（不是網站）";
-    } else if (location.host.endsWith("github.io")){
-      envBadge.textContent = "GitHub Pages ✅";
-    } else {
-      envBadge.textContent = "一般網站模式";
-    }
-
-    // test
-    document.getElementById("btnTest").addEventListener("click", ()=>{
-      window.open(urlFor("quickreply.html"), "_blank");
-    });
-
-    // modal
-    const modal = document.getElementById("modal");
-    document.getElementById("btnHelp").addEventListener("click", ()=> modal.classList.remove("hidden"));
-    document.getElementById("btnClose").addEventListener("click", ()=> modal.classList.add("hidden"));
-    modal.addEventListener("click", (e)=>{ if(e.target === modal) modal.classList.add("hidden"); });
-
-    // shortcuts
-    window.addEventListener("keydown", (e)=>{
-      if (e.key === "/" && document.activeElement !== q){
-        e.preventDefault(); q.focus();
-      }
-      if (e.key === "Escape"){
-        modal.classList.add("hidden");
-      }
-    });
+    grid.innerHTML = TOOLS.map(t => `
+      <button
+        class="w-full flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4
+               hover:bg-slate-100 active:scale-[0.99] transition text-left"
+        onclick="location.href='${urlFor(t.file)}'">
+        <span class="text-2xl">${t.icon}</span>
+        <span class="text-base font-bold">${t.title}</span>
+      </button>
+    `).join("");
   </script>
 </body>
 </html>
