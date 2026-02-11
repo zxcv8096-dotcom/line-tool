@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>問券規則後台（KV）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800">
+  <div class="max-w-5xl mx-auto p-6">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <div class="text-2xl font-black">問券規則後台（KV）</div>
+        <div class="text-sm text-slate-500">以後修 bug 改這裡，不用改 worker.js</div>
+      </div>
+      <div class="flex gap-2">
+        <button id="btnLoad" class="px-4 py-2 rounded bg-slate-800 text-white font-bold hover:bg-black">讀取</button>
+        <button id="btnSave" class="px-4 py-2 rounded bg-green-600 text-white font-bold hover:bg-green-700">儲存</button>
+      </div>
+    </div>
+
+    <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <label class="bg-white rounded-xl p-3 shadow">
+        <div class="text-xs font-bold text-slate-500 mb-1">Worker API Base</div>
+        <input id="apiBase" class="w-full border rounded px-3 py-2" placeholder="https://api.xxx.workers.dev">
+      </label>
+      <label class="bg-white rounded-xl p-3 shadow">
+        <div class="text-xs font-bold text-slate-500 mb-1">ADMIN_KEY（有設才需要）</div>
+        <input id="adminKey" class="w-full border rounded px-3 py-2" placeholder="可留空">
+      </label>
+      <label class="bg-white rounded-xl p-3 shadow">
+        <div class="text-xs font-bold text-slate-500 mb-1">surveyKey</div>
+        <input id="surveyKey" class="w-full border rounded px-3 py-2 font-bold" value="health_v1">
+      </label>
+    </div>
+
+    <div class="mt-4 bg-white rounded-xl shadow p-3">
+      <div class="flex items-center justify-between">
+        <div class="font-bold">rules JSON</div>
+        <div id="status" class="text-sm text-slate-500"></div>
+      </div>
+      <textarea id="rules" class="mt-2 w-full h-[520px] border rounded p-3 font-mono text-xs"></textarea>
+      <div class="mt-2 text-xs text-slate-500">
+        提示：儲存前會做 JSON 檢查；若維度/題目權重寫錯，會直接提示。
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const statusEl = $("status");
+
+  function normalizeBase(s){
+    s = (s||"").trim();
+    if(!s) return "";
+    if(!/^https?:\/\//i.test(s)) s = "https://" + s;
+    return s.replace(/\/+$/,"");
+  }
+
+  async function postJSON(url, data, adminKey){
+    const headers = { "Content-Type": "application/json" };
+    if(adminKey) headers["X-Admin-Key"] = adminKey;
+    const res = await fetch(url, { method:"POST", headers, body: JSON.stringify(data) });
+    const ct = res.headers.get("content-type") || "";
+    const payload = ct.includes("application/json") ? await res.json() : await res.text();
+    if(!res.ok) throw new Error(typeof payload === "string" ? payload : (payload?.error || "HTTP " + res.status));
+    return payload;
+  }
+
+  function setStatus(msg){ statusEl.textContent = msg; }
+
+  $("btnLoad").onclick = async () => {
+    try{
+      const base = normalizeBase($("apiBase").value);
+      const key  = $("adminKey").value.trim();
+      const sk   = $("surveyKey").value.trim();
+      if(!base || !sk) return alert("請填 Worker API Base 與 surveyKey");
+
+      setStatus("讀取中...");
+      const out = await postJSON(base + "/survey/rules/get", { surveyKey: sk }, key);
+      $("rules").value = out.rules ? JSON.stringify(out.rules, null, 2) : "";
+      setStatus(out.rules ? "讀取成功" : "KV 尚無 rules（可以直接貼上範本後儲存）");
+      localStorage.setItem("rules_apiBase", base);
+      localStorage.setItem("rules_surveyKey", sk);
+    }catch(e){
+      setStatus("");
+      alert("讀取失敗：\n" + e.message);
+    }
+  };
+
+  $("btnSave").onclick = async () => {
+    try{
+      const base = normalizeBase($("apiBase").value);
+      const key  = $("adminKey").value.trim();
+      const sk   = $("surveyKey").value.trim();
+      if(!base || !sk) return alert("請填 Worker API Base 與 surveyKey");
+
+      const raw = $("rules").value.trim();
+      if(!raw) return alert("rules 不能是空的");
+
+      let rules;
+      try{ rules = JSON.parse(raw); }catch{ return alert("rules JSON 格式錯誤（不是合法 JSON）"); }
+      if(!rules.dimensions || typeof rules.dimensions !== "object") return alert("rules.dimensions 必須存在");
+
+      setStatus("儲存中...");
+      await postJSON(base + "/survey/rules/set", { surveyKey: sk, rules }, key);
+      setStatus("儲存成功 ✅");
+      localStorage.setItem("rules_apiBase", base);
+      localStorage.setItem("rules_surveyKey", sk);
+    }catch(e){
+      setStatus("");
+      alert("儲存失敗：\n" + e.message + "\n\n（如果你有設 ADMIN_KEY，請確認後台有填對）");
+    }
+  };
+
+  // init
+  window.addEventListener("load", () => {
+    const b = localStorage.getItem("rules_apiBase");
+    const sk = localStorage.getItem("rules_surveyKey");
+    if(b) $("apiBase").value = b;
+    if(sk) $("surveyKey").value = sk;
+  });
+</script>
+</body>
+</html>
