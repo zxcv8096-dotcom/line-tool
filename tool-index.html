@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LINE Tool 控制台｜首頁</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#0f172a;
+      --card2:#111c33;
+      --bd:rgba(148,163,184,.18);
+      --tx:#e2e8f0;
+      --muted:#94a3b8;
+      --accent:#22c55e;
+      --accent2:#60a5fa;
+      --warn:#f59e0b;
+    }
+    body{background: radial-gradient(1200px 600px at 10% -10%, rgba(96,165,250,.18), transparent 60%),
+                 radial-gradient(900px 500px at 90% 0%, rgba(34,197,94,.16), transparent 55%),
+                 radial-gradient(1200px 700px at 50% 110%, rgba(245,158,11,.10), transparent 60%),
+                 var(--bg);
+         color:var(--tx);}
+    .glass{background: rgba(15,23,42,.62); backdrop-filter: blur(10px); border:1px solid var(--bd);}
+    .chip{border:1px solid var(--bd); background: rgba(2,6,23,.35);}
+    .bubble{border:1px solid var(--bd); background: rgba(2,6,23,.35);}
+    .btn{border:1px solid var(--bd); background: rgba(2,6,23,.35);}
+    .btn:hover{background: rgba(2,6,23,.55);}
+    .kbd{border:1px solid var(--bd); background: rgba(2,6,23,.45); padding:.1rem .35rem; border-radius:.5rem;}
+    a{outline:none}
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Top Bar -->
+  <header class="sticky top-0 z-20">
+    <div class="glass mx-auto max-w-5xl rounded-b-2xl px-4 py-3">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-2xl flex items-center justify-center"
+               style="background:linear-gradient(135deg, rgba(96,165,250,.35), rgba(34,197,94,.25)); border:1px solid var(--bd);">
+            <span class="text-xl">🧰</span>
+          </div>
+          <div>
+            <div class="text-base font-semibold leading-tight">LINE Tool 控制台</div>
+            <div class="text-xs text-slate-300/80 leading-tight">首頁｜快速進入各工具頁</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="chip text-xs px-2 py-1 rounded-xl text-slate-200/90 flex items-center gap-2">
+            <span class="inline-block h-2 w-2 rounded-full" style="background:var(--accent); box-shadow:0 0 18px rgba(34,197,94,.65)"></span>
+            GitHub Pages Ready
+          </span>
+          <button id="btnHelp" class="btn text-xs px-3 py-2 rounded-xl">快捷鍵</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-5xl px-4 pb-24 pt-5">
+    <!-- Quick Actions -->
+    <section class="glass rounded-2xl p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="text-sm text-slate-200/90">
+          你可以直接「點工具卡片」或在下方輸入框輸入：<span class="kbd">auto</span>、<span class="kbd">quick</span>、<span class="kbd">lab</span>、<span class="kbd">flow</span>、<span class="kbd">rich</span>…
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a class="btn text-sm px-3 py-2 rounded-xl" href="tools/lab_dashboard.html">🚦 Lab Dashboard</a>
+          <a class="btn text-sm px-3 py-2 rounded-xl" href="tools/quickreply.html">⚡ Quick Reply</a>
+          <a class="btn text-sm px-3 py-2 rounded-xl" href="tools/auto_reply.html">🤖 Auto Reply</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat-like panel -->
+    <section class="mt-5 glass rounded-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b" style="border-color:var(--bd);">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold">🗨️ 中控聊天室</span>
+            <span class="text-xs text-slate-300/70">（選工具＝送出一則指令）</span>
+          </div>
+          <div class="text-xs text-slate-300/70">
+            Tip：按 <span class="kbd">/</span> 直接聚焦輸入
+          </div>
+        </div>
+      </div>
+
+      <div id="chat" class="p-4 space-y-3 min-h-[360px]">
+        <!-- System bubble -->
+        <div class="bubble rounded-2xl p-4">
+          <div class="text-xs text-slate-300/70 mb-1">系統</div>
+          <div class="text-sm leading-relaxed">
+            這裡是首頁入口。選一個工具開始操作：
+            <span class="text-slate-200 font-semibold">快速回覆</span>、
+            <span class="text-slate-200 font-semibold">自動回覆</span>、
+            <span class="text-slate-200 font-semibold">流程</span>、
+            <span class="text-slate-200 font-semibold">圖像地圖</span>、
+            <span class="text-slate-200 font-semibold">Rich Menu</span>…
+          </div>
+        </div>
+
+        <!-- Tool cards message -->
+        <div class="bubble rounded-2xl p-4">
+          <div class="text-xs text-slate-300/70 mb-3">可用工具</div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <!-- card template -->
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/lab_dashboard.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">🚦 lab_dashboard</div>
+                  <div class="text-xs text-slate-300/75 mt-1">狀態、測試、彙整入口</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(96,165,250,.12); border:1px solid rgba(96,165,250,.25); color:#bfdbfe;">
+                  Dashboard
+                </span>
+              </div>
+            </a>
+
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/quickreply.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">⚡ quickreply</div>
+                  <div class="text-xs text-slate-300/75 mt-1">建立/管理快速回覆</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(34,197,94,.10); border:1px solid rgba(34,197,94,.22); color:#bbf7d0;">
+                  Reply
+                </span>
+              </div>
+            </a>
+
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/auto_reply.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">🤖 auto_reply</div>
+                  <div class="text-xs text-slate-300/75 mt-1">關鍵字 → 自動回覆規則</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(245,158,11,.10); border:1px solid rgba(245,158,11,.22); color:#fde68a;">
+                  Rules
+                </span>
+              </div>
+            </a>
+
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/tool_flow.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">🧭 tool_flow</div>
+                  <div class="text-xs text-slate-300/75 mt-1">流程/節點式工具頁</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(96,165,250,.12); border:1px solid rgba(96,165,250,.25); color:#bfdbfe;">
+                  Flow
+                </span>
+              </div>
+            </a>
+
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/tool_imagemap.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">🗺️ tool_imagemap</div>
+                  <div class="text-xs text-slate-300/75 mt-1">Imagemap 版面/熱區工具</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(34,197,94,.10); border:1px solid rgba(34,197,94,.22); color:#bbf7d0;">
+                  Map
+                </span>
+              </div>
+            </a>
+
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/tool_richmenu.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">📌 tool_richmenu</div>
+                  <div class="text-xs text-slate-300/75 mt-1">Rich Menu 設計/管理</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(245,158,11,.10); border:1px solid rgba(245,158,11,.22); color:#fde68a;">
+                  Menu
+                </span>
+              </div>
+            </a>
+
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/tool_carousel.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">🧩 tool_carousel</div>
+                  <div class="text-xs text-slate-300/75 mt-1">Carousel 組卡工具</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(96,165,250,.12); border:1px solid rgba(96,165,250,.25); color:#bfdbfe;">
+                  Cards
+                </span>
+              </div>
+            </a>
+
+            <a class="block rounded-2xl p-4 border hover:translate-y-[-1px] transition"
+               style="border-color:var(--bd); background:rgba(17,24,39,.35);"
+               href="tools/tool_meta_editor.html">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">🧾 tool_meta_editor</div>
+                  <div class="text-xs text-slate-300/75 mt-1">Meta/設定編輯器</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-xl"
+                      style="background:rgba(34,197,94,.10); border:1px solid rgba(34,197,94,.22); color:#bbf7d0;">
+                  Config
+                </span>
+              </div>
+            </a>
+          </div>
+
+          <div class="mt-4 text-xs text-slate-300/70">
+            以上路徑預設你的檔案都在 <span class="kbd">/tools/</span> 下面。
+          </div>
+        </div>
+      </div>
+
+      <!-- Input bar -->
+      <div class="px-4 py-3 border-t" style="border-color:var(--bd);">
+        <div class="flex gap-2 items-center">
+          <input id="cmd"
+                 class="w-full rounded-2xl px-4 py-3 bg-black/30 border outline-none text-sm"
+                 style="border-color:var(--bd);"
+                 placeholder="輸入指令：auto / quick / lab / flow / map / rich / carousel / meta（Enter 送出）"
+                 autocomplete="off" />
+          <button id="send" class="rounded-2xl px-4 py-3 text-sm font-semibold"
+                  style="background:linear-gradient(135deg, rgba(96,165,250,.35), rgba(34,197,94,.25)); border:1px solid var(--bd);">
+            送出
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="fixed bottom-0 left-0 right-0 z-30">
+    <div class="mx-auto max-w-5xl px-4 pb-4">
+      <div class="glass rounded-2xl px-3 py-2 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-xs text-slate-200/80">
+          <span class="inline-block h-2 w-2 rounded-full" style="background:var(--accent2); box-shadow:0 0 16px rgba(96,165,250,.55)"></span>
+          <span>Home</span>
+          <span class="text-slate-300/40">•</span>
+          <span id="pathHint" class="text-slate-300/70">/index.html</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a class="btn text-xs px-3 py-2 rounded-xl" href="tools/quickreply.html">Quick</a>
+          <a class="btn text-xs px-3 py-2 rounded-xl" href="tools/auto_reply.html">Auto</a>
+          <a class="btn text-xs px-3 py-2 rounded-xl" href="tools/tool_richmenu.html">Rich</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Help Modal -->
+  <div id="modal" class="hidden fixed inset-0 z-40">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative mx-auto max-w-lg px-4 py-10">
+      <div class="glass rounded-2xl p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-base font-semibold">快捷鍵 / 指令</div>
+            <div class="text-xs text-slate-300/70 mt-1">不想滑鼠就用這些</div>
+          </div>
+          <button id="btnClose" class="btn text-xs px-3 py-2 rounded-xl">關閉</button>
+        </div>
+
+        <div class="mt-4 space-y-2 text-sm">
+          <div class="flex items-center justify-between bubble rounded-xl px-3 py-2">
+            <span>聚焦輸入</span><span><span class="kbd">/</span></span>
+          </div>
+          <div class="flex items-center justify-between bubble rounded-xl px-3 py-2">
+            <span>送出指令</span><span><span class="kbd">Enter</span></span>
+          </div>
+          <div class="text-xs text-slate-300/70 mt-2">可用指令：</div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="chip rounded-xl px-2 py-1">lab</span>
+            <span class="chip rounded-xl px-2 py-1">quick</span>
+            <span class="chip rounded-xl px-2 py-1">auto</span>
+            <span class="chip rounded-xl px-2 py-1">flow</span>
+            <span class="chip rounded-xl px-2 py-1">map</span>
+            <span class="chip rounded-xl px-2 py-1">rich</span>
+            <span class="chip rounded-xl px-2 py-1">carousel</span>
+            <span class="chip rounded-xl px-2 py-1">meta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const routes = {
+      lab: "tools/lab_dashboard.html",
+      quick: "tools/quickreply.html",
+      auto: "tools/auto_reply.html",
+      flow: "tools/tool_flow.html",
+      map: "tools/tool_imagemap.html",
+      rich: "tools/tool_richmenu.html",
+      carousel: "tools/tool_carousel.html",
+      meta: "tools/tool_meta_editor.html",
+    };
+
+    const cmd = document.getElementById("cmd");
+    const send = document.getElementById("send");
+    const modal = document.getElementById("modal");
+    const btnHelp = document.getElementById("btnHelp");
+    const btnClose = document.getElementById("btnClose");
+
+    function go(input){
+      const key = (input || "").trim().toLowerCase();
+      if(!key) return;
+
+      // allow direct path
+      if(key.startsWith("tools/")) return location.href = key;
+
+      // allow shortcut
+      const target = routes[key];
+      if(target) return location.href = target;
+
+      // fuzzy match
+      const found = Object.keys(routes).find(k => k.includes(key) || key.includes(k));
+      if(found) return location.href = routes[found];
+
+      alert("找不到指令：「" + input + "」\n可用：lab / quick / auto / flow / map / rich / carousel / meta");
+    }
+
+    send.addEventListener("click", () => go(cmd.value));
+    cmd.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") go(cmd.value);
+    });
+
+    // focus with /
+    window.addEventListener("keydown", (e) => {
+      if(e.key === "/" && document.activeElement !== cmd){
+        e.preventDefault();
+        cmd.focus();
+      }
+      if(e.key === "Escape"){
+        modal.classList.add("hidden");
+      }
+    });
+
+    btnHelp.addEventListener("click", ()=> modal.classList.remove("hidden"));
+    btnClose.addEventListener("click", ()=> modal.classList.add("hidden"));
+    modal.addEventListener("click", (e)=>{
+      if(e.target === modal) modal.classList.add("hidden");
+    });
+
+    // default focus on desktop
+    setTimeout(()=> cmd.focus(), 200);
+  </script>
+</body>
+</html>
