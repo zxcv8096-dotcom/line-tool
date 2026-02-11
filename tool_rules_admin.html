@@ -1,23 +1,37 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cloudflare 統一窗口｜指令控制台</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>問卷規則中控台｜A+Health</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{ --bd:rgba(15,23,42,.10); --glass:rgba(255,255,255,.82); --glass2:rgba(255,255,255,.70); }
+    :root{
+      --bd: rgba(15,23,42,.10);
+      --glass: rgba(255,255,255,.82);
+      --glass2: rgba(255,255,255,.70);
+    }
     body{
+      font-family: ui-sans-serif, system-ui, "Microsoft JhengHei";
       background:
         radial-gradient(1200px 600px at 10% 0%, rgba(59,130,246,.18), transparent 55%),
         radial-gradient(950px 520px at 90% 12%, rgba(16,185,129,.16), transparent 55%),
         radial-gradient(1000px 650px at 50% 110%, rgba(245,158,11,.14), transparent 60%),
         #f8fafc;
     }
-    .glass{ background:var(--glass); border:1px solid var(--bd); backdrop-filter: blur(12px); box-shadow: 0 18px 55px rgba(15,23,42,.10);}
-    .glass2{ background:var(--glass2); border:1px solid var(--bd); backdrop-filter: blur(10px); box-shadow: 0 10px 26px rgba(15,23,42,.06);}
+    .glass{ background:var(--glass); border:1px solid var(--bd); backdrop-filter: blur(12px); box-shadow: 0 18px 55px rgba(15,23,42,.10); }
+    .glass2{ background:var(--glass2); border:1px solid var(--bd); backdrop-filter: blur(10px); box-shadow: 0 10px 26px rgba(15,23,42,.06); }
     .btn{ border:1px solid var(--bd); background:#fff; }
     .btn:hover{ background:#f1f5f9; }
+    .inp{
+      width:100%;
+      border-radius:16px;
+      border:1px solid var(--bd);
+      background: rgba(255,255,255,.85);
+      padding:12px 14px;
+      outline:none;
+    }
+    .inp:focus{ box-shadow: 0 0 0 4px rgba(59,130,246,.12); border-color: rgba(59,130,246,.35); }
     .kbd{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
       border:1px solid var(--bd);
@@ -26,256 +40,233 @@
       border-radius: .7rem;
       font-size: .82em;
     }
+    pre{ white-space: pre-wrap; word-break: break-word; }
   </style>
 </head>
 
 <body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-4 pt-5 pb-24">
+  <div class="mx-auto max-w-6xl px-4 pt-5 pb-24 space-y-4">
     <!-- Header -->
-    <div class="glass rounded-3xl px-5 py-4 flex items-center justify-between gap-3">
+    <div class="glass rounded-3xl px-5 py-4 flex items-start justify-between gap-3">
       <div class="min-w-0">
-        <div class="text-lg font-extrabold text-slate-900 truncate">Cloudflare 統一窗口｜指令控制台</div>
+        <div class="text-lg font-extrabold text-slate-900 truncate">問卷規則中控台｜A+Health</div>
         <div class="text-sm text-slate-600 truncate">
-          你所有工具要用 Cloudflare 功能 → 都改由這裡發指令（Worker API）
+          這頁是「規則/報告引擎」控制台（對應 Worker：<span class="kbd">/health</span>、<span class="kbd">/survey/*</span>）
         </div>
       </div>
       <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="UI.toggleHelp()">教學</button>
     </div>
 
     <!-- Help -->
-    <div id="help" class="hidden mt-4 glass2 rounded-3xl p-5 text-sm text-slate-700">
-      <div class="font-bold text-slate-900">這頁在做什麼？</div>
-      <div class="mt-2 text-slate-600">
-        這是「Cloudflare 指令控制台」，不是工具跳轉頁。<br/>
-        你在這裡按按鈕，會直接對 Worker 發送指令（例如 KV 設定、讀寫、列出 Key…）。<br/>
-        <span class="font-bold">如果按了沒反應＝通常是 Worker 沒開 CORS</span>（下面會顯示錯誤原因）。
+    <div id="help" class="hidden glass2 rounded-3xl p-5 text-sm text-slate-700">
+      <div class="font-bold text-slate-900">這頁怎麼用？</div>
+      <div class="mt-2 text-slate-600 leading-relaxed">
+        1) 先確認 Worker Base（預設已填好）。<br/>
+        2) 按「測試連線」會打 <span class="kbd">GET /health</span>。<br/>
+        3) 「讀規則」打 <span class="kbd">POST /survey/rules/get</span>，把 KV 裡的規則拉回來。<br/>
+        4) 「寫規則」打 <span class="kbd">POST /survey/rules/set</span>（需要 ADMIN_KEY，header：<span class="kbd">X-Admin-Key</span>）。<br/>
+        5) 「測試產報告」打 <span class="kbd">POST /survey/submit</span>。<br/>
+        <span class="font-bold">注意：</span>你之前那份問卷中控台打的是 <span class="kbd">/api/q/*</span>，但你 Worker 根本沒有那些路由，所以會 404。
       </div>
     </div>
 
-    <!-- Gateway -->
-    <div class="mt-4 glass2 rounded-3xl p-5">
-      <div class="flex flex-col md:flex-row md:items-end gap-3">
-        <div class="flex-1">
-          <div class="text-base font-bold text-slate-900">Gateway（Worker 網域）</div>
-          <div class="mt-1 text-sm text-slate-600">例如：<span class="kbd">https://api.zxcv8096.workers.dev</span></div>
-          <input id="gw" class="mt-3 w-full rounded-2xl px-4 py-3 border bg-white/80" style="border-color:var(--bd)"
-                 placeholder="貼上你的 Worker 網域…" />
-          <div class="mt-2 text-xs text-slate-500">會存到 <span class="kbd">localStorage.GW_BASE</span></div>
+    <!-- Settings -->
+    <div class="glass2 rounded-3xl p-5">
+      <div class="grid md:grid-cols-12 gap-3">
+        <div class="md:col-span-6">
+          <div class="text-sm font-extrabold text-slate-900">Worker Base</div>
+          <div class="text-xs text-slate-600 mt-1">例如：<span class="kbd">https://api.zxcv8096.workers.dev</span></div>
+          <input id="base" class="inp mt-2" placeholder="https://...workers.dev">
+          <div class="text-xs text-slate-500 mt-2">會存到 <span class="kbd">localStorage.QA_BASE</span></div>
         </div>
-        <div class="flex gap-2">
-          <button class="btn px-4 py-3 rounded-2xl text-sm font-semibold" onclick="UI.saveGW()">儲存</button>
-          <button class="btn px-4 py-3 rounded-2xl text-sm" onclick="UI.resetGW()">重置</button>
+
+        <div class="md:col-span-3">
+          <div class="text-sm font-extrabold text-slate-900">surveyKey</div>
+          <div class="text-xs text-slate-600 mt-1">預設：<span class="kbd">health_v1</span></div>
+          <input id="surveyKey" class="inp mt-2" placeholder="health_v1">
+          <div class="text-xs text-slate-500 mt-2">對應 KV key：<span class="kbd">SURVEY:{surveyKey}:RULES</span></div>
+        </div>
+
+        <div class="md:col-span-3">
+          <div class="text-sm font-extrabold text-slate-900">ADMIN_KEY（寫入用）</div>
+          <div class="text-xs text-slate-600 mt-1">header：<span class="kbd">X-Admin-Key</span></div>
+          <input id="adminKey" class="inp mt-2" type="password" placeholder="需要寫規則才填">
+          <div class="flex gap-2 mt-3">
+            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.save()">儲存</button>
+            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.reset()">重置</button>
+          </div>
         </div>
       </div>
 
-      <!-- ✅ 新增：問卷串聯（只加這塊） -->
-      <div class="mt-4 flex flex-col md:flex-row gap-2 md:items-center justify-between">
-        <div class="text-sm text-slate-700">
-          一鍵串聯問卷：把 Gateway 同步給問卷中控台使用，並直接開啟問卷頁。
-        </div>
-        <div class="flex gap-2 flex-wrap">
-          <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.openQuestionnaire()">
-            開 問卷中控台
-          </button>
-          <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.syncQuestionnaireOnly()">
-            只同步（不開啟）
-          </button>
-        </div>
-      </div>
-
-      <div class="mt-2 text-xs text-slate-500">
-        同步到問卷用的儲存鍵：<span class="kbd">q_console_api_base_pretty</span>
-        （問卷也會收到網址參數 <span class="kbd">?api=</span> 當雙保險）
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.ping()">測試連線</button>
+        <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.rulesGet()">讀規則</button>
+        <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.rulesSet()">寫規則</button>
+        <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.clearLog()">清空 Log</button>
       </div>
     </div>
 
-    <!-- Command Panel -->
-    <div class="mt-5 grid lg:grid-cols-2 gap-4">
-      <!-- KV: get/set -->
+    <!-- Editors -->
+    <div class="grid lg:grid-cols-2 gap-4">
       <div class="glass2 rounded-3xl p-5">
-        <div class="text-base font-bold text-slate-900">KV 指令（常用）</div>
-        <div class="mt-1 text-sm text-slate-600">讀寫你的 KV（例如 RULES_JSON、CONFIG、TOKEN…）</div>
-
-        <div class="mt-4 grid gap-3">
-          <div>
-            <div class="text-sm font-semibold text-slate-900">Key</div>
-            <input id="kvKey" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80" style="border-color:var(--bd)"
-                   placeholder="例如：RULES_JSON" />
-          </div>
-
-          <div>
-            <div class="text-sm font-semibold text-slate-900">Value（JSON / 文字）</div>
-            <textarea id="kvVal" rows="6" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80 font-mono text-xs"
-                      style="border-color:var(--bd)"
-                      placeholder='例如：{"version":1,"rules":[...]} 或任何文字'></textarea>
-          </div>
-
-          <div class="flex flex-wrap gap-2">
-            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.kvGet()">讀取</button>
-            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.kvPut()">寫入</button>
-            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.kvDel()">刪除</button>
-          </div>
+        <div class="text-base font-extrabold text-slate-900">規則 JSON（rules）</div>
+        <div class="text-sm text-slate-600 mt-1">「讀規則」會填入；改完按「寫規則」存回 KV。</div>
+        <textarea id="rules" rows="16" class="inp mt-3 font-mono text-xs" placeholder='{"dimensions":{...},"tips":{...}}'></textarea>
+        <div class="text-xs text-slate-500 mt-2">
+          Worker 路由：<span class="kbd">POST /survey/rules/get</span>、<span class="kbd">POST /survey/rules/set</span>
         </div>
       </div>
 
-      <!-- KV: list -->
       <div class="glass2 rounded-3xl p-5">
-        <div class="text-base font-bold text-slate-900">KV Keys（查詢）</div>
-        <div class="mt-1 text-sm text-slate-600">列出 KV 裡有哪些 key（可用 prefix 篩選）</div>
-
-        <div class="mt-4 grid gap-3">
-          <div>
-            <div class="text-sm font-semibold text-slate-900">Prefix（可空）</div>
-            <input id="kvPrefix" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80" style="border-color:var(--bd)"
-                   placeholder="例如：RULE_ 或 留空列出全部" />
-          </div>
-
-          <div class="flex gap-2">
-            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.kvList()">列出 Keys</button>
-            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.clearLog()">清空 Log</button>
-          </div>
-
-          <div class="text-xs text-slate-500">
-            你 Worker 需要提供 API：<span class="kbd">/api/kv/list</span>、<span class="kbd">/api/kv/get</span>、<span class="kbd">/api/kv/put</span>、<span class="kbd">/api/kv/del</span>
-          </div>
+        <div class="text-base font-extrabold text-slate-900">測試答案（answers）</div>
+        <div class="text-sm text-slate-600 mt-1">用來打 <span class="kbd">POST /survey/submit</span> 產生 report。</div>
+        <textarea id="answers" rows="10" class="inp mt-3 font-mono text-xs" placeholder='{"q1":"0","q2":"2"}'></textarea>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.submit()">測試產報告</button>
+          <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.fillDemo()">填入範例</button>
         </div>
+        <div class="text-xs text-slate-500 mt-2">如果回：<span class="kbd">No rules found</span>，代表 KV 沒存規則。</div>
       </div>
     </div>
 
     <!-- Log -->
-    <div class="mt-5 glass rounded-3xl p-5">
+    <div class="glass rounded-3xl p-5">
       <div class="flex items-center justify-between gap-3">
-        <div class="text-base font-bold text-slate-900">執行 Log（一定會顯示結果）</div>
+        <div class="text-base font-extrabold text-slate-900">執行 Log（一定會顯示結果）</div>
         <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.copyLog()">複製 Log</button>
       </div>
-      <pre id="log" class="mt-4 text-xs bg-white/70 border rounded-2xl p-4 overflow-auto max-h-[360px]"
-           style="border-color:var(--bd)"></pre>
+      <pre id="log" class="mt-4 text-xs bg-white/70 border rounded-2xl p-4 overflow-auto max-h-[420px]" style="border-color:var(--bd)"></pre>
     </div>
   </div>
 
 <script>
 const UI = (() => {
-  const K_GW = "GW_BASE";
-  const DEFAULT_GW = "https://api.zxcv8096.workers.dev";
+  const LS_BASE = "QA_BASE";
+  const LS_KEY  = "QA_ADMIN_KEY";
+  const LS_SK   = "QA_SURVEY_KEY";
 
-  // ✅ 問卷頁使用的 localStorage key（你問卷 code 裡面就是這個）
-  const Q_LS_API  = "q_console_api_base_pretty";
-  // （可選）問卷 admin key
-  const Q_LS_KEY  = "q_console_admin_key_pretty";
-  // ✅ 問卷固定位置
-  const Q_URL = "https://zxcv8096-dotcom.github.io/line-tool/pages/questionnaire/index.html";
+  const DEFAULT_BASE = "https://api.zxcv8096.workers.dev";
+  const DEFAULT_SK   = "health_v1";
 
   const $ = (id)=>document.getElementById(id);
   const logEl = $("log");
 
-  function normalizeGW(v){
+  function normBase(v){
     const s = String(v||"").trim();
     if(!s) return "";
     if(!/^https?:\/\//i.test(s)) return ("https://" + s.replace(/^\/+/,"")).replace(/\/+$/,"");
     return s.replace(/\/+$/,"");
   }
 
-  let GW = normalizeGW(localStorage.getItem(K_GW)) || DEFAULT_GW;
-  localStorage.setItem(K_GW, GW);
-  $("gw").value = GW;
-
   function log(line){
     const ts = new Date().toLocaleTimeString();
     logEl.textContent = `[${ts}] ${line}\n` + logEl.textContent;
   }
 
-  function toggleHelp(){
-    $("help").classList.toggle("hidden");
+  function toggleHelp(){ $("help").classList.toggle("hidden"); }
+
+  function load(){
+    $("base").value = normBase(localStorage.getItem(LS_BASE)) || DEFAULT_BASE;
+    $("adminKey").value = localStorage.getItem(LS_KEY) || "";
+    $("surveyKey").value = localStorage.getItem(LS_SK) || DEFAULT_SK;
   }
 
-  function saveGW(){
-    const v = normalizeGW($("gw").value);
-    if(!v) return alert("Gateway 不能空白");
-    GW = v;
-    localStorage.setItem(K_GW, GW);
-    log(`✅ 已儲存 Gateway = ${GW}`);
+  function save(){
+    const b = normBase($("base").value) || DEFAULT_BASE;
+    localStorage.setItem(LS_BASE, b);
+    localStorage.setItem(LS_KEY, ($("adminKey").value||"").trim());
+    localStorage.setItem(LS_SK, ($("surveyKey").value||"").trim() || DEFAULT_SK);
+    $("base").value = b;
+    log(`✅ 已儲存：base=${b} / surveyKey=${$("surveyKey").value.trim() || DEFAULT_SK}`);
   }
 
-  function resetGW(){
-    GW = DEFAULT_GW;
-    $("gw").value = GW;
-    localStorage.setItem(K_GW, GW);
-    log(`🔁 已重置 Gateway = ${GW}`);
-  }
-
-  // ✅ 串聯：只同步（不開啟）
-  function syncQuestionnaireOnly(){
-    // 確保 GW 是最新
-    const v = normalizeGW($("gw").value) || GW;
-    GW = v;
-    localStorage.setItem(K_GW, GW);
-
-    localStorage.setItem(Q_LS_API, GW);
-
-    // 如果你之後也想同步 admin key：你可以把這行打開，並把 admin key 放在統一窗口自己存一份
-    // localStorage.setItem(Q_LS_KEY, localStorage.getItem("ADMIN_KEY") || "");
-
-    log(`🔗 已同步給問卷：${Q_LS_API} = ${GW}`);
-    alert("已同步給問卷 ✅");
-  }
-
-  // ✅ 串聯：同步 + 打開問卷（雙保險帶 ?api=）
-  function openQuestionnaire(){
-    syncQuestionnaireOnly();
-    const url = Q_URL + "?api=" + encodeURIComponent(GW);
-    log(`🧾 開啟問卷：${url}`);
-    window.open(url, "_blank");
+  function reset(){
+    localStorage.setItem(LS_BASE, DEFAULT_BASE);
+    localStorage.removeItem(LS_KEY);
+    localStorage.setItem(LS_SK, DEFAULT_SK);
+    load();
+    log("🔁 已重置為預設");
   }
 
   function clearLog(){ logEl.textContent = ""; }
 
-  async function call(path, body){
-    const url = GW + path;
+  function base(){ return normBase($("base").value) || DEFAULT_BASE; }
+  function surveyKey(){ return ($("surveyKey").value||"").trim() || DEFAULT_SK; }
+  function adminKey(){ return ($("adminKey").value||"").trim(); }
+
+  async function fetchJson(path, body, withAdmin=false){
+    const url = base() + path;
     log(`➡️ ${url}`);
+    let res, text;
     try{
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(body || {})
+      res = await fetch(url, {
+        method: body ? "POST" : "GET",
+        mode: "cors",
+        headers: {
+          "Content-Type":"application/json",
+          ...(withAdmin && adminKey() ? {"X-Admin-Key": adminKey()} : {})
+        },
+        body: body ? JSON.stringify(body) : undefined
       });
-      const text = await res.text();
-      log(`⬅️ HTTP ${res.status} ${res.ok ? "OK" : "ERR"}`);
-      try{
-        const j = JSON.parse(text);
-        log(`📦 ${JSON.stringify(j, null, 2)}`);
-        return j;
-      }catch{
-        log(`📦 ${text}`);
-        return text;
-      }
+      text = await res.text();
     }catch(e){
       log(`❌ Fetch 失敗：${e?.message || e}`);
-      log(`⚠️ 常見原因：Worker 沒開 CORS（GitHub Pages 會擋）`);
+      log(`⚠️ 若你是 GitHub Pages，Worker 必須開 CORS（你這份 worker 已經有 *）`);
       return null;
+    }
+
+    log(`⬅️ HTTP ${res.status} ${res.ok ? "OK" : "ERR"}`);
+
+    try{
+      const j = JSON.parse(text);
+      log(`📦 ${JSON.stringify(j, null, 2)}`);
+      return j;
+    }catch{
+      log(`📦 ${text}`);
+      return { ok:false, raw:text };
     }
   }
 
-  async function kvGet(){
-    const key = $("kvKey").value.trim();
-    if(!key) return alert("Key 不能空白");
-    await call("/api/kv/get", { key });
+  async function ping(){
+    // 對齊你的 worker：GET /health
+    const j = await fetchJson("/health", null, false);
+    if(!j) return;
+    if(j.ok) log("✅ 連線 OK（/health）");
+    else log("⚠️ /health 回傳非 ok（請看上方 log）");
   }
-  async function kvPut(){
-    const key = $("kvKey").value.trim();
-    if(!key) return alert("Key 不能空白");
-    const valRaw = $("kvVal").value;
-    let value = valRaw;
-    try{ value = JSON.parse(valRaw); }catch{}
-    await call("/api/kv/put", { key, value });
+
+  async function rulesGet(){
+    const j = await fetchJson("/survey/rules/get", { surveyKey: surveyKey() }, false);
+    if(!j) return;
+    $("rules").value = j.rules ? JSON.stringify(j.rules, null, 2) : "";
+    if(!j.rules) log("⚠️ KV 尚未有規則（rules=null），請貼上規則後按「寫規則」");
   }
-  async function kvDel(){
-    const key = $("kvKey").value.trim();
-    if(!key) return alert("Key 不能空白");
-    await call("/api/kv/del", { key });
+
+  async function rulesSet(){
+    let rulesObj = null;
+    const raw = $("rules").value.trim();
+    if(!raw) return alert("rules 不能空白");
+    try{ rulesObj = JSON.parse(raw); }catch{ return alert("rules 不是合法 JSON"); }
+
+    const j = await fetchJson("/survey/rules/set", { surveyKey: surveyKey(), rules: rulesObj }, true);
+    if(!j) return;
+    if(j.ok) log("✅ 已寫入規則到 KV");
   }
-  async function kvList(){
-    const prefix = $("kvPrefix").value.trim();
-    await call("/api/kv/list", { prefix });
+
+  async function submit(){
+    let ansObj = {};
+    const raw = $("answers").value.trim();
+    if(raw){
+      try{ ansObj = JSON.parse(raw); }catch{ return alert("answers 不是合法 JSON"); }
+    }
+    const j = await fetchJson("/survey/submit", { surveyKey: surveyKey(), answers: ansObj }, false);
+    if(!j) return;
+    if(j.ok && j.report) log("✅ 已產出 report（看上方 JSON）");
+  }
+
+  function fillDemo(){
+    $("answers").value = JSON.stringify({ q1:"0", q2:"2", q3:"1" }, null, 2);
+    log("🧪 已填入 answers 範例");
   }
 
   async function copyLog(){
@@ -284,12 +275,8 @@ const UI = (() => {
     catch{ prompt("請手動複製：", t); }
   }
 
-  return {
-    toggleHelp, saveGW, resetGW,
-    syncQuestionnaireOnly, openQuestionnaire,
-    clearLog, copyLog,
-    kvGet, kvPut, kvDel, kvList
-  };
+  load();
+  return { toggleHelp, save, reset, clearLog, copyLog, ping, rulesGet, rulesSet, submit, fillDemo };
 })();
 </script>
 </body>
