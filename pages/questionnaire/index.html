@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>健康諮詢問卷｜個人化營養建議</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    :root { --bd:#e5e7eb; --tx:#0f172a; --muted:#64748b; }
+    body{ font-family: ui-sans-serif, system-ui, "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif; color:var(--tx); }
+    .card{ border:1px solid var(--bd); border-radius:18px; padding:16px; background:#fff; }
+    .chip{ border:1px solid var(--bd); border-radius:999px; padding:6px 10px; font-size:12px; color:#0f172a; background:#f8fafc; }
+    .btn{ border-radius:14px; padding:10px 14px; font-weight:700; }
+    .btn-primary{ background:#0f172a; color:#fff; }
+    .btn-ghost{ border:1px solid var(--bd); background:#fff; }
+    .radio-card{ border:1px solid var(--bd); border-radius:14px; padding:10px 12px; cursor:pointer; }
+    .radio-card[data-checked="true"]{ outline:2px solid #0f172a; }
+    .small{ font-size:12px; color:var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+
+<body class="bg-slate-50">
+  <div class="max-w-3xl mx-auto p-4 md:p-6 space-y-4">
+
+    <header class="card flex items-start justify-between gap-3">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h1 class="text-lg md:text-xl font-extrabold">個人化健康諮詢問卷</h1>
+          <span id="envChip" class="chip">未連線</span>
+          <span id="liffChip" class="chip">LIFF：未初始化</span>
+        </div>
+        <p class="text-sm text-slate-600">
+          依你的作答，系統會給出「優先方向 + 今天能做的調整 + 建議營養素」；狀態良好就只給維持建議，不強推。
+        </p>
+        <p class="small">
+          ※ 本工具提供一般健康與營養建議，非醫療診斷；若有慢性病、孕哺、用藥或症狀嚴重，請先諮詢醫師/營養師。
+        </p>
+      </div>
+
+      <div class="text-right space-y-2">
+        <div class="flex items-center justify-end gap-2">
+          <button id="btnToggleAdmin" class="btn btn-ghost text-sm">管理模式</button>
+          <button id="btnReload" class="btn btn-ghost text-sm">重整</button>
+        </div>
+        <div id="meBox" class="hidden text-xs text-slate-600">
+          <div class="flex items-center justify-end gap-2">
+            <img id="meAvatar" class="w-8 h-8 rounded-full border" alt="" />
+            <div class="leading-tight">
+              <div class="font-bold" id="meName">—</div>
+              <div class="mono" id="meId">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 設定區（同一頁操作） -->
+    <section id="adminPanel" class="card hidden space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="font-extrabold">管理模式（你自己用）</div>
+          <div class="small">在這頁直接設定 Worker API、LIFF ID、以及每個營養素的產品連結（會存在本機瀏覽器 localStorage）。</div>
+        </div>
+        <button id="btnAdminClose" class="btn btn-ghost text-sm">關閉</button>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-3">
+        <div class="space-y-2">
+          <label class="text-sm font-bold">Cloudflare Worker API Base（必填）</label>
+          <input id="cfgApiBase" class="w-full border rounded-xl px-3 py-2" placeholder="例如：https://your-worker.your-subdomain.workers.dev" />
+          <div class="small">前端會呼叫：<span class="mono">/api/report</span></div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-bold">LIFF ID（可選，但建議）</label>
+          <input id="cfgLiffId" class="w-full border rounded-xl px-3 py-2" placeholder="例如：2001234567-xxxxxxxx" />
+          <div class="small">若不填，仍可用一般瀏覽器測試（不帶 LINE 會員資料）。</div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-3">
+        <div class="space-y-2">
+          <label class="text-sm font-bold">推送到 LINE（可選）</label>
+          <select id="cfgPushMode" class="w-full border rounded-xl px-3 py-2">
+            <option value="off">不推送（只顯示在頁面）</option>
+            <option value="on">推送（若在 LINE 內開啟且後端有 token）</option>
+          </select>
+          <div class="small">你要「不重複發送」我已在 Worker 做去重。</div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-bold">管理 PIN（可選）</label>
+          <input id="cfgAdminPin" type="password" class="w-full border rounded-xl px-3 py-2" placeholder="不填=每次按管理模式就直接開" />
+          <div class="small">避免客戶亂改設定（PIN 存本機）。</div>
+        </div>
+      </div>
+
+      <div class="border rounded-2xl p-3 space-y-3 bg-slate-50">
+        <div class="font-extrabold">產品連結設定（對應建議營養素）</div>
+        <div class="small">你把各營養素對應的「你的產品頁連結」貼進去即可。沒有連結就留空，報告也不會硬塞。</div>
+
+        <div class="grid md:grid-cols-2 gap-3" id="linksGrid"></div>
+
+        <div class="flex items-center gap-2">
+          <button id="btnSaveCfg" class="btn btn-primary">儲存設定</button>
+          <button id="btnResetCfg" class="btn btn-ghost">恢復預設</button>
+          <span id="cfgSaved" class="small"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 問卷 -->
+    <section class="card space-y-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="font-extrabold">填寫問卷</div>
+          <div class="small">共 10 題，約 1 分鐘完成。</div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm font-bold"><span id="progressNow">0</span>/<span id="progressAll">10</span></div>
+          <div class="small">完成後會產生個人化報告</div>
+        </div>
+      </div>
+
+      <div id="qBox" class="space-y-4"></div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnSubmit" class="btn btn-primary">送出並產生報告</button>
+        <button id="btnClear" class="btn btn-ghost">清除重填</button>
+        <span id="submitHint" class="small"></span>
+      </div>
+    </section>
+
+    <!-- 報告 -->
+    <section id="reportPanel" class="card hidden space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="font-extrabold">你的個人化建議報告</div>
+          <div class="small">以下內容由系統依作答生成（不顯示你的答案與 ID）。</div>
+        </div>
+        <button id="btnCopy" class="btn btn-ghost text-sm">複製文字</button>
+      </div>
+
+      <div class="border rounded-2xl p-3 bg-slate-50">
+        <div class="flex items-center gap-3">
+          <img id="rAvatar" class="w-10 h-10 rounded-full border hidden" alt="" />
+          <div>
+            <div class="font-extrabold" id="rName">—</div>
+            <div class="small" id="rTag">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rText" class="whitespace-pre-wrap leading-relaxed text-slate-900"></div>
+
+      <div id="rLinksWrap" class="border rounded-2xl p-3 space-y-2 hidden">
+        <div class="font-extrabold">你可以參考的產品連結</div>
+        <div class="small">只列出本次建議中「你有設定連結」的項目。</div>
+        <div id="rLinks" class="space-y-2"></div>
+      </div>
+
+      <div class="small text-slate-600">
+        ※ 若你有疾病史、正在用藥、孕哺、或出現胸悶/暈厥/黑便/劇烈腹痛等警訊，請優先就醫。
+      </div>
+    </section>
+
+    <footer class="text-center text-xs text-slate-500 pb-6">
+      <div>© 健康諮詢問卷工具</div>
+    </footer>
+  </div>
+
+<script>
+/** =========================
+ *  可調整的題庫（固定 10 題）
+ *  ========================= */
+const QUESTIONS = [
+  { id:"energy", title:"最近 7 天，你白天精神狀態？", options:[
+    ["a","很好，精神穩定"],["b","普通，偶爾疲倦"],["c","常疲倦、提不起勁"],["d","很累，影響工作/生活"]
+  ]},
+  { id:"sleep", title:"你的睡眠品質？", options:[
+    ["a","好睡且睡醒有精神"],["b","偶爾難入睡/易醒"],["c","常常睡不沉或多夢"],["d","長期失眠或睡醒更累"]
+  ]},
+  { id:"stress", title:"最近壓力與情緒狀態？", options:[
+    ["a","穩定、能放鬆"],["b","偶爾緊繃/焦躁"],["c","常覺得壓力大"],["d","壓力很大、情緒明顯受影響"]
+  ]},
+  { id:"digestion", title:"腸胃消化與排便狀況？", options:[
+    ["a","順暢、規律"],["b","偶爾脹氣/便秘/腹瀉"],["c","常常不適或不規律"],["d","經常嚴重不適"]
+  ]},
+  { id:"hydration", title:"每天飲水量（白開水為主）？", options:[
+    ["a","足夠（約 1500ml↑）"],["b","普通（約 1000–1500ml）"],["c","偏少（約 500–1000ml）"],["d","很少（<500ml）"]
+  ]},
+  { id:"diet", title:"你的飲食型態比較接近？", options:[
+    ["a","均衡（蛋白/蔬菜/全穀都有）"],["b","偶爾外食偏多"],["c","常外食、蔬菜水果少"],["d","很不固定或常吃甜/炸/宵夜"]
+  ]},
+  { id:"immunity", title:"近 3 個月，你的感冒/過敏困擾？", options:[
+    ["a","幾乎沒有"],["b","偶爾"],["c","偏常發作"],["d","很常/恢復慢"]
+  ]},
+  { id:"skin", title:"皮膚狀態（乾燥、暗沉、痘痘）？", options:[
+    ["a","穩定"],["b","偶爾不穩"],["c","常乾燥或長痘"],["d","明顯困擾"]
+  ]},
+  { id:"muscle", title:"運動與肌力狀態？", options:[
+    ["a","每週規律運動"],["b","偶爾運動"],["c","很少運動"],["d","幾乎不動/久坐多"]
+  ]},
+  { id:"focus", title:"專注力與腦霧感？", options:[
+    ["a","清晰好專注"],["b","偶爾分心"],["c","常覺得腦霧/注意力差"],["d","明顯影響效率"]
+  ]}
+];
+
+const NUTRIENTS = [
+  { key:"protein", label:"優質蛋白", placeholder:"https://你的產品連結/蛋白" },
+  { key:"omega3", label:"Omega-3", placeholder:"https://你的產品連結/omega3" },
+  { key:"vitd", label:"維生素 D", placeholder:"https://你的產品連結/維生素D" },
+  { key:"magnesium", label:"鎂", placeholder:"https://你的產品連結/鎂" },
+  { key:"bcomplex", label:"B 群", placeholder:"https://你的產品連結/B群" },
+  { key:"probiotics", label:"益生菌", placeholder:"https://你的產品連結/益生菌" },
+  { key:"fiber", label:"膳食纖維", placeholder:"https://你的產品連結/纖維" },
+  { key:"electrolytes", label:"電解質/礦物質", placeholder:"https://你的產品連結/礦物質" },
+  { key:"antioxidants", label:"抗氧化營養（維C/E/植化素）", placeholder:"https://你的產品連結/維C或植化素" },
+  { key:"collagen", label:"膠原/皮膚支持", placeholder:"https://你的產品連結/膠原" }
+];
+
+/** =========================
+ *  localStorage 設定
+ *  ========================= */
+const LS_KEY = "health_q_cfg_v1";
+const defaultCfg = {
+  apiBase: "",
+  liffId: "",
+  pushMode: "off",
+  adminPin: "",
+  links: Object.fromEntries(NUTRIENTS.map(x => [x.key, ""]))
+};
+let CFG = loadCfg();
+
+function loadCfg(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return structuredClone(defaultCfg);
+    const o = JSON.parse(raw);
+    // merge
+    return {
+      ...structuredClone(defaultCfg),
+      ...o,
+      links: { ...structuredClone(defaultCfg.links), ...(o.links||{}) }
+    };
+  }catch(e){
+    return structuredClone(defaultCfg);
+  }
+}
+function saveCfg(){
+  localStorage.setItem(LS_KEY, JSON.stringify(CFG));
+}
+
+/** =========================
+ *  DOM helpers
+ *  ========================= */
+const $ = (id)=>document.getElementById(id);
+
+function setChip(id, text){
+  const el = $(id);
+  el.textContent = text;
+}
+
+/** =========================
+ *  Admin UI
+ *  ========================= */
+function renderLinksGrid(){
+  const grid = $("linksGrid");
+  grid.innerHTML = "";
+  for(const n of NUTRIENTS){
+    const wrap = document.createElement("div");
+    wrap.className = "space-y-2";
+    wrap.innerHTML = `
+      <label class="text-sm font-bold">${n.label}</label>
+      <input data-nkey="${n.key}" class="w-full border rounded-xl px-3 py-2" placeholder="${n.placeholder}" />
+    `;
+    grid.appendChild(wrap);
+  }
+  // fill
+  grid.querySelectorAll("input[data-nkey]").forEach(inp=>{
+    inp.value = CFG.links[inp.dataset.nkey] || "";
+  });
+}
+
+function openAdmin(){
+  // PIN check (if set)
+  if(CFG.adminPin){
+    const p = prompt("輸入管理 PIN");
+    if(p !== CFG.adminPin) return;
+  }
+  $("adminPanel").classList.remove("hidden");
+  $("cfgApiBase").value = CFG.apiBase || "";
+  $("cfgLiffId").value = CFG.liffId || "";
+  $("cfgPushMode").value = CFG.pushMode || "off";
+  $("cfgAdminPin").value = CFG.adminPin || "";
+  renderLinksGrid();
+}
+
+function closeAdmin(){
+  $("adminPanel").classList.add("hidden");
+}
+
+$("btnToggleAdmin").addEventListener("click", openAdmin);
+$("btnAdminClose").addEventListener("click", closeAdmin);
+
+$("btnSaveCfg").addEventListener("click", ()=>{
+  CFG.apiBase = $("cfgApiBase").value.trim().replace(/\/$/,"");
+  CFG.liffId = $("cfgLiffId").value.trim();
+  CFG.pushMode = $("cfgPushMode").value;
+  CFG.adminPin = $("cfgAdminPin").value.trim();
+  // links
+  document.querySelectorAll("input[data-nkey]").forEach(inp=>{
+    CFG.links[inp.dataset.nkey] = inp.value.trim();
+  });
+  saveCfg();
+  $("cfgSaved").textContent = "已儲存 ✅";
+  setTimeout(()=> $("cfgSaved").textContent="", 1600);
+  pingApi();
+  initLiffIfPossible();
+});
+
+$("btnResetCfg").addEventListener("click", ()=>{
+  if(!confirm("確定恢復預設？（會清空本機設定）")) return;
+  CFG = structuredClone(defaultCfg);
+  saveCfg();
+  $("cfgSaved").textContent = "已恢復預設 ✅";
+  setTimeout(()=> $("cfgSaved").textContent="", 1600);
+  $("cfgApiBase").value = "";
+  $("cfgLiffId").value = "";
+  $("cfgPushMode").value = "off";
+  $("cfgAdminPin").value = "";
+  renderLinksGrid();
+  pingApi();
+  initLiffIfPossible();
+});
+
+$("btnReload").addEventListener("click", ()=>location.reload());
+
+/** =========================
+ *  Questionnaire UI
+ *  ========================= */
+$("progressAll").textContent = String(QUESTIONS.length);
+
+function getAnswers(){
+  const ans = {};
+  for(const q of QUESTIONS){
+    const v = document.querySelector(`input[name="q_${q.id}"]:checked`)?.value;
+    if(v) ans[q.id] = v;
+  }
+  return ans;
+}
+
+function updateProgress(){
+  const a = getAnswers();
+  $("progressNow").textContent = String(Object.keys(a).length);
+}
+
+function renderQuestions(){
+  const box = $("qBox");
+  box.innerHTML = "";
+  for(const q of QUESTIONS){
+    const sec = document.createElement("div");
+    sec.className = "space-y-2";
+    sec.innerHTML = `
+      <div class="font-bold">${q.title}</div>
+      <div class="grid md:grid-cols-2 gap-2" id="wrap_${q.id}"></div>
+    `;
+    box.appendChild(sec);
+
+    const wrap = sec.querySelector(`#wrap_${q.id}`);
+    q.options.forEach(([val, label])=>{
+      const id = `q_${q.id}_${val}`;
+      const item = document.createElement("label");
+      item.className = "radio-card flex items-center gap-2";
+      item.innerHTML = `
+        <input class="hidden" type="radio" name="q_${q.id}" value="${val}" id="${id}">
+        <span class="w-4 h-4 rounded-full border flex items-center justify-center">
+          <span class="dot w-2 h-2 rounded-full hidden bg-slate-900"></span>
+        </span>
+        <span>${label}</span>
+      `;
+      wrap.appendChild(item);
+
+      const input = item.querySelector("input");
+      input.addEventListener("change", ()=>{
+        // group highlight
+        wrap.querySelectorAll(".radio-card").forEach(x=>x.dataset.checked="false");
+        item.dataset.checked="true";
+        wrap.querySelectorAll(".dot").forEach(d=>d.classList.add("hidden"));
+        item.querySelector(".dot").classList.remove("hidden");
+        updateProgress();
+      });
+    });
+  }
+}
+renderQuestions();
+updateProgress();
+
+$("btnClear").addEventListener("click", ()=>{
+  if(!confirm("確定清除所有選項？")) return;
+  document.querySelectorAll("input[type=radio]").forEach(i=>i.checked=false);
+  document.querySelectorAll(".radio-card").forEach(x=>x.dataset.checked="false");
+  document.querySelectorAll(".dot").forEach(d=>d.classList.add("hidden"));
+  $("reportPanel").classList.add("hidden");
+  $("submitHint").textContent = "";
+  updateProgress();
+});
+
+/** =========================
+ *  LIFF & Profile
+ *  ========================= */
+let LINE_PROFILE = null; // { userId, displayName, pictureUrl }
+let ID_TOKEN = null;
+
+async function initLiffIfPossible(){
+  if(!CFG.liffId){
+    setChip("liffChip","LIFF：未設定（可用瀏覽器測試）");
+    return;
+  }
+  try{
+    await liff.init({ liffId: CFG.liffId });
+    setChip("liffChip","LIFF：已初始化");
+    if(!liff.isLoggedIn()){
+      // 在 LINE 內會自動已登入；在外部瀏覽器可能需要 login
+      // 不強制跳轉，避免你測試不方便
+      setChip("liffChip","LIFF：未登入（在 LINE 內打開可自動帶入資料）");
+      return;
+    }
+    LINE_PROFILE = await liff.getProfile();
+    try{ ID_TOKEN = liff.getIDToken(); }catch(e){ ID_TOKEN = null; }
+
+    $("meBox").classList.remove("hidden");
+    $("meAvatar").src = LINE_PROFILE.pictureUrl || "";
+    $("meName").textContent = LINE_PROFILE.displayName || "LINE 用戶";
+    $("meId").textContent = (LINE_PROFILE.userId || "").slice(0,8) + "…";
+  }catch(e){
+    setChip("liffChip","LIFF：初始化失敗");
+    console.warn(e);
+  }
+}
+
+/** =========================
+ *  Worker API ping
+ *  ========================= */
+async function pingApi(){
+  if(!CFG.apiBase){
+    setChip("envChip","未連線（請先在管理模式填 API Base）");
+    return;
+  }
+  try{
+    const r = await fetch(CFG.apiBase + "/api/ping", { method:"GET" });
+    if(!r.ok) throw new Error("ping not ok");
+    setChip("envChip","已連線 ✅");
+  }catch(e){
+    setChip("envChip","連線失敗（檢查 API Base / Worker 路由）");
+  }
+}
+
+/** =========================
+ *  Submit => Worker /api/report
+ *  ========================= */
+function buildPayload(){
+  const answers = getAnswers();
+  return {
+    answers,
+    client: {
+      displayName: LINE_PROFILE?.displayName || null,
+      pictureUrl: LINE_PROFILE?.pictureUrl || null,
+      userId: LINE_PROFILE?.userId || null,
+      idToken: ID_TOKEN || null
+    },
+    options: {
+      pushMode: CFG.pushMode,  // off/on
+      productLinks: CFG.links  // nutrientKey => url
+    },
+    meta: {
+      ua: navigator.userAgent,
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone || null
+    }
+  };
+}
+
+function renderReport(res){
+  $("reportPanel").classList.remove("hidden");
+
+  // header
+  const name = res?.profile?.displayName || LINE_PROFILE?.displayName || "你";
+  $("rName").textContent = name;
+  $("rTag").textContent = res?.summaryTag || "已完成評估";
+
+  const avatar = res?.profile?.pictureUrl || LINE_PROFILE?.pictureUrl;
+  if(avatar){
+    $("rAvatar").src = avatar;
+    $("rAvatar").classList.remove("hidden");
+  }else{
+    $("rAvatar").classList.add("hidden");
+  }
+
+  // body
+  $("rText").textContent = res?.reportText || "（沒有產生報告）";
+
+  // links
+  const links = res?.productLinks || [];
+  if(links.length){
+    $("rLinksWrap").classList.remove("hidden");
+    const box = $("rLinks");
+    box.innerHTML = "";
+    for(const it of links){
+      const a = document.createElement("a");
+      a.href = it.url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.className = "block border rounded-xl p-3 hover:bg-slate-50";
+      a.innerHTML = `
+        <div class="font-bold">${it.label}</div>
+        <div class="small break-all">${it.url}</div>
+      `;
+      box.appendChild(a);
+    }
+  }else{
+    $("rLinksWrap").classList.add("hidden");
+    $("rLinks").innerHTML = "";
+  }
+}
+
+$("btnCopy").addEventListener("click", async ()=>{
+  const txt = $("rText").textContent.trim();
+  if(!txt) return;
+  await navigator.clipboard.writeText(txt);
+  alert("已複製 ✅");
+});
+
+$("btnSubmit").addEventListener("click", async ()=>{
+  const answers = getAnswers();
+  if(Object.keys(answers).length < QUESTIONS.length){
+    $("submitHint").textContent = "請先完成全部題目再送出。";
+    return;
+  }
+  if(!CFG.apiBase){
+    $("submitHint").textContent = "請先在「管理模式」填入 Cloudflare Worker API Base。";
+    openAdmin();
+    return;
+  }
+
+  $("submitHint").textContent = "送出中…";
+  $("btnSubmit").disabled = true;
+
+  try{
+    const payload = buildPayload();
+    const r = await fetch(CFG.apiBase + "/api/report", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json().catch(()=>null);
+    if(!r.ok){
+      throw new Error(data?.error || "request failed");
+    }
+    renderReport(data);
+    $("submitHint").textContent = data?.pushed ? "已產生報告並推送到 LINE ✅" : "已產生報告 ✅";
+  }catch(e){
+    console.error(e);
+    $("submitHint").textContent = "送出失敗：請檢查 Worker 設定 / 網址。";
+  }finally{
+    $("btnSubmit").disabled = false;
+  }
+});
+
+/** init */
+(async function boot(){
+  await pingApi();
+  await initLiffIfPossible();
+})();
+</script>
+</body>
+</html>
