@@ -3,16 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>全工具中控台</title>
+  <title>Cloudflare 統一窗口｜指令控制台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{
-      --bd: rgba(15,23,42,.10);
-      --glass: rgba(255,255,255,.82);
-      --glass2: rgba(255,255,255,.70);
-      --shadow: 0 18px 55px rgba(15,23,42,.10);
-      --shadow2: 0 10px 26px rgba(15,23,42,.06);
-    }
+    :root{ --bd:rgba(15,23,42,.10); --glass:rgba(255,255,255,.82); --glass2:rgba(255,255,255,.70); }
     body{
       background:
         radial-gradient(1200px 600px at 10% 0%, rgba(59,130,246,.18), transparent 55%),
@@ -20,12 +14,10 @@
         radial-gradient(1000px 650px at 50% 110%, rgba(245,158,11,.14), transparent 60%),
         #f8fafc;
     }
-    .glass{ background:var(--glass); border:1px solid var(--bd); backdrop-filter: blur(12px); box-shadow: var(--shadow); }
-    .glass2{ background:var(--glass2); border:1px solid var(--bd); backdrop-filter: blur(10px); box-shadow: var(--shadow2); }
+    .glass{ background:var(--glass); border:1px solid var(--bd); backdrop-filter: blur(12px); box-shadow: 0 18px 55px rgba(15,23,42,.10);}
+    .glass2{ background:var(--glass2); border:1px solid var(--bd); backdrop-filter: blur(10px); box-shadow: 0 10px 26px rgba(15,23,42,.06);}
     .btn{ border:1px solid var(--bd); background:#fff; }
     .btn:hover{ background:#f1f5f9; }
-    .card{ background:rgba(255,255,255,.88); border:1px solid var(--bd); box-shadow: var(--shadow2); transition:.15s ease; }
-    .card:hover{ transform: translateY(-2px); box-shadow: 0 16px 38px rgba(15,23,42,.10); background:rgba(255,255,255,.96); }
     .kbd{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
       border:1px solid var(--bd);
@@ -41,373 +33,211 @@
   <div class="mx-auto max-w-6xl px-4 pt-5 pb-24">
     <!-- Header -->
     <div class="glass rounded-3xl px-5 py-4 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3 min-w-0">
-        <div class="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0"
-             style="background: linear-gradient(135deg, rgba(59,130,246,.20), rgba(16,185,129,.18)); border:1px solid var(--bd);">
-          <span class="text-2xl">🧰</span>
-        </div>
-        <div class="min-w-0">
-          <div class="text-lg font-extrabold truncate text-slate-900">全工具中控台</div>
-          <div class="text-sm truncate text-slate-600">
-            統一窗口：<span class="kbd" id="gwBadge">—</span>
-          </div>
+      <div class="min-w-0">
+        <div class="text-lg font-extrabold text-slate-900 truncate">Cloudflare 統一窗口｜指令控制台</div>
+        <div class="text-sm text-slate-600 truncate">
+          你所有工具要用 Cloudflare 功能 → 都改由這裡發指令（Worker API）
         </div>
       </div>
+      <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="UI.toggleHelp()">教學</button>
+    </div>
 
-      <div class="flex items-center gap-2 shrink-0">
-        <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="UI.openHelp()">教學</button>
+    <!-- Help -->
+    <div id="help" class="hidden mt-4 glass2 rounded-3xl p-5 text-sm text-slate-700">
+      <div class="font-bold text-slate-900">這頁在做什麼？</div>
+      <div class="mt-2 text-slate-600">
+        這是「Cloudflare 指令控制台」，不是工具跳轉頁。<br/>
+        你在這裡按按鈕，會直接對 Worker 發送指令（例如 KV 設定、讀寫、列出 Key、清除快取…）。<br/>
+        <span class="font-bold">如果按了沒反應＝通常是 Worker 沒開 CORS</span>（下面會顯示錯誤原因）。
       </div>
     </div>
 
     <!-- Gateway -->
     <div class="mt-4 glass2 rounded-3xl p-5">
-      <div class="text-base font-bold text-slate-900">Gateway（統一入口）</div>
-      <div class="mt-1 text-sm text-slate-600">
-        工具可以在任何位置。填「完整網址」或「相對路徑」都可；相對路徑會用 Gateway 組成完整網址。
-      </div>
-
-      <div class="mt-4 flex flex-col md:flex-row gap-2">
-        <input id="gwInput" class="w-full rounded-2xl px-4 py-3 border bg-white/80"
-               style="border-color:var(--bd)" placeholder="例如：https://api.zxcv8096.workers.dev" />
-        <button class="btn px-4 py-3 rounded-2xl text-sm font-semibold whitespace-nowrap" onclick="UI.saveGW()">儲存</button>
-        <button class="btn px-4 py-3 rounded-2xl text-sm whitespace-nowrap" onclick="UI.resetGW()">重置</button>
-      </div>
-
-      <div class="mt-2 text-xs text-slate-500">
-        會存到 <span class="kbd">localStorage.GW_BASE</span>，點工具會自動帶 <span class="kbd">?gw=</span>
+      <div class="flex flex-col md:flex-row md:items-end gap-3">
+        <div class="flex-1">
+          <div class="text-base font-bold text-slate-900">Gateway（Worker 網域）</div>
+          <div class="mt-1 text-sm text-slate-600">例如：<span class="kbd">https://api.zxcv8096.workers.dev</span></div>
+          <input id="gw" class="mt-3 w-full rounded-2xl px-4 py-3 border bg-white/80" style="border-color:var(--bd)"
+                 placeholder="貼上你的 Worker 網域…" />
+          <div class="mt-2 text-xs text-slate-500">會存到 <span class="kbd">localStorage.GW_BASE</span></div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn px-4 py-3 rounded-2xl text-sm font-semibold" onclick="UI.saveGW()">儲存</button>
+          <button class="btn px-4 py-3 rounded-2xl text-sm" onclick="UI.resetGW()">重置</button>
+        </div>
       </div>
     </div>
 
-    <!-- Tools header -->
-    <div class="mt-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div>
-        <div class="text-base font-bold text-slate-900">工具列表</div>
-        <div class="text-sm text-slate-600">只保留必要功能：新增 / 編輯 / 刪除 / 搜尋 / 開啟</div>
-      </div>
+    <!-- Command Panel -->
+    <div class="mt-5 grid lg:grid-cols-2 gap-4">
+      <!-- KV: get/set -->
+      <div class="glass2 rounded-3xl p-5">
+        <div class="text-base font-bold text-slate-900">KV 指令（常用）</div>
+        <div class="mt-1 text-sm text-slate-600">讀寫你的 KV（例如 RULES_JSON、CONFIG、TOKEN…）</div>
 
-      <div class="flex items-center gap-2">
-        <input id="q" class="w-64 max-w-[60vw] rounded-2xl px-4 py-3 border bg-white/80"
-               style="border-color:var(--bd)" placeholder="搜尋…" oninput="UI.render()" />
-        <button class="btn px-4 py-3 rounded-2xl text-sm" onclick="UI.clearSearch()">清除</button>
-        <button class="btn px-4 py-3 rounded-2xl text-sm font-semibold" onclick="UI.openEditor(null)">＋新增</button>
-      </div>
-    </div>
-
-    <!-- Grid -->
-    <div id="grid" class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-
-    <!-- Empty -->
-    <div id="empty" class="hidden mt-6 glass2 rounded-3xl p-6 text-center">
-      <div class="text-lg font-bold text-slate-900">目前沒有工具</div>
-      <div class="mt-2 text-sm text-slate-600">點「新增」把工具網址加進來</div>
-    </div>
-  </div>
-
-  <!-- Help Modal (simple) -->
-  <div id="help" class="hidden fixed inset-0 z-50" onclick="if(event.target===this)UI.closeHelp()">
-    <div class="absolute inset-0 bg-black/40"></div>
-    <div class="relative mx-auto max-w-xl px-4 py-10">
-      <div class="glass rounded-3xl p-6">
-        <div class="flex items-start justify-between gap-3">
+        <div class="mt-4 grid gap-3">
           <div>
-            <div class="text-lg font-extrabold text-slate-900">教學</div>
-            <div class="mt-1 text-sm text-slate-600">
-              這頁是「全工具入口」。你只要管理 Gateway + 工具網址。
-            </div>
+            <div class="text-sm font-semibold text-slate-900">Key</div>
+            <input id="kvKey" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80" style="border-color:var(--bd)"
+                   placeholder="例如：RULES_JSON" />
           </div>
-          <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="UI.closeHelp()">關閉</button>
-        </div>
 
-        <div class="mt-4 text-sm text-slate-700 space-y-2">
-          <div class="glass2 rounded-2xl p-4">
-            <div class="font-bold">① 設定 Gateway</div>
-            <div class="mt-1 text-slate-600">填你的 Worker 網域並儲存，所有工具共用。</div>
+          <div>
+            <div class="text-sm font-semibold text-slate-900">Value（JSON / 文字）</div>
+            <textarea id="kvVal" rows="6" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80 font-mono text-xs"
+                      style="border-color:var(--bd)"
+                      placeholder='例如：{"version":1,"rules":[...]} 或任何文字'></textarea>
           </div>
-          <div class="glass2 rounded-2xl p-4">
-            <div class="font-bold">② 工具可放任何位置</div>
-            <div class="mt-1 text-slate-600">
-              工具網址可填：完整網址（https://…）或相對路徑（/path 或 pages/…）。相對路徑會用 Gateway 組合。
-            </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.kvGet()">讀取</button>
+            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.kvPut()">寫入</button>
+            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.kvDel()">刪除</button>
           </div>
-          <div class="glass2 rounded-2xl p-4">
-            <div class="font-bold">③ 工具如何拿到 Gateway</div>
-            <div class="mt-1 text-slate-600">點工具會自動帶 ?gw=；也可讀 localStorage.GW_BASE。</div>
+        </div>
+      </div>
+
+      <!-- KV: list -->
+      <div class="glass2 rounded-3xl p-5">
+        <div class="text-base font-bold text-slate-900">KV Keys（查詢）</div>
+        <div class="mt-1 text-sm text-slate-600">列出 KV 裡有哪些 key（可用 prefix 篩選）</div>
+
+        <div class="mt-4 grid gap-3">
+          <div>
+            <div class="text-sm font-semibold text-slate-900">Prefix（可空）</div>
+            <input id="kvPrefix" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80" style="border-color:var(--bd)"
+                   placeholder="例如：RULE_ 或 留空列出全部" />
+          </div>
+
+          <div class="flex gap-2">
+            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.kvList()">列出 Keys</button>
+            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.clearLog()">清空 Log</button>
+          </div>
+
+          <div class="text-xs text-slate-500">
+            你 Worker 需要提供 API：<span class="kbd">/api/kv/list</span>、<span class="kbd">/api/kv/get</span>、<span class="kbd">/api/kv/put</span>、<span class="kbd">/api/kv/del</span>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Editor Modal -->
-  <div id="editor" class="hidden fixed inset-0 z-50" onclick="if(event.target===this)UI.closeEditor()">
-    <div class="absolute inset-0 bg-black/40"></div>
-    <div class="relative mx-auto max-w-2xl px-4 py-8">
-      <div class="glass rounded-3xl overflow-hidden">
-        <div class="px-5 py-4 border-b" style="border-color:var(--bd);">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-lg font-extrabold text-slate-900" id="edTitle">新增工具</div>
-              <div class="text-sm text-slate-600">只填必要：名稱 + 網址（其他可空）</div>
-            </div>
-            <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="UI.closeEditor()">關閉</button>
-          </div>
-        </div>
-
-        <div class="px-5 py-5 space-y-3">
-          <div class="grid md:grid-cols-2 gap-3">
-            <div class="glass2 rounded-2xl p-4">
-              <div class="text-sm font-semibold text-slate-900">名稱（中文）</div>
-              <input id="edName" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80"
-                     style="border-color:var(--bd)" placeholder="例如：自動回覆" />
-            </div>
-            <div class="glass2 rounded-2xl p-4">
-              <div class="text-sm font-semibold text-slate-900">圖示（可空）</div>
-              <input id="edIcon" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80"
-                     style="border-color:var(--bd)" placeholder="例如：🤖" />
-            </div>
-          </div>
-
-          <div class="glass2 rounded-2xl p-4">
-            <div class="text-sm font-semibold text-slate-900">工具網址 / 路徑</div>
-            <div class="mt-1 text-xs text-slate-600">
-              支援：https://完整網址　或 /path　或 pages/xxx.html
-            </div>
-            <input id="edUrl" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80"
-                   style="border-color:var(--bd)" placeholder="例如：/pages/tools/auto_reply.html" oninput="UI.updatePreview()" />
-            <div class="mt-2 text-xs text-slate-600">
-              預覽：<span class="font-mono break-all" id="edPreview">—</span>
-            </div>
-          </div>
-
-          <div class="glass2 rounded-2xl p-4">
-            <div class="text-sm font-semibold text-slate-900">說明（可空）</div>
-            <input id="edDesc" class="mt-2 w-full rounded-2xl px-4 py-3 border bg-white/80"
-                   style="border-color:var(--bd)" placeholder="例如：關鍵字 → 規則庫回覆" />
-          </div>
-        </div>
-
-        <div class="px-5 py-4 border-t flex items-center justify-between gap-3" style="border-color:var(--bd);">
-          <button class="btn px-4 py-2 rounded-2xl text-sm" id="edDelete" onclick="UI.deleteTool()">刪除</button>
-          <div class="flex items-center gap-2">
-            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.closeEditor()">取消</button>
-            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.saveTool()">儲存</button>
-          </div>
-        </div>
+    <!-- Log -->
+    <div class="mt-5 glass rounded-3xl p-5">
+      <div class="flex items-center justify-between gap-3">
+        <div class="text-base font-bold text-slate-900">執行 Log（一定會顯示結果）</div>
+        <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.copyLog()">複製 Log</button>
       </div>
+      <pre id="log" class="mt-4 text-xs bg-white/70 border rounded-2xl p-4 overflow-auto max-h-[360px]"
+           style="border-color:var(--bd)"></pre>
     </div>
   </div>
 
 <script>
-/* 極簡穩定：只做 Gateway + 工具清單。所有按鈕用 onclick，保證會動 */
 const UI = (() => {
   const K_GW = "GW_BASE";
-  const K_TOOLS = "TOOLS_LIST_MIN_V1";
   const DEFAULT_GW = "https://api.zxcv8096.workers.dev";
 
-  let GW = normalizeGW(localStorage.getItem(K_GW)) || DEFAULT_GW;
-  localStorage.setItem(K_GW, GW);
-
-  let TOOLS = loadTools();
-  let editingId = null;
-
-  // ----- helpers -----
   const $ = (id)=>document.getElementById(id);
-  const esc = (s)=>String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  const logEl = $("log");
 
-  function uid(){ return "t_" + Math.random().toString(36).slice(2,10) + "_" + Date.now().toString(36); }
   function normalizeGW(v){
     const s = String(v||"").trim();
     if(!s) return "";
     if(!/^https?:\/\//i.test(s)) return ("https://" + s.replace(/^\/+/,"")).replace(/\/+$/,"");
     return s.replace(/\/+$/,"");
   }
-  function resolveToolUrl(input){
-    const u = String(input||"").trim();
-    if(!u) return "";
-    if(/^https?:\/\//i.test(u)) return u;
-    if(/^\/\//.test(u)) return "https:" + u;
 
-    const base = GW.replace(/\/+$/,"");
-    if(u.startsWith("/")) return base + u;
-    return base + "/" + u.replace(/^\/+/,"");
-  }
-  function withGw(url){
-    if(!url) return "";
-    if(/[\?&]gw=/.test(url)) return url;
-    const gw = encodeURIComponent(GW);
-    return url + (url.includes("?") ? "&" : "?") + "gw=" + gw;
+  let GW = normalizeGW(localStorage.getItem(K_GW)) || DEFAULT_GW;
+  localStorage.setItem(K_GW, GW);
+  $("gw").value = GW;
+
+  function log(line){
+    const ts = new Date().toLocaleTimeString();
+    logEl.textContent = `[${ts}] ${line}\n` + logEl.textContent;
   }
 
-  function loadTools(){
-    try{
-      const raw = localStorage.getItem(K_TOOLS);
-      if(raw){
-        const arr = JSON.parse(raw);
-        if(Array.isArray(arr)) return arr;
-      }
-    }catch{}
-    const seed = [
-      { id: uid(), name:"快速回覆", icon:"⚡", url:"/pages/tools/quickreply.html", desc:"建立 / 管理 Quick Reply" },
-      { id: uid(), name:"自動回覆", icon:"🤖", url:"/pages/tools/auto_reply.html", desc:"關鍵字 → 規則庫回覆" },
-    ];
-    localStorage.setItem(K_TOOLS, JSON.stringify(seed));
-    return seed;
-  }
-  function saveTools(){
-    localStorage.setItem(K_TOOLS, JSON.stringify(TOOLS));
-  }
-  function findById(id){ return TOOLS.find(t=>t.id===id); }
-
-  // ----- UI sync -----
-  function sync(){
-    $("gwBadge").textContent = GW;
-    $("gwInput").value = GW;
-    render();
+  function toggleHelp(){
+    $("help").classList.toggle("hidden");
   }
 
-  // ----- render -----
-  function render(){
-    const query = ($("q").value||"").toLowerCase().trim();
-    const list = TOOLS.filter(t=>{
-      if(!query) return true;
-      const hay = [t.name,t.desc,t.url].join(" ").toLowerCase();
-      return hay.includes(query);
-    });
-
-    $("empty").classList.toggle("hidden", list.length!==0);
-
-    $("grid").innerHTML = list.map(t=>{
-      const target = withGw(resolveToolUrl(t.url));
-      return `
-        <div class="card rounded-3xl p-5 min-w-0">
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-start gap-3 min-w-0">
-              <div class="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0"
-                   style="background:linear-gradient(135deg, rgba(59,130,246,.14), rgba(16,185,129,.12)); border:1px solid rgba(15,23,42,.10);">
-                <span class="text-2xl">${esc(t.icon||"🧩")}</span>
-              </div>
-              <div class="min-w-0">
-                <div class="text-lg font-extrabold text-slate-900 truncate">${esc(t.name||"未命名")}</div>
-                <div class="text-sm text-slate-600 line-clamp-2 mt-1">${esc(t.desc||"—")}</div>
-                <div class="mt-3 text-xs text-slate-500">
-                  <span class="font-mono break-all">${esc(target)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-2 shrink-0">
-              <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="UI.openTool('${esc(t.id)}')">開啟</button>
-              <button class="btn text-xs px-3 py-2 rounded-2xl" onclick="UI.openEditor('${esc(t.id)}')">編輯</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  // ----- actions -----
   function saveGW(){
-    const v = normalizeGW($("gwInput").value);
+    const v = normalizeGW($("gw").value);
     if(!v) return alert("Gateway 不能空白");
     GW = v;
     localStorage.setItem(K_GW, GW);
-    sync();
+    log(`✅ 已儲存 Gateway = ${GW}`);
   }
+
   function resetGW(){
     GW = DEFAULT_GW;
+    $("gw").value = GW;
     localStorage.setItem(K_GW, GW);
-    sync();
-  }
-  function clearSearch(){
-    $("q").value = "";
-    render();
+    log(`🔁 已重置 Gateway = ${GW}`);
   }
 
-  function openHelp(){ $("help").classList.remove("hidden"); }
-  function closeHelp(){ $("help").classList.add("hidden"); }
+  function clearLog(){ logEl.textContent = ""; }
 
-  function openTool(id){
-    localStorage.setItem(K_GW, GW);
-    const t = findById(id);
-    if(!t) return;
-    const dest = withGw(resolveToolUrl(t.url));
-    location.href = dest;
-  }
-
-  function openEditor(idOrNull){
-    editingId = idOrNull || null;
-    const t = editingId ? findById(editingId) : null;
-
-    $("edTitle").textContent = t ? "編輯工具" : "新增工具";
-    $("edDelete").style.display = t ? "" : "none";
-
-    $("edName").value = t?.name || "";
-    $("edIcon").value = t?.icon || "";
-    $("edUrl").value  = t?.url  || "";
-    $("edDesc").value = t?.desc || "";
-
-    updatePreview();
-    $("editor").classList.remove("hidden");
-    setTimeout(()=>$("edName").focus(), 0);
-  }
-  function closeEditor(){
-    $("editor").classList.add("hidden");
-    editingId = null;
-  }
-  function updatePreview(){
-    const u = $("edUrl").value.trim();
-    const resolved = resolveToolUrl(u);
-    $("edPreview").textContent = resolved ? withGw(resolved) : "—";
-  }
-
-  function saveTool(){
-    const name = $("edName").value.trim() || "未命名工具";
-    const url  = $("edUrl").value.trim();
-    if(!url) return alert("工具網址/路徑不能空白");
-
-    const obj = {
-      id: editingId || uid(),
-      name,
-      icon: $("edIcon").value.trim() || "🧩",
-      url,
-      desc: $("edDesc").value.trim()
-    };
-
-    if(editingId){
-      TOOLS = TOOLS.map(t=>t.id===editingId ? obj : t);
-    }else{
-      TOOLS = [obj, ...TOOLS];
+  async function call(path, body){
+    const url = GW + path;
+    log(`➡️ ${url}`);
+    try{
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(body || {})
+      });
+      const text = await res.text();
+      log(`⬅️ HTTP ${res.status} ${res.ok ? "OK" : "ERR"}`);
+      // 嘗試 parse JSON，失敗就原樣顯示
+      try{
+        const j = JSON.parse(text);
+        log(`📦 ${JSON.stringify(j, null, 2)}`);
+        return j;
+      }catch{
+        log(`📦 ${text}`);
+        return text;
+      }
+    }catch(e){
+      log(`❌ Fetch 失敗：${e?.message || e}`);
+      log(`⚠️ 常見原因：Worker 沒開 CORS（GitHub Pages 會擋）`);
+      return null;
     }
-
-    saveTools();
-    sync();
-    closeEditor();
   }
 
-  function deleteTool(){
-    if(!editingId) return;
-    if(!confirm("確定刪除？")) return;
-    TOOLS = TOOLS.filter(t=>t.id!==editingId);
-    saveTools();
-    sync();
-    closeEditor();
+  // ===== KV actions =====
+  async function kvGet(){
+    const key = $("kvKey").value.trim();
+    if(!key) return alert("Key 不能空白");
+    await call("/api/kv/get", { key });
+  }
+  async function kvPut(){
+    const key = $("kvKey").value.trim();
+    if(!key) return alert("Key 不能空白");
+    const valRaw = $("kvVal").value;
+    // 如果是 JSON，保持 JSON；不是就當字串
+    let value = valRaw;
+    try{ value = JSON.parse(valRaw); }catch{}
+    await call("/api/kv/put", { key, value });
+  }
+  async function kvDel(){
+    const key = $("kvKey").value.trim();
+    if(!key) return alert("Key 不能空白");
+    await call("/api/kv/del", { key });
+  }
+  async function kvList(){
+    const prefix = $("kvPrefix").value.trim();
+    await call("/api/kv/list", { prefix });
   }
 
-  // init
-  function init(){ sync(); }
+  async function copyLog(){
+    const t = logEl.textContent || "";
+    try{ await navigator.clipboard.writeText(t); alert("已複製"); }
+    catch{ prompt("請手動複製：", t); }
+  }
 
-  return {
-    init, render,
-    saveGW, resetGW,
-    clearSearch,
-    openHelp, closeHelp,
-    openTool,
-    openEditor, closeEditor,
-    updatePreview,
-    saveTool, deleteTool
-  };
+  return { toggleHelp, saveGW, resetGW, clearLog, copyLog, kvGet, kvPut, kvDel, kvList };
 })();
-UI.init();
 </script>
 </body>
 </html>
