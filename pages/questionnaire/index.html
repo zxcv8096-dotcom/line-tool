@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>問卷中控台｜多份問卷 + AI + 發布</title>
+  <title>問卷中控台（無 JSON）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{--bd:#e5e7eb;--tx:#0f172a;--muted:#64748b;}
@@ -13,25 +13,24 @@
     .btn-primary{background:#0f172a;color:#fff}
     .btn-ghost{border:1px solid var(--bd);background:#fff}
     .small{font-size:12px;color:var(--muted)}
-    textarea{font-family:ui-monospace,Menlo,Consolas,monospace}
     .pill{border:1px solid var(--bd);border-radius:999px;padding:4px 10px;font-size:12px}
+    input,select,textarea{outline:none}
+    .divider{height:1px;background:var(--bd)}
   </style>
 </head>
 <body class="bg-slate-50">
 <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
 
+  <!-- Header -->
   <header class="card p-4 md:p-5 space-y-3">
     <div class="flex items-start justify-between gap-3 flex-wrap">
       <div>
-        <div class="text-xl font-extrabold">問卷中控台（自動讀 Cloudflare DB / 多份問卷 / AI / 同步發布）</div>
-        <div class="small">LINE 聊天問卷會永遠使用「目前上線」那份的 <b>published</b> 設定。</div>
+        <div class="text-xl font-extrabold">問卷中控台（可視化｜多份問卷｜AI｜發布）</div>
+        <div class="small">你只需要操作這頁：建立/編輯/發布。LINE 端會自動使用「目前上線」那份。</div>
       </div>
-      <div class="text-right space-y-2">
-        <div class="flex gap-2 justify-end flex-wrap">
-          <button id="btnReload" class="btn btn-ghost text-sm">重整</button>
-          <button id="btnLoadList" class="btn btn-ghost text-sm">重新讀取清單</button>
-        </div>
+      <div class="text-right space-y-1">
         <div class="small">狀態：<span id="status">—</span></div>
+        <div class="pill" id="activeInfo">目前上線：—</div>
       </div>
     </div>
 
@@ -40,23 +39,24 @@
         <div class="text-sm font-bold">Worker API Base</div>
         <input id="apiBase" class="w-full border rounded-xl px-3 py-2"
                placeholder="https://xxx.workers.dev">
-        <div class="small">需要開：/api/q/*、/api/ping</div>
+        <div class="small">需要 Worker 有：/api/q/*、/api/ping</div>
       </div>
       <div class="space-y-1">
-        <div class="text-sm font-bold">ADMIN_KEY（寫入/發布/刪除/AI 需要）</div>
+        <div class="text-sm font-bold">ADMIN_KEY（管理用）</div>
         <input id="adminKey" type="password" class="w-full border rounded-xl px-3 py-2" placeholder="你的 ADMIN_KEY">
-        <div class="small">Header：<span class="font-bold">x-admin-key</span></div>
+        <div class="small">會以 header：<b>x-admin-key</b> 帶給 Worker</div>
       </div>
     </div>
 
     <div class="flex gap-2 flex-wrap items-center">
       <button id="btnPing" class="btn btn-ghost">測試連線</button>
-      <span id="activeInfo" class="pill">目前上線：—</span>
+      <button id="btnRefresh" class="btn btn-ghost">重整清單</button>
       <span class="small" id="hint"></span>
     </div>
   </header>
 
   <div class="grid lg:grid-cols-12 gap-4">
+
     <!-- Left: list -->
     <aside class="lg:col-span-4 card p-4 space-y-3">
       <div class="flex items-center justify-between gap-2">
@@ -76,71 +76,79 @@
     <main class="lg:col-span-8 card p-4 space-y-4">
       <div class="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <div class="font-extrabold">編輯區（Draft）</div>
+          <div class="font-extrabold">編輯草稿（Draft）</div>
           <div class="small">你改的是草稿；按「發布」才會同步上線給 LINE 使用。</div>
         </div>
         <div class="flex gap-2 flex-wrap">
           <button id="btnLoadDraft" class="btn btn-ghost text-sm">讀草稿</button>
           <button id="btnSaveDraft" class="btn btn-primary text-sm">儲存草稿</button>
-          <button id="btnPublish" class="btn btn-ghost text-sm">發布並切上線</button>
+          <button id="btnPublish" class="btn btn-ghost text-sm">發布並上線</button>
         </div>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <div class="text-sm font-bold">問卷名稱</div>
-          <input id="qName" class="w-full border rounded-xl px-3 py-2" placeholder="例如：生活型態營養問卷 v2">
-        </div>
-        <div class="space-y-1">
-          <div class="text-sm font-bold">封面圖 URL（Flex hero）</div>
-          <input id="coverUrl" class="w-full border rounded-xl px-3 py-2" placeholder="https://.../cover.png">
-        </div>
+      <div id="emptyState" class="small text-slate-600">
+        請先在左側選擇一份問卷，或按「新增」建立第一份。
       </div>
 
-      <div class="grid md:grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <div class="text-sm font-bold">開始關鍵字（用逗號分隔）</div>
-          <input id="startKeywords" class="w-full border rounded-xl px-3 py-2" placeholder="生活型態營養問卷,開始,start">
-        </div>
-        <div class="space-y-1">
-          <div class="text-sm font-bold">品牌標題（altText）</div>
-          <input id="brandTitle" class="w-full border rounded-xl px-3 py-2" placeholder="生活型態營養問卷">
-        </div>
-      </div>
+      <section id="editor" class="space-y-4 hidden">
 
-      <div class="border rounded-2xl p-3 bg-slate-50 space-y-2">
-        <div class="flex items-center justify-between gap-2">
-          <div class="font-extrabold">題目與選項（可視化）</div>
-          <button id="btnAddQ" class="btn btn-ghost text-sm">＋新增題目</button>
-        </div>
-        <div id="qEditor" class="space-y-3"></div>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-3">
-        <section class="border rounded-2xl p-3 bg-slate-50 space-y-2">
-          <div class="font-extrabold">JSON（整包匯入/匯出）</div>
-          <textarea id="jsonBox" class="w-full border rounded-xl p-3 text-xs" rows="14"></textarea>
-          <div class="flex gap-2 flex-wrap">
-            <button id="btnApplyJson" class="btn btn-primary text-sm">套用 JSON 到編輯器</button>
-            <button id="btnCopyJson" class="btn btn-ghost text-sm">複製 JSON</button>
+        <!-- Basic -->
+        <div class="grid md:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <div class="text-sm font-bold">問卷名稱</div>
+            <input id="qName" class="w-full border rounded-xl px-3 py-2" placeholder="例如：生活型態營養問卷 v2">
           </div>
-        </section>
+          <div class="space-y-1">
+            <div class="text-sm font-bold">封面圖 URL（Flex hero）</div>
+            <input id="coverUrl" class="w-full border rounded-xl px-3 py-2" placeholder="https://.../cover.png">
+          </div>
+        </div>
 
-        <section class="border rounded-2xl p-3 bg-slate-50 space-y-2">
-          <div class="font-extrabold">AI 幫我寫/改（Workers AI）</div>
-          <div class="small">範例：<br>「把問卷變成 11 題，增加腸胃、睡眠、壓力、皮膚，選項用一般人聽得懂的話」</div>
-          <textarea id="aiText" class="w-full border rounded-xl p-3 text-sm" rows="8" placeholder="輸入你的需求…"></textarea>
+        <div class="grid md:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <div class="text-sm font-bold">開始關鍵字（逗號分隔）</div>
+            <input id="startKeywords" class="w-full border rounded-xl px-3 py-2" placeholder="生活型態營養問卷,開始,start">
+          </div>
+          <div class="space-y-1">
+            <div class="text-sm font-bold">品牌標題（Flex altText）</div>
+            <input id="brandTitle" class="w-full border rounded-xl px-3 py-2" placeholder="生活型態營養問卷">
+          </div>
+        </div>
+
+        <!-- Questions -->
+        <div class="border rounded-2xl p-3 bg-slate-50 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-extrabold">題目與選項</div>
+            <button id="btnAddQ" class="btn btn-ghost text-sm">＋新增題目</button>
+          </div>
+          <div id="qEditor" class="space-y-3"></div>
+        </div>
+
+        <!-- Product links -->
+        <div class="border rounded-2xl p-3 bg-slate-50 space-y-2">
+          <div class="font-extrabold">產品連結（點擊營養素要導到哪裡）</div>
+          <div class="small">你可以自由增加/修改 key（例如：protein、vitD、omega3…）</div>
+          <div id="pEditor" class="space-y-2"></div>
           <div class="flex gap-2 flex-wrap">
-            <button id="btnAI" class="btn btn-primary text-sm">AI 產生/改寫</button>
-            <button id="btnAItoJson" class="btn btn-ghost text-sm">只產生（不套用）</button>
+            <button id="btnAddP" class="btn btn-ghost text-sm">＋新增一筆</button>
+          </div>
+        </div>
+
+        <!-- AI -->
+        <div class="border rounded-2xl p-3 bg-slate-50 space-y-2">
+          <div class="font-extrabold">AI 幫我寫/改問卷</div>
+          <div class="small">範例：把問卷變成 11 題，增加腸胃、睡眠、壓力、皮膚；文字像營養師問診但不要醫療用語。</div>
+          <textarea id="aiText" class="w-full border rounded-xl p-3 text-sm" rows="6" placeholder="輸入你的需求…"></textarea>
+          <div class="flex gap-2 flex-wrap">
+            <button id="btnAIApply" class="btn btn-primary text-sm">AI 直接套用到草稿</button>
           </div>
           <div class="small" id="aiHint"></div>
-        </section>
-      </div>
+        </div>
 
-      <div class="small text-slate-600">
-        提醒：發布後 LINE 會用 published；草稿再改不會影響上線，直到你再次發布。
-      </div>
+        <div class="small text-slate-600">
+          提醒：發布後 LINE 會用 published；草稿再改不會影響上線，直到你再次發布。
+        </div>
+      </section>
     </main>
   </div>
 </div>
@@ -148,30 +156,28 @@
 <script>
 const $ = (id)=>document.getElementById(id);
 
-const LS_API="q_console_api_base_v2";
-const LS_KEY="q_console_admin_key_v2";
+const LS_API="q_console_api_base_nojson";
+const LS_KEY="q_console_admin_key_nojson";
 
 let API_BASE = localStorage.getItem(LS_API) || "";
 let ADMIN_KEY = localStorage.getItem(LS_KEY) || "";
-let ACTIVE_ID = null;
 
+let ACTIVE_ID = null;
 let LIST = [];
 let CURRENT_ID = null;
-let CFG = null; // draft config
+let CFG = null;
 
 $("apiBase").value = API_BASE;
 $("adminKey").value = ADMIN_KEY;
 
-$("btnReload").onclick = ()=>location.reload();
-
 function setStatus(t){ $("status").textContent = t; }
 function hint(t){
-  $("hint").textContent = t;
+  $("hint").textContent=t;
   clearTimeout(hint._t);
   hint._t=setTimeout(()=> $("hint").textContent="", 2200);
 }
 function aiHint(t){
-  $("aiHint").textContent = t;
+  $("aiHint").textContent=t;
   clearTimeout(aiHint._t);
   aiHint._t=setTimeout(()=> $("aiHint").textContent="", 3500);
 }
@@ -179,17 +185,14 @@ function aiHint(t){
 function base(){
   const b = $("apiBase").value.trim().replace(/\/$/,"");
   if(!b) throw new Error("請先填 API Base");
-  API_BASE = b;
-  localStorage.setItem(LS_API, b);
+  API_BASE=b; localStorage.setItem(LS_API,b);
   return b;
 }
 function key(){
   const k = $("adminKey").value.trim();
-  ADMIN_KEY = k;
-  localStorage.setItem(LS_KEY, k);
+  ADMIN_KEY=k; localStorage.setItem(LS_KEY,k);
   return k;
 }
-
 async function apiGet(path){
   const r = await fetch(base()+path);
   const j = await r.json().catch(()=>null);
@@ -199,9 +202,9 @@ async function apiGet(path){
 async function apiAdmin(method, path, body){
   const k = key();
   if(!k) throw new Error("需要 ADMIN_KEY 才能寫入/發布/AI");
-  const r = await fetch(base()+path, {
+  const r = await fetch(base()+path,{
     method,
-    headers: { "Content-Type":"application/json", "x-admin-key": k },
+    headers:{ "Content-Type":"application/json", "x-admin-key":k },
     body: body ? JSON.stringify(body) : undefined
   });
   const j = await r.json().catch(()=>null);
@@ -216,11 +219,121 @@ $("btnPing").onclick = async ()=>{
     setStatus("連線 OK ✅");
   }catch(e){
     setStatus("連線失敗");
-    hint(String(e.message || e));
+    hint(String(e.message||e));
   }
 };
 
-$("btnLoadList").onclick = ()=>loadList();
+$("btnRefresh").onclick = ()=>loadList();
+$("btnLoadDraft").onclick = ()=>loadDraft();
+
+$("btnNew").onclick = async ()=>{
+  try{
+    const name = prompt("問卷名稱？","新問卷");
+    if(name===null) return;
+    setStatus("建立中…");
+    const j = await apiAdmin("POST","/api/q/create",{name});
+    await loadList();
+    CURRENT_ID=j.id;
+    await loadDraft();
+    setStatus("已建立 ✅");
+  }catch(e){
+    setStatus("建立失敗");
+    hint(String(e.message||e));
+  }
+};
+
+$("btnDup").onclick = async ()=>{
+  try{
+    if(!CURRENT_ID) return hint("先選一份問卷");
+    const name = prompt("複製後的新名稱？","複製問卷");
+    if(name===null) return;
+    setStatus("複製中…");
+    const j = await apiAdmin("POST","/api/q/duplicate",{fromId:CURRENT_ID,name});
+    await loadList();
+    CURRENT_ID=j.id;
+    await loadDraft();
+    setStatus("已複製 ✅");
+  }catch(e){
+    setStatus("複製失敗");
+    hint(String(e.message||e));
+  }
+};
+
+$("btnDelete").onclick = async ()=>{
+  try{
+    if(!CURRENT_ID) return hint("先選一份問卷");
+    if(!confirm("確定刪除？（draft & published 都會刪）")) return;
+    setStatus("刪除中…");
+    await apiAdmin("POST","/api/q/delete",{id:CURRENT_ID});
+    CURRENT_ID=null; CFG=null;
+    showEmpty();
+    await loadList();
+    setStatus("已刪除 ✅");
+  }catch(e){
+    setStatus("刪除失敗");
+    hint(String(e.message||e));
+  }
+};
+
+$("btnSaveDraft").onclick = async ()=>{
+  try{
+    if(!CURRENT_ID || !CFG) return hint("先選一份問卷");
+    collectHeaderFields();
+    setStatus("儲存中…");
+    await apiAdmin("PUT","/api/q/save",{id:CURRENT_ID,config:CFG});
+    await loadList();
+    setStatus("草稿已儲存 ✅");
+  }catch(e){
+    setStatus("儲存失敗");
+    hint(String(e.message||e));
+  }
+};
+
+$("btnPublish").onclick = async ()=>{
+  try{
+    if(!CURRENT_ID) return hint("先選一份問卷");
+    if(!confirm("發布並切換為上線問卷？")) return;
+    setStatus("發布中…");
+    await apiAdmin("POST","/api/q/publish",{id:CURRENT_ID});
+    await loadList();
+    setStatus("已發布並上線 ✅");
+  }catch(e){
+    setStatus("發布失敗");
+    hint(String(e.message||e));
+  }
+};
+
+$("btnAddQ").onclick = ()=>{
+  if(!CFG) return;
+  const nid = "q" + (CFG.questions.length + 1);
+  CFG.questions.push({ id:nid, title:"新題目", type:"yn" });
+  renderQEditor();
+};
+
+$("btnAddP").onclick = ()=>{
+  if(!CFG) return;
+  CFG.productLinks = CFG.productLinks || {};
+  CFG.productLinks["new_key"] = "";
+  renderPEditor();
+};
+
+$("btnAIApply").onclick = async ()=>{
+  try{
+    if(!CURRENT_ID) return aiHint("先選一份問卷");
+    const instruction = $("aiText").value.trim();
+    if(!instruction) return aiHint("請輸入需求");
+    aiHint("AI 生成中…");
+    const j = await apiAdmin("POST","/api/q/ai",{id:CURRENT_ID,instruction});
+    CFG = j.config;
+    fillHeaderFields();
+    renderQEditor();
+    renderPEditor();
+    await loadList();
+    aiHint("已套用 AI ✅（記得：儲存草稿 / 發布）");
+  }catch(e){
+    aiHint("AI 失敗：" + (e.message||e));
+  }
+};
 
 async function loadList(){
   try{
@@ -233,190 +346,63 @@ async function loadList(){
     setStatus("清單已更新 ✅");
   }catch(e){
     setStatus("讀取失敗");
-    hint(String(e.message || e));
+    hint(String(e.message||e));
   }
 }
 
 function renderList(){
   const box = $("list");
   box.innerHTML = "";
-
   if(!LIST.length){
     box.innerHTML = `<div class="small">尚無問卷，按「新增」建立第一份。</div>`;
     return;
   }
-
   LIST.forEach(item=>{
-    const isActive = (item.id === ACTIVE_ID);
-    const div = document.createElement("button");
-    div.className = "w-full text-left border rounded-2xl p-3 hover:bg-slate-50";
-    div.innerHTML = `
+    const isActive = item.id === ACTIVE_ID;
+    const btn = document.createElement("button");
+    btn.className = "w-full text-left border rounded-2xl p-3 hover:bg-slate-50";
+    btn.innerHTML = `
       <div class="flex items-center justify-between gap-2">
-        <div class="font-extrabold">${escapeHtml(item.name || item.id)}</div>
+        <div class="font-extrabold">${esc(item.name || item.id)}</div>
         <div class="flex items-center gap-2">
           ${isActive ? `<span class="pill">上線</span>` : ``}
           ${item.publishedAt ? `<span class="pill">已發布</span>` : `<span class="pill">未發布</span>`}
         </div>
       </div>
-      <div class="small">${item.id}</div>
+      <div class="small">${esc(item.id)}</div>
     `;
-    div.onclick = async ()=>{
+    btn.onclick = async ()=>{
       CURRENT_ID = item.id;
       await loadDraft();
     };
-    box.appendChild(div);
+    box.appendChild(btn);
   });
 }
 
-$("btnNew").onclick = async ()=>{
-  try{
-    const name = prompt("問卷名稱？", "新問卷");
-    if(name === null) return;
-    setStatus("建立中…");
-    const j = await apiAdmin("POST", "/api/q/create", { name });
-    await loadList();
-    CURRENT_ID = j.id;
-    await loadDraft();
-    setStatus("已建立 ✅");
-  }catch(e){
-    setStatus("建立失敗");
-    hint(String(e.message || e));
-  }
-};
-
-$("btnDup").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID) return hint("先選一份問卷");
-    const name = prompt("複製後的新名稱？", "複製問卷");
-    if(name === null) return;
-    setStatus("複製中…");
-    const j = await apiAdmin("POST", "/api/q/duplicate", { fromId: CURRENT_ID, name });
-    await loadList();
-    CURRENT_ID = j.id;
-    await loadDraft();
-    setStatus("已複製 ✅");
-  }catch(e){
-    setStatus("複製失敗");
-    hint(String(e.message || e));
-  }
-};
-
-$("btnDelete").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID) return hint("先選一份問卷");
-    if(!confirm("確定刪除？（draft & published 都會刪）")) return;
-    setStatus("刪除中…");
-    await apiAdmin("POST", "/api/q/delete", { id: CURRENT_ID });
-    CURRENT_ID = null;
-    CFG = null;
-    clearEditor();
-    await loadList();
-    setStatus("已刪除 ✅");
-  }catch(e){
-    setStatus("刪除失敗");
-    hint(String(e.message || e));
-  }
-};
-
-$("btnLoadDraft").onclick = ()=>loadDraft();
-
 async function loadDraft(){
   try{
-    if(!CURRENT_ID) return hint("先選一份問卷");
+    if(!CURRENT_ID) return;
     setStatus("讀草稿中…");
     const j = await apiGet(`/api/q/get?id=${encodeURIComponent(CURRENT_ID)}&ver=draft`);
     CFG = j.config;
     fillHeaderFields();
     renderQEditor();
-    syncJson();
+    renderPEditor();
+    showEditor();
     setStatus("草稿已載入 ✅");
   }catch(e){
     setStatus("讀取失敗");
-    hint(String(e.message || e));
+    hint(String(e.message||e));
   }
 }
 
-$("btnSaveDraft").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID || !CFG) return hint("先選一份問卷");
-    collectHeaderFields();
-    syncFromJsonIfChanged(); // if user edited json box
-    setStatus("儲存中…");
-    await apiAdmin("PUT", "/api/q/save", { id: CURRENT_ID, config: CFG });
-    await loadList();
-    setStatus("草稿已儲存 ✅");
-  }catch(e){
-    setStatus("儲存失敗");
-    hint(String(e.message || e));
-  }
-};
-
-$("btnPublish").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID) return hint("先選一份問卷");
-    if(!confirm("發布並切換為上線問卷？")) return;
-    setStatus("發布中…");
-    await apiAdmin("POST", "/api/q/publish", { id: CURRENT_ID });
-    await loadList();
-    setStatus("已發布並上線 ✅");
-  }catch(e){
-    setStatus("發布失敗");
-    hint(String(e.message || e));
-  }
-};
-
-$("btnAddQ").onclick = ()=>{
-  if(!CFG) return;
-  const nid = "q" + (CFG.questions.length + 1);
-  CFG.questions.push({ id: nid, title: "新題目", type: "yn" });
-  renderQEditor();
-  syncJson();
-};
-
-$("btnApplyJson").onclick = ()=>{
-  try{
-    const obj = JSON.parse($("jsonBox").value || "{}");
-    CFG = obj;
-    fillHeaderFields();
-    renderQEditor();
-    syncJson();
-    hint("已套用 JSON ✅");
-  }catch(e){
-    hint("JSON 格式錯誤");
-  }
-};
-
-$("btnCopyJson").onclick = async ()=>{
-  const t = $("jsonBox").value || "";
-  await navigator.clipboard.writeText(t);
-  hint("已複製 ✅");
-};
-
-$("btnAI").onclick = async ()=> runAI(true);
-$("btnAItoJson").onclick = async ()=> runAI(false);
-
-async function runAI(apply){
-  try{
-    if(!CURRENT_ID) return aiHint("先選一份問卷");
-    const instruction = $("aiText").value.trim();
-    if(!instruction) return aiHint("請輸入需求");
-    aiHint("AI 生成中…");
-
-    const j = await apiAdmin("POST", "/api/q/ai", { id: CURRENT_ID, instruction });
-    if(apply){
-      CFG = j.config;
-      fillHeaderFields();
-      renderQEditor();
-      syncJson();
-      aiHint("已套用 AI 結果 ✅（記得儲存草稿/發布）");
-      await loadList();
-    }else{
-      $("jsonBox").value = JSON.stringify(j.config, null, 2);
-      aiHint("已產生 JSON（未套用）✅");
-    }
-  }catch(e){
-    aiHint("AI 失敗：" + (e.message || e));
-  }
+function showEditor(){
+  $("emptyState").classList.add("hidden");
+  $("editor").classList.remove("hidden");
+}
+function showEmpty(){
+  $("emptyState").classList.remove("hidden");
+  $("editor").classList.add("hidden");
 }
 
 function fillHeaderFields(){
@@ -436,35 +422,17 @@ function collectHeaderFields(){
   CFG.meta.updatedAt = Date.now();
 }
 
-function syncJson(){
-  $("jsonBox").value = JSON.stringify(CFG, null, 2);
-}
-
-function syncFromJsonIfChanged(){
-  // If user edited json directly, prefer it
-  try{
-    const obj = JSON.parse($("jsonBox").value || "");
-    if(obj && typeof obj === "object") CFG = obj;
-  }catch(e){}
-}
-
-function clearEditor(){
-  $("qName").value="";
-  $("coverUrl").value="";
-  $("startKeywords").value="";
-  $("brandTitle").value="";
-  $("qEditor").innerHTML = `<div class="small">請先在左側選擇一份問卷。</div>`;
-  $("jsonBox").value="";
-}
-
 function renderQEditor(){
   const box = $("qEditor");
   box.innerHTML = "";
   if(!CFG) return;
 
+  CFG.questions = Array.isArray(CFG.questions) ? CFG.questions : [];
+
   CFG.questions.forEach((q, idx)=>{
     const wrap = document.createElement("div");
     wrap.className = "border rounded-2xl p-3 bg-white space-y-2";
+
     wrap.innerHTML = `
       <div class="flex items-center justify-between gap-2">
         <div class="font-extrabold">Q${idx+1}</div>
@@ -478,11 +446,11 @@ function renderQEditor(){
       <div class="grid md:grid-cols-2 gap-2">
         <div class="space-y-1">
           <div class="text-sm font-bold">題目 ID（唯一）</div>
-          <input class="w-full border rounded-xl px-3 py-2 text-sm" data-k="id" value="${escapeHtml(q.id)}">
+          <input class="w-full border rounded-xl px-3 py-2 text-sm" data-k="id" value="${esc(q.id)}" placeholder="q1">
         </div>
         <div class="space-y-1">
           <div class="text-sm font-bold">題目文字</div>
-          <input class="w-full border rounded-xl px-3 py-2 text-sm" data-k="title" value="${escapeHtml(q.title)}">
+          <input class="w-full border rounded-xl px-3 py-2 text-sm" data-k="title" value="${esc(q.title)}" placeholder="例如：我經常只有兩餐">
         </div>
       </div>
 
@@ -504,26 +472,34 @@ function renderQEditor(){
     `;
     box.appendChild(wrap);
 
+    // options editor
     const optWrap = wrap.querySelector('[data-optwrap="1"]');
     if(q.type === "choice"){
-      (q.options || []).forEach((op, oi)=>{
+      q.options = Array.isArray(q.options) ? q.options : [];
+      if(q.options.length === 0){
+        q.options = [
+          { v:"a", t:"選項A" },
+          { v:"b", t:"選項B" }
+        ];
+      }
+      q.options.slice(0, 6).forEach((op, oi)=>{
         const row = document.createElement("div");
         row.className = "grid grid-cols-12 gap-2 items-center";
         row.innerHTML = `
-          <div class="col-span-2"><input class="w-full border rounded-xl px-2 py-2 text-xs" data-opk="v" value="${escapeHtml(op.v)}" placeholder="a"></div>
-          <div class="col-span-9"><input class="w-full border rounded-xl px-2 py-2 text-xs" data-opk="t" value="${escapeHtml(op.t)}" placeholder="文字"></div>
+          <div class="col-span-2"><input class="w-full border rounded-xl px-2 py-2 text-xs" data-opk="v" value="${esc(op.v)}" placeholder="a"></div>
+          <div class="col-span-9"><input class="w-full border rounded-xl px-2 py-2 text-xs" data-opk="t" value="${esc(op.t)}" placeholder="文字"></div>
           <div class="col-span-1 text-right"><button class="btn btn-ghost text-xs" data-act="delOpt">✕</button></div>
         `;
         optWrap.appendChild(row);
 
         row.querySelector('[data-act="delOpt"]').onclick = ()=>{
           CFG.questions[idx].options.splice(oi,1);
-          renderQEditor(); syncJson();
+          renderQEditor();
         };
+
         row.querySelectorAll("input[data-opk]").forEach(inp=>{
           inp.addEventListener("input", ()=>{
             CFG.questions[idx].options[oi][inp.dataset.opk] = inp.value;
-            syncJson();
           });
         });
       });
@@ -531,54 +507,110 @@ function renderQEditor(){
       optWrap.innerHTML = `<div class="small">yn 題型不需要選項。</div>`;
     }
 
+    // question fields binding
     wrap.querySelectorAll("[data-k]").forEach(el=>{
       el.addEventListener("input", ()=>{
         const k = el.dataset.k;
         CFG.questions[idx][k] = el.value;
-        // if switch type => ensure options
-        if(k==="type"){
-          if(el.value==="choice" && (!CFG.questions[idx].options || CFG.questions[idx].options.length<2)){
-            CFG.questions[idx].options = [
+        if(k === "type"){
+          if(el.value === "choice"){
+            CFG.questions[idx].options = CFG.questions[idx].options || [
               { v:"a", t:"選項A" },
               { v:"b", t:"選項B" },
               { v:"c", t:"選項C" },
               { v:"d", t:"選項D" }
             ];
+          }else{
+            delete CFG.questions[idx].options;
           }
           renderQEditor();
         }
-        syncJson();
       });
     });
 
+    // actions
     wrap.querySelectorAll("button[data-act]").forEach(btn=>{
       btn.onclick = ()=>{
         const act = btn.dataset.act;
         if(act==="del"){
           CFG.questions.splice(idx,1);
-          renderQEditor(); syncJson();
+          renderQEditor();
         }
         if(act==="up" && idx>0){
           [CFG.questions[idx-1], CFG.questions[idx]] = [CFG.questions[idx], CFG.questions[idx-1]];
-          renderQEditor(); syncJson();
+          renderQEditor();
         }
         if(act==="down" && idx<CFG.questions.length-1){
           [CFG.questions[idx+1], CFG.questions[idx]] = [CFG.questions[idx], CFG.questions[idx+1]];
-          renderQEditor(); syncJson();
+          renderQEditor();
         }
         if(act==="addOpt"){
           CFG.questions[idx].type = "choice";
           CFG.questions[idx].options = CFG.questions[idx].options || [];
           const n = CFG.questions[idx].options.length;
           CFG.questions[idx].options.push({ v: String.fromCharCode(97+n) || "x", t:"新選項" });
-          renderQEditor(); syncJson();
+          renderQEditor();
         }
       };
     });
   });
 }
 
-function escapeHtml(s){
+function renderPEditor(){
+  const box = $("pEditor");
+  box.innerHTML = "";
+  if(!CFG) return;
+
+  CFG.productLinks = (CFG.productLinks && typeof CFG.productLinks === "object") ? CFG.productLinks : {};
+  const keys = Object.keys(CFG.productLinks);
+
+  if(keys.length === 0){
+    box.innerHTML = `<div class="small">尚無產品連結，按「新增一筆」。</div>`;
+    return;
+  }
+
+  keys.forEach((k)=>{
+    const row = document.createElement("div");
+    row.className = "grid grid-cols-12 gap-2 items-center";
+    row.innerHTML = `
+      <div class="col-span-3">
+        <input class="w-full border rounded-xl px-2 py-2 text-xs" value="${esc(k)}" data-pk="key">
+      </div>
+      <div class="col-span-8">
+        <input class="w-full border rounded-xl px-2 py-2 text-xs" value="${esc(CFG.productLinks[k])}" placeholder="https://..." data-pk="url">
+      </div>
+      <div class="col-span-1 text-right">
+        <button class="btn btn-ghost text-xs" data-act="delP">✕</button>
+      </div>
+    `;
+    box.appendChild(row);
+
+    const keyInp = row.querySelector('input[data-pk="key"]');
+    const urlInp = row.querySelector('input[data-pk="url"]');
+    const delBtn = row.querySelector('button[data-act="delP"]');
+
+    keyInp.addEventListener("input", ()=>{
+      const nk = keyInp.value.trim();
+      if(!nk || nk === k) return;
+      // rename key
+      CFG.productLinks[nk] = CFG.productLinks[k];
+      delete CFG.productLinks[k];
+      renderPEditor();
+    });
+
+    urlInp.addEventListener("input", ()=>{
+      CFG.productLinks[keyInp.value.trim() || k] = urlInp.value;
+    });
+
+    delBtn.onclick = ()=>{
+      const kk = keyInp.value.trim() || k;
+      delete CFG.productLinks[kk];
+      renderPEditor();
+    };
+  });
+}
+
+function esc(s){
   return String(s ?? "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
@@ -597,7 +629,7 @@ function escapeHtml(s){
       CURRENT_ID = LIST[0].id;
       await loadDraft();
     }else{
-      clearEditor();
+      showEmpty();
     }
   }catch(e){
     setStatus("初始化失敗");
