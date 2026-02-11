@@ -3,172 +3,254 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>問卷中控台（無 JSON）</title>
+  <title>問卷中控台｜A+Health</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{--bd:#e5e7eb;--tx:#0f172a;--muted:#64748b;}
-    body{font-family:system-ui,"Microsoft JhengHei";color:var(--tx)}
-    .card{border:1px solid var(--bd);border-radius:18px;background:#fff}
-    .btn{border-radius:14px;padding:10px 14px;font-weight:800}
-    .btn-primary{background:#0f172a;color:#fff}
-    .btn-ghost{border:1px solid var(--bd);background:#fff}
+    :root{
+      --glass: rgba(255,255,255,.72);
+      --bd: rgba(15,23,42,.10);
+      --muted: rgba(15,23,42,.55);
+    }
+    body{font-family: ui-sans-serif, system-ui, "Microsoft JhengHei";}
+    .glass{background:var(--glass); backdrop-filter: blur(10px); border:1px solid var(--bd);}
+    .soft-shadow{box-shadow: 0 18px 50px rgba(2,6,23,.10);}
+    .pill{border:1px solid var(--bd); border-radius:999px; padding:6px 12px; font-size:12px; color:rgba(15,23,42,.7); background:rgba(255,255,255,.65);}
+    .btn{
+      border-radius:14px; padding:10px 14px; font-weight:800;
+      transition: transform .08s ease, box-shadow .15s ease, background .15s ease, border .15s ease;
+      user-select:none;
+    }
+    .btn:active{transform: translateY(1px);}
+    .btn-primary{
+      background: linear-gradient(135deg,#0ea5e9,#2563eb);
+      color:#fff; box-shadow: 0 12px 30px rgba(37,99,235,.25);
+    }
+    .btn-primary:hover{filter: brightness(1.02);}
+    .btn-ghost{
+      border:1px solid var(--bd);
+      background:rgba(255,255,255,.75);
+      color: rgba(15,23,42,.86);
+    }
+    .btn-ghost:hover{background:rgba(255,255,255,.92);}
+    .btn-danger{
+      background: rgba(239,68,68,.10);
+      border:1px solid rgba(239,68,68,.25);
+      color:#b91c1c;
+    }
+    .inp{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--bd);
+      background: rgba(255,255,255,.85);
+      padding:10px 12px;
+      outline:none;
+    }
+    .inp:focus{box-shadow: 0 0 0 4px rgba(59,130,246,.12); border-color: rgba(59,130,246,.35);}
     .small{font-size:12px;color:var(--muted)}
-    .pill{border:1px solid var(--bd);border-radius:999px;padding:4px 10px;font-size:12px}
-    input,select,textarea{outline:none}
-    .divider{height:1px;background:var(--bd)}
+    .divider{height:1px;background:rgba(15,23,42,.10);}
+    .card{border-radius:22px;}
+    .fade-in{animation: fade .22s ease-out both;}
+    @keyframes fade{from{opacity:.0; transform: translateY(4px);}to{opacity:1; transform: translateY(0);}}
   </style>
 </head>
-<body class="bg-slate-50">
-<div class="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
 
-  <!-- Header -->
-  <header class="card p-4 md:p-5 space-y-3">
-    <div class="flex items-start justify-between gap-3 flex-wrap">
-      <div>
-        <div class="text-xl font-extrabold">問卷中控台（可視化｜多份問卷｜AI｜發布）</div>
-        <div class="small">你只需要操作這頁：建立/編輯/發布。LINE 端會自動使用「目前上線」那份。</div>
-      </div>
-      <div class="text-right space-y-1">
-        <div class="small">狀態：<span id="status">—</span></div>
-        <div class="pill" id="activeInfo">目前上線：—</div>
-      </div>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-3">
-      <div class="space-y-1">
-        <div class="text-sm font-bold">Worker API Base</div>
-        <input id="apiBase" class="w-full border rounded-xl px-3 py-2"
-               placeholder="https://xxx.workers.dev">
-        <div class="small">需要 Worker 有：/api/q/*、/api/ping</div>
-      </div>
-      <div class="space-y-1">
-        <div class="text-sm font-bold">ADMIN_KEY（管理用）</div>
-        <input id="adminKey" type="password" class="w-full border rounded-xl px-3 py-2" placeholder="你的 ADMIN_KEY">
-        <div class="small">會以 header：<b>x-admin-key</b> 帶給 Worker</div>
-      </div>
-    </div>
-
-    <div class="flex gap-2 flex-wrap items-center">
-      <button id="btnPing" class="btn btn-ghost">測試連線</button>
-      <button id="btnRefresh" class="btn btn-ghost">重整清單</button>
-      <span class="small" id="hint"></span>
-    </div>
-  </header>
-
-  <div class="grid lg:grid-cols-12 gap-4">
-
-    <!-- Left: list -->
-    <aside class="lg:col-span-4 card p-4 space-y-3">
-      <div class="flex items-center justify-between gap-2">
-        <div class="font-extrabold">問卷清單</div>
-        <button id="btnNew" class="btn btn-primary text-sm">＋新增</button>
-      </div>
-
-      <div class="flex gap-2 flex-wrap">
-        <button id="btnDup" class="btn btn-ghost text-sm">複製</button>
-        <button id="btnDelete" class="btn btn-ghost text-sm">刪除</button>
-      </div>
-
-      <div id="list" class="space-y-2"></div>
-    </aside>
-
-    <!-- Right: editor -->
-    <main class="lg:col-span-8 card p-4 space-y-4">
-      <div class="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <div class="font-extrabold">編輯草稿（Draft）</div>
-          <div class="small">你改的是草稿；按「發布」才會同步上線給 LINE 使用。</div>
-        </div>
-        <div class="flex gap-2 flex-wrap">
-          <button id="btnLoadDraft" class="btn btn-ghost text-sm">讀草稿</button>
-          <button id="btnSaveDraft" class="btn btn-primary text-sm">儲存草稿</button>
-          <button id="btnPublish" class="btn btn-ghost text-sm">發布並上線</button>
-        </div>
-      </div>
-
-      <div id="emptyState" class="small text-slate-600">
-        請先在左側選擇一份問卷，或按「新增」建立第一份。
-      </div>
-
-      <section id="editor" class="space-y-4 hidden">
-
-        <!-- Basic -->
-        <div class="grid md:grid-cols-2 gap-3">
-          <div class="space-y-1">
-            <div class="text-sm font-bold">問卷名稱</div>
-            <input id="qName" class="w-full border rounded-xl px-3 py-2" placeholder="例如：生活型態營養問卷 v2">
-          </div>
-          <div class="space-y-1">
-            <div class="text-sm font-bold">封面圖 URL（Flex hero）</div>
-            <input id="coverUrl" class="w-full border rounded-xl px-3 py-2" placeholder="https://.../cover.png">
-          </div>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-3">
-          <div class="space-y-1">
-            <div class="text-sm font-bold">開始關鍵字（逗號分隔）</div>
-            <input id="startKeywords" class="w-full border rounded-xl px-3 py-2" placeholder="生活型態營養問卷,開始,start">
-          </div>
-          <div class="space-y-1">
-            <div class="text-sm font-bold">品牌標題（Flex altText）</div>
-            <input id="brandTitle" class="w-full border rounded-xl px-3 py-2" placeholder="生活型態營養問卷">
-          </div>
-        </div>
-
-        <!-- Questions -->
-        <div class="border rounded-2xl p-3 bg-slate-50 space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="font-extrabold">題目與選項</div>
-            <button id="btnAddQ" class="btn btn-ghost text-sm">＋新增題目</button>
-          </div>
-          <div id="qEditor" class="space-y-3"></div>
-        </div>
-
-        <!-- Product links -->
-        <div class="border rounded-2xl p-3 bg-slate-50 space-y-2">
-          <div class="font-extrabold">產品連結（點擊營養素要導到哪裡）</div>
-          <div class="small">你可以自由增加/修改 key（例如：protein、vitD、omega3…）</div>
-          <div id="pEditor" class="space-y-2"></div>
-          <div class="flex gap-2 flex-wrap">
-            <button id="btnAddP" class="btn btn-ghost text-sm">＋新增一筆</button>
-          </div>
-        </div>
-
-        <!-- AI -->
-        <div class="border rounded-2xl p-3 bg-slate-50 space-y-2">
-          <div class="font-extrabold">AI 幫我寫/改問卷</div>
-          <div class="small">範例：把問卷變成 11 題，增加腸胃、睡眠、壓力、皮膚；文字像營養師問診但不要醫療用語。</div>
-          <textarea id="aiText" class="w-full border rounded-xl p-3 text-sm" rows="6" placeholder="輸入你的需求…"></textarea>
-          <div class="flex gap-2 flex-wrap">
-            <button id="btnAIApply" class="btn btn-primary text-sm">AI 直接套用到草稿</button>
-          </div>
-          <div class="small" id="aiHint"></div>
-        </div>
-
-        <div class="small text-slate-600">
-          提醒：發布後 LINE 會用 published；草稿再改不會影響上線，直到你再次發布。
-        </div>
-      </section>
-    </main>
+<body class="min-h-screen bg-slate-950">
+  <!-- background -->
+  <div class="fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900"></div>
+    <div class="absolute -top-40 -left-40 w-[520px] h-[520px] rounded-full bg-blue-500/25 blur-3xl"></div>
+    <div class="absolute -bottom-40 -right-40 w-[520px] h-[520px] rounded-full bg-sky-400/20 blur-3xl"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,.06),transparent_55%)]"></div>
   </div>
-</div>
+
+  <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
+    <!-- Top bar -->
+    <header class="glass soft-shadow card p-4 md:p-5 text-slate-900 fade-in">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white soft-shadow">
+            <!-- icon -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4Z" stroke="white" stroke-width="2" />
+              <path d="M9 12h6M12 9v6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-lg md:text-xl font-extrabold text-white">A+Health 問卷中控台</div>
+            <div class="small text-white/70">多份問卷｜AI 產生｜一鍵發布｜LINE 立即同步</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <span id="activeInfo" class="pill text-white/90 bg-white/10 border-white/15">目前上線：—</span>
+          <span id="status" class="pill text-white/80 bg-white/10 border-white/15">—</span>
+          <button id="btnRefresh" class="btn btn-ghost">重整</button>
+        </div>
+      </div>
+
+      <div class="mt-4 grid md:grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <div class="text-sm font-bold text-white">Worker API Base（自動）</div>
+          <div class="flex gap-2">
+            <input id="apiBase" class="inp text-slate-900" placeholder="自動偵測中…" readonly>
+            <button id="btnSetApi" class="btn btn-ghost">設定</button>
+          </div>
+          <div class="small text-white/70">
+            ✅ 自動策略：同網域自動抓 <b>location.origin</b>；或用 <b>?api=</b> 一次綁定；之後自動記住。
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <div class="text-sm font-bold text-white">ADMIN_KEY（管理用）</div>
+          <div class="flex gap-2">
+            <input id="adminKey" class="inp text-slate-900" type="password" placeholder="輸入一次後會記住">
+            <button id="btnSaveKey" class="btn btn-ghost">保存</button>
+          </div>
+          <div class="small text-white/70">用於：新增/儲存/刪除/AI/發布（header: <b>x-admin-key</b>）</div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2 flex-wrap">
+        <button id="btnPing" class="btn btn-primary">測試連線</button>
+        <button id="btnNew" class="btn btn-ghost">＋ 新增問卷</button>
+        <span class="small text-white/70" id="hint"></span>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <div class="grid lg:grid-cols-12 gap-4 fade-in">
+      <!-- List -->
+      <aside class="lg:col-span-4 glass soft-shadow card p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="text-white font-extrabold text-lg">問卷清單</div>
+          <button id="btnDup" class="btn btn-ghost">複製</button>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="btnDelete" class="btn btn-danger w-full">刪除</button>
+        </div>
+
+        <div id="list" class="space-y-2"></div>
+      </aside>
+
+      <!-- Editor -->
+      <main class="lg:col-span-8 glass soft-shadow card p-4 space-y-4">
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <div class="text-white font-extrabold text-lg">編輯草稿（Draft）</div>
+            <div class="small text-white/70">你改的是草稿；按「發布」才會同步上線給 LINE 使用。</div>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="btnLoadDraft" class="btn btn-ghost">讀草稿</button>
+            <button id="btnSaveDraft" class="btn btn-primary">儲存草稿</button>
+            <button id="btnPublish" class="btn btn-ghost">發布並上線</button>
+          </div>
+        </div>
+
+        <div id="emptyState" class="text-white/75 small">
+          請先在左側選擇一份問卷，或按「新增問卷」建立第一份。
+        </div>
+
+        <section id="editor" class="space-y-4 hidden">
+          <!-- Basics -->
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <div class="text-white font-bold text-sm">問卷名稱</div>
+              <input id="qName" class="inp" placeholder="例如：生活型態營養問卷 v2">
+            </div>
+            <div class="space-y-1">
+              <div class="text-white font-bold text-sm">封面圖 URL（Flex hero）</div>
+              <input id="coverUrl" class="inp" placeholder="https://.../cover.png">
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <div class="text-white font-bold text-sm">開始關鍵字（逗號分隔）</div>
+              <input id="startKeywords" class="inp" placeholder="生活型態營養問卷,開始,start">
+            </div>
+            <div class="space-y-1">
+              <div class="text-white font-bold text-sm">品牌標題（Flex altText）</div>
+              <input id="brandTitle" class="inp" placeholder="生活型態營養問卷">
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Questions -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="text-white font-extrabold">題目與選項</div>
+              <button id="btnAddQ" class="btn btn-ghost">＋ 新增題目</button>
+            </div>
+            <div id="qEditor" class="space-y-3"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Product links -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="text-white font-extrabold">產品連結（營養素 → 產品頁）</div>
+              <button id="btnAddP" class="btn btn-ghost">＋ 新增連結</button>
+            </div>
+            <div class="small text-white/70">你可以自由新增 key（例如：protein、vitD、omega3…）。報告圖點擊可導向這些網址。</div>
+            <div id="pEditor" class="space-y-2"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- AI -->
+          <div class="space-y-2">
+            <div class="text-white font-extrabold">AI 幫你寫/改問卷</div>
+            <div class="small text-white/70">
+              例：把問卷變成 11 題，增加腸胃、睡眠、壓力、皮膚；像營養師問診但不要醫療用語。
+            </div>
+            <textarea id="aiText" class="inp" rows="5" placeholder="輸入你的需求…"></textarea>
+            <div class="flex gap-2 flex-wrap">
+              <button id="btnAIApply" class="btn btn-primary">AI 直接套用到草稿</button>
+              <span id="aiHint" class="small text-white/70"></span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal: Set API -->
+  <div id="modal" class="fixed inset-0 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative glass soft-shadow card p-4 md:p-5 w-full max-w-xl text-slate-900 fade-in">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-lg font-extrabold text-slate-900">設定 Worker API Base</div>
+          <div class="small">只需設定一次，之後自動記住。</div>
+        </div>
+        <button id="modalClose" class="btn btn-ghost">關閉</button>
+      </div>
+
+      <div class="mt-3 space-y-2">
+        <div class="text-sm font-bold">Worker 網址（例如 https://xxx.workers.dev）</div>
+        <input id="modalApi" class="inp" placeholder="https://...workers.dev">
+        <div class="small">
+          ✅ 你也可以用網址參數：<b>?api=https://xxx.workers.dev</b>（一次設定後就不需要再帶）
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2 justify-end">
+        <button id="modalAuto" class="btn btn-ghost">嘗試同網域自動</button>
+        <button id="modalSave" class="btn btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 const $ = (id)=>document.getElementById(id);
 
-const LS_API="q_console_api_base_nojson";
-const LS_KEY="q_console_admin_key_nojson";
+const LS_API="q_console_api_base_pretty";
+const LS_KEY="q_console_admin_key_pretty";
 
-let API_BASE = localStorage.getItem(LS_API) || "";
-let ADMIN_KEY = localStorage.getItem(LS_KEY) || "";
-
-let ACTIVE_ID = null;
-let LIST = [];
-let CURRENT_ID = null;
-let CFG = null;
-
-$("apiBase").value = API_BASE;
-$("adminKey").value = ADMIN_KEY;
+let ACTIVE_ID=null, LIST=[], CURRENT_ID=null, CFG=null;
 
 function setStatus(t){ $("status").textContent = t; }
 function hint(t){
@@ -182,29 +264,109 @@ function aiHint(t){
   aiHint._t=setTimeout(()=> $("aiHint").textContent="", 3500);
 }
 
+function showEditor(){
+  $("emptyState").classList.add("hidden");
+  $("editor").classList.remove("hidden");
+}
+function showEmpty(){
+  $("emptyState").classList.remove("hidden");
+  $("editor").classList.add("hidden");
+}
+
+function esc(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* -------------------------
+ * Auto API Base
+ * ------------------------- */
+function getQueryApi(){
+  const u = new URL(location.href);
+  const api = (u.searchParams.get("api")||"").trim();
+  return api;
+}
+function normalizeBase(b){
+  return String(b||"").trim().replace(/\/$/,"");
+}
+async function tryPingOrigin(origin){
+  try{
+    const r = await fetch(origin + "/api/ping", { cache:"no-store" });
+    if(!r.ok) return false;
+    const j = await r.json().catch(()=>null);
+    return !!j?.ok;
+  }catch(e){ return false; }
+}
+
+async function resolveApiBase(){
+  // 1) query ?api=
+  const qapi = normalizeBase(getQueryApi());
+  if(qapi){
+    localStorage.setItem(LS_API, qapi);
+    return qapi;
+  }
+
+  // 2) saved
+  const saved = normalizeBase(localStorage.getItem(LS_API));
+  if(saved) return saved;
+
+  // 3) same origin ping success => use origin
+  const origin = normalizeBase(location.origin);
+  if(await tryPingOrigin(origin)){
+    localStorage.setItem(LS_API, origin);
+    return origin;
+  }
+
+  // 4) fallback: empty (force modal)
+  return "";
+}
+
+function setApiBaseUI(base){
+  $("apiBase").value = base ? base : "尚未設定";
+}
+
+/* -------------------------
+ * Admin key
+ * ------------------------- */
+function loadKey(){
+  const k = localStorage.getItem(LS_KEY) || "";
+  $("adminKey").value = k;
+}
+$("btnSaveKey").onclick = ()=>{
+  localStorage.setItem(LS_KEY, $("adminKey").value.trim());
+  hint("已保存 ADMIN_KEY ✅");
+};
+
+/* -------------------------
+ * API helpers
+ * ------------------------- */
 function base(){
-  const b = $("apiBase").value.trim().replace(/\/$/,"");
-  if(!b) throw new Error("請先填 API Base");
-  API_BASE=b; localStorage.setItem(LS_API,b);
+  const b = normalizeBase($("apiBase").value);
+  if(!b || b==="尚未設定") throw new Error("尚未設定 API Base");
   return b;
 }
 function key(){
-  const k = $("adminKey").value.trim();
-  ADMIN_KEY=k; localStorage.setItem(LS_KEY,k);
+  const k = ($("adminKey").value || "").trim();
+  if(!k) throw new Error("需要 ADMIN_KEY");
   return k;
 }
 async function apiGet(path){
-  const r = await fetch(base()+path);
+  const r = await fetch(base()+path, { cache:"no-store" });
   const j = await r.json().catch(()=>null);
   if(!r.ok) throw new Error(j?.error || "GET failed");
   return j;
 }
 async function apiAdmin(method, path, body){
-  const k = key();
-  if(!k) throw new Error("需要 ADMIN_KEY 才能寫入/發布/AI");
-  const r = await fetch(base()+path,{
+  const r = await fetch(base()+path, {
     method,
-    headers:{ "Content-Type":"application/json", "x-admin-key":k },
+    headers:{
+      "Content-Type":"application/json",
+      "x-admin-key": key()
+    },
     body: body ? JSON.stringify(body) : undefined
   });
   const j = await r.json().catch(()=>null);
@@ -212,20 +374,72 @@ async function apiAdmin(method, path, body){
   return j;
 }
 
+/* -------------------------
+ * Modal
+ * ------------------------- */
+function openModal(){
+  $("modal").classList.remove("hidden");
+  $("modal").classList.add("flex");
+  $("modalApi").value = "";
+}
+function closeModal(){
+  $("modal").classList.add("hidden");
+  $("modal").classList.remove("flex");
+}
+$("btnSetApi").onclick = openModal;
+$("modalClose").onclick = closeModal;
+$("modal").addEventListener("click", (e)=>{
+  if(e.target === $("modal")) closeModal();
+});
+$("modalAuto").onclick = async ()=>{
+  setStatus("嘗試同網域自動…");
+  const origin = normalizeBase(location.origin);
+  const ok = await tryPingOrigin(origin);
+  if(ok){
+    localStorage.setItem(LS_API, origin);
+    setApiBaseUI(origin);
+    closeModal();
+    hint("已自動使用同網域 ✅");
+    await loadList();
+  }else{
+    hint("同網域沒有 /api/ping，請手動貼 Worker 網址");
+  }
+  setStatus("—");
+};
+$("modalSave").onclick = async ()=>{
+  const b = normalizeBase($("modalApi").value);
+  if(!b) return hint("請貼入 Worker 網址");
+  // verify ping
+  setStatus("驗證 API…");
+  const ok = await tryPingOrigin(b);
+  if(!ok){
+    setStatus("—");
+    return hint("驗證失敗：找不到 /api/ping 或網址不正確");
+  }
+  localStorage.setItem(LS_API, b);
+  setApiBaseUI(b);
+  closeModal();
+  hint("已保存 API Base ✅");
+  setStatus("—");
+  await loadList();
+};
+
+/* -------------------------
+ * Actions
+ * ------------------------- */
 $("btnPing").onclick = async ()=>{
   try{
     setStatus("測試中…");
-    await apiGet("/api/ping");
-    setStatus("連線 OK ✅");
+    const j = await apiGet("/api/ping");
+    setStatus(j.ok ? "連線 OK ✅" : "連線異常");
   }catch(e){
     setStatus("連線失敗");
-    hint(String(e.message||e));
+    hint(e.message || String(e));
+    openModal();
   }
 };
 
 $("btnRefresh").onclick = ()=>loadList();
-$("btnLoadDraft").onclick = ()=>loadDraft();
-
 $("btnNew").onclick = async ()=>{
   try{
     const name = prompt("問卷名稱？","新問卷");
@@ -233,12 +447,12 @@ $("btnNew").onclick = async ()=>{
     setStatus("建立中…");
     const j = await apiAdmin("POST","/api/q/create",{name});
     await loadList();
-    CURRENT_ID=j.id;
+    CURRENT_ID = j.id;
     await loadDraft();
     setStatus("已建立 ✅");
   }catch(e){
     setStatus("建立失敗");
-    hint(String(e.message||e));
+    hint(e.message||String(e));
   }
 };
 
@@ -250,19 +464,19 @@ $("btnDup").onclick = async ()=>{
     setStatus("複製中…");
     const j = await apiAdmin("POST","/api/q/duplicate",{fromId:CURRENT_ID,name});
     await loadList();
-    CURRENT_ID=j.id;
+    CURRENT_ID = j.id;
     await loadDraft();
     setStatus("已複製 ✅");
   }catch(e){
     setStatus("複製失敗");
-    hint(String(e.message||e));
+    hint(e.message||String(e));
   }
 };
 
 $("btnDelete").onclick = async ()=>{
   try{
     if(!CURRENT_ID) return hint("先選一份問卷");
-    if(!confirm("確定刪除？（draft & published 都會刪）")) return;
+    if(!confirm("確定刪除？（draft + published 都會刪）")) return;
     setStatus("刪除中…");
     await apiAdmin("POST","/api/q/delete",{id:CURRENT_ID});
     CURRENT_ID=null; CFG=null;
@@ -271,9 +485,11 @@ $("btnDelete").onclick = async ()=>{
     setStatus("已刪除 ✅");
   }catch(e){
     setStatus("刪除失敗");
-    hint(String(e.message||e));
+    hint(e.message||String(e));
   }
 };
+
+$("btnLoadDraft").onclick = ()=>loadDraft();
 
 $("btnSaveDraft").onclick = async ()=>{
   try{
@@ -285,7 +501,7 @@ $("btnSaveDraft").onclick = async ()=>{
     setStatus("草稿已儲存 ✅");
   }catch(e){
     setStatus("儲存失敗");
-    hint(String(e.message||e));
+    hint(e.message||String(e));
   }
 };
 
@@ -299,7 +515,7 @@ $("btnPublish").onclick = async ()=>{
     setStatus("已發布並上線 ✅");
   }catch(e){
     setStatus("發布失敗");
-    hint(String(e.message||e));
+    hint(e.message||String(e));
   }
 };
 
@@ -313,14 +529,17 @@ $("btnAddQ").onclick = ()=>{
 $("btnAddP").onclick = ()=>{
   if(!CFG) return;
   CFG.productLinks = CFG.productLinks || {};
-  CFG.productLinks["new_key"] = "";
+  let k = "new_key";
+  let i = 1;
+  while(CFG.productLinks[k] !== undefined){ k = "new_key_" + (i++); }
+  CFG.productLinks[k] = "";
   renderPEditor();
 };
 
 $("btnAIApply").onclick = async ()=>{
   try{
     if(!CURRENT_ID) return aiHint("先選一份問卷");
-    const instruction = $("aiText").value.trim();
+    const instruction = ($("aiText").value||"").trim();
     if(!instruction) return aiHint("請輸入需求");
     aiHint("AI 生成中…");
     const j = await apiAdmin("POST","/api/q/ai",{id:CURRENT_ID,instruction});
@@ -331,22 +550,26 @@ $("btnAIApply").onclick = async ()=>{
     await loadList();
     aiHint("已套用 AI ✅（記得：儲存草稿 / 發布）");
   }catch(e){
-    aiHint("AI 失敗：" + (e.message||e));
+    aiHint("AI 失敗：" + (e.message||String(e)));
   }
 };
 
+/* -------------------------
+ * Data load/render
+ * ------------------------- */
 async function loadList(){
   try{
-    setStatus("讀取清單中…");
+    setStatus("讀取清單…");
     const j = await apiGet("/api/q/list");
     ACTIVE_ID = j.activeId;
     LIST = j.items || [];
     renderList();
     $("activeInfo").textContent = "目前上線：" + (ACTIVE_ID || "（尚未發布）");
-    setStatus("清單已更新 ✅");
+    setStatus("就緒 ✅");
   }catch(e){
     setStatus("讀取失敗");
-    hint(String(e.message||e));
+    hint(e.message||String(e));
+    openModal();
   }
 }
 
@@ -354,22 +577,22 @@ function renderList(){
   const box = $("list");
   box.innerHTML = "";
   if(!LIST.length){
-    box.innerHTML = `<div class="small">尚無問卷，按「新增」建立第一份。</div>`;
+    box.innerHTML = `<div class="small text-white/70">尚無問卷，按「新增問卷」建立第一份。</div>`;
     return;
   }
   LIST.forEach(item=>{
     const isActive = item.id === ACTIVE_ID;
     const btn = document.createElement("button");
-    btn.className = "w-full text-left border rounded-2xl p-3 hover:bg-slate-50";
+    btn.className = "w-full text-left rounded-2xl p-3 border border-white/10 bg-white/5 hover:bg-white/10 transition";
     btn.innerHTML = `
       <div class="flex items-center justify-between gap-2">
-        <div class="font-extrabold">${esc(item.name || item.id)}</div>
+        <div class="text-white font-extrabold">${esc(item.name || item.id)}</div>
         <div class="flex items-center gap-2">
-          ${isActive ? `<span class="pill">上線</span>` : ``}
-          ${item.publishedAt ? `<span class="pill">已發布</span>` : `<span class="pill">未發布</span>`}
+          ${isActive ? `<span class="pill text-white bg-white/10 border-white/15">上線</span>` : ``}
+          ${item.publishedAt ? `<span class="pill text-white bg-white/10 border-white/15">已發布</span>` : `<span class="pill text-white bg-white/10 border-white/15">未發布</span>`}
         </div>
       </div>
-      <div class="small">${esc(item.id)}</div>
+      <div class="small text-white/65 mt-1">${esc(item.id)}</div>
     `;
     btn.onclick = async ()=>{
       CURRENT_ID = item.id;
@@ -382,7 +605,7 @@ function renderList(){
 async function loadDraft(){
   try{
     if(!CURRENT_ID) return;
-    setStatus("讀草稿中…");
+    setStatus("讀草稿…");
     const j = await apiGet(`/api/q/get?id=${encodeURIComponent(CURRENT_ID)}&ver=draft`);
     CFG = j.config;
     fillHeaderFields();
@@ -392,19 +615,13 @@ async function loadDraft(){
     setStatus("草稿已載入 ✅");
   }catch(e){
     setStatus("讀取失敗");
-    hint(String(e.message||e));
+    hint(e.message||String(e));
   }
 }
 
-function showEditor(){
-  $("emptyState").classList.add("hidden");
-  $("editor").classList.remove("hidden");
-}
-function showEmpty(){
-  $("emptyState").classList.remove("hidden");
-  $("editor").classList.add("hidden");
-}
-
+/* -------------------------
+ * Editor binding
+ * ------------------------- */
 function fillHeaderFields(){
   $("qName").value = CFG?.meta?.name || "";
   $("coverUrl").value = CFG?.coverImageUrl || "";
@@ -415,10 +632,10 @@ function fillHeaderFields(){
 function collectHeaderFields(){
   if(!CFG) return;
   CFG.meta = CFG.meta || {};
-  CFG.meta.name = $("qName").value.trim() || "未命名問卷";
-  CFG.coverImageUrl = $("coverUrl").value.trim();
-  CFG.brandTitle = $("brandTitle").value.trim() || "問卷";
-  CFG.startKeywords = $("startKeywords").value.split(",").map(s=>s.trim()).filter(Boolean);
+  CFG.meta.name = ($("qName").value||"").trim() || "未命名問卷";
+  CFG.coverImageUrl = ($("coverUrl").value||"").trim();
+  CFG.brandTitle = ($("brandTitle").value||"").trim() || "問卷";
+  CFG.startKeywords = ($("startKeywords").value||"").split(",").map(s=>s.trim()).filter(Boolean);
   CFG.meta.updatedAt = Date.now();
 }
 
@@ -431,40 +648,40 @@ function renderQEditor(){
 
   CFG.questions.forEach((q, idx)=>{
     const wrap = document.createElement("div");
-    wrap.className = "border rounded-2xl p-3 bg-white space-y-2";
+    wrap.className = "rounded-2xl border border-white/10 bg-white/5 p-3 space-y-2";
 
     wrap.innerHTML = `
       <div class="flex items-center justify-between gap-2">
-        <div class="font-extrabold">Q${idx+1}</div>
+        <div class="text-white font-extrabold">Q${idx+1}</div>
         <div class="flex gap-2">
           <button class="btn btn-ghost text-xs" data-act="up">↑</button>
           <button class="btn btn-ghost text-xs" data-act="down">↓</button>
-          <button class="btn btn-ghost text-xs" data-act="del">刪除</button>
+          <button class="btn btn-danger text-xs" data-act="del">刪除</button>
         </div>
       </div>
 
       <div class="grid md:grid-cols-2 gap-2">
         <div class="space-y-1">
-          <div class="text-sm font-bold">題目 ID（唯一）</div>
-          <input class="w-full border rounded-xl px-3 py-2 text-sm" data-k="id" value="${esc(q.id)}" placeholder="q1">
+          <div class="text-white/80 text-sm font-bold">題目 ID（唯一）</div>
+          <input class="inp" data-k="id" value="${esc(q.id)}" placeholder="q1">
         </div>
         <div class="space-y-1">
-          <div class="text-sm font-bold">題目文字</div>
-          <input class="w-full border rounded-xl px-3 py-2 text-sm" data-k="title" value="${esc(q.title)}" placeholder="例如：我經常只有兩餐">
+          <div class="text-white/80 text-sm font-bold">題目文字</div>
+          <input class="inp" data-k="title" value="${esc(q.title)}" placeholder="例如：我經常只有兩餐">
         </div>
       </div>
 
       <div class="grid md:grid-cols-2 gap-2">
         <div class="space-y-1">
-          <div class="text-sm font-bold">題型</div>
-          <select class="w-full border rounded-xl px-3 py-2 text-sm" data-k="type">
+          <div class="text-white/80 text-sm font-bold">題型</div>
+          <select class="inp" data-k="type">
             <option value="yn" ${q.type==="yn"?"selected":""}>是/不是（yn）</option>
             <option value="choice" ${q.type==="choice"?"selected":""}>四選一（choice）</option>
           </select>
         </div>
         <div class="space-y-1">
-          <div class="text-sm font-bold">選項（choice 才需要）</div>
-          <button class="btn btn-ghost text-sm w-full" data-act="addOpt">＋新增選項</button>
+          <div class="text-white/80 text-sm font-bold">選項（choice 才需要）</div>
+          <button class="btn btn-ghost w-full" data-act="addOpt">＋ 新增選項</button>
         </div>
       </div>
 
@@ -472,23 +689,24 @@ function renderQEditor(){
     `;
     box.appendChild(wrap);
 
-    // options editor
     const optWrap = wrap.querySelector('[data-optwrap="1"]');
     if(q.type === "choice"){
       q.options = Array.isArray(q.options) ? q.options : [];
-      if(q.options.length === 0){
+      if(q.options.length < 2){
         q.options = [
           { v:"a", t:"選項A" },
-          { v:"b", t:"選項B" }
+          { v:"b", t:"選項B" },
+          { v:"c", t:"選項C" },
+          { v:"d", t:"選項D" }
         ];
       }
       q.options.slice(0, 6).forEach((op, oi)=>{
         const row = document.createElement("div");
         row.className = "grid grid-cols-12 gap-2 items-center";
         row.innerHTML = `
-          <div class="col-span-2"><input class="w-full border rounded-xl px-2 py-2 text-xs" data-opk="v" value="${esc(op.v)}" placeholder="a"></div>
-          <div class="col-span-9"><input class="w-full border rounded-xl px-2 py-2 text-xs" data-opk="t" value="${esc(op.t)}" placeholder="文字"></div>
-          <div class="col-span-1 text-right"><button class="btn btn-ghost text-xs" data-act="delOpt">✕</button></div>
+          <div class="col-span-2"><input class="inp" style="padding:8px 10px;border-radius:12px" data-opk="v" value="${esc(op.v)}" placeholder="a"></div>
+          <div class="col-span-9"><input class="inp" style="padding:8px 10px;border-radius:12px" data-opk="t" value="${esc(op.t)}" placeholder="文字"></div>
+          <div class="col-span-1 text-right"><button class="btn btn-danger text-xs" data-act="delOpt">✕</button></div>
         `;
         optWrap.appendChild(row);
 
@@ -496,7 +714,6 @@ function renderQEditor(){
           CFG.questions[idx].options.splice(oi,1);
           renderQEditor();
         };
-
         row.querySelectorAll("input[data-opk]").forEach(inp=>{
           inp.addEventListener("input", ()=>{
             CFG.questions[idx].options[oi][inp.dataset.opk] = inp.value;
@@ -504,10 +721,9 @@ function renderQEditor(){
         });
       });
     }else{
-      optWrap.innerHTML = `<div class="small">yn 題型不需要選項。</div>`;
+      optWrap.innerHTML = `<div class="small text-white/70">yn 題型不需要選項。</div>`;
     }
 
-    // question fields binding
     wrap.querySelectorAll("[data-k]").forEach(el=>{
       el.addEventListener("input", ()=>{
         const k = el.dataset.k;
@@ -528,7 +744,6 @@ function renderQEditor(){
       });
     });
 
-    // actions
     wrap.querySelectorAll("button[data-act]").forEach(btn=>{
       btn.onclick = ()=>{
         const act = btn.dataset.act;
@@ -565,22 +780,22 @@ function renderPEditor(){
   const keys = Object.keys(CFG.productLinks);
 
   if(keys.length === 0){
-    box.innerHTML = `<div class="small">尚無產品連結，按「新增一筆」。</div>`;
+    box.innerHTML = `<div class="small text-white/70">尚無產品連結，按「新增連結」。</div>`;
     return;
   }
 
   keys.forEach((k)=>{
     const row = document.createElement("div");
-    row.className = "grid grid-cols-12 gap-2 items-center";
+    row.className = "grid grid-cols-12 gap-2 items-center rounded-2xl border border-white/10 bg-white/5 p-2";
     row.innerHTML = `
       <div class="col-span-3">
-        <input class="w-full border rounded-xl px-2 py-2 text-xs" value="${esc(k)}" data-pk="key">
+        <input class="inp" style="padding:8px 10px;border-radius:12px" value="${esc(k)}" data-pk="key">
       </div>
       <div class="col-span-8">
-        <input class="w-full border rounded-xl px-2 py-2 text-xs" value="${esc(CFG.productLinks[k])}" placeholder="https://..." data-pk="url">
+        <input class="inp" style="padding:8px 10px;border-radius:12px" value="${esc(CFG.productLinks[k])}" placeholder="https://..." data-pk="url">
       </div>
       <div class="col-span-1 text-right">
-        <button class="btn btn-ghost text-xs" data-act="delP">✕</button>
+        <button class="btn btn-danger text-xs" data-act="delP">✕</button>
       </div>
     `;
     box.appendChild(row);
@@ -592,16 +807,14 @@ function renderPEditor(){
     keyInp.addEventListener("input", ()=>{
       const nk = keyInp.value.trim();
       if(!nk || nk === k) return;
-      // rename key
       CFG.productLinks[nk] = CFG.productLinks[k];
       delete CFG.productLinks[k];
       renderPEditor();
     });
-
     urlInp.addEventListener("input", ()=>{
-      CFG.productLinks[keyInp.value.trim() || k] = urlInp.value;
+      const kk = keyInp.value.trim() || k;
+      CFG.productLinks[kk] = urlInp.value;
     });
-
     delBtn.onclick = ()=>{
       const kk = keyInp.value.trim() || k;
       delete CFG.productLinks[kk];
@@ -610,29 +823,32 @@ function renderPEditor(){
   });
 }
 
-function esc(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-// boot
+/* -------------------------
+ * Boot
+ * ------------------------- */
 (async function(){
-  try{
-    setStatus("初始化…");
+  // load key
+  loadKey();
+
+  // resolve api
+  setStatus("自動偵測 API…");
+  const resolved = await resolveApiBase();
+  if(resolved){
+    setApiBaseUI(resolved);
+    setStatus("—");
+    // load list
     await loadList();
-    setStatus("就緒 ✅");
     if(LIST.length){
       CURRENT_ID = LIST[0].id;
       await loadDraft();
     }else{
       showEmpty();
     }
-  }catch(e){
-    setStatus("初始化失敗");
+  }else{
+    setApiBaseUI("");
+    setStatus("需要設定 API");
+    openModal();
+    showEmpty();
   }
 })();
 </script>
