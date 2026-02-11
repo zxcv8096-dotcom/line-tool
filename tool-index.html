@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LINE 工具中控台｜首頁</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
     :root{
       --ink:#0f172a;
@@ -12,7 +13,7 @@
       --muted2:#64748b;
       --bd:rgba(15,23,42,.10);
       --bg:#f8fafc;
-      --glass: rgba(255,255,255,.78);
+      --glass: rgba(255,255,255,.80);
       --glass2: rgba(255,255,255,.66);
       --shadow: 0 18px 55px rgba(15,23,42,.10);
       --shadow2: 0 8px 24px rgba(15,23,42,.08);
@@ -41,7 +42,7 @@
     .btn:hover{ background:#f1f5f9; }
     .pill{ border:1px solid var(--bd); background: rgba(255,255,255,.70); }
     .toolcard{
-      background: rgba(255,255,255,.82);
+      background: rgba(255,255,255,.84);
       border: 1px solid var(--bd);
       box-shadow: 0 10px 26px rgba(15,23,42,.06);
       transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
@@ -49,7 +50,7 @@
     .toolcard:hover{
       transform: translateY(-2px);
       box-shadow: 0 16px 38px rgba(15,23,42,.10);
-      background: rgba(255,255,255,.94);
+      background: rgba(255,255,255,.95);
     }
     .kbd{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
@@ -64,6 +65,7 @@
 </head>
 
 <body class="min-h-screen">
+  <!-- Top -->
   <header class="sticky top-0 z-30">
     <div class="mx-auto max-w-6xl px-4 pt-4">
       <div class="glass rounded-3xl px-5 py-4 flex items-center justify-between gap-3">
@@ -74,7 +76,9 @@
           </div>
           <div>
             <div class="text-lg font-extrabold leading-tight">LINE 工具中控台</div>
-            <div class="text-sm mt-1" style="color:var(--muted2)">首頁（pages/）｜工具都用中文顯示</div>
+            <div class="text-sm mt-1" style="color:var(--muted2)">
+              首頁｜工具固定在 <span class="kbd">/line-tool/pages/tools/</span>
+            </div>
           </div>
         </div>
 
@@ -87,12 +91,13 @@
   </header>
 
   <main class="mx-auto max-w-6xl px-4 pb-24">
+    <!-- Quick -->
     <section class="mt-4 glass-soft rounded-3xl p-5">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div class="text-base font-bold">快速入口</div>
           <div class="mt-1 text-sm" style="color:var(--muted)">
-            你檔案在 <span class="kbd">pages/tools</span>。這份首頁會用相對路徑直接連到工具。
+            所有工具連結都會指向：<span class="kbd" id="toolsRootText"></span>　
             按 <span class="kbd">/</span> 直接聚焦搜尋。
           </div>
           <div class="mt-3 flex flex-wrap gap-2 text-sm">
@@ -120,9 +125,9 @@
           </div>
         </div>
         <div class="pill rounded-2xl p-4">
-          <div class="font-semibold">工具目錄</div>
+          <div class="font-semibold">工具根目錄</div>
           <div class="mt-1" style="color:var(--muted)">
-            <span class="font-mono">pages/tools/*.html</span>
+            <span class="font-mono" id="toolsRootHint"></span>
           </div>
         </div>
         <div class="pill rounded-2xl p-4">
@@ -134,11 +139,12 @@
       </div>
     </section>
 
+    <!-- Search -->
     <section class="mt-5 glass-soft rounded-3xl p-5">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <div class="text-base font-bold">工具列表（中文）</div>
-          <div class="text-sm" style="color:var(--muted)">輸入關鍵字可快速篩選：回覆 / 選單 / 圖 / 流程</div>
+          <div class="text-sm" style="color:var(--muted)">搜尋：回覆 / 選單 / 圖 / 流程 / 設定</div>
         </div>
 
         <div class="flex items-center gap-2 w-full md:w-[420px]">
@@ -150,16 +156,18 @@
       </div>
     </section>
 
+    <!-- Grid -->
     <section class="mt-4">
       <div id="grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
       <div id="empty" class="hidden mt-5 glass-soft rounded-3xl p-6 text-center">
         <div class="text-lg font-bold">找不到符合的工具</div>
-        <div class="mt-2 text-sm" style="color:var(--muted)">換個關鍵字，例如：回覆 / rich / 圖文 / 流程</div>
+        <div class="mt-2 text-sm" style="color:var(--muted)">換個關鍵字：回覆 / rich / 圖文 / 流程</div>
       </div>
     </section>
   </main>
 
+  <!-- Bottom -->
   <nav class="fixed bottom-0 left-0 right-0 z-30">
     <div class="mx-auto max-w-6xl px-4 pb-4">
       <div class="glass rounded-3xl px-4 py-3 flex items-center justify-between gap-3">
@@ -175,6 +183,7 @@
     </div>
   </nav>
 
+  <!-- Help modal -->
   <div id="modal" class="hidden fixed inset-0 z-50">
     <div class="absolute inset-0 bg-black/40"></div>
     <div class="relative mx-auto max-w-xl px-4 py-10">
@@ -183,7 +192,7 @@
           <div>
             <div class="text-lg font-extrabold">使用說明</div>
             <div class="text-sm mt-1" style="color:var(--muted)">
-              你不改資料夾位置也能上線：我用 GitHub Actions 把 <span class="kbd">pages/</span> 當網站根目錄部署。
+              我已把所有連結固定指向：<span class="kbd" id="toolsRootText2"></span>
             </div>
           </div>
           <button id="btnClose" class="btn text-sm px-4 py-2 rounded-2xl">關閉</button>
@@ -191,24 +200,15 @@
 
         <div class="mt-4 space-y-3 text-sm">
           <div class="pill rounded-2xl p-4">
-            <div class="font-bold">✅ 檔案位置維持不動</div>
+            <div class="font-bold">✅ 你指定的工具位置</div>
             <div class="mt-1" style="color:var(--muted)">
-              pages/index.html<br/>
-              pages/tools/*.html
+              /line-tool/pages/tools/xxxx.html
             </div>
           </div>
-
           <div class="pill rounded-2xl p-4">
-            <div class="font-bold">✅ 你要做的只有一件事</div>
+            <div class="font-bold">✅ 這份首頁做了什麼</div>
             <div class="mt-1" style="color:var(--muted)">
-              到 Repo → Settings → Pages → Source 選 <span class="kbd">GitHub Actions</span>
-            </div>
-          </div>
-
-          <div class="pill rounded-2xl p-4">
-            <div class="font-bold">✅ 這份首頁連結寫法</div>
-            <div class="mt-1" style="color:var(--muted)">
-              直接連 <span class="kbd">tools/xxx.html</span>（因為 index 就在 pages/ 這層）
+              不管首頁在哪一層，點工具都會跳到固定網址（不會因為相對路徑壞掉）。
             </div>
           </div>
         </div>
@@ -218,23 +218,28 @@
   </div>
 
   <script>
-    // 工具（中文顯示）— 連結都指向 pages/tools/ 下的檔案（相對於 pages/index.html）
+    // 你指定的工具根目錄：固定使用 /line-tool/pages/tools/
+    const TOOLS_ROOT = "/line-tool/pages/tools/";
+
     const TOOLS = [
-      { key:"lab",      icon:"🚦", title:"儀表板",         desc:"狀態、測試、彙整入口",         tag:"Dashboard", href:"tools/lab_dashboard.html", keywords:["儀表板","dashboard","lab","狀態","測試"] },
-      { key:"quick",    icon:"⚡", title:"快速回覆",       desc:"建立 / 管理 Quick Reply",      tag:"Reply",     href:"tools/quickreply.html",      keywords:["快速回覆","quick","reply","回覆"] },
-      { key:"auto",     icon:"🤖", title:"自動回覆",       desc:"關鍵字 → 規則庫回覆",          tag:"Rules",     href:"tools/auto_reply.html",      keywords:["自動回覆","auto","關鍵字","規則","rules"] },
-      { key:"carousel", icon:"🧩", title:"輪播卡片",       desc:"Carousel 卡片組裝 / 產生",      tag:"Cards",     href:"tools/tool_carousel.html",   keywords:["carousel","輪播","卡片"] },
-      { key:"flow",     icon:"🧭", title:"流程工具",       desc:"節點 / 流程視覺化工具頁",       tag:"Flow",      href:"tools/tool_flow.html",       keywords:["流程","flow","節點","視覺化"] },
-      { key:"map",      icon:"🗺️", title:"Imagemap 熱區",  desc:"熱區 / 點擊區域配置",          tag:"Map",       href:"tools/tool_imagemap.html",   keywords:["imagemap","熱區","點擊","圖片","map"] },
-      { key:"meta",     icon:"🧾", title:"設定編輯器",     desc:"Meta / 設定內容編輯",           tag:"Config",    href:"tools/tool_meta_editor.html",keywords:["meta","設定","config","參數","json"] },
-      { key:"rich",     icon:"📌", title:"Rich Menu",      desc:"圖文選單設計 / 管理",           tag:"Menu",      href:"tools/tool_richmenu.html",   keywords:["rich","menu","選單","圖文","richmenu"] },
+      { key:"lab",      icon:"🚦", title:"儀表板",         desc:"狀態、測試、彙整入口",         tag:"Dashboard", file:"lab_dashboard.html",  keywords:["儀表板","dashboard","lab","狀態","測試"] },
+      { key:"quick",    icon:"⚡", title:"快速回覆",       desc:"建立 / 管理 Quick Reply",      tag:"Reply",     file:"quickreply.html",      keywords:["快速回覆","quick","reply","回覆"] },
+      { key:"auto",     icon:"🤖", title:"自動回覆",       desc:"關鍵字 → 規則庫回覆",          tag:"Rules",     file:"auto_reply.html",      keywords:["自動回覆","auto","關鍵字","規則","rules"] },
+      { key:"carousel", icon:"🧩", title:"輪播卡片",       desc:"Carousel 卡片組裝 / 產生",      tag:"Cards",     file:"tool_carousel.html",   keywords:["carousel","輪播","卡片"] },
+      { key:"flow",     icon:"🧭", title:"流程工具",       desc:"節點 / 流程視覺化工具頁",       tag:"Flow",      file:"tool_flow.html",       keywords:["流程","flow","節點","視覺化"] },
+      { key:"map",      icon:"🗺️", title:"Imagemap 熱區",  desc:"熱區 / 點擊區域配置",          tag:"Map",       file:"tool_imagemap.html",   keywords:["imagemap","熱區","點擊","圖片","map"] },
+      { key:"meta",     icon:"🧾", title:"設定編輯器",     desc:"Meta / 設定內容編輯",           tag:"Config",    file:"tool_meta_editor.html",keywords:["meta","設定","config","參數","json"] },
+      { key:"rich",     icon:"📌", title:"Rich Menu",      desc:"圖文選單設計 / 管理",           tag:"Menu",      file:"tool_richmenu.html",   keywords:["rich","menu","選單","圖文","richmenu"] },
     ];
 
-    // 導航：用相對路徑，因為 pages/ 已經會被部署成網站根
+    function urlFor(file){
+      return location.origin + TOOLS_ROOT + file;
+    }
+
     function go(key){
       const t = TOOLS.find(x=>x.key===key);
       if(!t) return alert("找不到工具：" + key);
-      location.href = t.href;
+      location.href = urlFor(t.file);
     }
     window.go = go;
 
@@ -259,7 +264,7 @@
             <span class="pill text-xs px-3 py-1 rounded-2xl whitespace-nowrap">${t.tag}</span>
           </div>
           <div class="mt-4 text-xs" style="color:var(--muted2)">
-            位置：<span class="font-mono">${t.href}</span>
+            連結：<span class="font-mono">${TOOLS_ROOT}${t.file}</span>
           </div>
         </button>
       `;
@@ -268,7 +273,9 @@
     function render(list){
       grid.innerHTML = list.map(cardHTML).join("");
       grid.querySelectorAll("[data-key]").forEach(el=>{
-        el.addEventListener("click", ()=> go(el.dataset.key));
+        el.addEventListener("click", ()=>{
+          go(el.dataset.key);
+        });
       });
       empty.classList.toggle("hidden", list.length !== 0);
     }
@@ -282,7 +289,7 @@
       const query = norm(q.value);
       if(!query) return render(TOOLS);
       const filtered = TOOLS.filter(t=>{
-        const hay = [t.title,t.desc,t.tag,t.key,t.href,...(t.keywords||[])].join(" ").toLowerCase();
+        const hay = [t.title,t.desc,t.tag,t.key,t.file,...(t.keywords||[])].join(" ").toLowerCase();
         return hay.includes(query);
       });
       render(filtered);
@@ -303,8 +310,13 @@
       envBadge.textContent = "一般網站模式";
     }
 
+    const toolsRootAbs = location.origin + TOOLS_ROOT;
+    document.getElementById("toolsRootHint").textContent = toolsRootAbs;
+    document.getElementById("toolsRootText").textContent = toolsRootAbs;
+    document.getElementById("toolsRootText2").textContent = toolsRootAbs;
+
     document.getElementById("btnTest").addEventListener("click", ()=>{
-      window.open("tools/quickreply.html", "_blank");
+      window.open(urlFor("quickreply.html"), "_blank");
     });
 
     // modal
