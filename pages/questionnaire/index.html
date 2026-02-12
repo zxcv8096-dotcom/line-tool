@@ -1,361 +1,3 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>AI 問卷後台（分支深問＋個人化報告版）</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body{
-      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
-      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      -webkit-text-size-adjust: 100%;
-    }
-    .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
-    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-    textarea { -webkit-overflow-scrolling: touch; }
-    .modal-scroll { max-height: min(78vh, 720px); overflow: auto; -webkit-overflow-scrolling: touch; }
-
-    /* ✅ LINE/iOS Modal 卡住：讓 Modal 自己可滾 */
-    #bulkModal{
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      touch-action: pan-y;
-    }
-    #bulkModalInner{
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    /* ✅ 小優化：報告清單高度 */
-    .report-list-scroll{
-      max-height: 520px;
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-  </style>
-</head>
-
-<body class="min-h-screen safe-bottom">
-  <div class="max-w-6xl mx-auto p-4 md:p-8">
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（分支深問＋個人化報告）</h1>
-        <p class="text-slate-600 mt-1">多問卷｜關鍵字綁定｜分支 nodes｜深問題庫｜報告模板（不顯示答案）｜批次匯入不卡住｜✅reportKey 自動整理｜✅圖片自動上傳</p>
-      </div>
-      <div class="text-xs text-slate-600 leading-5">
-        <div>✅ 分支後可再問很多題，做到像「專屬顧問」</div>
-        <div>✅ 報告不會列出他的選項（只送建議）</div>
-        <div>✅ reportKey 清單會自動掃描 nodes</div>
-      </div>
-    </header>
-
-    <!-- CONNECT -->
-    <section class="card rounded-2xl shadow p-5 mb-4 border border-slate-200">
-      <div class="grid md:grid-cols-3 gap-4 items-end">
-        <div class="md:col-span-2">
-          <label class="text-sm font-semibold text-slate-700">Worker 網址</label>
-          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 placeholder="https://api.xxx.workers.dev" />
-          <div class="text-xs text-slate-500 mt-2">
-            問卷：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
-            關鍵字表：<span class="mono font-semibold">AI_SURVEY:KW_MAP</span>　
-            Leads：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線</button>
-          <button id="btnSave" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">儲存</button>
-        </div>
-      </div>
-
-      <div class="mt-3 text-xs text-slate-500">
-        狀態：<span id="txtStatus" class="font-semibold">未連線</span>　
-        最後同步：<span id="txtLastSync" class="mono">-</span>
-      </div>
-    </section>
-
-    <div class="grid lg:grid-cols-3 gap-4">
-      <!-- LEFT -->
-      <aside class="card rounded-2xl shadow p-4 border border-slate-200 h-fit lg:sticky lg:top-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-xs text-slate-500">問卷清單</div>
-            <div class="text-sm text-slate-900 font-semibold">（可存多份｜可刪除）</div>
-          </div>
-          <button id="btnNew" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增</button>
-        </div>
-
-        <div class="mt-3">
-          <input id="qSearch" class="w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
-        </div>
-
-        <div id="surveyList" class="mt-3 space-y-2"></div>
-
-        <hr class="my-4 border-slate-200" />
-
-        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定（分支＋深問）</button>
-        <button id="btnTabTemplates" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 報告模板（只送建議）</button>
-        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads</button>
-
-        <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 leading-5">
-          <div class="font-extrabold">你要的「專屬感」做法</div>
-          <div>1) 第一題做分支（睡眠/壓力/腸胃/體態…）</div>
-          <div>2) 分支後再問 6～12 題（真的像量身）</div>
-          <div>3) 最後一題才給 reportKey（決定報告模板）</div>
-        </div>
-
-        <div class="mt-4 text-xs text-slate-500">
-          Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
-        </div>
-      </aside>
-
-      <!-- RIGHT -->
-      <main class="lg:col-span-2 space-y-4">
-        <!-- BUILDER -->
-        <section id="tabBuilder" class="card rounded-2xl shadow p-5 border border-slate-200">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（分支 nodes + 深問鏈）</h2>
-              <p class="text-sm text-slate-600 mt-1">
-                每個選項可指向不同下一題（next）。<span class="font-semibold">reportKey 建議只在最後一題填</span>，前面可留空。
-              </p>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次匯入</button>
-              <button id="btnAddNode" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增節點</button>
-              <button id="btnValidate" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">檢查</button>
-            </div>
-          </div>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
-              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：作息分流_第一版" />
-            </div>
-            <div>
-              <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到）</label>
-              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：60 秒作息分析" />
-            </div>
-
-            <div class="md:col-span-2">
-              <div class="flex items-center justify-between gap-2">
-                <label class="text-sm font-semibold text-slate-700">關鍵字（客戶輸入這個開始）</label>
-                <div id="kwHint" class="text-xs font-semibold text-slate-500"></div>
-              </div>
-              <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：作息分析" />
-            </div>
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">起始節點 ID</label>
-              <input id="inStart" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="例如：q1" />
-            </div>
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">報告後補一句（可空白）</label>
-              <input id="inFinalText" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：如果你願意，我可以幫你做一週調整計畫。" />
-            </div>
-
-            <div class="md:col-span-2">
-              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-6">
-                ✅ 報告不會顯示他的選項（只送你模板的建議文字）<br/>
-                ✅ 要更專屬：分支後多問幾題，最後才選 reportKey
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-6">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="font-extrabold text-slate-900">nodes（分支題目 / 深問題庫）</h3>
-              <div class="text-xs text-slate-500">next 留空=結束。reportKey 建議只在最後一題填。</div>
-            </div>
-            <div id="nodesWrap" class="mt-3 space-y-3"></div>
-          </div>
-        </section>
-
-        <!-- TEMPLATES -->
-        <section id="tabTemplates" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">② 報告模板（不顯示答案，只送建議）</h2>
-              <p class="text-sm text-slate-600 mt-1">依 reportKey 送不同報告。內容建議用「常見缺口/可能不足」語氣。</p>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button id="btnSyncKeys" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">掃描 reportKey</button>
-              <button id="btnFillMissing" class="px-4 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-400 font-semibold">補齊缺模板</button>
-              <button id="btnPreset" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入常用模板</button>
-              <button id="btnAddReport" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增模板</button>
-            </div>
-          </div>
-
-          <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">⚠️ 建議用詞</div>
-            <div>用「可能的常見缺口 / 建議補充方向」，不要用「你缺乏/你有病」。</div>
-            <div>最後加：若有慢性病/孕哺/用藥，先詢問醫師或藥師。</div>
-          </div>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-4 items-start">
-            <!-- LEFT: reportKey list -->
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-              <div class="flex items-center justify-between gap-2">
-                <div class="text-sm font-extrabold text-slate-900">reportKey 清單</div>
-                <div class="text-xs">
-                  <span id="txtKeyOk" class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold">✅ 0</span>
-                  <span id="txtKeyMissing" class="ml-1 px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100 font-semibold">⚠️ 0</span>
-                </div>
-              </div>
-              <div class="text-xs text-slate-500 mt-1">會自動從 nodes 掃描你實際用到的 reportKey，並標出缺模板。</div>
-
-              <div class="mt-3">
-                <input id="reportSearch" class="w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="搜尋 reportKey…" />
-              </div>
-
-              <div id="reportList" class="mt-3 space-y-2 report-list-scroll"></div>
-            </div>
-
-            <!-- RIGHT: editor -->
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-              <div class="flex items-center justify-between gap-2">
-                <div>
-                  <div class="text-sm font-extrabold text-slate-900">模板內容</div>
-                  <div class="text-xs text-slate-500 mt-1">這段會直接送給客戶（不包含他的答案）</div>
-                </div>
-                <button id="btnDeleteReport" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪</button>
-              </div>
-
-              <div class="mt-3">
-                <label class="text-xs font-bold text-slate-500">reportKey</label>
-                <input id="inReportKey" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：sleep_low" />
-              </div>
-
-              <!-- ✅ 圖片自動匯入 -->
-              <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-extrabold text-slate-700">圖片自動匯入（上傳到 R2）</div>
-                  <div class="text-[11px] text-slate-500">會自動插入 URL</div>
-                </div>
-                <div class="mt-2 flex gap-2 flex-wrap items-center">
-                  <button id="btnImgPick" class="px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold text-sm">選圖片上傳</button>
-                  <button id="btnImgCopy" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold text-sm">複製最後URL</button>
-                  <span id="txtImgStatus" class="text-xs text-slate-500"></span>
-                </div>
-                <input id="fileImg" type="file" accept="image/png,image/jpeg" class="hidden" />
-                <div class="mt-3">
-                  <img id="imgPreview" src="" alt="" class="hidden w-full rounded-xl border border-slate-200" />
-                </div>
-                <div class="mt-2 text-[11px] text-slate-500 leading-5">
-                  建議：PNG/JPG，越小越穩（LINE 圖片通常也有大小限制）。
-                </div>
-              </div>
-
-              <div class="mt-3">
-                <label class="text-xs font-bold text-slate-500">內容</label>
-                <textarea id="inReportBody" rows="12" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                  placeholder="請填你的個人化建議（不要提他選了什麼）。"></textarea>
-              </div>
-
-              <div class="mt-3 grid grid-cols-2 gap-2">
-                <button id="btnInsertImg" class="px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
-                  插入最後圖片URL
-                </button>
-                <button id="btnSaveReport" class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
-                  更新模板（記得再按右上『儲存』寫入 KV）
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- LEADS -->
-        <section id="tabLeads" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">③ Leads</h2>
-              <p class="text-sm text-slate-600 mt-1">顯示：userId、問卷、時間、reportKey、報告內容</p>
-            </div>
-            <div class="flex gap-2">
-              <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
-              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">刷新</button>
-            </div>
-          </div>
-
-          <div id="leadList" class="mt-4 space-y-3"></div>
-        </section>
-
-        <!-- TOAST -->
-        <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
-      </main>
-    </div>
-  </div>
-
-  <!-- BULK MODAL -->
-  <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50">
-    <div id="bulkModalInner">
-      <div class="w-full max-w-3xl">
-        <div class="card rounded-2xl shadow border border-slate-200 p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-xl font-extrabold text-slate-900">批次匯入（分支 nodes｜深問可很多題）</div>
-              <div class="text-sm text-slate-600 mt-1">
-                你可以在同一個分支一路寫很多 NODE（q2、q3、q4…），客戶就會覺得很專屬。
-              </div>
-            </div>
-            <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
-          </div>
-
-          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-            <div class="font-bold">格式範例（分支後一路深問，最後才 reportKey）：</div>
-<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 作息深問_第一版
-TITLE: 90 秒專屬作息分析
-KEYWORD: 作息深問
-START: q1
-FINAL: 想要我幫你做「7天調整計畫」，回我「計畫」。
-
-NODE: q1
-Q: 你最想先改善哪一塊？
-- 睡眠 -> next=s1 report=
-- 壓力 -> next=t1 report=
-- 腸胃 -> next=g1 report=
-- 體態 -> next=b1 report=
-
-NODE: s1
-Q: 你最近入睡狀況？
-- 很快睡著 -> next=s2 report=
-- 很難入睡 -> next=s2 report=
-- 常醒/淺眠 -> next=s2 report=
-
-NODE: s2
-Q: 你平常睡覺時間多半在？
-- 22-24 -> next=s3 report=
-- 24-02 -> next=s3 report=
-- 02以後 -> next=s3 report=
-
-NODE: s3
-Q: 最後一題：你屬於哪種型？
-- 晚睡＋日照少 -> next=END report=sleep_d_low
-- 壓力大＋難放鬆 -> next=END report=sleep_stress_high
-- 作息亂＋外食多 -> next=END report=sleep_food_irregular</pre>
-          </div>
-
-          <textarea id="bulkText" rows="12"
-            class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
-            style="min-height: 260px; max-height: 48vh; overflow:auto;"
-            placeholder="把分支深問文字貼這裡…（LINE/iOS 也可滑到底）"></textarea>
-
-          <div class="mt-4 flex flex-wrap gap-2 justify-end">
-            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
-            <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
 <script>
   const Q_PREFIX = "AI_SURVEY:Q:";
   const LEAD_PREFIX = "AI_SURVEY:LEAD:";
@@ -566,7 +208,6 @@ Q: 最後一題：你屬於哪種型？
           CURRENT = normalizeSurvey(payload);
           fillBuilder();
           renderReportsUI();
-          // ✅ 自動掃描 reportKey，並更新數字
           syncReportKeysUI(false);
           toast("已載入：" + x.name);
           setTab("builder");
@@ -737,7 +378,6 @@ Q: 最後一題：你屬於哪種型？
             opts.splice(idx,1);
             node.options = opts;
             drawOpts();
-            // ✅ nodes 動了就更新 reportKey 掃描
             syncReportKeysUI(false);
           };
           optWrap.appendChild(row);
@@ -868,7 +508,6 @@ Q: 最後一題：你屬於哪種型？
     const reports = CURRENT.reports || {};
     let okCount = 0, missCount = 0;
 
-    // 把「掃描到的 keys」優先顯示；其他既有模板 keys 也保留在後面
     const existingKeys = Object.keys(reports).sort((a,b)=>a.localeCompare(b));
     const merged = Array.from(new Set([...usedKeys, ...existingKeys]));
 
@@ -909,7 +548,6 @@ Q: 最後一題：你屬於哪種型？
           ACTIVE_REPORT_KEY = k;
           $("inReportKey").value = k;
           $("inReportBody").value = reports[k] || "";
-          // reset image preview
           $("imgPreview").classList.add("hidden");
           $("imgPreview").src = "";
           $("txtImgStatus").textContent = "";
@@ -936,7 +574,6 @@ Q: 最後一題：你屬於哪種型？
   }
 
   function renderReportsUI(){
-    // 保持相容：改由 syncReportKeysUI 生成
     syncReportKeysUI(false);
   }
 
@@ -1009,7 +646,6 @@ Q: 最後一題：你屬於哪種型？
     toast(filled ? `已補齊 ${filled} 個缺模板（記得按右上『儲存』）` : "沒有缺模板 ✅");
   }
 
-  // ✅ 在模板文字插入
   function insertAtCursor(textarea, text){
     const el = textarea;
     const start = el.selectionStart || 0;
@@ -1021,7 +657,6 @@ Q: 最後一題：你屬於哪種型？
     el.focus();
   }
 
-  // ✅ 插入圖片URL到模板
   function insertLastImgUrl(){
     if(!LAST_IMG_URL) return toast("還沒有上傳過圖片", "warn");
     insertAtCursor($("inReportBody"), `\n\n【圖片】\n${LAST_IMG_URL}\n`);
@@ -1091,14 +726,39 @@ Q: 最後一題：你屬於哪種型？
   function openBulk(){ $("bulkModal").classList.remove("hidden"); setTimeout(()=>{ $("bulkText").focus(); }, 50); }
   function closeBulk(){ $("bulkModal").classList.add("hidden"); }
 
-  // 批次匯入格式
+  // =========================================================
+  // ✅ 批次匯入（升級版）
+  // 支援：
+  // - NAME/TITLE/KEYWORD/START/FINAL
+  // - NODE/Q/選項
+  // - REPORT/IMG/BODY/ENDREPORT（整批匯入模板 + 圖片URL）
+  //
+  // 格式：
+  // REPORT: sleep_d_low
+  // IMG: https://xxx/file/uploads/aaa.png
+  // BODY:
+  // ...內容...（可用 [[IMG]] 當占位符）
+  // ENDREPORT
+  //
+  // 另外也支援「簡短一行」：
+  // IMG:sleep_d_low = https://xxx.png
+  // =========================================================
   function parseBulk(text){
     const lines = (text||"").replace(/\r/g,"").split("\n");
-    const out = { name:"", title:"", keyword:"", start:"q1", final:"", nodes:{} };
 
+    const out = { name:"", title:"", keyword:"", start:"q1", final:"", nodes:{}, reports:{}, images:{} };
+
+    // nodes state
     let curNodeId = "";
     let curQ = "";
     let curOpts = [];
+
+    // report block state
+    let inReport = false;
+    let curReportKey = "";
+    let curReportImg = "";
+    let curReportBodyLines = [];
+    let inReportBody = false;
 
     const flushNode = ()=>{
       if(!curNodeId) return;
@@ -1107,52 +767,144 @@ Q: 最後一題：你屬於哪種型？
       out.nodes[curNodeId].options = curOpts.slice();
     };
 
+    const flushReport = ()=>{
+      if(!inReport || !curReportKey) return;
+
+      let body = curReportBodyLines.join("\n").trim();
+
+      // 優先：REPORT block 的 IMG；其次：IMG:key = url 這種全域圖片表
+      const finalImg = curReportImg || (out.images[curReportKey] || "");
+
+      if(finalImg){
+        if(body.includes("[[IMG]]")){
+          body = body.replaceAll("[[IMG]]", finalImg);
+        }else{
+          // 沒寫占位符也幫你補在尾端（避免忘記）
+          body = body + `\n\n【圖片】\n${finalImg}\n`;
+        }
+      }else{
+        body = body.replaceAll("[[IMG]]", "").replace(/\n{3,}/g,"\n\n").trim();
+      }
+
+      if(body){
+        out.reports[curReportKey] = body;
+      }
+
+      inReport = false;
+      curReportKey = "";
+      curReportImg = "";
+      curReportBodyLines = [];
+      inReportBody = false;
+    };
+
     for(let i=0;i<lines.length;i++){
       const raw = lines[i] ?? "";
-      const line = raw.trim();
-      if(!line) continue;
+      const line = raw.trimEnd();
+      const tline = line.trim();
+      if(!tline) continue;
 
-      if(/^NAME\s*:/i.test(line)){ out.name = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^TITLE\s*:/i.test(line)){ out.title = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^KEYWORD\s*:/i.test(line)){ out.keyword = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^START\s*:/i.test(line)){ out.start = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^FINAL\s*:/i.test(line)){ out.final = line.split(":").slice(1).join(":").trim(); continue; }
+      // ✅ 支援一行圖片表：IMG:sleep_d_low = https://...
+      {
+        const m = tline.match(/^IMG\s*:\s*([A-Za-z0-9_\-]+)\s*=\s*(.+)$/i);
+        if(m){
+          const key = (m[1]||"").trim();
+          const url = (m[2]||"").trim();
+          if(key && url) out.images[key] = url;
+          continue;
+        }
+      }
 
-      if(/^NODE\s*:/i.test(line)){
+      // header（不在 report block 才吃）
+      if(!inReport){
+        if(/^NAME\s*:/i.test(tline)){ out.name = tline.split(":").slice(1).join(":").trim(); continue; }
+        if(/^TITLE\s*:/i.test(tline)){ out.title = tline.split(":").slice(1).join(":").trim(); continue; }
+        if(/^KEYWORD\s*:/i.test(tline)){ out.keyword = tline.split(":").slice(1).join(":").trim(); continue; }
+        if(/^START\s*:/i.test(tline)){ out.start = tline.split(":").slice(1).join(":").trim(); continue; }
+        if(/^FINAL\s*:/i.test(tline)){ out.final = tline.split(":").slice(1).join(":").trim(); continue; }
+      }
+
+      // report start/end
+      if(/^REPORT\s*:/i.test(tline)){
         flushNode();
-        curNodeId = line.split(":").slice(1).join(":").trim();
+        flushReport();
+        inReport = true;
+        curReportKey = tline.split(":").slice(1).join(":").trim();
+        curReportImg = "";
+        curReportBodyLines = [];
+        inReportBody = false;
+        continue;
+      }
+      if(/^ENDREPORT$/i.test(tline)){
+        flushReport();
+        continue;
+      }
+
+      // inside report
+      if(inReport){
+        if(/^IMG\s*:/i.test(tline)){
+          curReportImg = tline.split(":").slice(1).join(":").trim();
+          continue;
+        }
+        if(/^BODY\s*:/i.test(tline)){
+          inReportBody = true;
+          const rest = tline.split(":").slice(1).join(":");
+          if(rest && rest.trim()) curReportBodyLines.push(rest.replace(/^\s+/,""));
+          continue;
+        }
+        if(inReportBody){
+          curReportBodyLines.push(raw); // 保留縮排
+        }
+        continue;
+      }
+
+      // nodes
+      if(/^NODE\s*:/i.test(tline)){
+        flushNode();
+        curNodeId = tline.split(":").slice(1).join(":").trim();
         curQ = "";
         curOpts = [];
         continue;
       }
 
-      if(/^Q\s*:/i.test(line)){
-        curQ = line.split(":").slice(1).join(":").trim();
+      if(/^Q\s*:/i.test(tline)){
+        curQ = tline.split(":").slice(1).join(":").trim();
         continue;
       }
 
-      const optm = line.match(/^\-\s*(.+)$/);
+      const optm = tline.match(/^\-\s*(.+)$/);
       if(optm && curNodeId){
         const full = optm[1].trim();
         const parts = full.split("->").map(x=>x.trim());
-        const t = parts[0] || "";
+        const text = parts[0] || "";
         let next = "";
         let reportKey = "";
 
         if(parts[1]){
           const p = parts[1];
           const nextm = p.match(/next\s*=\s*([A-Za-z0-9_\-]+)/i);
-          const repm = p.match(/report\s*=\s*([A-Za-z0-9_\-]*)/i); // 允許空
+          const repm = p.match(/report\s*=\s*([A-Za-z0-9_\-]*)/i);
           next = nextm ? nextm[1] : "";
           reportKey = repm ? (repm[1]||"") : "";
           if(String(next).toUpperCase() === "END") next = "";
         }
 
-        curOpts.push({ t, next, reportKey });
+        curOpts.push({ t:text, next, reportKey });
         continue;
       }
     }
+
     flushNode();
+    flushReport();
+
+    // 如果用 images 表有補到 templates：把 [[IMG]] 也替換一次（避免沒有寫 IMG: 在 report block）
+    for(const rk of Object.keys(out.reports)){
+      const url = out.images[rk];
+      if(url){
+        out.reports[rk] = String(out.reports[rk]||"").replaceAll("[[IMG]]", url);
+      }else{
+        out.reports[rk] = String(out.reports[rk]||"").replaceAll("[[IMG]]", "").replace(/\n{3,}/g,"\n\n").trim();
+      }
+    }
 
     if(!out.name || !out.title || !out.keyword) throw new Error("缺少 NAME/TITLE/KEYWORD");
     if(!Object.keys(out.nodes).length) throw new Error("沒有讀到 NODE");
@@ -1168,7 +920,16 @@ Q: 最後一題：你屬於哪種型？
     CURRENT.start = parsed.start || "q1";
     CURRENT.final = { text: parsed.final || "" };
     CURRENT.nodes = parsed.nodes || {};
-    CURRENT.reports = CURRENT.reports || makeEmptySurvey().reports;
+
+    // ✅ 匯入 templates（reports）
+    CURRENT.reports = CURRENT.reports || {};
+    if(parsed.reports && typeof parsed.reports === "object"){
+      for(const k of Object.keys(parsed.reports)){
+        const body = String(parsed.reports[k] || "").trim();
+        if(body) CURRENT.reports[k] = body;
+      }
+    }
+
     fillBuilder();
     renderReportsUI();
     syncReportKeysUI(false);
@@ -1288,7 +1049,6 @@ Q: 最後一題：你屬於哪種型？
         if(LAST_IMG_URL){
           $("imgPreview").src = LAST_IMG_URL;
           $("imgPreview").classList.remove("hidden");
-          // ✅ 自動插入到模板游標
           insertAtCursor($("inReportBody"), `\n\n【圖片】\n${LAST_IMG_URL}\n`);
           toast("圖片已上傳並插入模板");
         }else{
@@ -1320,6 +1080,7 @@ Q: 最後一題：你屬於哪種型？
       if(e.target === $("bulkModal")) closeBulk();
     });
 
+    // ✅ 完整範例（含 REPORT + IMG + BODY）
     $("btnBulkExample").onclick = ()=>{
       $("bulkText").value = `NAME: 作息深問_第一版
 TITLE: 90 秒專屬作息分析
@@ -1347,11 +1108,62 @@ Q: 你平常睡覺時間多半在？
 - 02以後 -> next=s3 report=
 
 NODE: s3
-Q: 最後一題：你屬於哪種型？
+Q: 最後一題：你比較像哪種型？
 - 晚睡＋日照少 -> next=END report=sleep_d_low
 - 壓力大＋難放鬆 -> next=END report=sleep_stress_high
-- 外食多＋作息亂 -> next=END report=sleep_food_irregular`;
-      toast("已塞入範例");
+- 外食多＋作息亂 -> next=END report=sleep_food_irregular
+
+REPORT: sleep_d_low
+IMG: https://你的網域/file/uploads/xxxx.png
+BODY:
+【優先方向】
+我會先用「睡眠節律＋日照支持」做第一優先。
+
+【可能的常見缺口（方向提示）】
+• 維生素D：室內族/晚睡族常見不足
+• B群：忙碌期消耗較快
+
+【今天就能做的 3 件事】
+1) 白天 10~20 分鐘日照或戶外走路
+2) 睡前 60 分鐘把螢幕亮度降到最低
+3) 起床時間固定（比入睡時間更關鍵）
+
+【圖片】
+[[IMG]]
+
+【適合你的產品搭配】
+A) （填你的產品/組合 + 連結）
+B) （填你的產品/組合 + 連結）
+
+提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。
+ENDREPORT
+
+REPORT: sleep_stress_high
+IMG: https://你的網域/file/uploads/yyyy.jpg
+BODY:
+【優先方向】
+我會先用「放鬆支持＋睡眠品質」做第一優先。
+
+【可能的常見缺口（方向提示）】
+• 鎂：放鬆支持
+• B群：壓力期消耗較快
+• 維生素C：忙碌期常見不足
+
+【今天就能做的 3 件事】
+1) 每天 2 次 3 分鐘呼吸（吸4吐6）
+2) 晚上留 20 分鐘無訊息時間
+3) 睡前固定小儀式（熱水澡/伸展）
+
+【圖片】
+[[IMG]]
+
+【適合你的產品搭配】
+A) （填你的產品/組合 + 連結）
+B) （填你的產品/組合 + 連結）
+
+提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。
+ENDREPORT`;
+      toast("已塞入完整範例（含報告模板＋圖片URL）");
       $("bulkText").focus();
     };
 
@@ -1360,7 +1172,11 @@ Q: 最後一題：你屬於哪種型？
         const parsed = parseBulk($("bulkText").value || "");
         applyBulkToCurrent(parsed);
         closeBulk();
-        toast("已套用（記得按儲存）");
+
+        // ✅ 提醒：Bulk 只是「匯入圖片URL」，不會自動把檔案上傳到R2
+        // （要上傳檔案仍用②的「選圖片上傳」）
+        const reportCount = parsed.reports ? Object.keys(parsed.reports).length : 0;
+        toast(reportCount ? `已套用（含 ${reportCount} 個報告模板），記得按儲存` : "已套用（記得按儲存）");
       }catch(e){
         toast(e.message, "err");
       }
@@ -1377,5 +1193,3 @@ Q: 最後一題：你屬於哪種型？
     setTab("builder");
   })();
 </script>
-</body>
-</html>
