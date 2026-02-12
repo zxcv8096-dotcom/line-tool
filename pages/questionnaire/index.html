@@ -1,879 +1,384 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>問卷中控台｜A+Health</title>
+  <title>GavinTeam｜生活營養問卷</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    :root{
-      --glass: rgba(255,255,255,.72);
-      --bd: rgba(15,23,42,.10);
-      --muted: rgba(15,23,42,.55);
-    }
-    body{font-family: ui-sans-serif, system-ui, "Microsoft JhengHei";}
-    .glass{background:var(--glass); backdrop-filter: blur(10px); border:1px solid var(--bd);}
-    .soft-shadow{box-shadow: 0 18px 50px rgba(2,6,23,.10);}
-    .pill{border:1px solid var(--bd); border-radius:999px; padding:6px 12px; font-size:12px; color:rgba(15,23,42,.7); background:rgba(255,255,255,.65);}
-    .btn{
-      border-radius:14px; padding:10px 14px; font-weight:800;
-      transition: transform .08s ease, box-shadow .15s ease, background .15s ease, border .15s ease;
-      user-select:none;
-    }
-    .btn:active{transform: translateY(1px);}
-    .btn-primary{
-      background: linear-gradient(135deg,#0ea5e9,#2563eb);
-      color:#fff; box-shadow: 0 12px 30px rgba(37,99,235,.25);
-    }
-    .btn-primary:hover{filter: brightness(1.02);}
-    .btn-ghost{
-      border:1px solid var(--bd);
-      background:rgba(255,255,255,.75);
-      color: rgba(15,23,42,.86);
-    }
-    .btn-ghost:hover{background:rgba(255,255,255,.92);}
-    .btn-danger{
-      background: rgba(239,68,68,.10);
-      border:1px solid rgba(239,68,68,.25);
-      color:#b91c1c;
-    }
-    .inp{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--bd);
-      background: rgba(255,255,255,.85);
-      padding:10px 12px;
-      outline:none;
-    }
-    .inp:focus{box-shadow: 0 0 0 4px rgba(59,130,246,.12); border-color: rgba(59,130,246,.35);}
-    .small{font-size:12px;color:var(--muted)}
-    .divider{height:1px;background:rgba(15,23,42,.10);}
-    .card{border-radius:22px;}
-    .fade-in{animation: fade .22s ease-out both;}
-    @keyframes fade{from{opacity:.0; transform: translateY(4px);}to{opacity:1; transform: translateY(0);}}
+    body{ font-family: system-ui, "Microsoft JhengHei"; }
+    .card{ border:1px solid #e5e7eb; border-radius:20px; background:#fff; box-shadow:0 12px 30px rgba(2,6,23,.08); }
+    .qopt input{ display:none; }
+    .qopt label{ display:block; border:1px solid #e5e7eb; border-radius:14px; padding:12px 12px; cursor:pointer; }
+    .qopt input:checked + label{ border-color:#2563eb; box-shadow:0 0 0 4px rgba(37,99,235,.12); }
   </style>
 </head>
-
-<body class="min-h-screen bg-slate-950">
-  <div class="fixed inset-0 -z-10">
-    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900"></div>
-    <div class="absolute -top-40 -left-40 w-[520px] h-[520px] rounded-full bg-blue-500/25 blur-3xl"></div>
-    <div class="absolute -bottom-40 -right-40 w-[520px] h-[520px] rounded-full bg-sky-400/20 blur-3xl"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,.06),transparent_55%)]"></div>
-  </div>
-
-  <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
-    <header class="glass soft-shadow card p-4 md:p-5 text-slate-900 fade-in">
-      <div class="flex items-start justify-between gap-4 flex-wrap">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white soft-shadow">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4Z" stroke="white" stroke-width="2" />
-              <path d="M9 12h6M12 9v6" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div>
-            <div class="text-lg md:text-xl font-extrabold text-white">A+Health 問卷中控台</div>
-            <div class="small text-white/70">多份問卷｜AI 產生｜一鍵發布｜LINE 立即同步</div>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 flex-wrap">
-          <span id="activeInfo" class="pill text-white/90 bg-white/10 border-white/15">目前上線：—</span>
-          <span id="status" class="pill text-white/80 bg-white/10 border-white/15">—</span>
-          <button id="btnRefresh" class="btn btn-ghost">重整</button>
-        </div>
+<body class="bg-slate-50">
+  <div class="max-w-3xl mx-auto p-5 md:p-8">
+    <div class="flex items-center justify-between gap-3 mb-5">
+      <div>
+        <div class="text-2xl font-extrabold text-slate-900">GavinTeam｜生活營養問卷</div>
+        <div class="text-sm text-slate-500">填完會自動產出你的「營養檔案結果圖」，可一鍵分享回 LINE。</div>
       </div>
-
-      <div class="mt-4 grid md:grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <div class="text-sm font-bold text-white">Worker API Base（自動）</div>
-          <div class="flex gap-2">
-            <input id="apiBase" class="inp text-slate-900" placeholder="自動偵測中…" readonly>
-            <button id="btnSetApi" class="btn btn-ghost">設定</button>
-          </div>
-          <div class="small text-white/70">
-            ✅ 來源順序：<b>?api</b> → <b>?gw</b> → <b>localStorage.q_console_api_base_pretty</b> → <b>localStorage.GW_BASE</b>
-          </div>
-        </div>
-
-        <div class="space-y-1">
-          <div class="text-sm font-bold text-white">ADMIN_KEY（管理用）</div>
-          <div class="flex gap-2">
-            <input id="adminKey" class="inp text-slate-900" type="password" placeholder="輸入一次後會記住">
-            <button id="btnSaveKey" class="btn btn-ghost">保存</button>
-          </div>
-          <div class="small text-white/70">用於：新增/儲存/刪除/AI/發布（header: <b>x-admin-key</b>）</div>
-        </div>
+      <div class="text-xs text-slate-500 text-right">
+        <div id="liffState">LIFF：初始化中…</div>
+        <div id="who" class="font-semibold text-slate-700"></div>
       </div>
-
-      <div class="mt-4 flex gap-2 flex-wrap">
-        <button id="btnPing" class="btn btn-primary">測試連線</button>
-        <button id="btnNew" class="btn btn-ghost">＋ 新增問卷</button>
-        <span class="small text-white/70" id="hint"></span>
-      </div>
-    </header>
-
-    <div class="grid lg:grid-cols-12 gap-4 fade-in">
-      <aside class="lg:col-span-4 glass soft-shadow card p-4 space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="text-white font-extrabold text-lg">問卷清單</div>
-          <button id="btnDup" class="btn btn-ghost">複製</button>
-        </div>
-
-        <div class="flex gap-2">
-          <button id="btnDelete" class="btn btn-danger w-full">刪除</button>
-        </div>
-
-        <div id="list" class="space-y-2"></div>
-      </aside>
-
-      <main class="lg:col-span-8 glass soft-shadow card p-4 space-y-4">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <div class="text-white font-extrabold text-lg">編輯草稿（Draft）</div>
-            <div class="small text-white/70">你改的是草稿；按「發布」才會同步上線給 LINE 使用。</div>
-          </div>
-          <div class="flex gap-2 flex-wrap">
-            <button id="btnLoadDraft" class="btn btn-ghost">讀草稿</button>
-            <button id="btnSaveDraft" class="btn btn-primary">儲存草稿</button>
-            <button id="btnPublish" class="btn btn-ghost">發布並上線</button>
-          </div>
-        </div>
-
-        <div id="emptyState" class="text-white/75 small">
-          請先在左側選擇一份問卷，或按「新增問卷」建立第一份。
-        </div>
-
-        <section id="editor" class="space-y-4 hidden">
-          <div class="grid md:grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <div class="text-white font-bold text-sm">問卷名稱</div>
-              <input id="qName" class="inp" placeholder="例如：生活型態營養問卷 v2">
-            </div>
-            <div class="space-y-1">
-              <div class="text-white font-bold text-sm">封面圖 URL（Flex hero）</div>
-              <input id="coverUrl" class="inp" placeholder="https://.../cover.png">
-            </div>
-          </div>
-
-          <div class="grid md:grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <div class="text-white font-bold text-sm">開始關鍵字（逗號分隔）</div>
-              <input id="startKeywords" class="inp" placeholder="生活型態營養問卷,開始,start">
-            </div>
-            <div class="space-y-1">
-              <div class="text-white font-bold text-sm">品牌標題（Flex altText）</div>
-              <input id="brandTitle" class="inp" placeholder="生活型態營養問卷">
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <div class="text-white font-extrabold">題目與選項</div>
-              <button id="btnAddQ" class="btn btn-ghost">＋ 新增題目</button>
-            </div>
-            <div id="qEditor" class="space-y-3"></div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <div class="text-white font-extrabold">產品連結（營養素 → 產品頁）</div>
-              <button id="btnAddP" class="btn btn-ghost">＋ 新增連結</button>
-            </div>
-            <div class="small text-white/70">你可以自由新增 key（例如：protein、vitD、omega3…）。報告圖點擊可導向這些網址。</div>
-            <div id="pEditor" class="space-y-2"></div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="space-y-2">
-            <div class="text-white font-extrabold">AI 幫你寫/改問卷</div>
-            <div class="small text-white/70">
-              例：把問卷變成 11 題，增加腸胃、睡眠、壓力、皮膚；像營養師問診但不要醫療用語。
-            </div>
-            <textarea id="aiText" class="inp" rows="5" placeholder="輸入你的需求…"></textarea>
-            <div class="flex gap-2 flex-wrap">
-              <button id="btnAIApply" class="btn btn-primary">AI 直接套用到草稿</button>
-              <span id="aiHint" class="small text-white/70"></span>
-            </div>
-          </div>
-        </section>
-      </main>
     </div>
-  </div>
 
-  <div id="modal" class="fixed inset-0 hidden items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/60"></div>
-    <div class="relative glass soft-shadow card p-4 md:p-5 w-full max-w-xl text-slate-900 fade-in">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <div class="text-lg font-extrabold text-slate-900">設定 Worker API Base</div>
-          <div class="small">只需設定一次，之後自動記住。</div>
-        </div>
-        <button id="modalClose" class="btn btn-ghost">關閉</button>
-      </div>
-
-      <div class="mt-3 space-y-2">
-        <div class="text-sm font-bold">Worker 網址（例如 https://xxx.workers.dev）</div>
-        <input id="modalApi" class="inp" placeholder="https://...workers.dev">
-        <div class="small">
-          ✅ 你也可以用網址參數：<b>?api=https://xxx.workers.dev</b>（一次設定後就不需要再帶）
+    <div class="card p-5 md:p-7">
+      <div class="flex items-start gap-4">
+        <img id="avatar" class="w-14 h-14 rounded-full border" src="" alt="" />
+        <div class="flex-1">
+          <div class="font-bold text-slate-900">請用直覺回答（約 1 分鐘）</div>
+          <div class="text-sm text-slate-500">這是生活營養檢視，非醫療診斷；結果會以「建議方向」呈現。</div>
         </div>
       </div>
 
-      <div class="mt-4 flex gap-2 justify-end">
-        <button id="modalSave" class="btn btn-primary">保存</button>
+      <div id="questions" class="mt-6 space-y-6"></div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button id="btnMake" class="px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700">
+          產出我的營養檔案結果圖
+        </button>
+        <button id="btnShare" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-black hidden">
+          分享到 LINE
+        </button>
+        <a id="btnOpen" class="px-4 py-3 rounded-xl border font-bold hidden" target="_blank" rel="noreferrer">
+          另開結果圖
+        </a>
       </div>
 
-      <div class="mt-3 small text-slate-700">
-        如果你是從「統一窗口」開過來，這裡應該會自動有值；沒有才需要手貼。
+      <div id="status" class="mt-4 text-sm text-slate-600"></div>
+
+      <div class="mt-6 hidden" id="previewWrap">
+        <div class="font-bold text-slate-900 mb-2">預覽</div>
+        <img id="preview" class="w-full rounded-2xl border bg-white" alt="result"/>
       </div>
+    </div>
+
+    <div class="text-xs text-slate-400 mt-5">
+      © GavinTeam
     </div>
   </div>
 
 <script>
-const $ = (id)=>document.getElementById(id);
+/** ====== 你只需要改這 2 個 ====== **/
+const WORKER_BASE = "https://YOUR_WORKER_SUBDOMAIN.workers.dev"; // ← 改成你的 Worker 網址
+const LINE_ID_TEXT = "line:@aplusteam"; // 你想放在圖上的 line id（可改成你的）
 
-const LS_API="q_console_api_base_pretty";
-const LS_KEY="q_console_admin_key_pretty";
+/** ====== 問卷題庫（10+ 題） ====== **/
+const QUESTIONS = [
+  q("Q1", "你每天蔬菜（含深綠色）大概？", [
+    opt("A", "幾乎沒有 / 很少", 0),
+    opt("B", "1 碗左右", 1),
+    opt("C", "2 碗左右", 2),
+    opt("D", "3 碗以上", 3),
+  ]),
+  q("Q2", "你每天水果大概？", [
+    opt("A", "幾乎沒有", 0),
+    opt("B", "1 份", 1),
+    opt("C", "2 份", 2),
+    opt("D", "3 份以上", 3),
+  ]),
+  q("Q3", "你一週吃魚/海鮮（非油炸）頻率？", [
+    opt("A", "幾乎不吃", 0),
+    opt("B", "1 次", 1),
+    opt("C", "2–3 次", 2),
+    opt("D", "4 次以上", 3),
+  ]),
+  q("Q4", "你一週乳製品/豆奶/小魚乾等「鈣來源」？", [
+    opt("A", "幾乎沒有", 0),
+    opt("B", "1–2 次", 1),
+    opt("C", "3–5 次", 2),
+    opt("D", "幾乎每天", 3),
+  ]),
+  q("Q5", "你平常日曬（臉/手臂）約？", [
+    opt("A", "幾乎不曬太陽", 0),
+    opt("B", "每週 1–2 次", 1),
+    opt("C", "每週 3–5 次", 2),
+    opt("D", "幾乎每天", 3),
+  ]),
+  q("Q6", "你睡眠品質多數日子？", [
+    opt("A", "很差（常醒/難入睡）", 0),
+    opt("B", "普通", 1),
+    opt("C", "不錯", 2),
+    opt("D", "很好（穩定深睡）", 3),
+  ]),
+  q("Q7", "你日常壓力狀態？", [
+    opt("A", "長期高壓", 0),
+    opt("B", "偏高", 1),
+    opt("C", "中等", 2),
+    opt("D", "偏低/能放鬆", 3),
+  ]),
+  q("Q8", "你外食比例？", [
+    opt("A", "幾乎天天外食", 0),
+    opt("B", "一半以上外食", 1),
+    opt("C", "一週 2–3 次外食", 2),
+    opt("D", "很少外食", 3),
+  ]),
+  q("Q9", "你水分攝取（白開水/無糖）？", [
+    opt("A", "很少", 0),
+    opt("B", "普通", 1),
+    opt("C", "足夠", 2),
+    opt("D", "很足夠", 3),
+  ]),
+  q("Q10", "你排便狀況多數日子？", [
+    opt("A", "不規律/偏乾", 0),
+    opt("B", "偶爾不順", 1),
+    opt("C", "大多順", 2),
+    opt("D", "很規律", 3),
+  ]),
+  q("Q11", "你常吃甜食/含糖飲？", [
+    opt("A", "幾乎每天", 0),
+    opt("B", "一週 3–4 次", 1),
+    opt("C", "一週 1–2 次", 2),
+    opt("D", "很少", 3),
+  ]),
+  q("Q12", "你運動（會流汗）頻率？", [
+    opt("A", "幾乎沒有", 0),
+    opt("B", "一週 1 次", 1),
+    opt("C", "一週 2–3 次", 2),
+    opt("D", "一週 4 次以上", 3),
+  ]),
+];
 
-let ACTIVE_ID=null, LIST=[], CURRENT_ID=null, CFG=null;
+function q(id, title, options){ return { id, title, options }; }
+function opt(k, label, score){ return { k, label, score }; }
 
-function setStatus(t){ $("status").textContent = t; }
-function hint(t){
-  $("hint").textContent=t;
-  clearTimeout(hint._t);
-  hint._t=setTimeout(()=> $("hint").textContent="", 2600);
-}
-function aiHint(t){
-  $("aiHint").textContent=t;
-  clearTimeout(aiHint._t);
-  aiHint._t=setTimeout(()=> $("aiHint").textContent="", 3500);
-}
+/** ====== LIFF Profile ====== **/
+let PROFILE = { userId:"", displayName:"", pictureUrl:"" };
+init();
 
-function showEditor(){
-  $("emptyState").classList.add("hidden");
-  $("editor").classList.remove("hidden");
-}
-function showEmpty(){
-  $("emptyState").classList.remove("hidden");
-  $("editor").classList.add("hidden");
-}
-
-function esc(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-/* -------------------------
- * API Base (fixed)
- * ------------------------- */
-function normalizeBase(b){ return String(b||"").trim().replace(/\/+$/,""); }
-
-function getQueryBase(){
-  const u = new URL(location.href);
-  const api = (u.searchParams.get("api")||"").trim();
-  const gw  = (u.searchParams.get("gw")||"").trim();
-  return normalizeBase(api || gw);
-}
-
-async function ping(base){
-  const url = normalizeBase(base) + "/api/ping";
+async function init(){
+  const s = (t)=> document.getElementById("status").textContent = t;
   try{
-    const r = await fetch(url, { cache:"no-store", mode:"cors" });
-    if(!r.ok) return { ok:false, reason:`HTTP ${r.status}` };
-    const txt = await r.text();
-    try{
-      const j = JSON.parse(txt);
-      if(j && j.ok) return { ok:true };
-      return { ok:false, reason:"ping 回傳非 ok" };
-    }catch{
-      // 不是 JSON 也算失敗，但給原因
-      return { ok:false, reason:"ping 回傳不是 JSON" };
+    document.getElementById("liffState").textContent = "LIFF：初始化…";
+    await liff.init({ liffId: "YOUR_LIFF_ID" }); // ← 改成你的 LIFF ID
+    if(!liff.isLoggedIn()) liff.login();
+
+    const p = await liff.getProfile();
+    PROFILE = { userId: p.userId, displayName: p.displayName, pictureUrl: p.pictureUrl };
+
+    document.getElementById("liffState").textContent = "LIFF：已連線";
+    document.getElementById("who").textContent = p.displayName;
+    document.getElementById("avatar").src = p.pictureUrl || "https://via.placeholder.com/96";
+    renderQuestions();
+    s("請完成問卷後按「產出結果圖」。");
+  }catch(e){
+    document.getElementById("liffState").textContent = "LIFF：未連線（可用瀏覽器測試）";
+    renderQuestions();
+    s("⚠️ 若你在一般瀏覽器測試，無法取得 LINE 大頭貼與名稱；上線到 LIFF 就會正常。");
+  }
+}
+
+function renderQuestions(){
+  const wrap = document.getElementById("questions");
+  wrap.innerHTML = QUESTIONS.map((qq, idx) => {
+    const opts = qq.options.map(o => {
+      const rid = `${qq.id}_${o.k}`;
+      return `
+        <div class="qopt">
+          <input type="radio" name="${qq.id}" id="${rid}" value="${o.score}">
+          <label for="${rid}" class="hover:bg-slate-50">
+            <div class="font-semibold text-slate-900">${o.label}</div>
+          </label>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div>
+        <div class="font-bold text-slate-900 mb-2">${idx+1}. ${qq.title}</div>
+        <div class="grid md:grid-cols-2 gap-3">${opts}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+/** ====== 核心：計分 → 產 SVG → 轉 PNG → 上傳 R2 → 存 KV → 分享 ====== **/
+document.getElementById("btnMake").addEventListener("click", async () => {
+  const status = (t)=> document.getElementById("status").textContent = t;
+
+  // 1) 收答案
+  const answers = {};
+  for(const qq of QUESTIONS){
+    const v = document.querySelector(`input[name="${qq.id}"]:checked`)?.value;
+    if(v === undefined){
+      status("⚠️ 你有題目尚未作答，請全部選完。");
+      return;
     }
-  }catch(e){
-    return { ok:false, reason: (e?.message || String(e) || "fetch error") };
-  }
-}
-
-async function resolveApiBase(){
-  // 1) ?api= 或 ?gw=
-  const q = getQueryBase();
-  if(q){
-    localStorage.setItem(LS_API, q);
-    return q;
+    answers[qq.id] = Number(v);
   }
 
-  // 2) saved (問卷自己的)
-  const saved = normalizeBase(localStorage.getItem(LS_API));
-  if(saved) return saved;
+  // 2) 算營養檔案（0~100）
+  const scores = computeNutritionProfile(answers);
 
-  // 3) fallback to 統一窗口 GW_BASE
-  const gwSaved = normalizeBase(localStorage.getItem("GW_BASE"));
-  if(gwSaved){
-    localStorage.setItem(LS_API, gwSaved);
-    return gwSaved;
+  // 3) 產 SVG（結果圖）
+  status("生成結果圖中…");
+  const svg = makeResultSVG({
+    displayName: PROFILE.displayName || "訪客",
+    pictureUrl: PROFILE.pictureUrl || "",
+    gender: "—",
+    ageText: "19歲以上",
+    lineIdText: LINE_ID_TEXT,
+    scores,
+  });
+
+  // 4) SVG→PNG
+  const pngBase64 = await svgToPngDataUrl(svg, 900, 1100);
+
+  // 5) 上傳到 Worker → R2
+  status("上傳結果圖到雲端…");
+  const up = await fetch(`${WORKER_BASE}/api/upload`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      userId: PROFILE.userId || "browser_test",
+      pngBase64
+    })
+  }).then(r=>r.json());
+
+  if(!up.ok){
+    status("❌ 上傳失敗：" + (up.message || "unknown"));
+    return;
   }
 
-  // 4) none
-  return "";
-}
+  // 6) 存 KV（記錄）
+  await fetch(`${WORKER_BASE}/api/save`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      userId: PROFILE.userId || "browser_test",
+      profile: PROFILE,
+      scores,
+      imageUrl: up.publicUrl,
+      answers
+    })
+  }).catch(()=>{});
 
-function setApiBaseUI(base){
-  $("apiBase").value = base ? base : "尚未設定";
-}
+  // 7) 顯示預覽 + 打開連結 + 顯示分享鈕
+  document.getElementById("previewWrap").classList.remove("hidden");
+  document.getElementById("preview").src = up.publicUrl;
+  const openBtn = document.getElementById("btnOpen");
+  openBtn.href = up.publicUrl;
+  openBtn.classList.remove("hidden");
 
-/* -------------------------
- * Admin key
- * ------------------------- */
-function loadKey(){
-  const k = localStorage.getItem(LS_KEY) || "";
-  $("adminKey").value = k;
-}
-$("btnSaveKey").onclick = ()=>{
-  localStorage.setItem(LS_KEY, $("adminKey").value.trim());
-  hint("已保存 ADMIN_KEY ✅");
-};
+  const shareBtn = document.getElementById("btnShare");
+  shareBtn.classList.remove("hidden");
+  shareBtn.dataset.url = up.publicUrl;
 
-/* -------------------------
- * API helpers (better errors)
- * ------------------------- */
-function base(){
-  const b = normalizeBase($("apiBase").value);
-  if(!b || b==="尚未設定") throw new Error("尚未設定 API Base");
-  return b;
-}
-function key(){
-  const k = ($("adminKey").value || "").trim();
-  if(!k) throw new Error("需要 ADMIN_KEY");
-  return k;
-}
-
-async function apiGet(path){
-  const url = base()+path;
-  let r, txt, j=null;
-  try{
-    r = await fetch(url, { cache:"no-store", mode:"cors" });
-    txt = await r.text();
-    try{ j = JSON.parse(txt); }catch{}
-  }catch(e){
-    throw new Error("連線失敗（可能是 CORS 或 Worker 沒開）：" + (e?.message||e));
-  }
-  if(!r.ok){
-    throw new Error(j?.error || `GET failed: HTTP ${r.status}`);
-  }
-  return j ?? {};
-}
-
-async function apiAdmin(method, path, body){
-  const url = base()+path;
-  let r, txt, j=null;
-  try{
-    r = await fetch(url, {
-      method,
-      mode:"cors",
-      headers:{
-        "Content-Type":"application/json",
-        "x-admin-key": key()
-      },
-      body: body ? JSON.stringify(body) : undefined
-    });
-    txt = await r.text();
-    try{ j = JSON.parse(txt); }catch{}
-  }catch(e){
-    throw new Error("連線失敗（可能是 CORS 或 Worker 沒開）：" + (e?.message||e));
-  }
-  if(!r.ok){
-    throw new Error(j?.error || `ADMIN request failed: HTTP ${r.status}`);
-  }
-  return j ?? {};
-}
-
-/* -------------------------
- * Modal
- * ------------------------- */
-function openModal(){
-  $("modal").classList.remove("hidden");
-  $("modal").classList.add("flex");
-  $("modalApi").value = "";
-}
-function closeModal(){
-  $("modal").classList.add("hidden");
-  $("modal").classList.remove("flex");
-}
-$("btnSetApi").onclick = openModal;
-$("modalClose").onclick = closeModal;
-$("modal").addEventListener("click", (e)=>{
-  if(e.target === $("modal")) closeModal();
+  status("✅ 完成！你可以「分享到 LINE」。");
 });
-$("modalSave").onclick = async ()=>{
-  const b = normalizeBase($("modalApi").value);
-  if(!b) return hint("請貼入 Worker 網址");
-  setStatus("驗證 API…");
-  const res = await ping(b);
-  if(!res.ok){
-    setStatus("—");
-    return hint("驗證失敗：" + res.reason);
-  }
-  localStorage.setItem(LS_API, b);
-  setApiBaseUI(b);
-  closeModal();
-  hint("已保存 API Base ✅");
-  setStatus("—");
-  await loadList();
-};
 
-/* -------------------------
- * Actions
- * ------------------------- */
-$("btnPing").onclick = async ()=>{
+document.getElementById("btnShare").addEventListener("click", async (e) => {
+  const url = e.currentTarget.dataset.url;
+  const status = (t)=> document.getElementById("status").textContent = t;
+
   try{
-    const b = base();
-    setStatus("測試中…");
-    const res = await ping(b);
-    if(res.ok) setStatus("連線 OK ✅");
-    else { setStatus("連線失敗"); hint("原因：" + res.reason); openModal(); }
-  }catch(e){
-    setStatus("連線失敗");
-    hint(e.message || String(e));
-    openModal();
-  }
-};
-
-$("btnRefresh").onclick = ()=>loadList();
-
-$("btnNew").onclick = async ()=>{
-  try{
-    const name = prompt("問卷名稱？","新問卷");
-    if(name===null) return;
-    setStatus("建立中…");
-    const j = await apiAdmin("POST","/api/q/create",{name});
-    await loadList();
-    CURRENT_ID = j.id;
-    await loadDraft();
-    setStatus("已建立 ✅");
-  }catch(e){
-    setStatus("建立失敗");
-    hint(e.message||String(e));
-  }
-};
-
-$("btnDup").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID) return hint("先選一份問卷");
-    const name = prompt("複製後的新名稱？","複製問卷");
-    if(name===null) return;
-    setStatus("複製中…");
-    const j = await apiAdmin("POST","/api/q/duplicate",{fromId:CURRENT_ID,name});
-    await loadList();
-    CURRENT_ID = j.id;
-    await loadDraft();
-    setStatus("已複製 ✅");
-  }catch(e){
-    setStatus("複製失敗");
-    hint(e.message||String(e));
-  }
-};
-
-$("btnDelete").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID) return hint("先選一份問卷");
-    if(!confirm("確定刪除？（draft + published 都會刪）")) return;
-    setStatus("刪除中…");
-    await apiAdmin("POST","/api/q/delete",{id:CURRENT_ID});
-    CURRENT_ID=null; CFG=null;
-    showEmpty();
-    await loadList();
-    setStatus("已刪除 ✅");
-  }catch(e){
-    setStatus("刪除失敗");
-    hint(e.message||String(e));
-  }
-};
-
-$("btnLoadDraft").onclick = ()=>loadDraft();
-
-$("btnSaveDraft").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID || !CFG) return hint("先選一份問卷");
-    collectHeaderFields();
-    setStatus("儲存中…");
-    await apiAdmin("PUT","/api/q/save",{id:CURRENT_ID,config:CFG});
-    await loadList();
-    setStatus("草稿已儲存 ✅");
-  }catch(e){
-    setStatus("儲存失敗");
-    hint(e.message||String(e));
-  }
-};
-
-$("btnPublish").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID) return hint("先選一份問卷");
-    if(!confirm("發布並切換為上線問卷？")) return;
-    setStatus("發布中…");
-    await apiAdmin("POST","/api/q/publish",{id:CURRENT_ID});
-    await loadList();
-    setStatus("已發布並上線 ✅");
-  }catch(e){
-    setStatus("發布失敗");
-    hint(e.message||String(e));
-  }
-};
-
-$("btnAddQ").onclick = ()=>{
-  if(!CFG) return;
-  const nid = "q" + (CFG.questions.length + 1);
-  CFG.questions.push({ id:nid, title:"新題目", type:"yn" });
-  renderQEditor();
-};
-
-$("btnAddP").onclick = ()=>{
-  if(!CFG) return;
-  CFG.productLinks = CFG.productLinks || {};
-  let k = "new_key";
-  let i = 1;
-  while(CFG.productLinks[k] !== undefined){ k = "new_key_" + (i++); }
-  CFG.productLinks[k] = "";
-  renderPEditor();
-};
-
-$("btnAIApply").onclick = async ()=>{
-  try{
-    if(!CURRENT_ID) return aiHint("先選一份問卷");
-    const instruction = ($("aiText").value||"").trim();
-    if(!instruction) return aiHint("請輸入需求");
-    aiHint("AI 生成中…");
-    const j = await apiAdmin("POST","/api/q/ai",{id:CURRENT_ID,instruction});
-    CFG = j.config;
-    fillHeaderFields();
-    renderQEditor();
-    renderPEditor();
-    await loadList();
-    aiHint("已套用 AI ✅（記得：儲存草稿 / 發布）");
-  }catch(e){
-    aiHint("AI 失敗：" + (e.message||String(e)));
-  }
-};
-
-/* -------------------------
- * Data load/render
- * ------------------------- */
-async function loadList(){
-  try{
-    setStatus("讀取清單…");
-    const j = await apiGet("/api/q/list");
-    ACTIVE_ID = j.activeId;
-    LIST = j.items || [];
-    renderList();
-    $("activeInfo").textContent = "目前上線：" + (ACTIVE_ID || "（尚未發布）");
-    setStatus("就緒 ✅");
-  }catch(e){
-    setStatus("讀取失敗");
-    hint(e.message||String(e));
-    openModal();
-  }
-}
-
-function renderList(){
-  const box = $("list");
-  box.innerHTML = "";
-  if(!LIST.length){
-    box.innerHTML = `<div class="small text-white/70">尚無問卷，按「新增問卷」建立第一份。</div>`;
-    return;
-  }
-  LIST.forEach(item=>{
-    const isActive = item.id === ACTIVE_ID;
-    const btn = document.createElement("button");
-    btn.className = "w-full text-left rounded-2xl p-3 border border-white/10 bg-white/5 hover:bg-white/10 transition";
-    btn.innerHTML = `
-      <div class="flex items-center justify-between gap-2">
-        <div class="text-white font-extrabold">${esc(item.name || item.id)}</div>
-        <div class="flex items-center gap-2">
-          ${isActive ? `<span class="pill text-white bg-white/10 border-white/15">上線</span>` : ``}
-          ${item.publishedAt ? `<span class="pill text-white bg-white/10 border-white/15">已發布</span>` : `<span class="pill text-white bg-white/10 border-white/15">未發布</span>`}
-        </div>
-      </div>
-      <div class="small text-white/65 mt-1">${esc(item.id)}</div>
-    `;
-    btn.onclick = async ()=>{
-      CURRENT_ID = item.id;
-      await loadDraft();
-    };
-    box.appendChild(btn);
-  });
-}
-
-async function loadDraft(){
-  try{
-    if(!CURRENT_ID) return;
-    setStatus("讀草稿…");
-    const j = await apiGet(`/api/q/get?id=${encodeURIComponent(CURRENT_ID)}&ver=draft`);
-    CFG = j.config || {};
-    CFG.questions = Array.isArray(CFG.questions) ? CFG.questions : [];
-    CFG.productLinks = (CFG.productLinks && typeof CFG.productLinks === "object") ? CFG.productLinks : {};
-    fillHeaderFields();
-    renderQEditor();
-    renderPEditor();
-    showEditor();
-    setStatus("草稿已載入 ✅");
-  }catch(e){
-    setStatus("讀取失敗");
-    hint(e.message||String(e));
-  }
-}
-
-/* -------------------------
- * Editor binding
- * ------------------------- */
-function fillHeaderFields(){
-  $("qName").value = CFG?.meta?.name || "";
-  $("coverUrl").value = CFG?.coverImageUrl || "";
-  $("startKeywords").value = (CFG?.startKeywords || []).join(",");
-  $("brandTitle").value = CFG?.brandTitle || "";
-}
-
-function collectHeaderFields(){
-  if(!CFG) return;
-  CFG.meta = CFG.meta || {};
-  CFG.meta.name = ($("qName").value||"").trim() || "未命名問卷";
-  CFG.coverImageUrl = ($("coverUrl").value||"").trim();
-  CFG.brandTitle = ($("brandTitle").value||"").trim() || "問卷";
-  CFG.startKeywords = ($("startKeywords").value||"").split(",").map(s=>s.trim()).filter(Boolean);
-  CFG.meta.updatedAt = Date.now();
-}
-
-function uid(){ return "op_" + Math.random().toString(36).slice(2,10); }
-
-function renderQEditor(){
-  const box = $("qEditor");
-  box.innerHTML = "";
-  if(!CFG) return;
-
-  CFG.questions = Array.isArray(CFG.questions) ? CFG.questions : [];
-
-  CFG.questions.forEach((q, idx)=>{
-    const wrap = document.createElement("div");
-    wrap.className = "rounded-2xl border border-white/10 bg-white/5 p-3 space-y-2";
-
-    wrap.innerHTML = `
-      <div class="flex items-center justify-between gap-2">
-        <div class="text-white font-extrabold">Q${idx+1}</div>
-        <div class="flex gap-2">
-          <button class="btn btn-ghost text-xs" data-act="up">↑</button>
-          <button class="btn btn-ghost text-xs" data-act="down">↓</button>
-          <button class="btn btn-danger text-xs" data-act="del">刪除</button>
-        </div>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-2">
-        <div class="space-y-1">
-          <div class="text-white/80 text-sm font-bold">題目 ID（唯一）</div>
-          <input class="inp" data-k="id" value="${esc(q.id)}" placeholder="q1">
-        </div>
-        <div class="space-y-1">
-          <div class="text-white/80 text-sm font-bold">題目文字</div>
-          <input class="inp" data-k="title" value="${esc(q.title)}" placeholder="例如：我經常只有兩餐">
-        </div>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-2">
-        <div class="space-y-1">
-          <div class="text-white/80 text-sm font-bold">題型</div>
-          <select class="inp" data-k="type">
-            <option value="yn" ${q.type==="yn"?"selected":""}>是/不是（yn）</option>
-            <option value="choice" ${q.type==="choice"?"selected":""}>四選一（choice）</option>
-          </select>
-        </div>
-        <div class="space-y-1">
-          <div class="text-white/80 text-sm font-bold">選項（choice 才需要）</div>
-          <button class="btn btn-ghost w-full" data-act="addOpt">＋ 新增選項</button>
-        </div>
-      </div>
-
-      <div class="space-y-2" data-optwrap="1"></div>
-    `;
-    box.appendChild(wrap);
-
-    const optWrap = wrap.querySelector('[data-optwrap="1"]');
-
-    if(q.type === "choice"){
-      q.options = Array.isArray(q.options) ? q.options : [];
-      if(q.options.length < 2){
-        q.options = [
-          { id: uid(), v:"a", t:"選項A" },
-          { id: uid(), v:"b", t:"選項B" },
-          { id: uid(), v:"c", t:"選項C" },
-          { id: uid(), v:"d", t:"選項D" }
-        ];
-      }else{
-        // 補 id
-        q.options = q.options.map(op => ({ id: op.id || uid(), v: op.v, t: op.t }));
-      }
-
-      q.options.forEach((op)=>{
-        const row = document.createElement("div");
-        row.className = "grid grid-cols-12 gap-2 items-center";
-        row.innerHTML = `
-          <div class="col-span-2"><input class="inp" style="padding:8px 10px;border-radius:12px" data-opk="v" value="${esc(op.v)}" placeholder="a"></div>
-          <div class="col-span-9"><input class="inp" style="padding:8px 10px;border-radius:12px" data-opk="t" value="${esc(op.t)}" placeholder="文字"></div>
-          <div class="col-span-1 text-right"><button class="btn btn-danger text-xs" data-act="delOpt">✕</button></div>
-        `;
-        optWrap.appendChild(row);
-
-        row.querySelector('[data-act="delOpt"]').onclick = ()=>{
-          const cur = CFG.questions[idx];
-          cur.options = (cur.options||[]).filter(x => x.id !== op.id);
-          renderQEditor();
-        };
-
-        row.querySelectorAll("input[data-opk]").forEach(inp=>{
-          inp.addEventListener("input", ()=>{
-            const cur = CFG.questions[idx];
-            const target = (cur.options||[]).find(x=>x.id===op.id);
-            if(!target) return;
-            target[inp.dataset.opk] = inp.value;
-          });
-        });
-      });
-    }else{
-      optWrap.innerHTML = `<div class="small text-white/70">yn 題型不需要選項。</div>`;
+    if(!window.liff || !liff.isInClient()){
+      status("⚠️ 目前不是在 LINE App 內開啟，無法直接叫出分享器。你可以用「另開結果圖」複製連結分享。");
+      return;
     }
+    const res = await liff.shareTargetPicker([{
+      type: "image",
+      originalContentUrl: url,
+      previewImageUrl: url
+    }]);
+    if(res) status("✅ 已分享！");
+  }catch(err){
+    status("❌ 分享失敗（可能是權限/網域未設定）：" + err);
+  }
+});
 
-    wrap.querySelectorAll("[data-k]").forEach(el=>{
-      el.addEventListener("input", ()=>{
-        const k = el.dataset.k;
-        CFG.questions[idx][k] = el.value;
-        if(k === "type"){
-          if(el.value === "choice"){
-            CFG.questions[idx].options = CFG.questions[idx].options || [
-              { id: uid(), v:"a", t:"選項A" },
-              { id: uid(), v:"b", t:"選項B" },
-              { id: uid(), v:"c", t:"選項C" },
-              { id: uid(), v:"d", t:"選項D" }
-            ];
-          }else{
-            delete CFG.questions[idx].options;
-          }
-          renderQEditor();
-        }
-      });
-    });
+/** ====== 計分規則（可後續再調整更精準） ====== **/
+function computeNutritionProfile(a){
+  // 每題 0~3，總題數 12，所以 rawMax = 36
+  const total = Object.values(a).reduce((s,v)=>s+v,0);
+  const base = clamp(Math.round((total/36)*100), 0, 100);
 
-    wrap.querySelectorAll("button[data-act]").forEach(btn=>{
-      btn.onclick = ()=>{
-        const act = btn.dataset.act;
-        if(act==="del"){
-          CFG.questions.splice(idx,1);
-          renderQEditor();
-        }
-        if(act==="up" && idx>0){
-          [CFG.questions[idx-1], CFG.questions[idx]] = [CFG.questions[idx], CFG.questions[idx-1]];
-          renderQEditor();
-        }
-        if(act==="down" && idx<CFG.questions.length-1){
-          [CFG.questions[idx+1], CFG.questions[idx]] = [CFG.questions[idx], CFG.questions[idx+1]];
-          renderQEditor();
-        }
-        if(act==="addOpt"){
-          const cur = CFG.questions[idx];
-          cur.type = "choice";
-          cur.options = Array.isArray(cur.options) ? cur.options : [];
-          const n = cur.options.length;
-          cur.options.push({ id: uid(), v: String.fromCharCode(97+n) || "x", t:"新選項" });
-          renderQEditor();
-        }
-      };
-    });
-  });
+  // 依生活型態推估各營養的相對缺口（0~100：越高表示越需要補強）
+  // 這是「生活營養檔案」的方向性模型（非醫療）。
+  const veg = a.Q1;      // 蔬菜
+  const fruit = a.Q2;    // 水果
+  const fish = a.Q3;     // 魚
+  const calciumSrc = a.Q4;
+  const sun = a.Q5;
+  const sleep = a.Q6;
+  const stress = a.Q7;
+  const eatout = a.Q8;
+  const water = a.Q9;
+  const bowel = a.Q10;
+  const sugar = a.Q11;
+  const sport = a.Q12;
+
+  // 缺口計算：分數越低 → 缺口越高
+  const needA = clamp(100 - norm(veg, 3)*100, 0, 100);                 // 維生素A：蔬菜
+  const needC = clamp(100 - norm(fruit + veg, 6)*100, 0, 100);         // 維生素C：水果+蔬菜
+  const needD = clamp(100 - norm(sun, 3)*100, 0, 100);                 // 維生素D：日曬
+  const needE = clamp(60 + (eatout<=1?25:0) + (sugar<=1?20:0) - base*0.3, 0, 100); // 維生素E：外食/甜食偏多
+  const needB = clamp(50 + (stress<=1?25:0) + (sleep<=1?20:0) + (eatout<=1?15:0) - base*0.2, 0, 100); // 維生素B群：壓力/睡眠
+  const needCa = clamp(100 - norm(calciumSrc + sport, 6)*100, 0, 100); // 鈣鎂：鈣來源+運動
+  const needFe = clamp(55 + (eatout<=1?15:0) + (sport>=2?10:0) - norm(fish+veg,6)*20, 0, 100);        // 鐵：簡化推估
+  const needFiber = clamp(100 - norm(veg + fruit + bowel, 9)*100, 0, 100);  // 纖維：蔬果+排便
+  const needTrace = clamp(50 + (eatout<=1?20:0) + (stress<=1?15:0) - base*0.2, 0, 100); // 微量元素：外食/壓力
+
+  // 圖上顯示：用「建議補強程度」轉成「達成率」(越低越需要補)
+  // 你的圖是 40%、17% 這種，這裡做成：達成率 = 100 - need
+  const pct = (need)=> clamp(Math.round(100 - need), 0, 100);
+
+  return {
+    vitaminA: { pct: pct(needA), rightText: "3000µg" },
+    vitaminB: { pct: pct(needB), rightText: "B1:0.9mg, B2:1mg, B6:1.6mg" },
+    vitaminC: { pct: pct(needC), rightText: "2000mg" },
+    vitaminD: { pct: pct(needD), rightText: "50µg" },
+    vitaminE: { pct: pct(needE), rightText: "1000mg α-TE" },
+    calciumMg: { pct: pct(needCa), rightText: "鈣:2500mg、鎂:700mg" },
+    iron:     { pct: pct(needFe), rightText: "55mg" },
+    fiber:    { pct: pct(needFiber), rightText: "28g" },
+    trace:    { pct: pct(needTrace), rightText: "碘:55µg、硒:55µg" },
+  };
 }
 
-function renderPEditor(){
-  const box = $("pEditor");
-  box.innerHTML = "";
-  if(!CFG) return;
+function norm(v, max){ return clamp(v/max, 0, 1); }
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-  CFG.productLinks = (CFG.productLinks && typeof CFG.productLinks === "object") ? CFG.productLinks : {};
-  const keys = Object.keys(CFG.productLinks);
+/** ====== 結果圖 SVG（品牌：GavinTeam） ====== **/
+function makeResultSVG({ displayName, pictureUrl, gender, ageText, lineIdText, scores }){
+  const rows = [
+    ["維生素A", scores.vitaminA.pct, scores.vitaminA.rightText],
+    ["維生素B", scores.vitaminB.pct, scores.vitaminB.rightText],
+    ["維生素C", scores.vitaminC.pct, scores.vitaminC.rightText],
+    ["維生素D", scores.vitaminD.pct, scores.vitaminD.rightText],
+    ["維生素E", scores.vitaminE.pct, scores.vitaminE.rightText],
+    ["鈣鎂",     scores.calciumMg.pct, scores.calciumMg.rightText],
+    ["鐵",       scores.iron.pct, scores.iron.rightText],
+    ["纖維",     scores.fiber.pct, scores.fiber.rightText],
+    ["微量元素", scores.trace.pct, scores.trace.rightText],
+  ];
 
-  if(keys.length === 0){
-    box.innerHTML = `<div class="small text-white/70">尚無產品連結，按「新增連結」。</div>`;
-    return;
-  }
+  // bar 參數
+  const W = 900, H = 1100;
+  const leftX = 70, barX = 230, barW = 520, barH = 30;
+  let y = 320;
 
-  keys.forEach((k)=>{
-    const row = document.createElement("div");
-    row.className = "grid grid-cols-12 gap-2 items-center rounded-2xl border border-white/10 bg-white/5 p-2";
-    row.innerHTML = `
-      <div class="col-span-3">
-        <input class="inp" style="padding:8px 10px;border-radius:12px" value="${esc(k)}" data-pk="key">
-      </div>
-      <div class="col-span-8">
-        <input class="inp" style="padding:8px 10px;border-radius:12px" value="${esc(CFG.productLinks[k])}" placeholder="https://..." data-pk="url">
-      </div>
-      <div class="col-span-1 text-right">
-        <button class="btn btn-danger text-xs" data-act="delP">✕</button>
-      </div>
+  const bars = rows.map(([label, pct, right], i) => {
+    const fillW = Math.round(barW * (pct/100));
+    const yy = y + i*60;
+    return `
+      <text x="${leftX}" y="${yy+22}" font-size="22" fill="#E5E7EB" font-weight="700">${escapeXml(label)}：</text>
+
+      <rect x="${barX}" y="${yy}" width="${barW}" height="${barH}" rx="16" fill="rgba(255,255,255,0.20)"/>
+      <rect x="${barX}" y="${yy}" width="${fillW}" height="${barH}" rx="16" fill="url(#grad)"/>
+
+      <text x="${barX + barW/2}" y="${yy+22}" font-size="20" fill="#0B1220" font-weight="800" text-anchor="middle">${pct}%</text>
+      <text x="${barX + barW + 18}" y="${yy+22}" font-size="20" fill="#E5E7EB" font-weight="700">${escapeXml(right)}</text>
     `;
-    box.appendChild(row);
+  }).join("");
 
-    const keyInp = row.querySelector('input[data-pk="key"]');
-    const urlInp = row.querySelector('input[data-pk="url"]');
-    const delBtn = row.querySelector('button[data-act="delP"]');
-
-    keyInp.addEventListener("input", ()=>{
-      const nk = keyInp.value.trim();
-      if(!nk || nk === k) return;
-      CFG.productLinks[nk] = CFG.productLinks[k];
-      delete CFG.productLinks[k];
-      renderPEditor();
-    });
-    urlInp.addEventListener("input", ()=>{
-      const kk = keyInp.value.trim() || k;
-      CFG.productLinks[kk] = urlInp.value;
-    });
-    delBtn.onclick = ()=>{
-      const kk = keyInp.value.trim() || k;
-      delete CFG.productLinks[kk];
-      renderPEditor();
-    };
-  });
-}
-
-/* -------------------------
- * Boot
- * ------------------------- */
-(async function(){
-  loadKey();
-  setStatus("自動偵測 API…");
-
-  const resolved = await resolveApiBase();
-  if(resolved){
-    setApiBaseUI(resolved);
-    setStatus("—");
-    await loadList();
-    if(LIST.length){
-      CURRENT_ID = LIST[0].id;
-      await loadDraft();
-    }else{
-      showEmpty();
-    }
-  }else{
-    setApiBaseUI("");
-    setStatus("需要設定 API");
-    openModal();
-    showEmpty();
-  }
-})();
-</script>
-</body>
-</html>
+  // 圓形頭像（用 image + clipPath）
+  const avatar = pictureUrl ? `
+    <defs>
+      <clipPath id="clipAvatar"><circle cx="160" cy="150" r="84"/></clipPath>
+    </defs>
