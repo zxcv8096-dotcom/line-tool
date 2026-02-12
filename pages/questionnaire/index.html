@@ -1,124 +1,138 @@
 <!doctype html>
 <html lang="zh-TW">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>GavinTeam 問卷中控台</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-body{font-family:system-ui,"Microsoft JhengHei";}
-.card{border:1px solid #e5e7eb;border-radius:20px;padding:20px;background:#fff;}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>問卷後台｜填寫測試</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 p-8">
+<body class="bg-slate-50 min-h-screen">
+  <div class="max-w-3xl mx-auto p-6">
+    <div class="bg-white rounded-2xl shadow p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-extrabold text-slate-900">健康狀態評估問卷（測試版）</h1>
+          <p class="text-sm text-slate-500 mt-1">分數越高代表該面向越需要優先調整（不顯示作答內容給客戶）。</p>
+        </div>
 
-<div class="max-w-4xl mx-auto space-y-6">
-
-<h1 class="text-2xl font-bold">GavinTeam 問卷中控台</h1>
-
-<div class="card">
-<button onclick="addQuestion()" class="bg-blue-600 text-white px-4 py-2 rounded">
-新增題目
-</button>
-
-<button onclick="saveRules()" class="bg-green-600 text-white px-4 py-2 rounded ml-2">
-儲存到 Cloudflare
-</button>
-
-<button onclick="loadRules()" class="bg-gray-700 text-white px-4 py-2 rounded ml-2">
-讀取目前規則
-</button>
-</div>
-
-<div id="questions" class="space-y-6"></div>
-
-</div>
-
-<script>
-
-const WORKER_BASE = "https://你的worker網址"; // 改成你的
-
-let rules = [];
-
-function addQuestion() {
-  rules.push({
-    id: "q" + Date.now(),
-    title: "請輸入題目",
-    options: [
-      { text: "選項1", score: 0 },
-      { text: "選項2", score: 1 },
-      { text: "選項3", score: 2 },
-      { text: "選項4", score: 3 }
-    ]
-  });
-  render();
-}
-
-function render() {
-  const container = document.getElementById("questions");
-  container.innerHTML = "";
-
-  rules.forEach((q, i) => {
-
-    let html = `
-    <div class="card">
-      <div class="flex justify-between items-center">
-        <h2 class="font-bold">第 ${i+1} 題</h2>
-        <button onclick="deleteQuestion(${i})" class="text-red-600">刪除</button>
+        <div class="text-right">
+          <div class="text-xs text-slate-500">目前 Worker</div>
+          <div id="workerStatus" class="text-sm font-bold text-slate-900">讀取中…</div>
+        </div>
       </div>
 
-      <input class="w-full border p-2 mt-2"
-        value="${q.title}"
-        onchange="updateTitle(${i}, this.value)"
-      />
+      <hr class="my-4"/>
 
-      <div class="mt-4 space-y-2">
-    `;
+      <form id="form" class="space-y-5"></form>
 
-    q.options.forEach((opt, j) => {
-      html += `
-      <div class="flex gap-2">
-        <input class="flex-1 border p-2"
-          value="${opt.text}"
-          onchange="updateOption(${i},${j},this.value)"
-        />
-        <input type="number"
-          class="w-20 border p-2"
-          value="${opt.score}"
-          onchange="updateScore(${i},${j},this.value)"
-        />
+      <div class="flex gap-2 mt-6">
+        <button id="btnSubmit" type="button"
+          class="flex-1 bg-black text-white font-bold py-3 rounded-xl hover:opacity-90">
+          送出並產生報告
+        </button>
+        <button id="btnReset" type="button"
+          class="px-4 py-3 rounded-xl border font-bold hover:bg-slate-50">
+          清除
+        </button>
       </div>
+
+      <div id="result" class="mt-5 hidden">
+        <div class="rounded-xl border bg-slate-50 p-4">
+          <div class="font-extrabold text-slate-900 mb-2">回傳結果</div>
+          <pre id="resultJson" class="text-xs whitespace-pre-wrap break-words"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getWorkerBase, apiFetch } from "../../assets/js/api.js";
+
+    // 10 大面向（最小可跑版）
+    const QUESTIONS = [
+      { k:"energy", t:"起床後仍覺得累、精神不易集中" },
+      { k:"sleep", t:"入睡慢 / 半夜醒來 / 睡醒不清爽" },
+      { k:"gut", t:"飯後脹氣、排便不規律、消化不順" },
+      { k:"stress", t:"近期壓力大、容易煩躁或情緒起伏" },
+      { k:"immune", t:"容易反覆不舒服、恢復速度慢" },
+      { k:"circulation", t:"手腳冰冷、久坐久站容易不適" },
+      { k:"liver", t:"熬夜或外食比例高、覺得負擔重" },
+      { k:"sugar", t:"想吃甜食/澱粉，餐後容易昏沉" },
+      { k:"antiox", t:"3C/空汙/日曬多，覺得狀態耗損" },
+      { k:"bone", t:"肩頸痠、關節卡、久走久站不舒服" },
+    ];
+
+    // 顯示目前 worker
+    const base = getWorkerBase();
+    document.getElementById("workerStatus").textContent = base;
+
+    // render
+    const form = document.getElementById("form");
+    QUESTIONS.forEach((q, idx) => {
+      const wrap = document.createElement("div");
+      wrap.className = "rounded-xl border p-4";
+      wrap.innerHTML = `
+        <div class="font-bold text-slate-900 mb-3">${idx+1}. ${q.t}</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          ${[
+            {v:1, label:"幾乎沒有"},
+            {v:2, label:"偶爾"},
+            {v:3, label:"常常"},
+            {v:4, label:"幾乎每天"},
+          ].map(o => `
+            <label class="cursor-pointer rounded-lg border px-3 py-2 hover:bg-slate-50">
+              <input class="mr-2" type="radio" name="${q.k}" value="${o.v}" required>
+              <span class="text-sm font-semibold">${o.label}</span>
+            </label>
+          `).join("")}
+        </div>
       `;
+      form.appendChild(wrap);
     });
 
-    html += `</div></div>`;
-    container.innerHTML += html;
-  });
-}
+    const btnSubmit = document.getElementById("btnSubmit");
+    const btnReset = document.getElementById("btnReset");
+    const resultBox = document.getElementById("result");
+    const resultJson = document.getElementById("resultJson");
 
-function updateTitle(i,val){ rules[i].title = val; }
-function updateOption(i,j,val){ rules[i].options[j].text = val; }
-function updateScore(i,j,val){ rules[i].options[j].score = parseInt(val); }
-function deleteQuestion(i){ rules.splice(i,1); render(); }
+    btnReset.onclick = () => {
+      form.reset();
+      resultBox.classList.add("hidden");
+      resultJson.textContent = "";
+    };
 
-async function saveRules() {
-  await fetch(WORKER_BASE + "/api/save-rules", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(rules)
-  });
-  alert("已儲存！");
-}
+    btnSubmit.onclick = async () => {
+      // collect
+      const payload = {};
+      for (const q of QUESTIONS) {
+        const el = form.querySelector(`input[name="${q.k}"]:checked`);
+        payload[q.k] = el ? Number(el.value) : 0;
+      }
 
-async function loadRules() {
-  const res = await fetch(WORKER_BASE + "/api/get-rules");
-  rules = await res.json();
-  render();
-}
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "送出中…";
 
-render();
+      try {
+        // 你 Cloudflare Worker 需有此路由：POST /api/survey/submit
+        const out = await apiFetch("/api/survey/submit", {
+          method: "POST",
+          body: {
+            survey_id: "default",
+            answers: payload,
+            // 之後你要做顧問歸屬，可在這裡加：consultant_id / line_user_id / utm
+          }
+        });
 
-</script>
-
+        resultBox.classList.remove("hidden");
+        resultJson.textContent = JSON.stringify(out, null, 2);
+        alert("✅ 已產生報告（測試回傳已顯示）");
+      } catch (e) {
+        alert("❌ 送出失敗：" + e.message);
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "送出並產生報告";
+      }
+    };
+  </script>
 </body>
 </html>
