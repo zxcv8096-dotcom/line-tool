@@ -7,11 +7,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body{ font-family: system-ui, "Microsoft JhengHei"; }
-    .card{ border:1px solid #e5e7eb; border-radius:20px; background:#fff; box-shadow:0 12px 30px rgba(2,6,23,.08); }
-    .qopt input{ display:none; }
-    .qopt label{ display:block; border:1px solid #e5e7eb; border-radius:14px; padding:12px 12px; cursor:pointer; }
-    .qopt input:checked + label{ border-color:#2563eb; box-shadow:0 0 0 4px rgba(37,99,235,.12); }
+    body{font-family:system-ui,"Microsoft JhengHei";}
+    .card{border:1px solid #e5e7eb;border-radius:22px;background:#fff;box-shadow:0 14px 40px rgba(2,6,23,.08);}
+    .qopt input{display:none;}
+    .qopt label{display:block;border:1px solid #e5e7eb;border-radius:16px;padding:12px 14px;cursor:pointer;}
+    .qopt input:checked + label{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.12);}
   </style>
 </head>
 <body class="bg-slate-50">
@@ -19,7 +19,7 @@
     <div class="flex items-center justify-between gap-3 mb-5">
       <div>
         <div class="text-2xl font-extrabold text-slate-900">GavinTeam｜生活營養問卷</div>
-        <div class="text-sm text-slate-500">填完會自動產出你的「營養檔案結果圖」，可一鍵分享回 LINE。</div>
+        <div class="text-sm text-slate-500">填完會自動產生你的「營養檔案報告圖」，並回傳到 LINE。</div>
       </div>
       <div class="text-xs text-slate-500 text-right">
         <div id="liffState">LIFF：初始化中…</div>
@@ -29,160 +29,93 @@
 
     <div class="card p-5 md:p-7">
       <div class="flex items-start gap-4">
-        <img id="avatar" class="w-14 h-14 rounded-full border" src="" alt="" />
+        <img id="avatar" class="w-14 h-14 rounded-full border bg-white" src="" alt="">
         <div class="flex-1">
           <div class="font-bold text-slate-900">請用直覺回答（約 1 分鐘）</div>
-          <div class="text-sm text-slate-500">這是生活營養檢視，非醫療診斷；結果會以「建議方向」呈現。</div>
+          <div class="text-sm text-slate-500">生活營養檢視（非醫療診斷），用於提供補強方向。</div>
         </div>
       </div>
 
       <div id="questions" class="mt-6 space-y-6"></div>
 
       <div class="mt-6 flex flex-wrap gap-3">
-        <button id="btnMake" class="px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700">
-          產出我的營養檔案結果圖
+        <button id="btnSubmit" class="px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700">
+          送出並取得我的專屬報告圖
         </button>
-        <button id="btnShare" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-black hidden">
-          分享到 LINE
-        </button>
-        <a id="btnOpen" class="px-4 py-3 rounded-xl border font-bold hidden" target="_blank" rel="noreferrer">
-          另開結果圖
-        </a>
       </div>
 
       <div id="status" class="mt-4 text-sm text-slate-600"></div>
 
       <div class="mt-6 hidden" id="previewWrap">
-        <div class="font-bold text-slate-900 mb-2">預覽</div>
+        <div class="font-bold text-slate-900 mb-2">你這邊看到的是預覽（LINE 也會收到同一張）</div>
         <img id="preview" class="w-full rounded-2xl border bg-white" alt="result"/>
       </div>
-    </div>
-
-    <div class="text-xs text-slate-400 mt-5">
-      © GavinTeam
     </div>
   </div>
 
 <script>
-/** ====== 你只需要改這 2 個 ====== **/
-const WORKER_BASE = "https://YOUR_WORKER_SUBDOMAIN.workers.dev"; // ← 改成你的 Worker 網址
-const LINE_ID_TEXT = "line:@aplusteam"; // 你想放在圖上的 line id（可改成你的）
+/** ===== 必改區 ===== */
+const WORKER_BASE = "https://YOUR_WORKER_SUBDOMAIN.workers.dev"; // 改你的 Worker
+const LIFF_ID = "YOUR_LIFF_ID"; // 改你的 LIFF ID
+const BRAND_NAME = "GavinTeam";
+const BRAND_LINE_ID = "line:@你的lineid"; // 改你要顯示的 line
 
-/** ====== 問卷題庫（10+ 題） ====== **/
+/** ===== 問卷題庫（你可之後再擴充）===== */
 const QUESTIONS = [
-  q("Q1", "你每天蔬菜（含深綠色）大概？", [
-    opt("A", "幾乎沒有 / 很少", 0),
-    opt("B", "1 碗左右", 1),
-    opt("C", "2 碗左右", 2),
-    opt("D", "3 碗以上", 3),
-  ]),
-  q("Q2", "你每天水果大概？", [
-    opt("A", "幾乎沒有", 0),
-    opt("B", "1 份", 1),
-    opt("C", "2 份", 2),
-    opt("D", "3 份以上", 3),
-  ]),
-  q("Q3", "你一週吃魚/海鮮（非油炸）頻率？", [
-    opt("A", "幾乎不吃", 0),
-    opt("B", "1 次", 1),
-    opt("C", "2–3 次", 2),
-    opt("D", "4 次以上", 3),
-  ]),
-  q("Q4", "你一週乳製品/豆奶/小魚乾等「鈣來源」？", [
-    opt("A", "幾乎沒有", 0),
-    opt("B", "1–2 次", 1),
-    opt("C", "3–5 次", 2),
-    opt("D", "幾乎每天", 3),
-  ]),
-  q("Q5", "你平常日曬（臉/手臂）約？", [
-    opt("A", "幾乎不曬太陽", 0),
-    opt("B", "每週 1–2 次", 1),
-    opt("C", "每週 3–5 次", 2),
-    opt("D", "幾乎每天", 3),
-  ]),
-  q("Q6", "你睡眠品質多數日子？", [
-    opt("A", "很差（常醒/難入睡）", 0),
-    opt("B", "普通", 1),
-    opt("C", "不錯", 2),
-    opt("D", "很好（穩定深睡）", 3),
-  ]),
-  q("Q7", "你日常壓力狀態？", [
-    opt("A", "長期高壓", 0),
-    opt("B", "偏高", 1),
-    opt("C", "中等", 2),
-    opt("D", "偏低/能放鬆", 3),
-  ]),
-  q("Q8", "你外食比例？", [
-    opt("A", "幾乎天天外食", 0),
-    opt("B", "一半以上外食", 1),
-    opt("C", "一週 2–3 次外食", 2),
-    opt("D", "很少外食", 3),
-  ]),
-  q("Q9", "你水分攝取（白開水/無糖）？", [
-    opt("A", "很少", 0),
-    opt("B", "普通", 1),
-    opt("C", "足夠", 2),
-    opt("D", "很足夠", 3),
-  ]),
-  q("Q10", "你排便狀況多數日子？", [
-    opt("A", "不規律/偏乾", 0),
-    opt("B", "偶爾不順", 1),
-    opt("C", "大多順", 2),
-    opt("D", "很規律", 3),
-  ]),
-  q("Q11", "你常吃甜食/含糖飲？", [
-    opt("A", "幾乎每天", 0),
-    opt("B", "一週 3–4 次", 1),
-    opt("C", "一週 1–2 次", 2),
-    opt("D", "很少", 3),
-  ]),
-  q("Q12", "你運動（會流汗）頻率？", [
-    opt("A", "幾乎沒有", 0),
-    opt("B", "一週 1 次", 1),
-    opt("C", "一週 2–3 次", 2),
-    opt("D", "一週 4 次以上", 3),
-  ]),
+  q("veg","你每天蔬菜（含深綠色）大概？", ["幾乎沒有/很少","1 碗左右","2 碗左右","3 碗以上"]),
+  q("fruit","你每天水果大概？", ["幾乎沒有","1 份","2 份","3 份以上"]),
+  q("fish","你一週吃魚/海鮮（非油炸）頻率？", ["幾乎不吃","1 次","2–3 次","4 次以上"]),
+  q("calcium","你一週乳製品/豆奶/小魚乾等「鈣來源」？", ["幾乎沒有","1–2 次","3–5 次","幾乎每天"]),
+  q("sun","你平常日曬（臉/手臂）約？", ["幾乎不曬太陽","每週 1–2 次","每週 3–5 次","幾乎每天"]),
+  q("sleep","你睡眠品質多數日子？", ["很差（常醒/難入睡）","普通","不錯","很好（穩定深睡）"]),
+  q("stress","你日常壓力狀態？", ["長期高壓","偏高","中等","偏低/能放鬆"]),
+  q("eatout","你外食比例？", ["幾乎天天外食","一半以上外食","一週 2–3 次外食","很少外食"]),
+  q("water","你水分攝取（白開水/無糖）？", ["很少","普通","足夠","很足夠"]),
+  q("bowel","你排便狀況多數日子？", ["不規律/偏乾","偶爾不順","大多順","很規律"]),
 ];
 
-function q(id, title, options){ return { id, title, options }; }
-function opt(k, label, score){ return { k, label, score }; }
+function q(id, title, labels){
+  return { id, title, labels }; // 選項分數：0~3
+}
 
-/** ====== LIFF Profile ====== **/
-let PROFILE = { userId:"", displayName:"", pictureUrl:"" };
+let PROFILE = { userId:"", displayName:"訪客", pictureUrl:"" };
+let UID_FROM_QUERY = new URLSearchParams(location.search).get("uid") || "";
+
+/** ===== 初始化 LIFF ===== */
 init();
 
 async function init(){
-  const s = (t)=> document.getElementById("status").textContent = t;
+  const set = (t)=> document.getElementById("status").textContent = t;
+  renderQuestions();
+
   try{
-    document.getElementById("liffState").textContent = "LIFF：初始化…";
-    await liff.init({ liffId: "YOUR_LIFF_ID" }); // ← 改成你的 LIFF ID
+    await liff.init({ liffId: LIFF_ID });
     if(!liff.isLoggedIn()) liff.login();
 
     const p = await liff.getProfile();
-    PROFILE = { userId: p.userId, displayName: p.displayName, pictureUrl: p.pictureUrl };
+    PROFILE = { userId: p.userId, displayName: p.displayName, pictureUrl: p.pictureUrl || "" };
 
     document.getElementById("liffState").textContent = "LIFF：已連線";
     document.getElementById("who").textContent = p.displayName;
     document.getElementById("avatar").src = p.pictureUrl || "https://via.placeholder.com/96";
-    renderQuestions();
-    s("請完成問卷後按「產出結果圖」。");
+    set("請完成問卷後送出。送出後報告圖會自動回到 LINE。");
   }catch(e){
-    document.getElementById("liffState").textContent = "LIFF：未連線（可用瀏覽器測試）";
-    renderQuestions();
-    s("⚠️ 若你在一般瀏覽器測試，無法取得 LINE 大頭貼與名稱；上線到 LIFF 就會正常。");
+    document.getElementById("liffState").textContent = "LIFF：未連線（瀏覽器測試中）";
+    document.getElementById("avatar").src = "https://via.placeholder.com/96";
+    set("⚠️ 你目前在一般瀏覽器測試；上到 LINE LIFF 會有姓名與大頭貼。");
   }
 }
 
 function renderQuestions(){
   const wrap = document.getElementById("questions");
   wrap.innerHTML = QUESTIONS.map((qq, idx) => {
-    const opts = qq.options.map(o => {
-      const rid = `${qq.id}_${o.k}`;
+    const opts = qq.labels.map((label, k) => {
+      const rid = `${qq.id}_${k}`;
       return `
         <div class="qopt">
-          <input type="radio" name="${qq.id}" id="${rid}" value="${o.score}">
+          <input type="radio" name="${qq.id}" id="${rid}" value="${k}">
           <label for="${rid}" class="hover:bg-slate-50">
-            <div class="font-semibold text-slate-900">${o.label}</div>
+            <div class="font-semibold text-slate-900">${label}</div>
           </label>
         </div>
       `;
@@ -197,11 +130,11 @@ function renderQuestions(){
   }).join("");
 }
 
-/** ====== 核心：計分 → 產 SVG → 轉 PNG → 上傳 R2 → 存 KV → 分享 ====== **/
-document.getElementById("btnMake").addEventListener("click", async () => {
+/** ===== 送出：算分 → 產 SVG（你那張風格）→ 轉 PNG → 上傳 + Push ===== */
+document.getElementById("btnSubmit").addEventListener("click", async ()=>{
   const status = (t)=> document.getElementById("status").textContent = t;
 
-  // 1) 收答案
+  // collect answers
   const answers = {};
   for(const qq of QUESTIONS){
     const v = document.querySelector(`input[name="${qq.id}"]:checked`)?.value;
@@ -212,173 +145,191 @@ document.getElementById("btnMake").addEventListener("click", async () => {
     answers[qq.id] = Number(v);
   }
 
-  // 2) 算營養檔案（0~100）
-  const scores = computeNutritionProfile(answers);
+  const userId = PROFILE.userId || UID_FROM_QUERY || "browser_test";
 
-  // 3) 產 SVG（結果圖）
-  status("生成結果圖中…");
-  const svg = makeResultSVG({
+  // compute nutrition scores (0~100)
+  const scores = evaluate(answers);
+
+  status("生成報告圖中…");
+  const svg = buildReportSVG({
+    brandName: BRAND_NAME,
+    brandLine: BRAND_LINE_ID,
     displayName: PROFILE.displayName || "訪客",
-    pictureUrl: PROFILE.pictureUrl || "",
-    gender: "—",
     ageText: "19歲以上",
-    lineIdText: LINE_ID_TEXT,
-    scores,
+    genderText: "—",
+    avatarUrl: PROFILE.pictureUrl || "",
+    scores
   });
 
-  // 4) SVG→PNG
-  const pngBase64 = await svgToPngDataUrl(svg, 900, 1100);
+  const pngBase64 = await svgToPng(svg, 768, 1024);
 
-  // 5) 上傳到 Worker → R2
-  status("上傳結果圖到雲端…");
-  const up = await fetch(`${WORKER_BASE}/api/upload`, {
+  // preview in page
+  document.getElementById("previewWrap").classList.remove("hidden");
+  document.getElementById("preview").src = pngBase64;
+
+  status("上傳並回傳到 LINE…");
+  const res = await fetch(`${WORKER_BASE}/api/submit`, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
-      userId: PROFILE.userId || "browser_test",
+      userId,
+      profile: PROFILE,
+      answers,
+      scores,
       pngBase64
     })
-  }).then(r=>r.json());
+  }).then(r=>r.json()).catch(()=>null);
 
-  if(!up.ok){
-    status("❌ 上傳失敗：" + (up.message || "unknown"));
+  if(!res?.ok){
+    status("❌ 送出失敗（請確認 Worker/ALLOW_ORIGINS/Secrets 設定）");
     return;
   }
 
-  // 6) 存 KV（記錄）
-  await fetch(`${WORKER_BASE}/api/save`, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      userId: PROFILE.userId || "browser_test",
-      profile: PROFILE,
-      scores,
-      imageUrl: up.publicUrl,
-      answers
-    })
-  }).catch(()=>{});
-
-  // 7) 顯示預覽 + 打開連結 + 顯示分享鈕
-  document.getElementById("previewWrap").classList.remove("hidden");
-  document.getElementById("preview").src = up.publicUrl;
-  const openBtn = document.getElementById("btnOpen");
-  openBtn.href = up.publicUrl;
-  openBtn.classList.remove("hidden");
-
-  const shareBtn = document.getElementById("btnShare");
-  shareBtn.classList.remove("hidden");
-  shareBtn.dataset.url = up.publicUrl;
-
-  status("✅ 完成！你可以「分享到 LINE」。");
+  status("✅ 已完成！請回到 LINE 查看你的專屬報告圖。");
 });
 
-document.getElementById("btnShare").addEventListener("click", async (e) => {
-  const url = e.currentTarget.dataset.url;
-  const status = (t)=> document.getElementById("status").textContent = t;
+/** ===== 評估：把生活型態轉成像你圖那樣的百分比 ===== */
+function evaluate(a){
+  // a: 0~3, 越高越好
+  // 把「需要補強」轉成「達成率」：達成率越低 → 越需要補
+  const clamp=(n)=>Math.max(0,Math.min(100,Math.round(n)));
 
-  try{
-    if(!window.liff || !liff.isInClient()){
-      status("⚠️ 目前不是在 LINE App 內開啟，無法直接叫出分享器。你可以用「另開結果圖」複製連結分享。");
-      return;
-    }
-    const res = await liff.shareTargetPicker([{
-      type: "image",
-      originalContentUrl: url,
-      previewImageUrl: url
-    }]);
-    if(res) status("✅ 已分享！");
-  }catch(err){
-    status("❌ 分享失敗（可能是權限/網域未設定）：" + err);
-  }
-});
+  const veg=a.veg, fruit=a.fruit, fish=a.fish, calcium=a.calcium, sun=a.sun, sleep=a.sleep, stress=a.stress, eatout=a.eatout, water=a.water, bowel=a.bowel;
 
-/** ====== 計分規則（可後續再調整更精準） ====== **/
-function computeNutritionProfile(a){
-  // 每題 0~3，總題數 12，所以 rawMax = 36
-  const total = Object.values(a).reduce((s,v)=>s+v,0);
-  const base = clamp(Math.round((total/36)*100), 0, 100);
+  const needA = (3-veg)*25 + (eatout<=1?10:0);
+  const needC = (3-fruit)*25 + (3-veg)*10;
+  const needD = (3-sun)*30;
+  const needB = (3-stress)*20 + (3-sleep)*15 + (eatout<=1?10:0);
+  const needE = (eatout<=1?25:10) + (water<=1?10:0);
+  const needCa = (3-calcium)*25 + (sleep<=1?8:0);
+  const needFe = (eatout<=1?10:0) + (fish<=1?10:0);
+  const needFiber = (3-bowel)*18 + (3-veg)*10 + (3-fruit)*10;
+  const needTrace = (eatout<=1?15:5) + (fish<=1?15:5);
 
-  // 依生活型態推估各營養的相對缺口（0~100：越高表示越需要補強）
-  // 這是「生活營養檔案」的方向性模型（非醫療）。
-  const veg = a.Q1;      // 蔬菜
-  const fruit = a.Q2;    // 水果
-  const fish = a.Q3;     // 魚
-  const calciumSrc = a.Q4;
-  const sun = a.Q5;
-  const sleep = a.Q6;
-  const stress = a.Q7;
-  const eatout = a.Q8;
-  const water = a.Q9;
-  const bowel = a.Q10;
-  const sugar = a.Q11;
-  const sport = a.Q12;
-
-  // 缺口計算：分數越低 → 缺口越高
-  const needA = clamp(100 - norm(veg, 3)*100, 0, 100);                 // 維生素A：蔬菜
-  const needC = clamp(100 - norm(fruit + veg, 6)*100, 0, 100);         // 維生素C：水果+蔬菜
-  const needD = clamp(100 - norm(sun, 3)*100, 0, 100);                 // 維生素D：日曬
-  const needE = clamp(60 + (eatout<=1?25:0) + (sugar<=1?20:0) - base*0.3, 0, 100); // 維生素E：外食/甜食偏多
-  const needB = clamp(50 + (stress<=1?25:0) + (sleep<=1?20:0) + (eatout<=1?15:0) - base*0.2, 0, 100); // 維生素B群：壓力/睡眠
-  const needCa = clamp(100 - norm(calciumSrc + sport, 6)*100, 0, 100); // 鈣鎂：鈣來源+運動
-  const needFe = clamp(55 + (eatout<=1?15:0) + (sport>=2?10:0) - norm(fish+veg,6)*20, 0, 100);        // 鐵：簡化推估
-  const needFiber = clamp(100 - norm(veg + fruit + bowel, 9)*100, 0, 100);  // 纖維：蔬果+排便
-  const needTrace = clamp(50 + (eatout<=1?20:0) + (stress<=1?15:0) - base*0.2, 0, 100); // 微量元素：外食/壓力
-
-  // 圖上顯示：用「建議補強程度」轉成「達成率」(越低越需要補)
-  // 你的圖是 40%、17% 這種，這裡做成：達成率 = 100 - need
-  const pct = (need)=> clamp(Math.round(100 - need), 0, 100);
+  const pct = (need)=> clamp(100 - need);
 
   return {
-    vitaminA: { pct: pct(needA), rightText: "3000µg" },
-    vitaminB: { pct: pct(needB), rightText: "B1:0.9mg, B2:1mg, B6:1.6mg" },
-    vitaminC: { pct: pct(needC), rightText: "2000mg" },
-    vitaminD: { pct: pct(needD), rightText: "50µg" },
-    vitaminE: { pct: pct(needE), rightText: "1000mg α-TE" },
-    calciumMg: { pct: pct(needCa), rightText: "鈣:2500mg、鎂:700mg" },
-    iron:     { pct: pct(needFe), rightText: "55mg" },
-    fiber:    { pct: pct(needFiber), rightText: "28g" },
-    trace:    { pct: pct(needTrace), rightText: "碘:55µg、硒:55µg" },
+    vitaminA: pct(needA),
+    vitaminB: pct(needB),
+    vitaminC: pct(needC),
+    vitaminD: pct(needD),
+    vitaminE: pct(needE),
+    calciumMg: pct(needCa),
+    iron: pct(needFe),
+    fiber: pct(needFiber),
+    trace: pct(needTrace),
   };
 }
 
-function norm(v, max){ return clamp(v/max, 0, 1); }
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+/** ===== SVG：做成你給的圖那種風格（背景格線 + 圓形頭像 + 條狀百分比） ===== */
+function buildReportSVG({brandName, brandLine, displayName, ageText, genderText, avatarUrl, scores}){
+  const W=768, H=1024;
 
-/** ====== 結果圖 SVG（品牌：GavinTeam） ====== **/
-function makeResultSVG({ displayName, pictureUrl, gender, ageText, lineIdText, scores }){
   const rows = [
-    ["維生素A", scores.vitaminA.pct, scores.vitaminA.rightText],
-    ["維生素B", scores.vitaminB.pct, scores.vitaminB.rightText],
-    ["維生素C", scores.vitaminC.pct, scores.vitaminC.rightText],
-    ["維生素D", scores.vitaminD.pct, scores.vitaminD.rightText],
-    ["維生素E", scores.vitaminE.pct, scores.vitaminE.rightText],
-    ["鈣鎂",     scores.calciumMg.pct, scores.calciumMg.rightText],
-    ["鐵",       scores.iron.pct, scores.iron.rightText],
-    ["纖維",     scores.fiber.pct, scores.fiber.rightText],
-    ["微量元素", scores.trace.pct, scores.trace.rightText],
+    ["維生素A", scores.vitaminA, "3000µg"],
+    ["維生素B", scores.vitaminB, "B1:0.9mg、B2:1mg、B6:1.6mg"],
+    ["維生素C", scores.vitaminC, "2000mg"],
+    ["維生素D", scores.vitaminD, "50µg"],
+    ["維生素E", scores.vitaminE, "1000mg α-TE"],
+    ["鈣鎂", scores.calciumMg, "鈣:2500mg、鎂:700mg"],
+    ["鐵", scores.iron, "55mg"],
+    ["纖維", scores.fiber, "29g"],
+    ["微量元素", scores.trace, "碘:55µg、硒:55µg"],
   ];
 
-  // bar 參數
-  const W = 900, H = 1100;
-  const leftX = 70, barX = 230, barW = 520, barH = 30;
-  let y = 320;
+  const leftX=70, barX=210, barW=420, barH=26;
+  let y=300;
 
-  const bars = rows.map(([label, pct, right], i) => {
-    const fillW = Math.round(barW * (pct/100));
-    const yy = y + i*60;
+  const bars = rows.map(([label,pct,right],i)=>{
+    const fillW = Math.round(barW*(pct/100));
+    const yy = y + i*55;
     return `
-      <text x="${leftX}" y="${yy+22}" font-size="22" fill="#E5E7EB" font-weight="700">${escapeXml(label)}：</text>
-
-      <rect x="${barX}" y="${yy}" width="${barW}" height="${barH}" rx="16" fill="rgba(255,255,255,0.20)"/>
-      <rect x="${barX}" y="${yy}" width="${fillW}" height="${barH}" rx="16" fill="url(#grad)"/>
-
-      <text x="${barX + barW/2}" y="${yy+22}" font-size="20" fill="#0B1220" font-weight="800" text-anchor="middle">${pct}%</text>
-      <text x="${barX + barW + 18}" y="${yy+22}" font-size="20" fill="#E5E7EB" font-weight="700">${escapeXml(right)}</text>
+      <text x="${leftX}" y="${yy+18}" font-size="18" fill="rgba(255,255,255,0.92)" font-weight="700">${esc(label)}：</text>
+      <rect x="${barX}" y="${yy}" width="${barW}" height="${barH}" rx="13" fill="rgba(255,255,255,0.18)"/>
+      <rect x="${barX}" y="${yy}" width="${fillW}" height="${barH}" rx="13" fill="url(#grad)"/>
+      <text x="${barX+Math.max(36,fillW-10)}" y="${yy+19}" font-size="16" fill="#0b1220" font-weight="900" text-anchor="end">${pct}%</text>
+      <text x="${barX+barW+16}" y="${yy+19}" font-size="16" fill="rgba(255,255,255,0.92)" font-weight="700">${esc(right)}</text>
     `;
   }).join("");
 
-  // 圓形頭像（用 image + clipPath）
-  const avatar = pictureUrl ? `
+  const avatar = avatarUrl ? `
     <defs>
-      <clipPath id="clipAvatar"><circle cx="160" cy="150" r="84"/></clipPath>
+      <clipPath id="clipA"><circle cx="120" cy="120" r="72"/></clipPath>
     </defs>
+    <circle cx="120" cy="120" r="80" fill="rgba(255,255,255,0.18)"/>
+    <image href="${esc(avatarUrl)}" x="48" y="48" width="144" height="144" clip-path="url(#clipA)" preserveAspectRatio="xMidYMid slice"/>
+    <circle cx="120" cy="120" r="72" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="4"/>
+  ` : `
+    <circle cx="120" cy="120" r="80" fill="rgba(255,255,255,0.18)"/>
+    <circle cx="120" cy="120" r="72" fill="rgba(255,255,255,0.35)"/>
+  `;
+
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#352a8f"/>
+        <stop offset="0.55" stop-color="#1747d1"/>
+        <stop offset="1" stop-color="#0a1430"/>
+      </linearGradient>
+      <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffb347"/>
+        <stop offset="1" stop-color="#ff2a68"/>
+      </linearGradient>
+      <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+        <path d="M60 0H0V60" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+      </pattern>
+    </defs>
+
+    <rect width="${W}" height="${H}" fill="url(#bg)"/>
+    <rect width="${W}" height="${H}" fill="url(#grid)"/>
+
+    ${avatar}
+
+    <text x="220" y="105" font-size="52" fill="#fff" font-weight="900">${esc(brandName)}</text>
+    <text x="220" y="140" font-size="20" fill="rgba(255,255,255,0.85)" font-weight="700">${esc(brandLine)}</text>
+
+    <text x="220" y="190" font-size="26" fill="#fff" font-weight="800">${esc(displayName)}</text>
+    <text x="220" y="220" font-size="16" fill="rgba(255,255,255,0.75)" font-weight="700">年齡:${esc(ageText)}・性別:${esc(genderText)}</text>
+
+    ${bars}
+
+    <text x="${W/2}" y="${H-40}" font-size="46" fill="rgba(255,255,255,0.92)" font-weight="900" text-anchor="middle">${esc(brandName)}</text>
+  </svg>`;
+}
+
+function esc(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&apos;");
+}
+
+/** SVG → PNG dataURL */
+async function svgToPng(svgText, width, height){
+  const blob = new Blob([svgText], { type:"image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const img = await loadImage(url);
+  URL.revokeObjectURL(url);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, width, height);
+  return canvas.toDataURL("image/png");
+}
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.crossOrigin="anonymous";
+    img.onload=()=>resolve(img);
+    img.onerror=reject;
+    img.src=src;
+  });
+}
+</script>
+</body>
+</html>
