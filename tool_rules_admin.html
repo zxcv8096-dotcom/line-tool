@@ -1,105 +1,237 @@
-// ✅ 最小後台 API：三槽位規則 + 上線指標
-// KV keys:
-// - RULES_PROD / RULES_DEV / RULES_OLD : JSON string
-// - RULES_ACTIVE_SLOT : "prod" | "dev" | "old"
-//
-// Secrets:
-// - ADMIN_TOKEN
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>規則版本切換後台（已上線 / 開發中 / 舊檔）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{font-family:system-ui,"Microsoft JhengHei";}
+    textarea{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50">
+  <div class="max-w-5xl mx-auto p-5">
+    <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900">規則版本切換後台</h1>
+        <p class="text-sm text-slate-600 mt-1">用一個指標切換：已上線 / 開發中 / 舊檔（方便 debug 與回退）</p>
+      </div>
+      <div class="bg-white border rounded-2xl p-3 shadow-sm w-full sm:w-auto">
+        <div class="text-xs font-bold text-slate-600">API Base（你的 Worker 網址）</div>
+        <input id="apiBase" class="mt-1 w-full sm:w-[360px] px-3 py-2 border rounded-xl text-sm"
+               placeholder="https://xxx.yourname.workers.dev"
+               />
+      </div>
+    </div>
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "content-type": "application/json; charset=utf-8" },
-  });
-}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5">
+      <!-- 左：操作 -->
+      <div class="bg-white border rounded-2xl p-4 shadow-sm">
+        <div class="text-sm font-bold text-slate-900">1) 權杖（簡易保護）</div>
+        <p class="text-xs text-slate-600 mt-1">Worker 端會驗證 <code class="px-1 bg-slate-100 rounded">x-admin-token</code></p>
+        <input id="token" type="password" class="mt-2 w-full px-3 py-2 border rounded-xl text-sm" placeholder="輸入你的 admin token" />
+        <button id="saveToken" class="mt-2 w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-black">
+          保存 Token（存在本機）
+        </button>
 
-function assertAdmin(request, env) {
-  const t = request.headers.get("x-admin-token") || "";
-  if (!env.ADMIN_TOKEN || t !== env.ADMIN_TOKEN) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "content-type": "application/json; charset=utf-8" },
+        <div class="h-px bg-slate-100 my-4"></div>
+
+        <div class="text-sm font-bold text-slate-900">2) 選擇槽位</div>
+        <div class="mt-2">
+          <label class="text-xs font-bold text-slate-600">目前上線使用槽位</label>
+          <div class="flex items-center gap-2 mt-1">
+            <span id="activeBadge" class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800">未讀取</span>
+            <button id="refreshActive" class="px-3 py-1.5 rounded-lg border text-xs font-bold hover:bg-slate-50">重新讀取</button>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="text-xs font-bold text-slate-600">我要編輯的槽位</label>
+          <select id="slot" class="mt-1 w-full px-3 py-2 border rounded-xl text-sm">
+            <option value="prod">已上線（PROD）</option>
+            <option value="dev">開發中（DEV）</option>
+            <option value="old">舊檔（OLD）</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+          <button id="loadSlot" class="flex-1 px-3 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700">
+            讀取槽位規則
+          </button>
+          <button id="saveSlot" class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700">
+            儲存到槽位
+          </button>
+        </div>
+
+        <div class="h-px bg-slate-100 my-4"></div>
+
+        <div class="text-sm font-bold text-slate-900">3) 切換上線</div>
+        <p class="text-xs text-slate-600 mt-1">把「上線指標」改成你選的槽位</p>
+        <button id="setActive" class="mt-2 w-full px-3 py-2 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700">
+          立刻切換上線到：目前選取槽位
+        </button>
+
+        <div class="mt-3">
+          <div class="text-sm font-bold text-slate-900">4) 一鍵備份 / 回退</div>
+          <p class="text-xs text-slate-600 mt-1">把 PROD 規則複製到 OLD（方便回退）</p>
+          <button id="backupProdToOld" class="mt-2 w-full px-3 py-2 rounded-xl border font-bold text-sm hover:bg-slate-50">
+            備份：PROD → OLD
+          </button>
+        </div>
+
+        <div id="msg" class="mt-4 text-xs"></div>
+      </div>
+
+      <!-- 右：JSON 編輯器 -->
+      <div class="bg-white border rounded-2xl p-4 shadow-sm lg:col-span-2">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <div class="text-sm font-bold text-slate-900">規則 JSON</div>
+            <div class="text-xs text-slate-600 mt-1">建議：DEV 改好 → 測試 OK → 切換上線到 PROD</div>
+          </div>
+          <div class="flex gap-2">
+            <button id="formatJson" class="px-3 py-2 rounded-xl border text-xs font-bold hover:bg-slate-50">格式化</button>
+            <button id="validateJson" class="px-3 py-2 rounded-xl border text-xs font-bold hover:bg-slate-50">檢查 JSON</button>
+          </div>
+        </div>
+
+        <textarea id="editor" class="mt-3 w-full h-[520px] px-3 py-3 border rounded-2xl text-sm"
+          placeholder='例如：{"version":"2026-02-12","rules":[...]}'
+        ></textarea>
+
+        <div class="mt-3 text-xs text-slate-500">
+          小提示：你可以把問卷規則全部當 JSON 放這裡，Worker 只負責「讀哪個槽位 + 套用規則」。
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  const SLOT_LABEL = { prod: "已上線(PROD)", dev: "開發中(DEV)", old: "舊檔(OLD)" };
+
+  function apiBase() {
+    const v = $("apiBase").value.trim().replace(/\/+$/, "");
+    if (!v) throw new Error("請先填 API Base（你的 Worker 網址）");
+    return v;
+  }
+
+  function token() {
+    const t = $("token").value.trim() || localStorage.getItem("ADMIN_TOKEN") || "";
+    if (!t) throw new Error("請先輸入 admin token");
+    return t;
+  }
+
+  function setMsg(text, ok=true) {
+    $("msg").className = "mt-4 text-xs " + (ok ? "text-emerald-700" : "text-red-700");
+    $("msg").textContent = text;
+  }
+
+  async function api(path, { method="GET", body=null } = {}) {
+    const res = await fetch(apiBase() + path, {
+      method,
+      headers: {
+        "content-type": "application/json",
+        "x-admin-token": token()
+      },
+      body: body ? JSON.stringify(body) : null
     });
-  }
-}
-
-function slotToKey(slot) {
-  if (slot === "prod") return "RULES_PROD";
-  if (slot === "dev") return "RULES_DEV";
-  if (slot === "old") return "RULES_OLD";
-  return null;
-}
-
-async function handleAdminApi(request, env) {
-  // 管理端驗證
-  assertAdmin(request, env);
-
-  const url = new URL(request.url);
-
-  // GET /admin/active
-  if (url.pathname === "/admin/active" && request.method === "GET") {
-    const active = (await env.DB.get("RULES_ACTIVE_SLOT")) || "prod";
-    return json({ active });
+    const txt = await res.text();
+    let data;
+    try { data = JSON.parse(txt); } catch { data = { raw: txt }; }
+    if (!res.ok) throw new Error(data?.error || data?.message || ("HTTP " + res.status));
+    return data;
   }
 
-  // PUT /admin/active  body: { active: "prod|dev|old" }
-  if (url.pathname === "/admin/active" && request.method === "PUT") {
-    const body = await request.json();
-    const active = body?.active;
-    if (!["prod","dev","old"].includes(active)) return json({ error: "invalid active" }, 400);
-    await env.DB.put("RULES_ACTIVE_SLOT", active);
-    return json({ ok: true, active });
+  async function refreshActive() {
+    const data = await api("/admin/active");
+    const slot = data.active;
+    $("activeBadge").textContent = SLOT_LABEL[slot] || slot;
+    $("activeBadge").className = "px-2 py-1 rounded-lg text-xs font-bold " +
+      (slot === "prod" ? "bg-emerald-100 text-emerald-800" :
+       slot === "dev" ? "bg-blue-100 text-blue-800" :
+       "bg-amber-100 text-amber-800");
   }
 
-  // GET /admin/rules?slot=prod|dev|old
-  if (url.pathname === "/admin/rules" && request.method === "GET") {
-    const slot = url.searchParams.get("slot") || "prod";
-    const key = slotToKey(slot);
-    if (!key) return json({ error: "invalid slot" }, 400);
-    const raw = await env.DB.get(key);
-    if (!raw) return json({ rules: {} }); // 空的也回傳
-    try { return json({ rules: JSON.parse(raw) }); }
-    catch { return json({ rules: raw }); }
+  async function loadSlot() {
+    const slot = $("slot").value;
+    const data = await api("/admin/rules?slot=" + encodeURIComponent(slot));
+    $("editor").value = typeof data.rules === "string" ? data.rules : JSON.stringify(data.rules, null, 2);
+    setMsg("已載入槽位：" + SLOT_LABEL[slot]);
   }
 
-  // PUT /admin/rules?slot=... body: { rules: <object> }
-  if (url.pathname === "/admin/rules" && request.method === "PUT") {
-    const slot = url.searchParams.get("slot") || "prod";
-    const key = slotToKey(slot);
-    if (!key) return json({ error: "invalid slot" }, 400);
-    const body = await request.json();
-    const rules = body?.rules ?? {};
-    await env.DB.put(key, JSON.stringify(rules));
-    return json({ ok: true, slot });
+  async function saveSlot() {
+    const slot = $("slot").value;
+    let parsed;
+    try { parsed = JSON.parse($("editor").value); }
+    catch (e) { throw new Error("JSON 格式錯誤，請先按「檢查 JSON」或修正：" + e.message); }
+    await api("/admin/rules?slot=" + encodeURIComponent(slot), { method: "PUT", body: { rules: parsed } });
+    setMsg("已儲存到槽位：" + SLOT_LABEL[slot]);
   }
 
-  // POST /admin/backup-prod-to-old
-  if (url.pathname === "/admin/backup-prod-to-old" && request.method === "POST") {
-    const prod = await env.DB.get("RULES_PROD");
-    if (prod) await env.DB.put("RULES_OLD", prod);
-    return json({ ok: true });
+  async function setActive() {
+    const slot = $("slot").value;
+    await api("/admin/active", { method: "PUT", body: { active: slot } });
+    await refreshActive();
+    setMsg("✅ 已切換上線槽位為：" + SLOT_LABEL[slot]);
   }
 
-  return json({ error: "Not Found" }, 404);
-}
+  async function backupProdToOld() {
+    await api("/admin/backup-prod-to-old", { method: "POST" });
+    setMsg("✅ 已備份：PROD → OLD（你可隨時切回 OLD 回退）");
+  }
 
-// ✅ 你原本的 fetch 裡加這段路由（放最前面）
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
+  $("saveToken").onclick = () => {
+    localStorage.setItem("ADMIN_TOKEN", $("token").value.trim());
+    setMsg("Token 已保存到本機瀏覽器");
+  };
 
-    // 後台 API
-    if (url.pathname.startsWith("/admin/")) {
-      try { return await handleAdminApi(request, env); }
-      catch (e) { return e instanceof Response ? e : json({ error: "server error" }, 500); }
+  $("refreshActive").onclick = async () => {
+    try { await refreshActive(); setMsg("已更新目前上線槽位"); }
+    catch (e) { setMsg(e.message, false); }
+  };
+
+  $("loadSlot").onclick = async () => {
+    try { await loadSlot(); }
+    catch (e) { setMsg(e.message, false); }
+  };
+
+  $("saveSlot").onclick = async () => {
+    try { await saveSlot(); }
+    catch (e) { setMsg(e.message, false); }
+  };
+
+  $("setActive").onclick = async () => {
+    try { await setActive(); }
+    catch (e) { setMsg(e.message, false); }
+  };
+
+  $("backupProdToOld").onclick = async () => {
+    try { await backupProdToOld(); }
+    catch (e) { setMsg(e.message, false); }
+  };
+
+  $("formatJson").onclick = () => {
+    try {
+      const obj = JSON.parse($("editor").value);
+      $("editor").value = JSON.stringify(obj, null, 2);
+      setMsg("已格式化 JSON");
+    } catch (e) {
+      setMsg("JSON 目前無法格式化：" + e.message, false);
     }
+  };
 
-    // ✅ 問卷規則讀取：永遠從 ACTIVE_SLOT 指到的槽位讀
-    // 你把你原本的規則讀取改成下面這種即可：
-    // const active = (await env.DB.get("RULES_ACTIVE_SLOT")) || "prod";
-    // const rulesKey = active === "dev" ? "RULES_DEV" : active === "old" ? "RULES_OLD" : "RULES_PROD";
-    // const rules = JSON.parse((await env.DB.get(rulesKey)) || "{}");
+  $("validateJson").onclick = () => {
+    try { JSON.parse($("editor").value); setMsg("✅ JSON 格式 OK"); }
+    catch (e) { setMsg("❌ JSON 格式錯誤：" + e.message, false); }
+  };
 
-    return new Response("OK");
-  }
-};
+  // 預填：如果你想固定 API，可直接在這裡寫死
+  // $("apiBase").value = "https://xxx.yourname.workers.dev";
+
+  // 進來先讀 active（若 API base 有填）
+</script>
+</body>
+</html>
