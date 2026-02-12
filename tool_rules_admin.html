@@ -1,237 +1,487 @@
 <!doctype html>
 <html lang="zh-TW">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>規則版本切換後台（已上線 / 開發中 / 舊檔）</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Worker 組裝台｜已上線 / 開發中 / 舊檔</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body{font-family:system-ui,"Microsoft JhengHei";}
-    textarea{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+    .tab{padding:.5rem .75rem;border-radius:999px;border:1px solid #e5e7eb;font-weight:800;font-size:12px}
+    .tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
+    .btn{padding:.5rem .75rem;border-radius:12px;font-weight:800;font-size:12px;border:1px solid #e5e7eb;background:#fff}
+    .btn:hover{background:#f8fafc}
+    .btnP{background:#2563eb;color:#fff;border-color:#2563eb}
+    .btnP:hover{background:#1d4ed8}
+    .btnG{background:#10b981;color:#fff;border-color:#10b981}
+    .btnG:hover{background:#059669}
+    .btnD{background:#0f172a;color:#fff;border-color:#0f172a}
+    .btnD:hover{background:#000}
   </style>
 </head>
 <body class="min-h-screen bg-slate-50">
-  <div class="max-w-5xl mx-auto p-5">
+  <div class="max-w-7xl mx-auto p-5">
     <div class="flex items-start justify-between gap-3 flex-wrap">
       <div>
-        <h1 class="text-2xl font-extrabold text-slate-900">規則版本切換後台</h1>
-        <p class="text-sm text-slate-600 mt-1">用一個指標切換：已上線 / 開發中 / 舊檔（方便 debug 與回退）</p>
+        <h1 class="text-2xl font-extrabold text-slate-900">Worker 組裝台</h1>
+        <p class="text-sm text-slate-600 mt-1">
+          只用一個 HTML：拆模組 → 整理 → 一鍵輸出完整 <span class="mono">worker.js</span>（不需要 Cloudflare 後台 API）
+        </p>
       </div>
-      <div class="bg-white border rounded-2xl p-3 shadow-sm w-full sm:w-auto">
-        <div class="text-xs font-bold text-slate-600">API Base（你的 Worker 網址）</div>
-        <input id="apiBase" class="mt-1 w-full sm:w-[360px] px-3 py-2 border rounded-xl text-sm"
-               placeholder="https://xxx.yourname.workers.dev"
-               />
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="slotProd" class="tab">已上線</button>
+        <button id="slotDev" class="tab active">開發中</button>
+        <button id="slotOld" class="tab">舊檔</button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5">
-      <!-- 左：操作 -->
-      <div class="bg-white border rounded-2xl p-4 shadow-sm">
-        <div class="text-sm font-bold text-slate-900">1) 權杖（簡易保護）</div>
-        <p class="text-xs text-slate-600 mt-1">Worker 端會驗證 <code class="px-1 bg-slate-100 rounded">x-admin-token</code></p>
-        <input id="token" type="password" class="mt-2 w-full px-3 py-2 border rounded-xl text-sm" placeholder="輸入你的 admin token" />
-        <button id="saveToken" class="mt-2 w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-black">
-          保存 Token（存在本機）
-        </button>
-
-        <div class="h-px bg-slate-100 my-4"></div>
-
-        <div class="text-sm font-bold text-slate-900">2) 選擇槽位</div>
-        <div class="mt-2">
-          <label class="text-xs font-bold text-slate-600">目前上線使用槽位</label>
-          <div class="flex items-center gap-2 mt-1">
-            <span id="activeBadge" class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800">未讀取</span>
-            <button id="refreshActive" class="px-3 py-1.5 rounded-lg border text-xs font-bold hover:bg-slate-50">重新讀取</button>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-5">
+      <!-- 左：模組清單 -->
+      <div class="lg:col-span-4 bg-white border rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <div class="text-sm font-extrabold text-slate-900">模組</div>
+            <div class="text-xs text-slate-600 mt-1">每個模組是一段 JS。可開關、可改名、可排序。</div>
           </div>
+          <button id="addModule" class="btn btnP">＋ 新增模組</button>
+        </div>
+
+        <div class="mt-3 flex gap-2 flex-wrap">
+          <button id="saveSlot" class="btn btnG">儲存到此槽位</button>
+          <button id="copyToProd" class="btn">複製到已上線</button>
+          <button id="copyToOld" class="btn">備份到舊檔</button>
         </div>
 
         <div class="mt-3">
-          <label class="text-xs font-bold text-slate-600">我要編輯的槽位</label>
-          <select id="slot" class="mt-1 w-full px-3 py-2 border rounded-xl text-sm">
-            <option value="prod">已上線（PROD）</option>
-            <option value="dev">開發中（DEV）</option>
-            <option value="old">舊檔（OLD）</option>
-          </select>
+          <label class="text-xs font-bold text-slate-600">專案名稱</label>
+          <input id="projectName" class="mt-1 w-full px-3 py-2 border rounded-xl text-sm" placeholder="例如：LINE 工具 Worker" />
         </div>
-
-        <div class="flex gap-2 mt-3">
-          <button id="loadSlot" class="flex-1 px-3 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700">
-            讀取槽位規則
-          </button>
-          <button id="saveSlot" class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700">
-            儲存到槽位
-          </button>
-        </div>
-
-        <div class="h-px bg-slate-100 my-4"></div>
-
-        <div class="text-sm font-bold text-slate-900">3) 切換上線</div>
-        <p class="text-xs text-slate-600 mt-1">把「上線指標」改成你選的槽位</p>
-        <button id="setActive" class="mt-2 w-full px-3 py-2 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700">
-          立刻切換上線到：目前選取槽位
-        </button>
 
         <div class="mt-3">
-          <div class="text-sm font-bold text-slate-900">4) 一鍵備份 / 回退</div>
-          <p class="text-xs text-slate-600 mt-1">把 PROD 規則複製到 OLD（方便回退）</p>
-          <button id="backupProdToOld" class="mt-2 w-full px-3 py-2 rounded-xl border font-bold text-sm hover:bg-slate-50">
-            備份：PROD → OLD
-          </button>
+          <label class="text-xs font-bold text-slate-600">模組列表</label>
+          <div id="moduleList" class="mt-2 space-y-2"></div>
         </div>
 
-        <div id="msg" class="mt-4 text-xs"></div>
+        <div id="msg" class="mt-3 text-xs"></div>
       </div>
 
-      <!-- 右：JSON 編輯器 -->
-      <div class="bg-white border rounded-2xl p-4 shadow-sm lg:col-span-2">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
+      <!-- 中：模組編輯器 -->
+      <div class="lg:col-span-4 bg-white border rounded-2xl p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2 flex-wrap">
           <div>
-            <div class="text-sm font-bold text-slate-900">規則 JSON</div>
-            <div class="text-xs text-slate-600 mt-1">建議：DEV 改好 → 測試 OK → 切換上線到 PROD</div>
+            <div class="text-sm font-extrabold text-slate-900">模組編輯</div>
+            <div class="text-xs text-slate-600 mt-1">你正在編輯：<span id="editingName" class="font-bold">（未選）</span></div>
           </div>
-          <div class="flex gap-2">
-            <button id="formatJson" class="px-3 py-2 rounded-xl border text-xs font-bold hover:bg-slate-50">格式化</button>
-            <button id="validateJson" class="px-3 py-2 rounded-xl border text-xs font-bold hover:bg-slate-50">檢查 JSON</button>
+          <div class="flex gap-2 flex-wrap">
+            <button id="formatModule" class="btn">簡易格式化</button>
+            <button id="wrapHelper" class="btn">插入範本</button>
           </div>
         </div>
 
-        <textarea id="editor" class="mt-3 w-full h-[520px] px-3 py-3 border rounded-2xl text-sm"
-          placeholder='例如：{"version":"2026-02-12","rules":[...]}'
-        ></textarea>
+        <textarea id="moduleEditor" class="mt-3 w-full h-[560px] px-3 py-3 border rounded-2xl text-sm"
+          placeholder="// 選一個模組開始編輯"></textarea>
 
         <div class="mt-3 text-xs text-slate-500">
-          小提示：你可以把問卷規則全部當 JSON 放這裡，Worker 只負責「讀哪個槽位 + 套用規則」。
+          小提醒：這裡不做真正「語法檢查」，但你可以用右邊的輸出結果直接貼到 Cloudflare Worker 編輯器測試。
         </div>
+      </div>
+
+      <!-- 右：輸出 worker.js -->
+      <div class="lg:col-span-4 bg-white border rounded-2xl p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2 flex-wrap">
+          <div>
+            <div class="text-sm font-extrabold text-slate-900">輸出：worker.js</div>
+            <div class="text-xs text-slate-600 mt-1">把啟用的模組依序組合，產出完整 Worker。</div>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="build" class="btn btnD">組裝</button>
+            <button id="copyOut" class="btn">複製</button>
+            <button id="downloadOut" class="btn btnG">下載 .js</button>
+          </div>
+        </div>
+
+        <textarea id="output" class="mt-3 w-full h-[560px] px-3 py-3 border rounded-2xl text-sm"
+          placeholder="// 按「組裝」產生完整 worker.js"></textarea>
       </div>
     </div>
   </div>
 
 <script>
+  // ---------- Storage ----------
+  const LS_KEY = (slot) => `WORKER_BUILDER__${slot}`;
+  const DEFAULT_PROJECT = {
+    name: "My Worker",
+    modules: [
+      {
+        id: crypto.randomUUID(),
+        name: "00_bootstrap",
+        enabled: true,
+        code:
+`// ✅ 基礎工具：json() / notFound()
+// 你可以把共用 helper 都放這個模組
+
+function json(data, status=200, headers={}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "content-type":"application/json; charset=utf-8", ...headers },
+  });
+}
+
+function notFound() {
+  return new Response("Not Found", { status: 404 });
+}
+`
+      },
+      {
+        id: crypto.randomUUID(),
+        name: "10_routes",
+        enabled: true,
+        code:
+`// ✅ 路由分流：你只要一直加 if 區塊就好
+// 建議：每個功能做成一個 handler function 放在其他模組
+
+async function router(request, env, ctx) {
+  const url = new URL(request.url);
+
+  // 範例：健康問券 API
+  if (url.pathname.startsWith("/api/quiz")) {
+    return handleQuiz(request, env, ctx);
+  }
+
+  // 範例：LINE webhook
+  if (url.pathname === "/webhook") {
+    return handleLineWebhook(request, env, ctx);
+  }
+
+  return notFound();
+}
+`
+      },
+      {
+        id: crypto.randomUUID(),
+        name: "20_handlers",
+        enabled: true,
+        code:
+`// ✅ 各功能 handler 寫在這
+// 你可以之後拆成更多模組（例如 21_quiz, 22_line...）
+
+async function handleQuiz(request, env, ctx) {
+  return json({ ok: true, from: "handleQuiz" });
+}
+
+async function handleLineWebhook(request, env, ctx) {
+  return json({ ok: true, from: "handleLineWebhook" });
+}
+`
+      },
+      {
+        id: crypto.randomUUID(),
+        name: "99_entry",
+        enabled: true,
+        code:
+`// ✅ 入口：Cloudflare Worker fetch
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      return await router(request, env, ctx);
+    } catch (err) {
+      // 你可以在這裡統一處理錯誤
+      return json({ error: "server_error", message: String(err?.message || err) }, 500);
+    }
+  }
+};
+`
+      },
+    ],
+    updatedAt: new Date().toISOString(),
+  };
+
+  // ---------- State ----------
+  let slot = "dev"; // prod/dev/old
+  let project = load(slot);
+  let editingId = null;
+
+  // ---------- Elements ----------
   const $ = (id) => document.getElementById(id);
+  const moduleList = $("moduleList");
+  const editor = $("moduleEditor");
+  const output = $("output");
 
-  const SLOT_LABEL = { prod: "已上線(PROD)", dev: "開發中(DEV)", old: "舊檔(OLD)" };
-
-  function apiBase() {
-    const v = $("apiBase").value.trim().replace(/\/+$/, "");
-    if (!v) throw new Error("請先填 API Base（你的 Worker 網址）");
-    return v;
-  }
-
-  function token() {
-    const t = $("token").value.trim() || localStorage.getItem("ADMIN_TOKEN") || "";
-    if (!t) throw new Error("請先輸入 admin token");
-    return t;
-  }
-
-  function setMsg(text, ok=true) {
-    $("msg").className = "mt-4 text-xs " + (ok ? "text-emerald-700" : "text-red-700");
+  // ---------- Helpers ----------
+  function setMsg(text, ok=true){
+    $("msg").className = "mt-3 text-xs " + (ok ? "text-emerald-700" : "text-red-700");
     $("msg").textContent = text;
   }
 
-  async function api(path, { method="GET", body=null } = {}) {
-    const res = await fetch(apiBase() + path, {
-      method,
-      headers: {
-        "content-type": "application/json",
-        "x-admin-token": token()
-      },
-      body: body ? JSON.stringify(body) : null
+  function load(s){
+    const raw = localStorage.getItem(LS_KEY(s));
+    if (!raw) return structuredClone(DEFAULT_PROJECT);
+    try { return JSON.parse(raw); } catch { return structuredClone(DEFAULT_PROJECT); }
+  }
+  function save(s, data){
+    data.updatedAt = new Date().toISOString();
+    localStorage.setItem(LS_KEY(s), JSON.stringify(data));
+  }
+
+  function setSlot(s){
+    slot = s;
+    project = load(slot);
+    editingId = null;
+    editor.value = "";
+    $("editingName").textContent = "（未選）";
+    renderTabs();
+    renderList();
+    $("projectName").value = project.name || "";
+    setMsg(`已切換到「${label(slot)}」`, true);
+  }
+
+  function label(s){
+    return s === "prod" ? "已上線" : s === "dev" ? "開發中" : "舊檔";
+  }
+
+  function renderTabs(){
+    $("slotProd").classList.toggle("active", slot==="prod");
+    $("slotDev").classList.toggle("active", slot==="dev");
+    $("slotOld").classList.toggle("active", slot==="old");
+  }
+
+  function renderList(){
+    moduleList.innerHTML = "";
+    project.modules
+      .sort((a,b)=> (a.name||"").localeCompare(b.name||""))
+      .forEach((m, idx)=>{
+        const row = document.createElement("div");
+        row.className = "border rounded-2xl p-3 flex items-center justify-between gap-2";
+        row.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" ${m.enabled ? "checked" : ""} data-act="toggle" class="h-4 w-4">
+              <button data-act="edit" class="text-left font-extrabold text-sm text-slate-900 truncate hover:underline">${escapeHtml(m.name)}</button>
+            </div>
+            <div class="text-xs text-slate-500 mt-1 mono truncate">id: ${m.id}</div>
+          </div>
+          <div class="flex gap-2 flex-shrink-0">
+            <button class="btn" data-act="up">↑</button>
+            <button class="btn" data-act="down">↓</button>
+            <button class="btn" data-act="rename">改名</button>
+            <button class="btn" data-act="dup">複製</button>
+            <button class="btn" data-act="del">刪</button>
+          </div>
+        `;
+        row.querySelectorAll("[data-act]").forEach(btn=>{
+          btn.addEventListener("click", ()=>{
+            const act = btn.getAttribute("data-act");
+            handleListAction(act, m.id);
+          });
+        });
+        row.querySelector('[data-act="toggle"]').addEventListener("change", (e)=>{
+          m.enabled = e.target.checked;
+          setMsg(`模組「${m.name}」已${m.enabled ? "啟用" : "停用"}`);
+        });
+
+        moduleList.appendChild(row);
+      });
+  }
+
+  function handleListAction(act, id){
+    const i = project.modules.findIndex(x=>x.id===id);
+    if (i<0) return;
+    const m = project.modules[i];
+
+    if (act === "edit"){
+      editingId = id;
+      $("editingName").textContent = m.name;
+      editor.value = m.code || "";
+      setMsg(`正在編輯：${m.name}`);
+      return;
+    }
+
+    if (act === "up" && i>0){
+      [project.modules[i-1], project.modules[i]] = [project.modules[i], project.modules[i-1]];
+      renderList();
+      setMsg("已上移");
+      return;
+    }
+    if (act === "down" && i<project.modules.length-1){
+      [project.modules[i+1], project.modules[i]] = [project.modules[i], project.modules[i+1]];
+      renderList();
+      setMsg("已下移");
+      return;
+    }
+
+    if (act === "rename"){
+      const nn = prompt("輸入新模組名稱（建議用 00_, 10_ 來排序）", m.name || "");
+      if (!nn) return;
+      m.name = nn.trim();
+      if (editingId === id) $("editingName").textContent = m.name;
+      renderList();
+      setMsg("已改名");
+      return;
+    }
+
+    if (act === "dup"){
+      const copy = structuredClone(m);
+      copy.id = crypto.randomUUID();
+      copy.name = (m.name || "module") + "_copy";
+      project.modules.push(copy);
+      renderList();
+      setMsg("已複製模組");
+      return;
+    }
+
+    if (act === "del"){
+      if (!confirm(`確定刪除模組「${m.name}」？`)) return;
+      project.modules.splice(i,1);
+      if (editingId === id){
+        editingId = null;
+        editor.value = "";
+        $("editingName").textContent = "（未選）";
+      }
+      renderList();
+      setMsg("已刪除");
+      return;
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, (c)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  // ---------- Editor sync ----------
+  editor.addEventListener("input", ()=>{
+    if (!editingId) return;
+    const m = project.modules.find(x=>x.id===editingId);
+    if (!m) return;
+    m.code = editor.value;
+  });
+
+  // ---------- Build worker.js ----------
+  function buildWorker(){
+    const header =
+`/**
+ * Built by Worker 組裝台
+ * Project: ${project.name || "Untitled"}
+ * Slot: ${label(slot)}
+ * Updated: ${new Date().toISOString()}
+ *
+ * Enabled modules: ${project.modules.filter(m=>m.enabled).map(m=>m.name).join(", ")}
+ */`;
+
+    const body = project.modules
+      .filter(m=>m.enabled)
+      .map(m=>`\n\n// ===== MODULE: ${m.name} =====\n${m.code || ""}\n`)
+      .join("");
+
+    return `${header}\n${body}\n`;
+  }
+
+  // ---------- Actions ----------
+  $("addModule").onclick = ()=>{
+    const name = prompt("模組名稱（建議用 30_xxx 這種）", "30_new_module");
+    if (!name) return;
+    project.modules.push({
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      enabled: true,
+      code: `// ${name.trim()}\n\n`
     });
-    const txt = await res.text();
-    let data;
-    try { data = JSON.parse(txt); } catch { data = { raw: txt }; }
-    if (!res.ok) throw new Error(data?.error || data?.message || ("HTTP " + res.status));
-    return data;
-  }
-
-  async function refreshActive() {
-    const data = await api("/admin/active");
-    const slot = data.active;
-    $("activeBadge").textContent = SLOT_LABEL[slot] || slot;
-    $("activeBadge").className = "px-2 py-1 rounded-lg text-xs font-bold " +
-      (slot === "prod" ? "bg-emerald-100 text-emerald-800" :
-       slot === "dev" ? "bg-blue-100 text-blue-800" :
-       "bg-amber-100 text-amber-800");
-  }
-
-  async function loadSlot() {
-    const slot = $("slot").value;
-    const data = await api("/admin/rules?slot=" + encodeURIComponent(slot));
-    $("editor").value = typeof data.rules === "string" ? data.rules : JSON.stringify(data.rules, null, 2);
-    setMsg("已載入槽位：" + SLOT_LABEL[slot]);
-  }
-
-  async function saveSlot() {
-    const slot = $("slot").value;
-    let parsed;
-    try { parsed = JSON.parse($("editor").value); }
-    catch (e) { throw new Error("JSON 格式錯誤，請先按「檢查 JSON」或修正：" + e.message); }
-    await api("/admin/rules?slot=" + encodeURIComponent(slot), { method: "PUT", body: { rules: parsed } });
-    setMsg("已儲存到槽位：" + SLOT_LABEL[slot]);
-  }
-
-  async function setActive() {
-    const slot = $("slot").value;
-    await api("/admin/active", { method: "PUT", body: { active: slot } });
-    await refreshActive();
-    setMsg("✅ 已切換上線槽位為：" + SLOT_LABEL[slot]);
-  }
-
-  async function backupProdToOld() {
-    await api("/admin/backup-prod-to-old", { method: "POST" });
-    setMsg("✅ 已備份：PROD → OLD（你可隨時切回 OLD 回退）");
-  }
-
-  $("saveToken").onclick = () => {
-    localStorage.setItem("ADMIN_TOKEN", $("token").value.trim());
-    setMsg("Token 已保存到本機瀏覽器");
+    renderList();
+    setMsg("已新增模組");
   };
 
-  $("refreshActive").onclick = async () => {
-    try { await refreshActive(); setMsg("已更新目前上線槽位"); }
-    catch (e) { setMsg(e.message, false); }
+  $("saveSlot").onclick = ()=>{
+    project.name = $("projectName").value.trim() || project.name;
+    save(slot, project);
+    setMsg(`✅ 已儲存到「${label(slot)}」`, true);
   };
 
-  $("loadSlot").onclick = async () => {
-    try { await loadSlot(); }
-    catch (e) { setMsg(e.message, false); }
+  $("copyToProd").onclick = ()=>{
+    project.name = $("projectName").value.trim() || project.name;
+    save("prod", project);
+    setMsg("✅ 已複製到「已上線」", true);
   };
 
-  $("saveSlot").onclick = async () => {
-    try { await saveSlot(); }
-    catch (e) { setMsg(e.message, false); }
+  $("copyToOld").onclick = ()=>{
+    project.name = $("projectName").value.trim() || project.name;
+    save("old", project);
+    setMsg("✅ 已備份到「舊檔」", true);
   };
 
-  $("setActive").onclick = async () => {
-    try { await setActive(); }
-    catch (e) { setMsg(e.message, false); }
+  $("build").onclick = ()=>{
+    project.name = $("projectName").value.trim() || project.name;
+    const out = buildWorker();
+    output.value = out;
+    setMsg("✅ 已組裝完成，可直接貼到 Cloudflare Worker", true);
   };
 
-  $("backupProdToOld").onclick = async () => {
-    try { await backupProdToOld(); }
-    catch (e) { setMsg(e.message, false); }
-  };
-
-  $("formatJson").onclick = () => {
-    try {
-      const obj = JSON.parse($("editor").value);
-      $("editor").value = JSON.stringify(obj, null, 2);
-      setMsg("已格式化 JSON");
-    } catch (e) {
-      setMsg("JSON 目前無法格式化：" + e.message, false);
+  $("copyOut").onclick = async ()=>{
+    try{
+      await navigator.clipboard.writeText(output.value || "");
+      setMsg("已複製輸出內容");
+    }catch(e){
+      setMsg("複製失敗：瀏覽器不允許或沒有輸出內容", false);
     }
   };
 
-  $("validateJson").onclick = () => {
-    try { JSON.parse($("editor").value); setMsg("✅ JSON 格式 OK"); }
-    catch (e) { setMsg("❌ JSON 格式錯誤：" + e.message, false); }
+  $("downloadOut").onclick = ()=>{
+    const content = output.value || "";
+    if (!content.trim()){
+      setMsg("請先按「組裝」產生輸出", false);
+      return;
+    }
+    const blob = new Blob([content], { type: "text/javascript;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "worker.js";
+    a.click();
+    URL.revokeObjectURL(url);
+    setMsg("已下載 worker.js");
   };
 
-  // 預填：如果你想固定 API，可直接在這裡寫死
-  // $("apiBase").value = "https://xxx.yourname.workers.dev";
+  $("formatModule").onclick = ()=>{
+    if (!editingId) return setMsg("請先選一個模組", false);
+    // 非 prettifier，只做最簡單整理（避免搞壞程式）
+    editor.value = editor.value.replace(/\t/g, "  ").replace(/\r\n/g, "\n");
+    const m = project.modules.find(x=>x.id===editingId);
+    if (m) m.code = editor.value;
+    setMsg("已做簡易格式化");
+  };
 
-  // 進來先讀 active（若 API base 有填）
+  $("wrapHelper").onclick = ()=>{
+    if (!editingId) return setMsg("請先選一個模組", false);
+    const tpl =
+`// ✅ 範本：新增一個路由 handler
+// 1) 在 router() 加一段 if 路徑
+// 2) 在這裡寫 function
+
+// router() 範例：
+// if (url.pathname === "/api/example") return handleExample(request, env, ctx);
+
+async function handleExample(request, env, ctx) {
+  return json({ ok: true, from: "handleExample" });
+}
+`;
+    editor.value = (editor.value || "") + "\n\n" + tpl;
+    const m = project.modules.find(x=>x.id===editingId);
+    if (m) m.code = editor.value;
+    setMsg("已插入範本");
+  };
+
+  $("slotProd").onclick = ()=>setSlot("prod");
+  $("slotDev").onclick = ()=>setSlot("dev");
+  $("slotOld").onclick = ()=>setSlot("old");
+
+  // ---------- Init ----------
+  renderTabs();
+  $("projectName").value = project.name || "";
+  renderList();
+  setMsg("已載入（預設：開發中）");
 </script>
 </body>
 </html>
