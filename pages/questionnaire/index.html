@@ -1,138 +1,1182 @@
 <!doctype html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>問卷後台｜填寫測試</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>AI 問卷後台（分支深問＋個人化報告版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    .card { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    textarea { -webkit-overflow-scrolling: touch; }
+    .modal-scroll { max-height: min(78vh, 720px); overflow: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ✅ 重要：修 LINE/iOS Modal 卡住（不要 fixed body；讓 Modal 自己可滾動） */
+    #bulkModal{
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+    }
+    #bulkModalInner{
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 16px;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-  <div class="max-w-3xl mx-auto p-6">
-    <div class="bg-white rounded-2xl shadow p-5">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <h1 class="text-xl font-extrabold text-slate-900">健康狀態評估問卷（測試版）</h1>
-          <p class="text-sm text-slate-500 mt-1">分數越高代表該面向越需要優先調整（不顯示作答內容給客戶）。</p>
-        </div>
 
-        <div class="text-right">
-          <div class="text-xs text-slate-500">目前 Worker</div>
-          <div id="workerStatus" class="text-sm font-bold text-slate-900">讀取中…</div>
+<body class="min-h-screen safe-bottom">
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（分支深問＋個人化報告）</h1>
+        <p class="text-slate-600 mt-1">多問卷｜關鍵字綁定｜分支 nodes｜深問題庫｜報告模板（不顯示答案）｜批次匯入不卡住</p>
+      </div>
+      <div class="text-xs text-slate-600 leading-5">
+        <div>✅ 分支後可再問很多題，做到像「專屬顧問」</div>
+        <div>✅ 報告不會列出他的選項（只送建議）</div>
+      </div>
+    </header>
+
+    <!-- CONNECT -->
+    <section class="card rounded-2xl shadow p-5 mb-4 border border-slate-200">
+      <div class="grid md:grid-cols-3 gap-4 items-end">
+        <div class="md:col-span-2">
+          <label class="text-sm font-semibold text-slate-700">Worker 網址</label>
+          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 placeholder="https://api.xxx.workers.dev" />
+          <div class="text-xs text-slate-500 mt-2">
+            問卷：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
+            關鍵字表：<span class="mono font-semibold">AI_SURVEY:KW_MAP</span>　
+            Leads：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線</button>
+          <button id="btnSave" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">儲存</button>
         </div>
       </div>
 
-      <hr class="my-4"/>
-
-      <form id="form" class="space-y-5"></form>
-
-      <div class="flex gap-2 mt-6">
-        <button id="btnSubmit" type="button"
-          class="flex-1 bg-black text-white font-bold py-3 rounded-xl hover:opacity-90">
-          送出並產生報告
-        </button>
-        <button id="btnReset" type="button"
-          class="px-4 py-3 rounded-xl border font-bold hover:bg-slate-50">
-          清除
-        </button>
+      <div class="mt-3 text-xs text-slate-500">
+        狀態：<span id="txtStatus" class="font-semibold">未連線</span>　
+        最後同步：<span id="txtLastSync" class="mono">-</span>
       </div>
+    </section>
 
-      <div id="result" class="mt-5 hidden">
-        <div class="rounded-xl border bg-slate-50 p-4">
-          <div class="font-extrabold text-slate-900 mb-2">回傳結果</div>
-          <pre id="resultJson" class="text-xs whitespace-pre-wrap break-words"></pre>
+    <div class="grid lg:grid-cols-3 gap-4">
+      <!-- LEFT -->
+      <aside class="card rounded-2xl shadow p-4 border border-slate-200 h-fit lg:sticky lg:top-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500">問卷清單</div>
+            <div class="text-sm text-slate-900 font-semibold">（可存多份｜可刪除）</div>
+          </div>
+          <button id="btnNew" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增</button>
+        </div>
+
+        <div class="mt-3">
+          <input id="qSearch" class="w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
+        </div>
+
+        <div id="surveyList" class="mt-3 space-y-2"></div>
+
+        <hr class="my-4 border-slate-200" />
+
+        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定（分支＋深問）</button>
+        <button id="btnTabTemplates" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 報告模板（只送建議）</button>
+        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads</button>
+
+        <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 leading-5">
+          <div class="font-extrabold">你要的「專屬感」做法</div>
+          <div>1) 第一題做分支（睡眠/壓力/腸胃/體態…）</div>
+          <div>2) 分支後再問 6～12 題（真的像量身）</div>
+          <div>3) 最後一題才給 reportKey（決定報告模板）</div>
+        </div>
+
+        <div class="mt-4 text-xs text-slate-500">
+          Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
+        </div>
+      </aside>
+
+      <!-- RIGHT -->
+      <main class="lg:col-span-2 space-y-4">
+        <!-- BUILDER -->
+        <section id="tabBuilder" class="card rounded-2xl shadow p-5 border border-slate-200">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（分支 nodes + 深問鏈）</h2>
+              <p class="text-sm text-slate-600 mt-1">
+                每個選項可指向不同下一題（next）。<span class="font-semibold">reportKey 建議只在最後一題填</span>，前面可留空。
+              </p>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次匯入</button>
+              <button id="btnAddNode" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增節點</button>
+              <button id="btnValidate" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">檢查</button>
+            </div>
+          </div>
+
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
+              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：作息分流_第一版" />
+            </div>
+            <div>
+              <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到）</label>
+              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：60 秒作息分析" />
+            </div>
+
+            <div class="md:col-span-2">
+              <div class="flex items-center justify-between gap-2">
+                <label class="text-sm font-semibold text-slate-700">關鍵字（客戶輸入這個開始）</label>
+                <div id="kwHint" class="text-xs font-semibold text-slate-500"></div>
+              </div>
+              <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：作息分析" />
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold text-slate-700">起始節點 ID</label>
+              <input id="inStart" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="例如：q1" />
+            </div>
+
+            <div>
+              <label class="text-sm font-semibold text-slate-700">報告後補一句（可空白）</label>
+              <input id="inFinalText" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：如果你願意，我可以幫你做一週調整計畫。" />
+            </div>
+
+            <div class="md:col-span-2">
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-6">
+                ✅ 報告不會顯示他的選項（只送你模板的建議文字）<br/>
+                ✅ 要更專屬：分支後多問幾題，最後才選 reportKey
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-extrabold text-slate-900">nodes（分支題目 / 深問題庫）</h3>
+              <div class="text-xs text-slate-500">next 留空=結束。reportKey 建議只在最後一題填。</div>
+            </div>
+            <div id="nodesWrap" class="mt-3 space-y-3"></div>
+          </div>
+        </section>
+
+        <!-- TEMPLATES -->
+        <section id="tabTemplates" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">② 報告模板（不顯示答案，只送建議）</h2>
+              <p class="text-sm text-slate-600 mt-1">依 reportKey 送不同報告。內容建議用「常見缺口/可能不足」語氣。</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="btnPreset" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入常用模板</button>
+              <button id="btnAddReport" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增模板</button>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
+            <div class="font-extrabold">⚠️ 建議用詞</div>
+            <div>用「可能的常見缺口 / 建議補充方向」，不要用「你缺乏/你有病」。</div>
+            <div>最後加：若有慢性病/孕哺/用藥，先詢問醫師或藥師。</div>
+          </div>
+
+          <div class="mt-4 grid md:grid-cols-2 gap-4 items-start">
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="text-sm font-extrabold text-slate-900">reportKey 清單</div>
+              <div class="text-xs text-slate-500 mt-1">例如：sleep_low / stress_high / gut / body / energy / immune ...</div>
+              <div id="reportList" class="mt-3 space-y-2"></div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <div class="text-sm font-extrabold text-slate-900">模板內容</div>
+                  <div class="text-xs text-slate-500 mt-1">這段會直接送給客戶（不包含他的答案）</div>
+                </div>
+                <button id="btnDeleteReport" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪</button>
+              </div>
+
+              <div class="mt-3">
+                <label class="text-xs font-bold text-slate-500">reportKey</label>
+                <input id="inReportKey" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：sleep_low" />
+              </div>
+
+              <div class="mt-3">
+                <label class="text-xs font-bold text-slate-500">內容</label>
+                <textarea id="inReportBody" rows="12" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                  placeholder="請填你的個人化建議（不要提他選了什麼）。"></textarea>
+              </div>
+
+              <div class="mt-3">
+                <button id="btnSaveReport" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
+                  更新模板（記得再按右上『儲存』寫入 KV）
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LEADS -->
+        <section id="tabLeads" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">③ Leads</h2>
+              <p class="text-sm text-slate-600 mt-1">顯示：userId、問卷、時間、reportKey、報告內容</p>
+            </div>
+            <div class="flex gap-2">
+              <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
+              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">刷新</button>
+            </div>
+          </div>
+
+          <div id="leadList" class="mt-4 space-y-3"></div>
+        </section>
+
+        <!-- TOAST -->
+        <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- BULK MODAL (✅已修不卡住) -->
+  <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50">
+    <div id="bulkModalInner">
+      <div class="w-full max-w-3xl">
+        <div class="card rounded-2xl shadow border border-slate-200 p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-xl font-extrabold text-slate-900">批次匯入（分支 nodes｜深問可很多題）</div>
+              <div class="text-sm text-slate-600 mt-1">
+                你可以在同一個分支一路寫很多 NODE（q2、q3、q4…），客戶就會覺得很專屬。
+              </div>
+            </div>
+            <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
+            <div class="font-bold">格式範例（分支後一路深問，最後才 reportKey）：</div>
+<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 作息深問_第一版
+TITLE: 90 秒專屬作息分析
+KEYWORD: 作息深問
+START: q1
+FINAL: 想要我幫你做「7天調整計畫」，回我「計畫」。
+
+NODE: q1
+Q: 你最想先改善哪一塊？
+- 睡眠 -> next=s1 report=
+- 壓力 -> next=t1 report=
+- 腸胃 -> next=g1 report=
+- 體態 -> next=b1 report=
+
+NODE: s1
+Q: 你最近入睡狀況？
+- 很快睡著 -> next=s2 report=
+- 很難入睡 -> next=s2 report=
+- 常醒/淺眠 -> next=s2 report=
+
+NODE: s2
+Q: 你平常睡覺時間多半在？
+- 22-24 -> next=s3 report=
+- 24-02 -> next=s3 report=
+- 02以後 -> next=s3 report=
+
+NODE: s3
+Q: 你白天精神比較像？
+- 穩定 -> next=s4 report=
+- 下午下滑 -> next=s4 report=
+- 容易恍神 -> next=s4 report=
+
+NODE: s4
+Q: 最後一題：你屬於哪種型？
+- 晚睡＋日照少 -> next=END report=sleep_d_low
+- 壓力大＋難放鬆 -> next=END report=sleep_stress_high
+- 作息亂＋外食多 -> next=END report=sleep_food_irregular</pre>
+          </div>
+
+          <!-- ✅ 這裡就是你說「滑不到下面輸入框」的地方：已確保 modal 自己可滾 -->
+          <textarea id="bulkText" rows="12"
+            class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
+            style="min-height: 260px; max-height: 48vh; overflow:auto;"
+            placeholder="把分支深問文字貼這裡…（LINE/iOS 也可滑到底）"></textarea>
+
+          <div class="mt-4 flex flex-wrap gap-2 justify-end">
+            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
+            <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script type="module">
-    import { getWorkerBase, apiFetch } from "../../assets/js/api.js";
+<script>
+  const Q_PREFIX = "AI_SURVEY:Q:";
+  const LEAD_PREFIX = "AI_SURVEY:LEAD:";
+  const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-    // 10 大面向（最小可跑版）
-    const QUESTIONS = [
-      { k:"energy", t:"起床後仍覺得累、精神不易集中" },
-      { k:"sleep", t:"入睡慢 / 半夜醒來 / 睡醒不清爽" },
-      { k:"gut", t:"飯後脹氣、排便不規律、消化不順" },
-      { k:"stress", t:"近期壓力大、容易煩躁或情緒起伏" },
-      { k:"immune", t:"容易反覆不舒服、恢復速度慢" },
-      { k:"circulation", t:"手腳冰冷、久坐久站容易不適" },
-      { k:"liver", t:"熬夜或外食比例高、覺得負擔重" },
-      { k:"sugar", t:"想吃甜食/澱粉，餐後容易昏沉" },
-      { k:"antiox", t:"3C/空汙/日曬多，覺得狀態耗損" },
-      { k:"bone", t:"肩頸痠、關節卡、久走久站不舒服" },
-    ];
+  let API_BASE = "";
+  let SURVEYS = [];
+  let CURRENT = makeEmptySurvey();
+  let LEADS = [];
+  let KW_MAP = {};
+  let ACTIVE_REPORT_KEY = "";
 
-    // 顯示目前 worker
-    const base = getWorkerBase();
-    document.getElementById("workerStatus").textContent = base;
+  const $ = (id)=>document.getElementById(id);
 
-    // render
-    const form = document.getElementById("form");
-    QUESTIONS.forEach((q, idx) => {
-      const wrap = document.createElement("div");
-      wrap.className = "rounded-xl border p-4";
-      wrap.innerHTML = `
-        <div class="font-bold text-slate-900 mb-3">${idx+1}. ${q.t}</div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          ${[
-            {v:1, label:"幾乎沒有"},
-            {v:2, label:"偶爾"},
-            {v:3, label:"常常"},
-            {v:4, label:"幾乎每天"},
-          ].map(o => `
-            <label class="cursor-pointer rounded-lg border px-3 py-2 hover:bg-slate-50">
-              <input class="mr-2" type="radio" name="${q.k}" value="${o.v}" required>
-              <span class="text-sm font-semibold">${o.label}</span>
-            </label>
-          `).join("")}
+  function toast(msg, type="ok"){
+    const wrap = $("toastWrap");
+    const div = document.createElement("div");
+    div.className = `card rounded-2xl shadow px-4 py-3 border ${
+      type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
+    }`;
+    div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
+    wrap.appendChild(div);
+    setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
+    setTimeout(()=>{ div.remove(); }, 2600);
+  }
+
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function normKw(s){
+    return String(s||"").trim().replace(/\s+/g,"").toLowerCase();
+  }
+
+  function makeEmptySurvey(){
+    return {
+      name: "",
+      title: "",
+      keyword: "",
+      start: "q1",
+      final: { text: "" },
+      nodes: {
+        "q1": {
+          q: "你最想先改善哪一塊？",
+          options: [
+            { t:"睡眠", next:"s1", reportKey:"" },
+            { t:"壓力", next:"t1", reportKey:"" },
+            { t:"腸胃", next:"g1", reportKey:"" },
+            { t:"體態", next:"b1", reportKey:"" },
+          ]
+        },
+        "s1": {
+          q: "你最近入睡狀況？",
+          options: [
+            { t:"很快睡著", next:"s2", reportKey:"" },
+            { t:"很難入睡", next:"s2", reportKey:"" },
+            { t:"常醒/淺眠", next:"s2", reportKey:"" },
+          ]
+        },
+        "s2": {
+          q: "你平常睡覺時間多半在？",
+          options: [
+            { t:"22-24", next:"s3", reportKey:"" },
+            { t:"24-02", next:"s3", reportKey:"" },
+            { t:"02以後", next:"s3", reportKey:"" },
+          ]
+        },
+        "s3": {
+          q: "最後一題：你比較像哪種型？",
+          options: [
+            { t:"晚睡＋日照少", next:"", reportKey:"sleep_d_low" },
+            { t:"壓力大＋難放鬆", next:"", reportKey:"sleep_stress_high" },
+            { t:"外食多＋作息亂", next:"", reportKey:"sleep_food_irregular" },
+          ]
+        }
+      },
+      reports: {
+        "sleep_d_low": "【優先方向】\n我會先用「睡眠節律＋日照支持」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• 維生素D：室內族/晚睡族常見不足\n• B群：忙碌期消耗較快\n\n【今天就能做的 3 件事】\n1) 白天 10~20 分鐘日照或戶外走路\n2) 晚上藍光降低（睡前 60 分鐘）\n3) 起床時間固定（比入睡時間更關鍵）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "sleep_stress_high": "【優先方向】\n我會先用「放鬆支持＋睡眠品質」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• 鎂：放鬆/緊繃支持\n• B群：壓力期消耗較快\n• 維生素C：忙碌期常見不足\n\n【今天就能做的 3 件事】\n1) 每天 2 次 3 分鐘呼吸（吸4吐6）\n2) 晚上留 20 分鐘無訊息時間\n3) 睡前固定小儀式（熱水澡/伸展）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "sleep_food_irregular": "【優先方向】\n我會先用「飲食節律＋睡眠恢復」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• B群：外食/忙碌期常見不足\n• 鎂：放鬆支持\n\n【今天就能做的 3 件事】\n1) 晚餐少油少糖（睡前 3 小時）\n2) 先把早餐固定（蛋白質＋蔬果）\n3) 每天同一時間上床準備睡\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。"
+      }
+    };
+  }
+
+  async function api(path, bodyObj){
+    if(!API_BASE) throw new Error("Worker 網址未設定");
+    const res = await fetch(API_BASE.replace(/\/$/,"") + path, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(bodyObj || {})
+    });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok) throw new Error((data && (data.error||data.detail)) || res.statusText);
+    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
+    return data;
+  }
+
+  function setTab(tab){
+    $("tabBuilder").classList.toggle("hidden", tab!=="builder");
+    $("tabTemplates").classList.toggle("hidden", tab!=="templates");
+    $("tabLeads").classList.toggle("hidden", tab!=="leads");
+
+    $("btnTabBuilder").className = tab==="builder"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-0 font-semibold text-slate-900";
+
+    $("btnTabTemplates").className = tab==="templates"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
+
+    $("btnTabLeads").className = tab==="leads"
+      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
+      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
+  }
+
+  async function refreshKwMap(){
+    const data = await api("/kwMapGet", {});
+    KW_MAP = (data && data.payload && typeof data.payload === "object") ? data.payload : {};
+  }
+  async function saveKwMap(){
+    await api("/kwMapPut", { payload: KW_MAP });
+  }
+  function keywordOwner(kw){
+    const k = normKw(kw);
+    if(!k) return "";
+    return KW_MAP[k] || "";
+  }
+  function updateKwHint(){
+    const kw = normKw($("inKeyword").value);
+    const name = String($("inName").value || CURRENT.name || "").trim();
+    const owner = keywordOwner(kw);
+    const el = $("kwHint");
+    el.textContent = "";
+    el.className = "text-xs font-semibold text-slate-500";
+    if(!kw) return;
+    if(owner && owner !== name){
+      el.textContent = "已被使用";
+      el.className = "text-xs font-extrabold text-rose-600";
+    }else{
+      el.textContent = "可用";
+      el.className = "text-xs font-extrabold text-emerald-700";
+    }
+  }
+
+  async function refreshSurveyList(){
+    const data = await api("/listAll", {});
+    const db = data.db || [];
+    SURVEYS = db
+      .filter(k => k.startsWith(Q_PREFIX))
+      .map(k => ({ key:k, name:k.replace(Q_PREFIX,"") }))
+      .sort((a,b)=>a.name.localeCompare(b.name,"zh-Hant"));
+    renderSurveyList();
+  }
+
+  function renderSurveyList(){
+    const wrap = $("surveyList");
+    wrap.innerHTML = "";
+    const q = ($("qSearch").value || "").trim().toLowerCase();
+    const items = SURVEYS.filter(x => !q || x.name.toLowerCase().includes(q));
+
+    if(items.length===0){
+      const d = document.createElement("div");
+      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
+      d.textContent = "目前沒有問卷。按「新增」建立。";
+      wrap.appendChild(d);
+      return;
+    }
+
+    items.forEach(x=>{
+      const row = document.createElement("div");
+      row.className = "rounded-2xl bg-white/70 border border-slate-200 overflow-hidden";
+
+      const btn = document.createElement("button");
+      btn.className = "w-full text-left px-4 py-3 hover:bg-white flex items-start justify-between gap-3";
+      btn.innerHTML = `
+        <div class="min-w-0">
+          <div class="font-semibold text-slate-900 truncate">${escapeHtml(x.name)}</div>
+          <div class="text-xs text-slate-500 mono truncate">${escapeHtml(x.key)}</div>
+        </div>
+        <div class="shrink-0 flex items-center gap-2">
+          <span class="text-xs px-2 py-1 rounded-full bg-slate-50 border border-slate-200 font-semibold text-slate-600">載入</span>
         </div>
       `;
-      form.appendChild(wrap);
+      btn.onclick = async ()=>{
+        try{
+          const loaded = await api("/loadAny", { namespace:"DB", keyword: x.key });
+          const payload = loaded.payload || loaded;
+          CURRENT = normalizeSurvey(payload);
+          fillBuilder();
+          renderReportsUI();
+          toast("已載入：" + x.name);
+          setTab("builder");
+        }catch(e){
+          toast(e.message, "err");
+        }
+      };
+
+      const del = document.createElement("button");
+      del.className = "w-full px-4 py-2 bg-rose-600 text-white hover:bg-rose-500 font-extrabold";
+      del.textContent = "刪除";
+      del.onclick = async ()=>{
+        const ok = confirm(`確定刪除「${x.name}」？（會連同關鍵字一起刪）`);
+        if(!ok) return;
+        try{
+          await api("/surveyDelete", { surveyName: x.name });
+          toast("已刪除：" + x.name);
+          if((CURRENT.name||"") === x.name){
+            CURRENT = makeEmptySurvey();
+            fillBuilder();
+            renderReportsUI();
+          }
+          await refreshKwMap().catch(()=>{});
+          await refreshSurveyList();
+        }catch(e){
+          toast(e.message, "err");
+        }
+      };
+
+      row.appendChild(btn);
+      row.appendChild(del);
+      wrap.appendChild(row);
+    });
+  }
+
+  function normalizeSurvey(obj){
+    const base = makeEmptySurvey();
+    if(obj && typeof obj === "object"){
+      base.name = obj.name || base.name;
+      base.title = obj.title || base.title;
+      base.keyword = obj.keyword || base.keyword;
+      base.start = obj.start || base.start;
+      base.final = (obj.final && typeof obj.final==="object") ? obj.final : base.final;
+      base.nodes = (obj.nodes && typeof obj.nodes==="object") ? obj.nodes : base.nodes;
+      base.reports = (obj.reports && typeof obj.reports==="object") ? obj.reports : base.reports;
+    }
+    for(const nodeId of Object.keys(base.nodes||{})){
+      const n = base.nodes[nodeId] || {};
+      n.q = String(n.q || "").trim();
+      n.options = Array.isArray(n.options) ? n.options : [];
+      n.options = n.options.map(o=>({
+        t: String(o?.t || "").trim(),
+        next: String(o?.next || "").trim(),
+        reportKey: String(o?.reportKey || "").trim(),
+      }));
+      base.nodes[nodeId] = n;
+    }
+    base.reports = base.reports || {};
+    return base;
+  }
+
+  function fillBuilder(){
+    $("inName").value = CURRENT.name || "";
+    $("inTitle").value = CURRENT.title || "";
+    $("inKeyword").value = CURRENT.keyword || "";
+    $("inStart").value = CURRENT.start || "q1";
+    $("inFinalText").value = (CURRENT.final && CURRENT.final.text) ? CURRENT.final.text : "";
+    renderNodes();
+    updateKwHint();
+  }
+
+  function renderNodes(){
+    const wrap = $("nodesWrap");
+    wrap.innerHTML = "";
+
+    const nodeIds = Object.keys(CURRENT.nodes || {}).sort((a,b)=>a.localeCompare(b));
+    if(nodeIds.length===0){
+      const empty = document.createElement("div");
+      empty.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
+      empty.textContent = "目前沒有 nodes。按「新增節點」。";
+      wrap.appendChild(empty);
+      return;
+    }
+
+    nodeIds.forEach(nodeId=>{
+      const node = CURRENT.nodes[nodeId];
+      const card = document.createElement("div");
+      card.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
+
+      const opts = Array.isArray(node.options) ? node.options : [];
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-xs text-slate-500">nodeId</div>
+            <div class="mono font-extrabold text-slate-900">${escapeHtml(nodeId)}</div>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <button data-act="addopt" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold">+ 選項</button>
+            <button data-act="delnode" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">刪節點</button>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="text-sm font-semibold text-slate-700">題目文字</label>
+          <input data-k="q" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="請輸入題目" />
+        </div>
+
+        <div class="mt-4">
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-extrabold text-slate-900">選項（t / next / reportKey）</div>
+            <div class="text-xs text-slate-500">reportKey 建議只在最後一題填</div>
+          </div>
+
+          <div class="mt-2 space-y-2" data-optwrap></div>
+        </div>
+      `;
+
+      const qInput = card.querySelector('[data-k="q"]');
+      qInput.value = node.q || "";
+      qInput.oninput = (e)=>{ node.q = e.target.value; };
+
+      const optWrap = card.querySelector("[data-optwrap]");
+      const drawOpts = ()=>{
+        optWrap.innerHTML = "";
+        if(opts.length===0){
+          const d = document.createElement("div");
+          d.className = "rounded-xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
+          d.textContent = "沒有選項，按「+ 選項」新增。";
+          optWrap.appendChild(d);
+          return;
+        }
+
+        opts.forEach((o, idx)=>{
+          const row = document.createElement("div");
+          row.className = "rounded-2xl border border-slate-200 bg-white p-3";
+          row.innerHTML = `
+            <div class="grid md:grid-cols-12 gap-2 items-end">
+              <div class="md:col-span-5">
+                <label class="text-xs font-bold text-slate-500">顯示文字 t</label>
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" data-k="t" placeholder="例如：常醒/難睡" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="text-xs font-bold text-slate-500">下一題 next</label>
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="next" placeholder="例如：s2（留空=結束）" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="text-xs font-bold text-slate-500">reportKey（最後一題填）</label>
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="rk" placeholder="例如：sleep_d_low" />
+              </div>
+              <div class="md:col-span-1 flex justify-end">
+                <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="delopt">刪</button>
+              </div>
+            </div>
+          `;
+          const t = row.querySelector('[data-k="t"]');
+          const n = row.querySelector('[data-k="next"]');
+          const rk = row.querySelector('[data-k="rk"]');
+          t.value = o.t || "";
+          n.value = o.next || "";
+          rk.value = o.reportKey || "";
+
+          t.oninput = (e)=>{ o.t = e.target.value; };
+          n.oninput = (e)=>{ o.next = e.target.value; };
+          rk.oninput = (e)=>{ o.reportKey = e.target.value; };
+
+          row.querySelector('[data-act="delopt"]').onclick = ()=>{
+            opts.splice(idx,1);
+            node.options = opts;
+            drawOpts();
+          };
+          optWrap.appendChild(row);
+        });
+      };
+      drawOpts();
+
+      card.querySelector('[data-act="addopt"]').onclick = ()=>{
+        opts.push({ t:"", next:"", reportKey:"" });
+        node.options = opts;
+        drawOpts();
+      };
+
+      card.querySelector('[data-act="delnode"]').onclick = ()=>{
+        const ok = confirm(`確定刪除 node「${nodeId}」？`);
+        if(!ok) return;
+        delete CURRENT.nodes[nodeId];
+        renderNodes();
+      };
+
+      wrap.appendChild(card);
+    });
+  }
+
+  function validateSurvey(){
+    const name = ($("inName").value||"").trim();
+    const title = ($("inTitle").value||"").trim();
+    const kw = normKw($("inKeyword").value);
+    const start = ($("inStart").value||"").trim();
+
+    if(!name) throw new Error("請先填『問卷檔名』");
+    if(!title) throw new Error("請先填『問卷標題』");
+    if(!kw) throw new Error("請先填『關鍵字』");
+    if(!start) throw new Error("請先填『起始節點 ID』");
+
+    const owner = keywordOwner(kw);
+    if(owner && owner !== name) throw new Error("關鍵字已被其他問卷使用");
+
+    const nodes = CURRENT.nodes || {};
+    if(!nodes[start]) throw new Error(`起始節點不存在：${start}`);
+
+    // ✅ 這裡改成「只要求：每條路徑最後一定會遇到 reportKey」
+    // 為了支援你要的「分支後多題深問」：前面 reportKey 可以空白
+    const usedReportKeys = new Set();
+    for(const nodeId of Object.keys(nodes)){
+      const node = nodes[nodeId];
+      if(!String(node.q||"").trim()) throw new Error(`node ${nodeId} 題目是空的`);
+      if(!Array.isArray(node.options) || node.options.length===0) throw new Error(`node ${nodeId} 沒有選項`);
+
+      node.options.forEach((o, i)=>{
+        if(!String(o.t||"").trim()) throw new Error(`node ${nodeId} 選項 ${i+1} 文字是空的`);
+        const nx = String(o.next||"").trim();
+        if(nx && !nodes[nx]) throw new Error(`node ${nodeId} 選項 ${i+1} next 指向不存在：${nx}`);
+
+        const rk = String(o.reportKey||"").trim();
+        if(rk) usedReportKeys.add(rk);
+      });
+    }
+
+    if(usedReportKeys.size === 0){
+      throw new Error("目前沒有任何 reportKey（請在每個分支『最後一題』的選項填 reportKey）");
+    }
+
+    const reports = CURRENT.reports || {};
+    for(const rk of usedReportKeys){
+      if(!reports[rk] || !String(reports[rk]).trim()){
+        throw new Error(`缺少報告模板：reports["${rk}"]（去②補上）`);
+      }
+    }
+
+    return { name, title, kw, start };
+  }
+
+  async function saveSurvey(){
+    const { name, title, kw, start } = validateSurvey();
+
+    CURRENT.name = name;
+    CURRENT.title = title;
+    CURRENT.keyword = kw;
+    CURRENT.start = start;
+    CURRENT.final = { text: ($("inFinalText").value||"").trim() };
+
+    await api("/putAny", {
+      namespace: "DB",
+      keyword: Q_PREFIX + CURRENT.name,
+      payload: CURRENT
     });
 
-    const btnSubmit = document.getElementById("btnSubmit");
-    const btnReset = document.getElementById("btnReset");
-    const resultBox = document.getElementById("result");
-    const resultJson = document.getElementById("resultJson");
+    await refreshKwMap().catch(()=>{});
+    for(const k of Object.keys(KW_MAP)){
+      if(KW_MAP[k] === CURRENT.name && k !== kw){
+        delete KW_MAP[k];
+      }
+    }
+    KW_MAP[kw] = CURRENT.name;
+    await saveKwMap();
 
-    btnReset.onclick = () => {
-      form.reset();
-      resultBox.classList.add("hidden");
-      resultJson.textContent = "";
+    toast("已儲存（含分支＋深問＋模板）");
+    $("txtLastSync").textContent = new Date().toLocaleString();
+
+    await refreshSurveyList();
+    await refreshKwMap().catch(()=>{});
+    updateKwHint();
+  }
+
+  function renderReportsUI(){
+    const list = $("reportList");
+    list.innerHTML = "";
+
+    const keys = Object.keys(CURRENT.reports || {}).sort((a,b)=>a.localeCompare(b));
+    if(keys.length===0){
+      const d = document.createElement("div");
+      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
+      d.textContent = "目前沒有模板。按「新增模板」。";
+      list.appendChild(d);
+      return;
+    }
+
+    keys.forEach(k=>{
+      const row = document.createElement("button");
+      row.className = `w-full text-left rounded-2xl border px-4 py-3 hover:bg-white ${
+        k===ACTIVE_REPORT_KEY ? "border-slate-900 bg-white" : "border-slate-200 bg-white/70"
+      }`;
+      const preview = String(CURRENT.reports[k]||"").trim().slice(0, 60);
+      row.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="mono font-extrabold text-slate-900">${escapeHtml(k)}</div>
+            <div class="text-xs text-slate-500 mt-1 truncate">${escapeHtml(preview)}${preview.length>=60?"…":""}</div>
+          </div>
+          <div class="text-xs px-2 py-1 rounded-full bg-slate-50 border border-slate-200 font-semibold text-slate-600">編輯</div>
+        </div>
+      `;
+      row.onclick = ()=>{
+        ACTIVE_REPORT_KEY = k;
+        $("inReportKey").value = k;
+        $("inReportBody").value = CURRENT.reports[k] || "";
+        renderReportsUI();
+      };
+      list.appendChild(row);
+    });
+
+    if(!ACTIVE_REPORT_KEY && keys[0]){
+      ACTIVE_REPORT_KEY = keys[0];
+      $("inReportKey").value = ACTIVE_REPORT_KEY;
+      $("inReportBody").value = CURRENT.reports[ACTIVE_REPORT_KEY] || "";
+    }
+  }
+
+  function saveCurrentReport(){
+    const k = String($("inReportKey").value||"").trim();
+    const body = String($("inReportBody").value||"").trim();
+    if(!k) return toast("reportKey 不可空白", "err");
+    if(!body) return toast("模板內容不可空白", "err");
+    CURRENT.reports = CURRENT.reports || {};
+    CURRENT.reports[k] = body;
+    ACTIVE_REPORT_KEY = k;
+    toast("已更新模板（記得按右上『儲存』才會寫入 KV）");
+    renderReportsUI();
+  }
+
+  function deleteCurrentReport(){
+    const k = String($("inReportKey").value||"").trim();
+    if(!k) return;
+    const ok = confirm(`確定刪除模板「${k}」？`);
+    if(!ok) return;
+    if(CURRENT.reports && CURRENT.reports[k] !== undefined){
+      delete CURRENT.reports[k];
+      $("inReportKey").value = "";
+      $("inReportBody").value = "";
+      ACTIVE_REPORT_KEY = "";
+      toast("已刪除模板（記得按右上『儲存』才會寫入 KV）");
+      renderReportsUI();
+    }
+  }
+
+  function addReportKey(){
+    const k = prompt("輸入新的 reportKey（例如：gut / energy / immune）");
+    if(!k) return;
+    const key = String(k).trim();
+    CURRENT.reports = CURRENT.reports || {};
+    if(CURRENT.reports[key]) return toast("這個 reportKey 已存在", "warn");
+    CURRENT.reports[key] = "【方向】\n（請填你的個人化建議，不要提他選了什麼）\n\n【可能的常見缺口（方向提示）】\n• …\n\n【今天就能做的 3 件事】\n1) …\n2) …\n3) …\n\n【適合你的產品搭配】\nA) …\nB) …\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。";
+    ACTIVE_REPORT_KEY = key;
+    $("inReportKey").value = key;
+    $("inReportBody").value = CURRENT.reports[key];
+    renderReportsUI();
+    toast("已新增模板（記得按右上『儲存』）");
+  }
+
+  function presetReports(){
+    if(!confirm("要用常用模板覆蓋/補齊嗎？（同 key 會覆蓋）")) return;
+    const preset = makeEmptySurvey().reports;
+    CURRENT.reports = CURRENT.reports || {};
+    for(const k of Object.keys(preset)){
+      CURRENT.reports[k] = preset[k];
+    }
+    toast("已塞入常用模板（記得按右上『儲存』）");
+    renderReportsUI();
+  }
+
+  async function refreshLeads(){
+    const data = await api("/listAll", {});
+    const db = data.db || [];
+    const keys = db.filter(k=>k.startsWith(LEAD_PREFIX)).sort((a,b)=>b.localeCompare(a));
+    $("txtLeadCount").textContent = String(keys.length);
+
+    const top = keys.slice(0, 30);
+    const rows = await Promise.all(top.map(k =>
+      api("/loadAny", { namespace:"DB", keyword:k })
+        .then(r=>r.payload||r)
+        .catch(()=>null)
+    ));
+    LEADS = rows.filter(Boolean);
+    renderLeads();
+  }
+
+  function renderLeads(){
+    const q = ($("leadSearch").value||"").trim().toLowerCase();
+    const items = LEADS.filter(x=> !q || JSON.stringify(x).toLowerCase().includes(q));
+    const wrap = $("leadList");
+    wrap.innerHTML = "";
+
+    if(items.length===0){
+      const d = document.createElement("div");
+      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
+      d.textContent = "目前沒有 Leads。";
+      wrap.appendChild(d);
+      return;
+    }
+
+    items.forEach(x=>{
+      const when = x.createdAt ? new Date(x.createdAt).toLocaleString() : (x.created_at ? new Date(x.created_at).toLocaleString() : "-");
+      const uid = x.userId || x.user_id || "-";
+      const survey = x.surveyName || x.survey_name || "-";
+      const reportKey = x.reportKey || x.primaryTag || "";
+      const report = x.report || x.summary || x.result || "";
+
+      const card = document.createElement("div");
+      card.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
+      card.innerHTML = `
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="text-xs text-slate-500">${escapeHtml(when)}</div>
+          <span class="text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 font-semibold">
+            ${escapeHtml(survey)}
+          </span>
+          ${reportKey ? `<span class="text-xs px-2 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-200 font-semibold mono">${escapeHtml(reportKey)}</span>` : ``}
+        </div>
+        <div class="mt-1 text-xs text-slate-500 mono break-all">userId: ${escapeHtml(uid)}</div>
+        <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 whitespace-pre-line">
+          ${escapeHtml(report || "（沒有報告內容）")}
+        </div>
+      `;
+      wrap.appendChild(card);
+    });
+  }
+
+  // ✅ Modal open/close：不固定 body，只切 hidden（LINE/iOS 最穩）
+  function openBulk(){ $("bulkModal").classList.remove("hidden"); setTimeout(()=>{ $("bulkText").focus(); }, 50); }
+  function closeBulk(){ $("bulkModal").classList.add("hidden"); }
+
+  // 批次匯入格式
+  function parseBulk(text){
+    const lines = (text||"").replace(/\r/g,"").split("\n");
+    const out = { name:"", title:"", keyword:"", start:"q1", final:"", nodes:{} };
+
+    let curNodeId = "";
+    let curQ = "";
+    let curOpts = [];
+
+    const flushNode = ()=>{
+      if(!curNodeId) return;
+      out.nodes[curNodeId] = out.nodes[curNodeId] || { q:"", options:[] };
+      out.nodes[curNodeId].q = curQ || out.nodes[curNodeId].q || "";
+      out.nodes[curNodeId].options = curOpts.slice();
     };
 
-    btnSubmit.onclick = async () => {
-      // collect
-      const payload = {};
-      for (const q of QUESTIONS) {
-        const el = form.querySelector(`input[name="${q.k}"]:checked`);
-        payload[q.k] = el ? Number(el.value) : 0;
+    for(let i=0;i<lines.length;i++){
+      const raw = lines[i] ?? "";
+      const line = raw.trim();
+      if(!line) continue;
+
+      if(/^NAME\s*:/i.test(line)){ out.name = line.split(":").slice(1).join(":").trim(); continue; }
+      if(/^TITLE\s*:/i.test(line)){ out.title = line.split(":").slice(1).join(":").trim(); continue; }
+      if(/^KEYWORD\s*:/i.test(line)){ out.keyword = line.split(":").slice(1).join(":").trim(); continue; }
+      if(/^START\s*:/i.test(line)){ out.start = line.split(":").slice(1).join(":").trim(); continue; }
+      if(/^FINAL\s*:/i.test(line)){ out.final = line.split(":").slice(1).join(":").trim(); continue; }
+
+      if(/^NODE\s*:/i.test(line)){
+        flushNode();
+        curNodeId = line.split(":").slice(1).join(":").trim();
+        curQ = "";
+        curOpts = [];
+        continue;
       }
 
-      btnSubmit.disabled = true;
-      btnSubmit.textContent = "送出中…";
+      if(/^Q\s*:/i.test(line)){
+        curQ = line.split(":").slice(1).join(":").trim();
+        continue;
+      }
 
-      try {
-        // 你 Cloudflare Worker 需有此路由：POST /api/survey/submit
-        const out = await apiFetch("/api/survey/submit", {
-          method: "POST",
-          body: {
-            survey_id: "default",
-            answers: payload,
-            // 之後你要做顧問歸屬，可在這裡加：consultant_id / line_user_id / utm
-          }
-        });
+      const optm = line.match(/^\-\s*(.+)$/);
+      if(optm && curNodeId){
+        const full = optm[1].trim();
+        const parts = full.split("->").map(x=>x.trim());
+        const t = parts[0] || "";
+        let next = "";
+        let reportKey = "";
 
-        resultBox.classList.remove("hidden");
-        resultJson.textContent = JSON.stringify(out, null, 2);
-        alert("✅ 已產生報告（測試回傳已顯示）");
-      } catch (e) {
-        alert("❌ 送出失敗：" + e.message);
-      } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = "送出並產生報告";
+        if(parts[1]){
+          const p = parts[1];
+          const nextm = p.match(/next\s*=\s*([A-Za-z0-9_\-]+)/i);
+          const repm = p.match(/report\s*=\s*([A-Za-z0-9_\-]*)/i); // 允許空
+          next = nextm ? nextm[1] : "";
+          reportKey = repm ? (repm[1]||"") : "";
+          if(String(next).toUpperCase() === "END") next = "";
+        }
+
+        curOpts.push({ t, next, reportKey });
+        continue;
+      }
+    }
+    flushNode();
+
+    if(!out.name || !out.title || !out.keyword) throw new Error("缺少 NAME/TITLE/KEYWORD");
+    if(!Object.keys(out.nodes).length) throw new Error("沒有讀到 NODE");
+    if(!out.start) out.start = "q1";
+    return out;
+  }
+
+  function applyBulkToCurrent(parsed){
+    CURRENT = makeEmptySurvey();
+    CURRENT.name = parsed.name || "";
+    CURRENT.title = parsed.title || "";
+    CURRENT.keyword = parsed.keyword || "";
+    CURRENT.start = parsed.start || "q1";
+    CURRENT.final = { text: parsed.final || "" };
+    CURRENT.nodes = parsed.nodes || {};
+    CURRENT.reports = CURRENT.reports || makeEmptySurvey().reports;
+    fillBuilder();
+    renderReportsUI();
+  }
+
+  function setApiBaseFromInput(){
+    const v = ($("inApiBase").value || "").trim();
+    if(!v) throw new Error("請輸入 Worker 網址");
+    API_BASE = v;
+    localStorage.setItem("questionnaire_worker_url", v);
+  }
+  function initApiBase(){
+    const fromSelf = (localStorage.getItem("questionnaire_worker_url") || "").trim();
+    if(fromSelf){
+      API_BASE = fromSelf;
+      $("inApiBase").value = fromSelf;
+    }
+  }
+
+  function bindInputs(){
+    $("inName").oninput = ()=> updateKwHint();
+    $("inKeyword").oninput = ()=> updateKwHint();
+    $("qSearch").oninput = ()=> renderSurveyList();
+    $("leadSearch").oninput = ()=> renderLeads();
+
+    $("btnTabBuilder").onclick = ()=> setTab("builder");
+    $("btnTabTemplates").onclick = ()=>{ setTab("templates"); renderReportsUI(); };
+    $("btnTabLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
+
+    $("btnNew").onclick = ()=>{
+      CURRENT = makeEmptySurvey();
+      fillBuilder();
+      renderReportsUI();
+      toast("已建立新問卷（尚未儲存）");
+      setTab("builder");
+    };
+
+    $("btnAddNode").onclick = ()=>{
+      const nid = prompt("輸入 nodeId（例如：s5 / t3 / g2 / b4）");
+      if(!nid) return;
+      const id = String(nid).trim();
+      CURRENT.nodes = CURRENT.nodes || {};
+      if(CURRENT.nodes[id]) return toast("這個 nodeId 已存在", "warn");
+      CURRENT.nodes[id] = { q:"", options:[{t:"", next:"", reportKey:""}] };
+      renderNodes();
+      toast("已新增節點（記得按儲存）");
+    };
+
+    $("btnValidate").onclick = ()=>{
+      try{
+        validateSurvey();
+        toast("檢查通過 ✅");
+      }catch(e){
+        toast(e.message, "err");
       }
     };
-  </script>
+
+    $("btnConnect").onclick = async ()=>{
+      try{
+        setApiBaseFromInput();
+        $("txtStatus").textContent = "已連線";
+        $("txtStatus").className = "font-semibold text-emerald-700";
+        $("txtLastSync").textContent = new Date().toLocaleString();
+
+        await refreshKwMap().catch(()=>{});
+        await refreshSurveyList();
+        await refreshLeads().catch(()=>{});
+        updateKwHint();
+        renderReportsUI();
+        toast("連線成功");
+      }catch(e){
+        $("txtStatus").textContent = "連線失敗";
+        $("txtStatus").className = "font-semibold text-rose-700";
+        toast(e.message, "err");
+      }
+    };
+
+    $("btnSave").onclick = async ()=>{
+      try{
+        setApiBaseFromInput();
+        await refreshKwMap().catch(()=>{});
+        await saveSurvey();
+      }catch(e){
+        toast(e.message,"err");
+      }
+    };
+
+    $("btnSaveReport").onclick = saveCurrentReport;
+    $("btnDeleteReport").onclick = deleteCurrentReport;
+    $("btnAddReport").onclick = addReportKey;
+    $("btnPreset").onclick = presetReports;
+
+    $("btnBulk").onclick = openBulk;
+    $("btnBulkClose").onclick = closeBulk;
+
+    // ✅ 點黑底關閉（不會卡）
+    $("bulkModal").addEventListener("click", (e)=>{
+      if(e.target === $("bulkModal")) closeBulk();
+    });
+
+    $("btnBulkExample").onclick = ()=>{
+      $("bulkText").value = `NAME: 作息深問_第一版
+TITLE: 90 秒專屬作息分析
+KEYWORD: 作息深問
+START: q1
+FINAL: 想要我幫你做「7天調整計畫」，回我「計畫」。
+
+NODE: q1
+Q: 你最想先改善哪一塊？
+- 睡眠 -> next=s1 report=
+- 壓力 -> next=t1 report=
+- 腸胃 -> next=g1 report=
+- 體態 -> next=b1 report=
+
+NODE: s1
+Q: 你最近入睡狀況？
+- 很快睡著 -> next=s2 report=
+- 很難入睡 -> next=s2 report=
+- 常醒/淺眠 -> next=s2 report=
+
+NODE: s2
+Q: 你平常睡覺時間多半在？
+- 22-24 -> next=s3 report=
+- 24-02 -> next=s3 report=
+- 02以後 -> next=s3 report=
+
+NODE: s3
+Q: 你白天精神比較像？
+- 穩定 -> next=s4 report=
+- 下午下滑 -> next=s4 report=
+- 容易恍神 -> next=s4 report=
+
+NODE: s4
+Q: 最後一題：你屬於哪種型？
+- 晚睡＋日照少 -> next=END report=sleep_d_low
+- 壓力大＋難放鬆 -> next=END report=sleep_stress_high
+- 外食多＋作息亂 -> next=END report=sleep_food_irregular`;
+      toast("已塞入範例");
+      $("bulkText").focus();
+    };
+
+    $("btnBulkApply").onclick = ()=>{
+      try{
+        const parsed = parseBulk($("bulkText").value || "");
+        applyBulkToCurrent(parsed);
+        closeBulk();
+        toast("已套用（記得按儲存）");
+      }catch(e){
+        toast(e.message, "err");
+      }
+    };
+
+    $("btnLeadsReload").onclick = async ()=>{ await refreshLeads().catch(e=>toast(e.message,"err")); };
+  }
+
+  (function init(){
+    initApiBase();
+    bindInputs();
+    fillBuilder();
+    renderReportsUI();
+    setTab("builder");
+  })();
+</script>
 </body>
 </html>
