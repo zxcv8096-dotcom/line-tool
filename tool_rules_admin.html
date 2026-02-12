@@ -1,314 +1,105 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cloudflare 超級控制台｜統一窗口</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root{ --bd:rgba(15,23,42,.10); --glass:rgba(255,255,255,.82); --glass2:rgba(255,255,255,.70); }
-    body{
-      background:
-        radial-gradient(1200px 600px at 10% 0%, rgba(59,130,246,.18), transparent 55%),
-        radial-gradient(950px 520px at 90% 12%, rgba(16,185,129,.16), transparent 55%),
-        radial-gradient(1000px 650px at 50% 110%, rgba(245,158,11,.14), transparent 60%),
-        #f8fafc;
-      font-family: ui-sans-serif, system-ui, "Microsoft JhengHei";
-    }
-    .glass{ background:var(--glass); border:1px solid var(--bd); backdrop-filter: blur(12px); box-shadow: 0 18px 55px rgba(15,23,42,.10);}
-    .glass2{ background:var(--glass2); border:1px solid var(--bd); backdrop-filter: blur(10px); box-shadow: 0 10px 26px rgba(15,23,42,.06);}
-    .btn{ border:1px solid var(--bd); background:#fff; }
-    .btn:hover{ background:#f1f5f9; }
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      border:1px solid var(--bd);
-      background: rgba(255,255,255,.75);
-      padding:.12rem .45rem;
-      border-radius: .7rem;
-      font-size: .82em;
-    }
-    .inp{
-      border:1px solid var(--bd);
-      background: rgba(255,255,255,.85);
-      border-radius: 1rem;
-      padding: .75rem 1rem;
-      width: 100%;
-      outline: none;
-    }
-    .inp:focus{ box-shadow: 0 0 0 4px rgba(59,130,246,.12); border-color: rgba(59,130,246,.35); }
-  </style>
-</head>
+// ✅ 最小後台 API：三槽位規則 + 上線指標
+// KV keys:
+// - RULES_PROD / RULES_DEV / RULES_OLD : JSON string
+// - RULES_ACTIVE_SLOT : "prod" | "dev" | "old"
+//
+// Secrets:
+// - ADMIN_TOKEN
 
-<body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-4 pt-5 pb-24">
-    <!-- Header -->
-    <div class="glass rounded-3xl px-5 py-4 flex items-center justify-between gap-3">
-      <div class="min-w-0">
-        <div class="text-lg font-extrabold text-slate-900 truncate">Cloudflare 超級控制台｜統一窗口</div>
-        <div class="text-sm text-slate-600 truncate">
-          這頁是「對 Worker 發指令」不是跳轉頁（KV / Survey / 管理 API）
-        </div>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="UI.ping()">測試連線</button>
-        <button class="btn text-sm px-4 py-2 rounded-2xl" onclick="UI.toggleHelp()">教學</button>
-      </div>
-    </div>
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8" },
+  });
+}
 
-    <!-- Help -->
-    <div id="help" class="hidden mt-4 glass2 rounded-3xl p-5 text-sm text-slate-700">
-      <div class="font-bold text-slate-900">為什麼你會「KV 讀取失敗」？</div>
-      <div class="mt-2 text-slate-600 leading-relaxed">
-        1) 你 Worker 若有設定 <span class="kbd">ADMIN_KEY</span>，那 KV API 會要求 header <span class="kbd">X-Admin-Key</span>，沒帶就會 <span class="kbd">401</span>。<br/>
-        2) 若你 Worker 沒有升級到「超級後端」版本，打 <span class="kbd">/api/kv/get</span> 會 <span class="kbd">404</span>。<br/>
-        3) 若 Bindings 沒有設 <span class="kbd">DB -&gt; BOT_DATA</span>，會 <span class="kbd">500 Missing KV binding</span>。<br/>
-        <div class="mt-3">
-          ✅ 正常時：<span class="kbd">/health</span> 回 ok、<span class="kbd">/api/ping</span> 回 ok、KV GET 回 ok。
-        </div>
-      </div>
-    </div>
-
-    <!-- Gateway + Admin -->
-    <div class="mt-4 grid lg:grid-cols-2 gap-4">
-      <div class="glass2 rounded-3xl p-5">
-        <div class="text-base font-bold text-slate-900">Gateway（Worker 網域）</div>
-        <div class="mt-1 text-sm text-slate-600">例如：<span class="kbd">https://api.zxcv8096.workers.dev</span></div>
-        <input id="gw" class="inp mt-3" placeholder="貼上你的 Worker 網域…" />
-        <div class="mt-2 text-xs text-slate-500">會存到 <span class="kbd">localStorage.GW_BASE</span></div>
-        <div class="mt-3 flex gap-2">
-          <button class="btn px-4 py-3 rounded-2xl text-sm font-semibold" onclick="UI.saveGW()">儲存</button>
-          <button class="btn px-4 py-3 rounded-2xl text-sm" onclick="UI.resetGW()">重置</button>
-        </div>
-      </div>
-
-      <div class="glass2 rounded-3xl p-5">
-        <div class="text-base font-bold text-slate-900">ADMIN_KEY（管理密鑰）</div>
-        <div class="mt-1 text-sm text-slate-600">有設 ADMIN_KEY 才能操作 KV / rules set（header: <span class="kbd">X-Admin-Key</span>）</div>
-        <input id="ak" class="inp mt-3" type="password" placeholder="輸入一次後會記住（可留空）" />
-        <div class="mt-2 text-xs text-slate-500">會存到 <span class="kbd">localStorage.ADMIN_KEY</span></div>
-        <div class="mt-3 flex gap-2">
-          <button class="btn px-4 py-3 rounded-2xl text-sm font-semibold" onclick="UI.saveAK()">儲存</button>
-          <button class="btn px-4 py-3 rounded-2xl text-sm" onclick="UI.clearAK()">清除</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Command Panel -->
-    <div class="mt-5 grid lg:grid-cols-2 gap-4">
-      <!-- KV: get/set -->
-      <div class="glass2 rounded-3xl p-5">
-        <div class="text-base font-bold text-slate-900">KV 指令（BOT_DATA via env.DB）</div>
-        <div class="mt-1 text-sm text-slate-600">讀寫你的 KV（例如 RULES_JSON、CONFIG、TOKEN…）</div>
-
-        <div class="mt-4 grid gap-3">
-          <div>
-            <div class="text-sm font-semibold text-slate-900">Key</div>
-            <input id="kvKey" class="inp mt-2" placeholder="例如：SURVEY:health_v1:RULES" />
-          </div>
-
-          <div>
-            <div class="text-sm font-semibold text-slate-900">Value（JSON / 文字）</div>
-            <textarea id="kvVal" rows="7" class="inp mt-2 font-mono text-xs"
-              placeholder='例如：{"version":1,"rules":[...]} 或任何文字'></textarea>
-          </div>
-
-          <div class="flex flex-wrap gap-2">
-            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.kvGet()">讀取</button>
-            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.kvPut()">寫入</button>
-            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.kvDel()">刪除</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- KV: list -->
-      <div class="glass2 rounded-3xl p-5">
-        <div class="text-base font-bold text-slate-900">KV Keys（查詢）</div>
-        <div class="mt-1 text-sm text-slate-600">列出 KV 裡有哪些 key（可用 prefix 篩選）</div>
-
-        <div class="mt-4 grid gap-3">
-          <div>
-            <div class="text-sm font-semibold text-slate-900">Prefix（可空）</div>
-            <input id="kvPrefix" class="inp mt-2" placeholder="例如：SURVEY: 或 留空列出全部" />
-          </div>
-
-          <div class="grid grid-cols-12 gap-2">
-            <div class="col-span-6">
-              <div class="text-sm font-semibold text-slate-900">Limit</div>
-              <input id="kvLimit" class="inp mt-2" value="100" />
-            </div>
-            <div class="col-span-6">
-              <div class="text-sm font-semibold text-slate-900">Cursor（翻頁用，可空）</div>
-              <input id="kvCursor" class="inp mt-2" placeholder="上一次 list 回傳的 cursor" />
-            </div>
-          </div>
-
-          <div class="flex gap-2">
-            <button class="btn px-4 py-2 rounded-2xl text-sm font-semibold" onclick="UI.kvList()">列出 Keys</button>
-            <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.clearLog()">清空 Log</button>
-          </div>
-
-          <div class="text-xs text-slate-500 leading-relaxed">
-            需要 Worker 有：<span class="kbd">POST /api/kv/list</span>、<span class="kbd">/api/kv/get</span>、<span class="kbd">/api/kv/put</span>、<span class="kbd">/api/kv/del</span><br/>
-            ✅ 你已升級到「超級後端」就會有。
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Log -->
-    <div class="mt-5 glass rounded-3xl p-5">
-      <div class="flex items-center justify-between gap-3">
-        <div class="text-base font-bold text-slate-900">執行 Log（一定會顯示 HTTP 狀態與回應）</div>
-        <button class="btn px-4 py-2 rounded-2xl text-sm" onclick="UI.copyLog()">複製 Log</button>
-      </div>
-      <pre id="log" class="mt-4 text-xs bg-white/70 border rounded-2xl p-4 overflow-auto max-h-[420px]"
-        style="border-color:var(--bd)"></pre>
-    </div>
-  </div>
-
-<script>
-const UI = (() => {
-  const K_GW = "GW_BASE";
-  const K_AK = "ADMIN_KEY";
-  const DEFAULT_GW = "https://api.zxcv8096.workers.dev";
-
-  const $ = (id)=>document.getElementById(id);
-  const logEl = $("log");
-
-  function normalizeGW(v){
-    const s = String(v||"").trim();
-    if(!s) return "";
-    if(!/^https?:\/\//i.test(s)) return ("https://" + s.replace(/^\/+/,"")).replace(/\/+$/,"");
-    return s.replace(/\/+$/,"");
-  }
-
-  function now(){
-    return new Date().toLocaleTimeString();
-  }
-  function log(line){
-    logEl.textContent = `[${now()}] ${line}\n` + logEl.textContent;
-  }
-  function toggleHelp(){ $("help").classList.toggle("hidden"); }
-  function clearLog(){ logEl.textContent = ""; }
-
-  // init
-  let GW = normalizeGW(localStorage.getItem(K_GW)) || DEFAULT_GW;
-  localStorage.setItem(K_GW, GW);
-  $("gw").value = GW;
-
-  let AK = String(localStorage.getItem(K_AK) || "");
-  $("ak").value = AK;
-
-  function saveGW(){
-    const v = normalizeGW($("gw").value);
-    if(!v) return alert("Gateway 不能空白");
-    GW = v;
-    localStorage.setItem(K_GW, GW);
-    log(`✅ 已儲存 Gateway = ${GW}`);
-  }
-  function resetGW(){
-    GW = DEFAULT_GW;
-    $("gw").value = GW;
-    localStorage.setItem(K_GW, GW);
-    log(`🔁 已重置 Gateway = ${GW}`);
-  }
-  function saveAK(){
-    AK = String($("ak").value || "").trim();
-    localStorage.setItem(K_AK, AK);
-    log(AK ? "✅ 已儲存 ADMIN_KEY（已啟用管理呼叫）" : "✅ ADMIN_KEY 為空（若 Worker 有設 ADMIN_KEY，呼叫會 401）");
-  }
-  function clearAK(){
-    AK = "";
-    $("ak").value = "";
-    localStorage.setItem(K_AK, "");
-    log("🧹 已清除 ADMIN_KEY");
-  }
-
-  async function call(path, body){
-    const url = GW + path;
-    log(`➡️ ${url}`);
-    const headers = { "Content-Type":"application/json" };
-    if (AK) headers["X-Admin-Key"] = AK;
-
-    try{
-      const res = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body || {})
-      });
-
-      const text = await res.text();
-      log(`⬅️ HTTP ${res.status} ${res.ok ? "OK" : "ERR"}`);
-
-      // parse JSON if possible
-      try{
-        const j = JSON.parse(text);
-        log(`📦 ${JSON.stringify(j, null, 2)}`);
-        return j;
-      }catch{
-        log(`📦 ${text}`);
-        return text;
-      }
-    }catch(e){
-      log(`❌ Fetch 失敗：${e?.message || e}`);
-      log(`⚠️ 常見原因：1) Worker 沒開 CORS 2) 網址錯 3) 被瀏覽器擋`);
-      return null;
-    }
-  }
-
-  async function ping(){
-    // use GET /health (no admin)
-    const url = GW.replace(/\/+$/,"") + "/health";
-    log(`➡️ ${url} (GET)`);
-    try{
-      const res = await fetch(url, { method:"GET" });
-      const text = await res.text();
-      log(`⬅️ HTTP ${res.status} ${res.ok ? "OK" : "ERR"}`);
-      try{ log(`📦 ${JSON.stringify(JSON.parse(text), null, 2)}`); }
-      catch{ log(`📦 ${text}`); }
-    }catch(e){
-      log(`❌ Ping 失敗：${e?.message || e}`);
-    }
-  }
-
-  // KV actions
-  async function kvGet(){
-    const key = $("kvKey").value.trim();
-    if(!key) return alert("Key 不能空白");
-    await call("/api/kv/get", { key });
-  }
-  async function kvPut(){
-    const key = $("kvKey").value.trim();
-    if(!key) return alert("Key 不能空白");
-    const raw = $("kvVal").value;
-    let value = raw;
-    try{ value = JSON.parse(raw); }catch{}
-    await call("/api/kv/put", { key, value });
-  }
-  async function kvDel(){
-    const key = $("kvKey").value.trim();
-    if(!key) return alert("Key 不能空白");
-    await call("/api/kv/del", { key });
-  }
-  async function kvList(){
-    const prefix = $("kvPrefix").value.trim();
-    const cursor = $("kvCursor").value.trim();
-    const limit = Number(($("kvLimit").value || "100").trim());
-    await call("/api/kv/list", {
-      prefix,
-      cursor: cursor || undefined,
-      limit: Number.isFinite(limit) ? limit : 100
+function assertAdmin(request, env) {
+  const t = request.headers.get("x-admin-token") || "";
+  if (!env.ADMIN_TOKEN || t !== env.ADMIN_TOKEN) {
+    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "content-type": "application/json; charset=utf-8" },
     });
   }
+}
 
-  async function copyLog(){
-    const t = logEl.textContent || "";
-    try{ await navigator.clipboard.writeText(t); alert("已複製"); }
-    catch{ prompt("請手動複製：", t); }
+function slotToKey(slot) {
+  if (slot === "prod") return "RULES_PROD";
+  if (slot === "dev") return "RULES_DEV";
+  if (slot === "old") return "RULES_OLD";
+  return null;
+}
+
+async function handleAdminApi(request, env) {
+  // 管理端驗證
+  assertAdmin(request, env);
+
+  const url = new URL(request.url);
+
+  // GET /admin/active
+  if (url.pathname === "/admin/active" && request.method === "GET") {
+    const active = (await env.DB.get("RULES_ACTIVE_SLOT")) || "prod";
+    return json({ active });
   }
 
-  return { toggleHelp, clearLog, copyLog, saveGW, resetGW, saveAK, clearAK, ping, kvGet, kvPut, kvDel, kvList };
-})();
-</script>
-</body>
-</html>
+  // PUT /admin/active  body: { active: "prod|dev|old" }
+  if (url.pathname === "/admin/active" && request.method === "PUT") {
+    const body = await request.json();
+    const active = body?.active;
+    if (!["prod","dev","old"].includes(active)) return json({ error: "invalid active" }, 400);
+    await env.DB.put("RULES_ACTIVE_SLOT", active);
+    return json({ ok: true, active });
+  }
+
+  // GET /admin/rules?slot=prod|dev|old
+  if (url.pathname === "/admin/rules" && request.method === "GET") {
+    const slot = url.searchParams.get("slot") || "prod";
+    const key = slotToKey(slot);
+    if (!key) return json({ error: "invalid slot" }, 400);
+    const raw = await env.DB.get(key);
+    if (!raw) return json({ rules: {} }); // 空的也回傳
+    try { return json({ rules: JSON.parse(raw) }); }
+    catch { return json({ rules: raw }); }
+  }
+
+  // PUT /admin/rules?slot=... body: { rules: <object> }
+  if (url.pathname === "/admin/rules" && request.method === "PUT") {
+    const slot = url.searchParams.get("slot") || "prod";
+    const key = slotToKey(slot);
+    if (!key) return json({ error: "invalid slot" }, 400);
+    const body = await request.json();
+    const rules = body?.rules ?? {};
+    await env.DB.put(key, JSON.stringify(rules));
+    return json({ ok: true, slot });
+  }
+
+  // POST /admin/backup-prod-to-old
+  if (url.pathname === "/admin/backup-prod-to-old" && request.method === "POST") {
+    const prod = await env.DB.get("RULES_PROD");
+    if (prod) await env.DB.put("RULES_OLD", prod);
+    return json({ ok: true });
+  }
+
+  return json({ error: "Not Found" }, 404);
+}
+
+// ✅ 你原本的 fetch 裡加這段路由（放最前面）
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    // 後台 API
+    if (url.pathname.startsWith("/admin/")) {
+      try { return await handleAdminApi(request, env); }
+      catch (e) { return e instanceof Response ? e : json({ error: "server error" }, 500); }
+    }
+
+    // ✅ 問卷規則讀取：永遠從 ACTIVE_SLOT 指到的槽位讀
+    // 你把你原本的規則讀取改成下面這種即可：
+    // const active = (await env.DB.get("RULES_ACTIVE_SLOT")) || "prod";
+    // const rulesKey = active === "dev" ? "RULES_DEV" : active === "old" ? "RULES_OLD" : "RULES_PROD";
+    // const rules = JSON.parse((await env.DB.get(rulesKey)) || "{}");
+
+    return new Response("OK");
+  }
+};
