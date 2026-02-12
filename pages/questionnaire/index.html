@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>AI 問卷後台（分支深問＋個人化報告版）</title>
+  <title>AI 問卷後台（分支＋個人化報告版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body{
@@ -16,21 +16,8 @@
     .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
     textarea { -webkit-overflow-scrolling: touch; }
     .modal-scroll { max-height: min(78vh, 720px); overflow: auto; -webkit-overflow-scrolling: touch; }
-
-    /* ✅ 重要：修 LINE/iOS Modal 卡住（不要 fixed body；讓 Modal 自己可滾動） */
-    #bulkModal{
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      touch-action: pan-y;
-    }
-    #bulkModalInner{
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 16px;
-    }
+    /* ✅ iOS/LINE 內建瀏覽器：Modal 打開時避免整頁卡住 */
+    body.modal-open { position: fixed; width: 100%; overflow: hidden; }
   </style>
 </head>
 
@@ -38,12 +25,14 @@
   <div class="max-w-6xl mx-auto p-4 md:p-8">
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（分支深問＋個人化報告）</h1>
-        <p class="text-slate-600 mt-1">多問卷｜關鍵字綁定｜分支 nodes｜深問題庫｜報告模板（不顯示答案）｜批次匯入不卡住</p>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台（分支＋個人化報告）</h1>
+        <p class="text-slate-600 mt-1">多問卷｜關鍵字綁定｜分支題庫 nodes｜報告 templates｜一鍵刪除｜批次匯入</p>
       </div>
-      <div class="text-xs text-slate-600 leading-5">
-        <div>✅ 分支後可再問很多題，做到像「專屬顧問」</div>
-        <div>✅ 報告不會列出他的選項（只送建議）</div>
+      <div class="flex gap-2">
+        <div class="text-xs text-slate-600 leading-5">
+          <div>✅ 客戶全程在 LINE 內點選，不跳轉網站</div>
+          <div>⚠️ 維生素/缺乏為「可能性提示」，非診斷</div>
+        </div>
       </div>
     </header>
 
@@ -91,15 +80,14 @@
 
         <hr class="my-4 border-slate-200" />
 
-        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定（分支＋深問）</button>
-        <button id="btnTabTemplates" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 報告模板（只送建議）</button>
-        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads</button>
+        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷設定（分支）</button>
+        <button id="btnTabTemplates" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 報告模板（維生素＋產品建議）</button>
+        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads 報告</button>
 
         <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 leading-5">
-          <div class="font-extrabold">你要的「專屬感」做法</div>
-          <div>1) 第一題做分支（睡眠/壓力/腸胃/體態…）</div>
-          <div>2) 分支後再問 6～12 題（真的像量身）</div>
-          <div>3) 最後一題才給 reportKey（決定報告模板）</div>
+          <div class="font-extrabold">提醒</div>
+          <div>你要「不要出現他選擇的狀況」：已內建。</div>
+          <div>LINE 最後只會送「個人化建議」模板，不會列出選項。</div>
         </div>
 
         <div class="mt-4 text-xs text-slate-500">
@@ -113,15 +101,13 @@
         <section id="tabBuilder" class="card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（分支 nodes + 深問鏈）</h2>
-              <p class="text-sm text-slate-600 mt-1">
-                每個選項可指向不同下一題（next）。<span class="font-semibold">reportKey 建議只在最後一題填</span>，前面可留空。
-              </p>
+              <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定（分支 nodes）</h2>
+              <p class="text-sm text-slate-600 mt-1">每個選項可以指向不同下一題，最後結束後會依 reportKey 送出你的個人化報告。</p>
             </div>
             <div class="flex gap-2 flex-wrap">
               <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次匯入</button>
               <button id="btnAddNode" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增節點</button>
-              <button id="btnValidate" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">檢查</button>
+              <button id="btnValidate" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">檢查設定</button>
             </div>
           </div>
 
@@ -137,7 +123,7 @@
 
             <div class="md:col-span-2">
               <div class="flex items-center justify-between gap-2">
-                <label class="text-sm font-semibold text-slate-700">關鍵字（客戶輸入這個開始）</label>
+                <label class="text-sm font-semibold text-slate-700">關鍵字（客戶輸入這個開始問卷）</label>
                 <div id="kwHint" class="text-xs font-semibold text-slate-500"></div>
               </div>
               <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：作息分析" />
@@ -146,25 +132,28 @@
             <div>
               <label class="text-sm font-semibold text-slate-700">起始節點 ID</label>
               <input id="inStart" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="例如：q1" />
+              <div class="text-xs text-slate-500 mt-2">通常用 <span class="mono font-semibold">q1</span></div>
             </div>
 
             <div>
-              <label class="text-sm font-semibold text-slate-700">報告後補一句（可空白）</label>
-              <input id="inFinalText" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：如果你願意，我可以幫你做一週調整計畫。" />
+              <label class="text-sm font-semibold text-slate-700">結束後補充訊息（可空白）</label>
+              <input id="inFinalText" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：如果你願意，我可以再幫你做一份一週調整計畫。" />
+              <div class="text-xs text-slate-500 mt-2">這段會在報告後「再推送一次」</div>
             </div>
 
             <div class="md:col-span-2">
-              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-6">
-                ✅ 報告不會顯示他的選項（只送你模板的建議文字）<br/>
-                ✅ 要更專屬：分支後多問幾題，最後才選 reportKey
+              <label class="text-sm font-semibold text-slate-700">重要：報告不要顯示他選了什麼</label>
+              <div class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-6">
+                ✅ 已預設：LINE 報告只會送出「模板內容」，不會列出他的答案。<br/>
+                你只需要在「② 報告模板」填好各類別的維生素＋產品建議即可。
               </div>
             </div>
           </div>
 
           <div class="mt-6">
             <div class="flex items-center justify-between gap-2">
-              <h3 class="font-extrabold text-slate-900">nodes（分支題目 / 深問題庫）</h3>
-              <div class="text-xs text-slate-500">next 留空=結束。reportKey 建議只在最後一題填。</div>
+              <h3 class="font-extrabold text-slate-900">nodes（分支題庫）</h3>
+              <div class="text-xs text-slate-500">建議：每題 2～6 個選項。選項 next 留空＝結束。</div>
             </div>
             <div id="nodesWrap" class="mt-3 space-y-3"></div>
           </div>
@@ -174,8 +163,8 @@
         <section id="tabTemplates" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">② 報告模板（不顯示答案，只送建議）</h2>
-              <p class="text-sm text-slate-600 mt-1">依 reportKey 送不同報告。內容建議用「常見缺口/可能不足」語氣。</p>
+              <h2 class="text-lg font-extrabold text-slate-900">② 報告模板（維生素＋產品建議）</h2>
+              <p class="text-sm text-slate-600 mt-1">依 <span class="mono font-semibold">reportKey</span> 分類出報告。報告內容不要提他選了什麼。</p>
             </div>
             <div class="flex gap-2">
               <button id="btnPreset" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入常用模板</button>
@@ -184,15 +173,15 @@
           </div>
 
           <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">⚠️ 建議用詞</div>
-            <div>用「可能的常見缺口 / 建議補充方向」，不要用「你缺乏/你有病」。</div>
-            <div>最後加：若有慢性病/孕哺/用藥，先詢問醫師或藥師。</div>
+            <div class="font-extrabold">⚠️ 重要（避免踩醫療法規/爭議）</div>
+            <div>請用「可能不足 / 常見缺口 / 建議補充方向」描述，不要用「你缺乏」或「你有病」。</div>
+            <div>建議最後加一句：<span class="font-semibold">「若有慢性病/孕哺/用藥，請先詢問醫師或藥師。」</span></div>
           </div>
 
           <div class="mt-4 grid md:grid-cols-2 gap-4 items-start">
             <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
               <div class="text-sm font-extrabold text-slate-900">reportKey 清單</div>
-              <div class="text-xs text-slate-500 mt-1">例如：sleep_low / stress_high / gut / body / energy / immune ...</div>
+              <div class="text-xs text-slate-500 mt-1">nodes 的選項可設定 reportKey，例如：sleep / stress / gut / body / energy / immune</div>
               <div id="reportList" class="mt-3 space-y-2"></div>
             </div>
 
@@ -200,26 +189,31 @@
               <div class="flex items-center justify-between gap-2">
                 <div>
                   <div class="text-sm font-extrabold text-slate-900">模板內容</div>
-                  <div class="text-xs text-slate-500 mt-1">這段會直接送給客戶（不包含他的答案）</div>
+                  <div class="text-xs text-slate-500 mt-1">送給客戶的內容（不顯示答案）</div>
                 </div>
-                <button id="btnDeleteReport" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪</button>
+                <div class="flex gap-2">
+                  <button id="btnDeleteReport" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪</button>
+                </div>
               </div>
 
               <div class="mt-3">
                 <label class="text-xs font-bold text-slate-500">reportKey</label>
-                <input id="inReportKey" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：sleep_low" />
+                <input id="inReportKey" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：sleep" />
               </div>
 
               <div class="mt-3">
-                <label class="text-xs font-bold text-slate-500">內容</label>
+                <label class="text-xs font-bold text-slate-500">標題（可空白）</label>
+                <input id="inReportTitle" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="例如：睡眠補強建議" />
+              </div>
+
+              <div class="mt-3">
+                <label class="text-xs font-bold text-slate-500">內容（會直接送出）</label>
                 <textarea id="inReportBody" rows="12" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                  placeholder="請填你的個人化建議（不要提他選了什麼）。"></textarea>
+                  placeholder="範例：&#10;我會先用「睡眠」做優先補強方向。&#10;&#10;【可能的常見缺口】&#10;• 鎂：放鬆/入睡支持（很多人飲食不足）&#10;• 維生素B群：壓力期消耗較快&#10;• 維生素D：久待室內/日照少常見不足&#10;&#10;【今天就能做的 3 件事】&#10;1) …&#10;2) …&#10;3) …&#10;&#10;【適合你的產品搭配】&#10;A) …（你的產品/組合）&#10;B) …&#10;&#10;提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。"></textarea>
               </div>
 
               <div class="mt-3">
-                <button id="btnSaveReport" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
-                  更新模板（記得再按右上『儲存』寫入 KV）
-                </button>
+                <button id="btnSaveReport" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">儲存到此問卷（會跟著問卷一起存）</button>
               </div>
             </div>
           </div>
@@ -229,8 +223,8 @@
         <section id="tabLeads" class="hidden card rounded-2xl shadow p-5 border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900">③ Leads</h2>
-              <p class="text-sm text-slate-600 mt-1">顯示：userId、問卷、時間、reportKey、報告內容</p>
+              <h2 class="text-lg font-extrabold text-slate-900">③ Leads 報告</h2>
+              <p class="text-sm text-slate-600 mt-1">顯示：userId、問卷、時間、reportKey、報告（你可以複製再加工）</p>
             </div>
             <div class="flex gap-2">
               <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
@@ -247,81 +241,60 @@
     </div>
   </div>
 
-  <!-- BULK MODAL (✅已修不卡住) -->
+  <!-- BULK MODAL -->
   <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50">
-    <div id="bulkModalInner">
-      <div class="w-full max-w-3xl">
-        <div class="card rounded-2xl shadow border border-slate-200 p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-xl font-extrabold text-slate-900">批次匯入（分支 nodes｜深問可很多題）</div>
-              <div class="text-sm text-slate-600 mt-1">
-                你可以在同一個分支一路寫很多 NODE（q2、q3、q4…），客戶就會覺得很專屬。
-              </div>
-            </div>
-            <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
+    <div class="max-w-3xl mx-auto p-4 md:p-8">
+      <div class="card rounded-2xl shadow border border-slate-200 p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-xl font-extrabold text-slate-900">批次匯入（分支 nodes）</div>
+            <div class="text-sm text-slate-600 mt-1">貼上純文字 → 自動生成 nodes（每題選項可寫 next / reportKey）</div>
           </div>
+          <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
+        </div>
 
-          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-            <div class="font-bold">格式範例（分支後一路深問，最後才 reportKey）：</div>
-<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 作息深問_第一版
-TITLE: 90 秒專屬作息分析
-KEYWORD: 作息深問
+        <div class="mt-4 modal-scroll rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
+          <div class="font-bold">格式範例：</div>
+<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap">NAME: 作息分流_第一版
+TITLE: 60 秒作息分析
+KEYWORD: 作息分析
 START: q1
-FINAL: 想要我幫你做「7天調整計畫」，回我「計畫」。
+FINAL: 如果你願意，我可以再幫你做一份一週調整計畫。
 
 NODE: q1
-Q: 你最想先改善哪一塊？
-- 睡眠 -> next=s1 report=
-- 壓力 -> next=t1 report=
-- 腸胃 -> next=g1 report=
-- 體態 -> next=b1 report=
+Q: 你最近睡眠狀態比較像？
+- 很好 -> next=q2 report=sleep_good
+- 普通 -> next=q2 report=sleep_ok
+- 常醒/難睡 -> next=q2 report=sleep_low
+- 晚睡且日照少 -> next=q2 report=d_low
 
-NODE: s1
-Q: 你最近入睡狀況？
-- 很快睡著 -> next=s2 report=
-- 很難入睡 -> next=s2 report=
-- 常醒/淺眠 -> next=s2 report=
+NODE: q2
+Q: 你的壓力感大概是？
+- 不太有 -> next=END report=balance
+- 偶爾緊 -> next=END report=stress_mid
+- 常緊繃 -> next=END report=stress_high</pre>
+        </div>
 
-NODE: s2
-Q: 你平常睡覺時間多半在？
-- 22-24 -> next=s3 report=
-- 24-02 -> next=s3 report=
-- 02以後 -> next=s3 report=
+        <textarea id="bulkText" rows="12"
+          class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
+          style="min-height: 260px; max-height: 48vh; overflow:auto;"
+          placeholder="把文字貼這裡…（在 LINE 內建瀏覽器也能滑）"></textarea>
 
-NODE: s3
-Q: 你白天精神比較像？
-- 穩定 -> next=s4 report=
-- 下午下滑 -> next=s4 report=
-- 容易恍神 -> next=s4 report=
-
-NODE: s4
-Q: 最後一題：你屬於哪種型？
-- 晚睡＋日照少 -> next=END report=sleep_d_low
-- 壓力大＋難放鬆 -> next=END report=sleep_stress_high
-- 作息亂＋外食多 -> next=END report=sleep_food_irregular</pre>
-          </div>
-
-          <!-- ✅ 這裡就是你說「滑不到下面輸入框」的地方：已確保 modal 自己可滾 -->
-          <textarea id="bulkText" rows="12"
-            class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
-            style="min-height: 260px; max-height: 48vh; overflow:auto;"
-            placeholder="把分支深問文字貼這裡…（LINE/iOS 也可滑到底）"></textarea>
-
-          <div class="mt-4 flex flex-wrap gap-2 justify-end">
-            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
-            <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用</button>
-          </div>
+        <div class="mt-4 flex flex-wrap gap-2 justify-end">
+          <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入範例</button>
+          <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用</button>
         </div>
       </div>
     </div>
   </div>
 
 <script>
+  // ========= KV Keys =========
   const Q_PREFIX = "AI_SURVEY:Q:";
   const LEAD_PREFIX = "AI_SURVEY:LEAD:";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
+  // ========= State =========
   let API_BASE = "";
   let SURVEYS = [];
   let CURRENT = makeEmptySurvey();
@@ -329,6 +302,7 @@ Q: 最後一題：你屬於哪種型？
   let KW_MAP = {};
   let ACTIVE_REPORT_KEY = "";
 
+  // ========= Helpers =========
   const $ = (id)=>document.getElementById(id);
 
   function toast(msg, type="ok"){
@@ -361,45 +335,34 @@ Q: 最後一題：你屬於哪種型？
       keyword: "",
       start: "q1",
       final: { text: "" },
+      // ✅ 分支問卷：nodes
       nodes: {
         "q1": {
-          q: "你最想先改善哪一塊？",
+          q: "你最近睡眠狀態比較像？",
           options: [
-            { t:"睡眠", next:"s1", reportKey:"" },
-            { t:"壓力", next:"t1", reportKey:"" },
-            { t:"腸胃", next:"g1", reportKey:"" },
-            { t:"體態", next:"b1", reportKey:"" },
+            { t:"很OK", next:"q2", reportKey:"balance" },
+            { t:"普通", next:"q2", reportKey:"sleep_ok" },
+            { t:"常醒/難睡", next:"q2", reportKey:"sleep_low" },
+            { t:"晚睡且日照少", next:"q2", reportKey:"d_low" },
           ]
         },
-        "s1": {
-          q: "你最近入睡狀況？",
+        "q2": {
+          q: "你的壓力感大概是？",
           options: [
-            { t:"很快睡著", next:"s2", reportKey:"" },
-            { t:"很難入睡", next:"s2", reportKey:"" },
-            { t:"常醒/淺眠", next:"s2", reportKey:"" },
-          ]
-        },
-        "s2": {
-          q: "你平常睡覺時間多半在？",
-          options: [
-            { t:"22-24", next:"s3", reportKey:"" },
-            { t:"24-02", next:"s3", reportKey:"" },
-            { t:"02以後", next:"s3", reportKey:"" },
-          ]
-        },
-        "s3": {
-          q: "最後一題：你比較像哪種型？",
-          options: [
-            { t:"晚睡＋日照少", next:"", reportKey:"sleep_d_low" },
-            { t:"壓力大＋難放鬆", next:"", reportKey:"sleep_stress_high" },
-            { t:"外食多＋作息亂", next:"", reportKey:"sleep_food_irregular" },
+            { t:"不太有", next:"", reportKey:"balance" },
+            { t:"偶爾緊", next:"", reportKey:"stress_mid" },
+            { t:"常緊繃", next:"", reportKey:"stress_high" },
           ]
         }
       },
+      // ✅ 報告模板：reports[reportKey] = 文字（不顯示答案）
       reports: {
-        "sleep_d_low": "【優先方向】\n我會先用「睡眠節律＋日照支持」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• 維生素D：室內族/晚睡族常見不足\n• B群：忙碌期消耗較快\n\n【今天就能做的 3 件事】\n1) 白天 10~20 分鐘日照或戶外走路\n2) 晚上藍光降低（睡前 60 分鐘）\n3) 起床時間固定（比入睡時間更關鍵）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
-        "sleep_stress_high": "【優先方向】\n我會先用「放鬆支持＋睡眠品質」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• 鎂：放鬆/緊繃支持\n• B群：壓力期消耗較快\n• 維生素C：忙碌期常見不足\n\n【今天就能做的 3 件事】\n1) 每天 2 次 3 分鐘呼吸（吸4吐6）\n2) 晚上留 20 分鐘無訊息時間\n3) 睡前固定小儀式（熱水澡/伸展）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
-        "sleep_food_irregular": "【優先方向】\n我會先用「飲食節律＋睡眠恢復」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• B群：外食/忙碌期常見不足\n• 鎂：放鬆支持\n\n【今天就能做的 3 件事】\n1) 晚餐少油少糖（睡前 3 小時）\n2) 先把早餐固定（蛋白質＋蔬果）\n3) 每天同一時間上床準備睡\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。"
+        "balance": "【整體方向】\n你現在的作息基礎不錯，我會先用「穩定續航」做目標。\n\n【可能的常見缺口】\n• 維生素D：室內族日照少常見不足\n• B群：忙碌/壓力期消耗較快\n\n【今天就能做的 3 件事】\n1) 固定起床時間\n2) 每天 10~20 分鐘日照或戶外走路\n3) 晚餐後避免含糖/高咖啡因\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "sleep_low": "【優先補強】\n我會先用「睡眠補強」做第一優先，讓恢復力先拉回來。\n\n【可能的常見缺口（方向提示）】\n• 鎂：放鬆支持（很多人飲食攝取不足）\n• B群：壓力期消耗較快\n• 維生素D：日照少常見不足\n\n【今天就能做的 3 件事】\n1) 睡前 60 分鐘降低螢幕/亮光\n2) 晚上咖啡因截止時間提前\n3) 睡前固定小儀式（熱水澡/伸展/呼吸）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "stress_high": "【優先補強】\n我會先用「壓力管理＋續航」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• B群：壓力期消耗較快\n• 維生素C：忙碌期常見不足\n• 鎂：放鬆/緊繃支持\n\n【今天就能做的 3 件事】\n1) 每天 2 次 3 分鐘呼吸（吸4吐6）\n2) 每餐先補蛋白質＋蔬菜\n3) 晚上留 20 分鐘無訊息時間\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "d_low": "【優先補強】\n你比較像「日照少＋作息晚」，我會先用「維生素D＋睡眠節律」做第一優先。\n\n【可能的常見缺口（方向提示）】\n• 維生素D：室內族/晚睡族常見不足\n• B群：忙碌期消耗較快\n\n【今天就能做的 3 件事】\n1) 白天找 10~20 分鐘日照或戶外走路\n2) 晚上藍光降低\n3) 起床時間固定（比睡覺時間更重要）\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "sleep_ok": "【方向】\n你目前睡眠還可以，我會先做「微調」讓白天續航更穩。\n\n【可能的常見缺口（方向提示）】\n• 維生素D：日照少常見不足\n• B群：忙碌期消耗較快\n\n【今天就能做的 3 件事】\n1) 固定起床時間\n2) 下午咖啡因不要太晚\n3) 晚餐不要太油/太甜\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。",
+        "stress_mid": "【方向】\n你是「中度壓力」，我會用「穩定情緒＋續航」做優先。\n\n【可能的常見缺口（方向提示）】\n• B群：壓力期消耗較快\n• 維生素C：外食族常見不足\n\n【今天就能做的 3 件事】\n1) 每天 10 分鐘走路\n2) 早餐加蛋白質\n3) 晚上留 15 分鐘不看訊息\n\n【適合你的產品搭配】\nA) （填你的產品/組合）\nB) （填你的產品/組合）\n\n提醒：若有慢性病/孕哺/用藥，請先詢問醫師或藥師。"
       }
     };
   }
@@ -435,6 +398,7 @@ Q: 最後一題：你屬於哪種型？
       : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
   }
 
+  // ========= KW Map =========
   async function refreshKwMap(){
     const data = await api("/kwMapGet", {});
     KW_MAP = (data && data.payload && typeof data.payload === "object") ? data.payload : {};
@@ -464,6 +428,7 @@ Q: 最後一題：你屬於哪種型？
     }
   }
 
+  // ========= Survey list =========
   async function refreshSurveyList(){
     const data = await api("/listAll", {});
     const db = data.db || [];
@@ -555,6 +520,7 @@ Q: 最後一題：你屬於哪種型？
       base.nodes = (obj.nodes && typeof obj.nodes==="object") ? obj.nodes : base.nodes;
       base.reports = (obj.reports && typeof obj.reports==="object") ? obj.reports : base.reports;
     }
+    // 修補 nodes 結構
     for(const nodeId of Object.keys(base.nodes||{})){
       const n = base.nodes[nodeId] || {};
       n.q = String(n.q || "").trim();
@@ -562,7 +528,7 @@ Q: 最後一題：你屬於哪種型？
       n.options = n.options.map(o=>({
         t: String(o?.t || "").trim(),
         next: String(o?.next || "").trim(),
-        reportKey: String(o?.reportKey || "").trim(),
+        reportKey: String(o?.reportKey || o?.tag || "").trim(),
       }));
       base.nodes[nodeId] = n;
     }
@@ -570,6 +536,7 @@ Q: 最後一題：你屬於哪種型？
     return base;
   }
 
+  // ========= Builder UI =========
   function fillBuilder(){
     $("inName").value = CURRENT.name || "";
     $("inTitle").value = CURRENT.title || "";
@@ -619,7 +586,7 @@ Q: 最後一題：你屬於哪種型？
         <div class="mt-4">
           <div class="flex items-center justify-between">
             <div class="text-sm font-extrabold text-slate-900">選項（t / next / reportKey）</div>
-            <div class="text-xs text-slate-500">reportKey 建議只在最後一題填</div>
+            <div class="text-xs text-slate-500">next 留空＝結束出報告</div>
           </div>
 
           <div class="mt-2 space-y-2" data-optwrap></div>
@@ -652,11 +619,11 @@ Q: 最後一題：你屬於哪種型？
               </div>
               <div class="md:col-span-3">
                 <label class="text-xs font-bold text-slate-500">下一題 next</label>
-                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="next" placeholder="例如：s2（留空=結束）" />
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="next" placeholder="例如：q2（留空=結束）" />
               </div>
               <div class="md:col-span-3">
-                <label class="text-xs font-bold text-slate-500">reportKey（最後一題填）</label>
-                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="rk" placeholder="例如：sleep_d_low" />
+                <label class="text-xs font-bold text-slate-500">reportKey（決定報告）</label>
+                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="rk" placeholder="例如：sleep_low" />
               </div>
               <div class="md:col-span-1 flex justify-end">
                 <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="delopt">刪</button>
@@ -712,14 +679,14 @@ Q: 最後一題：你屬於哪種型？
     if(!kw) throw new Error("請先填『關鍵字』");
     if(!start) throw new Error("請先填『起始節點 ID』");
 
+    // 關鍵字不可被其他問卷使用
     const owner = keywordOwner(kw);
     if(owner && owner !== name) throw new Error("關鍵字已被其他問卷使用");
 
     const nodes = CURRENT.nodes || {};
     if(!nodes[start]) throw new Error(`起始節點不存在：${start}`);
 
-    // ✅ 這裡改成「只要求：每條路徑最後一定會遇到 reportKey」
-    // 為了支援你要的「分支後多題深問」：前面 reportKey 可以空白
+    // nodes 基本檢查
     const usedReportKeys = new Set();
     for(const nodeId of Object.keys(nodes)){
       const node = nodes[nodeId];
@@ -728,22 +695,20 @@ Q: 最後一題：你屬於哪種型？
 
       node.options.forEach((o, i)=>{
         if(!String(o.t||"").trim()) throw new Error(`node ${nodeId} 選項 ${i+1} 文字是空的`);
+        const rk = String(o.reportKey||"").trim();
+        if(!rk) throw new Error(`node ${nodeId} 選項 ${i+1} reportKey 是空的（報告會不知道用哪套）`);
+        usedReportKeys.add(rk);
+
         const nx = String(o.next||"").trim();
         if(nx && !nodes[nx]) throw new Error(`node ${nodeId} 選項 ${i+1} next 指向不存在：${nx}`);
-
-        const rk = String(o.reportKey||"").trim();
-        if(rk) usedReportKeys.add(rk);
       });
     }
 
-    if(usedReportKeys.size === 0){
-      throw new Error("目前沒有任何 reportKey（請在每個分支『最後一題』的選項填 reportKey）");
-    }
-
+    // reports 檢查：至少要有用到的 reportKey
     const reports = CURRENT.reports || {};
     for(const rk of usedReportKeys){
       if(!reports[rk] || !String(reports[rk]).trim()){
-        throw new Error(`缺少報告模板：reports["${rk}"]（去②補上）`);
+        throw new Error(`缺少報告模板：reports["${rk}"]（去「② 報告模板」補上）`);
       }
     }
 
@@ -759,12 +724,14 @@ Q: 最後一題：你屬於哪種型？
     CURRENT.start = start;
     CURRENT.final = { text: ($("inFinalText").value||"").trim() };
 
+    // 先存問卷本體
     await api("/putAny", {
       namespace: "DB",
       keyword: Q_PREFIX + CURRENT.name,
       payload: CURRENT
     });
 
+    // 同步 keyword map（自動更新）
     await refreshKwMap().catch(()=>{});
     for(const k of Object.keys(KW_MAP)){
       if(KW_MAP[k] === CURRENT.name && k !== kw){
@@ -774,7 +741,7 @@ Q: 最後一題：你屬於哪種型？
     KW_MAP[kw] = CURRENT.name;
     await saveKwMap();
 
-    toast("已儲存（含分支＋深問＋模板）");
+    toast("已儲存（含關鍵字綁定＋分支＋報告模板）");
     $("txtLastSync").textContent = new Date().toLocaleString();
 
     await refreshSurveyList();
@@ -782,6 +749,7 @@ Q: 最後一題：你屬於哪種型？
     updateKwHint();
   }
 
+  // ========= Reports UI =========
   function renderReportsUI(){
     const list = $("reportList");
     list.innerHTML = "";
@@ -813,6 +781,7 @@ Q: 最後一題：你屬於哪種型？
       row.onclick = ()=>{
         ACTIVE_REPORT_KEY = k;
         $("inReportKey").value = k;
+        $("inReportTitle").value = ""; // 你要標題可自己寫在 body 第一行；這邊保留欄位
         $("inReportBody").value = CURRENT.reports[k] || "";
         renderReportsUI();
       };
@@ -831,6 +800,7 @@ Q: 最後一題：你屬於哪種型？
     const body = String($("inReportBody").value||"").trim();
     if(!k) return toast("reportKey 不可空白", "err");
     if(!body) return toast("模板內容不可空白", "err");
+
     CURRENT.reports = CURRENT.reports || {};
     CURRENT.reports[k] = body;
     ACTIVE_REPORT_KEY = k;
@@ -868,7 +838,7 @@ Q: 最後一題：你屬於哪種型？
   }
 
   function presetReports(){
-    if(!confirm("要用常用模板覆蓋/補齊嗎？（同 key 會覆蓋）")) return;
+    if(!confirm("要用常用模板覆蓋/補齊嗎？（不會刪掉你現有的，但同 key 會覆蓋）")) return;
     const preset = makeEmptySurvey().reports;
     CURRENT.reports = CURRENT.reports || {};
     for(const k of Object.keys(preset)){
@@ -878,6 +848,7 @@ Q: 最後一題：你屬於哪種型？
     renderReportsUI();
   }
 
+  // ========= Leads =========
   async function refreshLeads(){
     const data = await api("/listAll", {});
     const db = data.db || [];
@@ -934,14 +905,21 @@ Q: 最後一題：你屬於哪種型？
     });
   }
 
-  // ✅ Modal open/close：不固定 body，只切 hidden（LINE/iOS 最穩）
-  function openBulk(){ $("bulkModal").classList.remove("hidden"); setTimeout(()=>{ $("bulkText").focus(); }, 50); }
-  function closeBulk(){ $("bulkModal").classList.add("hidden"); }
+  // ========= Bulk Import =========
+  function openBulk(){
+    $("bulkModal").classList.remove("hidden");
+    // ✅ iOS/LINE：避免背景頁面搶滾動造成卡住
+    document.body.classList.add("modal-open");
+  }
+  function closeBulk(){
+    $("bulkModal").classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }
 
-  // 批次匯入格式
+  // 格式：NODE: q1 / Q: ... / - opt -> next=... report=...
   function parseBulk(text){
     const lines = (text||"").replace(/\r/g,"").split("\n");
-    const out = { name:"", title:"", keyword:"", start:"q1", final:"", nodes:{} };
+    const out = { name:"", title:"", keyword:"", start:"q1", final:"", nodes:{}, reports:{} };
 
     let curNodeId = "";
     let curQ = "";
@@ -978,6 +956,7 @@ Q: 最後一題：你屬於哪種型？
         continue;
       }
 
+      // option: - text -> next=q2 report=sleep_low
       const optm = line.match(/^\-\s*(.+)$/);
       if(optm && curNodeId){
         const full = optm[1].trim();
@@ -989,9 +968,9 @@ Q: 最後一題：你屬於哪種型？
         if(parts[1]){
           const p = parts[1];
           const nextm = p.match(/next\s*=\s*([A-Za-z0-9_\-]+)/i);
-          const repm = p.match(/report\s*=\s*([A-Za-z0-9_\-]*)/i); // 允許空
+          const repm = p.match(/report\s*=\s*([A-Za-z0-9_\-]+)/i);
           next = nextm ? nextm[1] : "";
-          reportKey = repm ? (repm[1]||"") : "";
+          reportKey = repm ? repm[1] : "";
           if(String(next).toUpperCase() === "END") next = "";
         }
 
@@ -1004,6 +983,7 @@ Q: 最後一題：你屬於哪種型？
     if(!out.name || !out.title || !out.keyword) throw new Error("缺少 NAME/TITLE/KEYWORD");
     if(!Object.keys(out.nodes).length) throw new Error("沒有讀到 NODE");
     if(!out.start) out.start = "q1";
+
     return out;
   }
 
@@ -1015,9 +995,18 @@ Q: 最後一題：你屬於哪種型？
     CURRENT.start = parsed.start || "q1";
     CURRENT.final = { text: parsed.final || "" };
     CURRENT.nodes = parsed.nodes || {};
-    CURRENT.reports = CURRENT.reports || makeEmptySurvey().reports;
+    // reports 先保留既有，不動
     fillBuilder();
     renderReportsUI();
+  }
+
+  // ========= Init =========
+  function initApiBase(){
+    const fromSelf = (localStorage.getItem("questionnaire_worker_url") || "").trim();
+    if(fromSelf){
+      API_BASE = fromSelf;
+      $("inApiBase").value = fromSelf;
+    }
   }
 
   function setApiBaseFromInput(){
@@ -1025,13 +1014,6 @@ Q: 最後一題：你屬於哪種型？
     if(!v) throw new Error("請輸入 Worker 網址");
     API_BASE = v;
     localStorage.setItem("questionnaire_worker_url", v);
-  }
-  function initApiBase(){
-    const fromSelf = (localStorage.getItem("questionnaire_worker_url") || "").trim();
-    if(fromSelf){
-      API_BASE = fromSelf;
-      $("inApiBase").value = fromSelf;
-    }
   }
 
   function bindInputs(){
@@ -1053,7 +1035,7 @@ Q: 最後一題：你屬於哪種型？
     };
 
     $("btnAddNode").onclick = ()=>{
-      const nid = prompt("輸入 nodeId（例如：s5 / t3 / g2 / b4）");
+      const nid = prompt("輸入 nodeId（例如：q3 / gut1）");
       if(!nid) return;
       const id = String(nid).trim();
       CURRENT.nodes = CURRENT.nodes || {};
@@ -1065,6 +1047,12 @@ Q: 最後一題：你屬於哪種型？
 
     $("btnValidate").onclick = ()=>{
       try{
+        // 同步 UI -> CURRENT
+        CURRENT.name = ($("inName").value||"").trim();
+        CURRENT.title = ($("inTitle").value||"").trim();
+        CURRENT.keyword = ($("inKeyword").value||"").trim();
+        CURRENT.start = ($("inStart").value||"").trim();
+        CURRENT.final = { text: ($("inFinalText").value||"").trim() };
         validateSurvey();
         toast("檢查通過 ✅");
       }catch(e){
@@ -1102,58 +1090,37 @@ Q: 最後一題：你屬於哪種型？
       }
     };
 
+    // reports
     $("btnSaveReport").onclick = saveCurrentReport;
     $("btnDeleteReport").onclick = deleteCurrentReport;
     $("btnAddReport").onclick = addReportKey;
     $("btnPreset").onclick = presetReports;
 
+    // bulk
     $("btnBulk").onclick = openBulk;
     $("btnBulkClose").onclick = closeBulk;
-
-    // ✅ 點黑底關閉（不會卡）
-    $("bulkModal").addEventListener("click", (e)=>{
-      if(e.target === $("bulkModal")) closeBulk();
-    });
+    $("bulkModal").addEventListener("click", (e)=>{ if(e.target === $("bulkModal")) closeBulk(); });
 
     $("btnBulkExample").onclick = ()=>{
-      $("bulkText").value = `NAME: 作息深問_第一版
-TITLE: 90 秒專屬作息分析
-KEYWORD: 作息深問
+      $("bulkText").value = `NAME: 作息分流_第一版
+TITLE: 60 秒作息分析
+KEYWORD: 作息分析
 START: q1
-FINAL: 想要我幫你做「7天調整計畫」，回我「計畫」。
+FINAL: 如果你願意，我可以再幫你做一份一週調整計畫。
 
 NODE: q1
-Q: 你最想先改善哪一塊？
-- 睡眠 -> next=s1 report=
-- 壓力 -> next=t1 report=
-- 腸胃 -> next=g1 report=
-- 體態 -> next=b1 report=
+Q: 你最近睡眠狀態比較像？
+- 很好 -> next=q2 report=balance
+- 普通 -> next=q2 report=sleep_ok
+- 常醒/難睡 -> next=q2 report=sleep_low
+- 晚睡且日照少 -> next=q2 report=d_low
 
-NODE: s1
-Q: 你最近入睡狀況？
-- 很快睡著 -> next=s2 report=
-- 很難入睡 -> next=s2 report=
-- 常醒/淺眠 -> next=s2 report=
-
-NODE: s2
-Q: 你平常睡覺時間多半在？
-- 22-24 -> next=s3 report=
-- 24-02 -> next=s3 report=
-- 02以後 -> next=s3 report=
-
-NODE: s3
-Q: 你白天精神比較像？
-- 穩定 -> next=s4 report=
-- 下午下滑 -> next=s4 report=
-- 容易恍神 -> next=s4 report=
-
-NODE: s4
-Q: 最後一題：你屬於哪種型？
-- 晚睡＋日照少 -> next=END report=sleep_d_low
-- 壓力大＋難放鬆 -> next=END report=sleep_stress_high
-- 外食多＋作息亂 -> next=END report=sleep_food_irregular`;
+NODE: q2
+Q: 你的壓力感大概是？
+- 不太有 -> next=END report=balance
+- 偶爾緊 -> next=END report=stress_mid
+- 常緊繃 -> next=END report=stress_high`;
       toast("已塞入範例");
-      $("bulkText").focus();
     };
 
     $("btnBulkApply").onclick = ()=>{
@@ -1167,6 +1134,7 @@ Q: 最後一題：你屬於哪種型？
       }
     };
 
+    // Leads
     $("btnLeadsReload").onclick = async ()=>{ await refreshLeads().catch(e=>toast(e.message,"err")); };
   }
 
