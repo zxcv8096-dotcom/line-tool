@@ -527,8 +527,11 @@
   function makeReport(){
     const ageOpts = [
       ($("age1").value || "18歲以下").trim(),
-      ($("age2").value || "19–39歲").trim(),
-      ($("age3").value || "40歲以上").trim(),
+      ($("age2").value || "19–29歲").trim(),
+      ($("age4").value || "30-39歲").trim(),
+      ($("age5").value || "40-49歲").trim(),
+      ($("age6").value || "50-64歲").trim(),
+      ($("age6").value || "65歲以上").trim(),
     ];
     const rules = buildRules(ageOpts);
     const links = getNutrientLinks();
