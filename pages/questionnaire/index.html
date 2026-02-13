@@ -2,1443 +2,208 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>AI 問卷後台 admin（批次匯入｜營養計分規則｜Leads｜圖片批次上傳）</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Report Renderer</title>
   <style>
-    :root{
-      --ink:#0f172a;
-      --muted:#64748b;
-      --bd:rgba(15,23,42,.10);
-      --glass: rgba(255,255,255,.88);
-      --shadow: 0 18px 55px rgba(15,23,42,.10);
-    }
-    body{
-      color:var(--ink);
-      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
-      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      -webkit-text-size-adjust: 100%;
-    }
-    .card{ background: var(--glass); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
-    .safe-bottom{ padding-bottom: env(safe-area-inset-bottom); }
-    .modal-scroll{ max-height: min(78vh, 760px); overflow:auto; -webkit-overflow-scrolling:touch; }
-    #bulkModal{ overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; }
-    #bulkModalInner{ min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:16px; }
-    .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
-    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.18); border-radius: 999px; }
-    .report-list-scroll{ max-height: 520px; overflow:auto; -webkit-overflow-scrolling:touch; }
+    body{font-family:"Microsoft JhengHei",system-ui;margin:16px}
+    canvas{border:1px solid #ddd;border-radius:12px;max-width:100%}
+    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    button{padding:10px 12px;border:0;border-radius:10px;background:#111827;color:#fff;cursor:pointer}
+    .muted{color:#64748b}
   </style>
 </head>
+<body>
+  <div class="muted" id="status">loading...</div>
+  <canvas id="cv" width="900" height="1400"></canvas>
 
-<body class="min-h-screen safe-bottom">
-  <div class="max-w-6xl mx-auto p-4 md:p-8">
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台 admin</h1>
-        <div class="text-sm text-slate-600 mt-1">批次匯入｜問卷編輯｜營養計分規則｜圖片批次上傳｜Leads</div>
-      </div>
-      <div class="text-xs text-slate-600 leading-5">
-        <div class="font-semibold">資料結構（後台會存到 KV 的 survey 物件）</div>
-        <div class="mono">nodes[].options[].effects.nutrients</div>
-        <div class="mono">rules.nutrients（各營養素分級 + 建議 + 產品連結）</div>
-      </div>
-    </header>
-
-    <!-- CONNECT -->
-    <section class="card rounded-2xl p-5 mb-4 border border-slate-200">
-      <div class="grid md:grid-cols-3 gap-4 items-end">
-        <div class="md:col-span-2">
-          <label class="text-sm font-semibold text-slate-700">Worker 網址</label>
-          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 placeholder="https://api.xxx.workers.dev" />
-          <div class="text-xs text-slate-500 mt-2">
-            問卷 KV Key：<span class="mono font-semibold">AI_SURVEY:Q:&lt;name&gt;</span>　
-            關鍵字表：<span class="mono font-semibold">AI_SURVEY:KW_MAP</span>　
-            Leads：<span class="mono font-semibold">AI_SURVEY:LEAD:</span>
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線</button>
-          <button id="btnSaveSurvey" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">儲存問卷</button>
-        </div>
-      </div>
-
-      <div class="mt-3 text-xs text-slate-500">
-        狀態：<span id="txtStatus" class="font-semibold">未連線</span>　
-        最後同步：<span id="txtLastSync" class="mono">-</span>
-      </div>
-
-      <div id="errBanner" class="hidden mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-        <div class="font-extrabold">頁面出錯（不會再空白了）</div>
-        <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
-      </div>
-    </section>
-
-    <div class="grid lg:grid-cols-3 gap-4">
-      <!-- LEFT -->
-      <aside class="card rounded-2xl p-4 border border-slate-200 h-fit lg:sticky lg:top-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-xs text-slate-500">問卷清單</div>
-            <div class="text-sm text-slate-900 font-semibold">（可存多份｜可刪除）</div>
-          </div>
-          <button id="btnNew" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">新增</button>
-        </div>
-
-        <div class="mt-3">
-          <input id="qSearch" class="w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
-        </div>
-
-        <div id="surveyList" class="mt-3 space-y-2"></div>
-
-        <hr class="my-4 border-slate-200" />
-
-        <button id="btnTabBuilder" class="w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold">① 問卷題目與計分</button>
-        <button id="btnTabRules" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">② 營養規則庫（分級/建議/產品）</button>
-        <button id="btnTabLeads" class="w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900">③ Leads</button>
-
-        <div class="mt-4 text-xs text-slate-500">
-          Leads：<span id="txtLeadCount" class="mono font-semibold">0</span> 筆
-        </div>
-      </aside>
-
-      <!-- RIGHT -->
-      <main class="lg:col-span-2 space-y-4">
-
-        <!-- BUILDER -->
-        <section id="tabBuilder" class="card rounded-2xl p-5 border border-slate-200">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">① 問卷題目與計分</h2>
-              <p class="text-sm text-slate-600 mt-1">
-                你不需要 reportKey。每個選項都可以「直接加總營養分數」，最後由規則庫自動統計出報告。
-              </p>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次匯入</button>
-              <button id="btnAddNode" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增節點</button>
-              <button id="btnValidate" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">檢查</button>
-            </div>
-          </div>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-semibold text-slate-700">問卷檔名（唯一）</label>
-              <input id="inName" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：生活健康問卷_20題_四選一" />
-            </div>
-            <div>
-              <label class="text-sm font-semibold text-slate-700">問卷標題（客戶看到）</label>
-              <input id="inTitle" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：3分鐘生活健康分析（20題）" />
-            </div>
-
-            <div class="md:col-span-2">
-              <div class="flex items-center justify-between gap-2">
-                <label class="text-sm font-semibold text-slate-700">關鍵字（客戶輸入這個開始）</label>
-                <div id="kwHint" class="text-xs font-semibold text-slate-500"></div>
-              </div>
-              <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：生活問卷" />
-            </div>
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">起始節點 ID</label>
-              <input id="inStart" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono" placeholder="例如：q1" />
-            </div>
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">結尾補一句（可空白）</label>
-              <input id="inFinalText" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="例如：如果你願意，我可以再幫你做 7 天調整建議。" />
-            </div>
-
-            <div class="md:col-span-2">
-              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-6">
-                ✅ 每題四選一：每個 node 維持 4 個選項即可（但也支援 2～4 選項，用在性別/分流題）<br/>
-                ✅ 計分方式：選項的 effects.nutrients 直接累加（例如：{"b_complex":2,"magnesium":1}）<br/>
-                ✅ 最後報告：由「②營養規則庫」把累積分數轉成分級＋建議＋產品連結
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-6">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="font-extrabold text-slate-900">nodes（題目 / 下一題 / 計分）</h3>
-              <div class="text-xs text-slate-500">next 留空=結束。effects 會在作答當下就累加。</div>
-            </div>
-            <div id="nodesWrap" class="mt-3 space-y-3"></div>
-          </div>
-        </section>
-
-        <!-- RULES -->
-        <section id="tabRules" class="hidden card rounded-2xl p-5 border border-slate-200">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">② 營養規則庫（分級/建議/產品）</h2>
-              <p class="text-sm text-slate-600 mt-1">
-                這裡不是「統一掛答案」，而是把累積分數轉成：優先方向＋今天能做的事＋建議營養素＋產品連結。
-              </p>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button id="btnScanNutrients" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">掃描問卷用到的營養素</button>
-              <button id="btnRulesFillMissing" class="px-4 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-400 font-semibold">補齊缺規則</button>
-              <button id="btnRulesSaveLocal" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">更新規則（本地）</button>
-              <button id="btnRulesWriteKV" class="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">寫入 KV</button>
-            </div>
-          </div>
-
-          <div class="mt-4 grid md:grid-cols-2 gap-4 items-start">
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-              <div class="flex items-center justify-between gap-2">
-                <div class="text-sm font-extrabold text-slate-900">營養素清單</div>
-                <div class="text-xs">
-                  <span id="txtNutOk" class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold">✅ 0</span>
-                  <span id="txtNutMissing" class="ml-1 px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100 font-semibold">⚠️ 0</span>
-                </div>
-              </div>
-              <div class="text-xs text-slate-500 mt-1">會從 nodes.options.effects.nutrients 掃描 key，並標出缺規則。</div>
-
-              <div class="mt-3">
-                <input id="nutSearch" class="w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="搜尋營養素 key…" />
-              </div>
-
-              <div id="nutList" class="mt-3 space-y-2 report-list-scroll thinbar"></div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-              <div class="flex items-start justify-between gap-2">
-                <div>
-                  <div class="text-sm font-extrabold text-slate-900">規則內容（JSON）</div>
-                  <div class="text-xs text-slate-500 mt-1">分級門檻 + 建議文字 + 產品連結，最後報告會組合這些輸出。</div>
-                </div>
-                <button id="btnRulesDelete" class="px-3 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-500 font-semibold">刪</button>
-              </div>
-
-              <div class="mt-3">
-                <label class="text-xs font-bold text-slate-500">nutrientKey</label>
-                <input id="inNutKey" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200 mono" placeholder="例如：b_complex / magnesium / omega3 / fiber" />
-              </div>
-
-              <div class="mt-3">
-                <label class="text-xs font-bold text-slate-500">rule JSON</label>
-                <textarea id="inNutRule" rows="14" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                  placeholder='{
-  "label": "B群",
-  "priority": 80,
-  "thresholds": { "low": 3, "mid": 6 },
-  "messages": {
-    "low": "你最近容易疲累/專注度不穩，B群方向可優先補齊。",
-    "mid": "B群方向可做維持型補充。",
-    "high": "目前B群方向表現不錯，維持即可。"
-  },
-  "today": ["早餐先吃蛋白質", "下午不空腹喝咖啡", "晚上提早收工半小時"],
-  "products": [
-    { "name": "產品A", "url": "https://你的連結" },
-    { "name": "產品B", "url": "https://你的連結" }
-  ]
-}'></textarea>
-              </div>
-
-              <div class="mt-3 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-3">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-extrabold text-indigo-900">圖片整批匯入（自動對應 nutrientKey）</div>
-                  <div class="text-[11px] text-indigo-900/70">檔名＝nutrientKey</div>
-                </div>
-                <div class="mt-2 text-[12px] text-indigo-900/80 leading-5">
-                  例：<span class="mono">b_complex.png</span>、<span class="mono">magnesium.jpg</span><br>
-                  上傳後會把 URL 寫進 rule JSON 的 <span class="mono">imageUrl</span>
-                </div>
-                <div class="mt-2 flex gap-2 flex-wrap items-center">
-                  <button id="btnBatchNutImgPick" class="px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold text-sm">選多張圖片</button>
-                  <button id="btnBatchNutImgRun" class="px-3 py-2 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-200 font-semibold text-sm">開始整批套用</button>
-                  <span id="txtBatchNutImg" class="text-xs text-indigo-900/70"></span>
-                </div>
-                <input id="fileBatchNutImg" type="file" accept="image/png,image/jpeg" multiple class="hidden" />
-              </div>
-
-              <div class="mt-3 text-[11px] text-slate-500 leading-5">
-                ✅ 建議：messages 用「可能的常見缺口/方向」，不要用醫療用語。<br/>
-                ✅ thresholds：分數越高代表「越需要關注」。low/mid 是門檻，high = 低風險（維持型）。
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- LEADS -->
-        <section id="tabLeads" class="hidden card rounded-2xl p-5 border border-slate-200">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-extrabold text-slate-900">③ Leads</h2>
-              <p class="text-sm text-slate-600 mt-1">顯示：userId、問卷、時間、計分總表、報告內容（若 KV 有存 displayName/pictureUrl 就會顯示）</p>
-            </div>
-            <div class="flex gap-2">
-              <input id="leadSearch" class="px-4 py-2 rounded-xl border border-slate-200" placeholder="搜尋…" />
-              <button id="btnLeadsReload" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">刷新</button>
-            </div>
-          </div>
-
-          <div id="leadList" class="mt-4 space-y-3"></div>
-        </section>
-
-        <!-- TOAST -->
-        <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
-      </main>
-    </div>
-  </div>
-
-  <!-- BULK MODAL -->
-  <div id="bulkModal" class="hidden fixed inset-0 bg-black/40 z-50">
-    <div id="bulkModalInner">
-      <div class="w-full max-w-3xl">
-        <div class="card rounded-2xl border border-slate-200 p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-xl font-extrabold text-slate-900">批次匯入（AI 也看得懂的描述格式）</div>
-              <div class="text-sm text-slate-600 mt-1">
-                你要的是「作答當下就開始累加營養分數」：請用每個選項的 <span class="mono font-semibold">add=</span> 來描述要加到哪些營養素。
-              </div>
-            </div>
-            <button id="btnBulkClose" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">關閉</button>
-          </div>
-
-          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-            <div class="font-bold">匯入格式（重點：add=營養素:分數）</div>
-            <div class="text-xs text-slate-500 mt-1">
-              • NODE 支援 2～4 選項（性別/分流題可 2 選）。 • next 可接下一題。 • add 會寫進 options.effects.nutrients，最後會加總。
-            </div>
-
-<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap thinbar">NAME: 生活健康問卷_示範
-TITLE: 3分鐘生活健康分析（示範）
-KEYWORD: 生活問卷
-START: q1
-FINAL: 想要我幫你做 7 天調整建議，回我「7天」。
-
-NODE: q1
-Q: 你最近整體精神感受比較像？
-- 很有精神 -> next=q2 add=hydration:-1,protein:-1
-- 普通還可以 -> next=q2 add=hydration:0
-- 常覺得疲累 -> next=q2 add=b_complex:2,iron:1
-- 起床就沒力 -> next=q2 add=b_complex:3,protein:1
-
-NODE: q2
-Q: 你最近的睡眠品質？
-- 好，醒來清爽 -> next=q3 add=magnesium:-1
-- 還行，偶爾醒 -> next=q3 add=magnesium:1
-- 常醒/淺眠 -> next=q3 add=magnesium:2,omega3:1
-- 難入睡 -> next=q3 add=magnesium:3,stress_support:2
-
-NODE: q3
-Q: 你腸胃感受比較像？
-- 順暢 -> next=END add=fiber:-1
-- 偶爾不適 -> next=END add=fiber:1,probiotics:1
-- 常脹氣/悶 -> next=END add=probiotics:2,fiber:2
-- 容易拉肚子或便祕 -> next=END add=probiotics:3,fiber:3</pre>
-          </div>
-
-          <textarea id="bulkText" rows="12"
-            class="mt-4 w-full px-4 py-3 rounded-2xl border border-slate-200 mono"
-            style="min-height: 260px; max-height: 48vh; overflow:auto;"
-            placeholder="把格式貼這裡…"></textarea>
-
-          <div class="mt-4 flex flex-wrap gap-2 justify-end">
-            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入示範</button>
-            <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="row">
+    <button id="btnGen">重新產生並上傳</button>
   </div>
 
 <script>
-(() => {
-  const Q_PREFIX = "AI_SURVEY:Q:";
-  const LEAD_PREFIX = "AI_SURVEY:LEAD:";
-  const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
+const API_BASE = location.origin; // Worker 同網域
+const BG_URL = "https://YOUR_BG_IMAGE_URL/report_bg.png"; // 你那張藍底模板（請換成你的網址）
 
-  let API_BASE = "";
-  let SURVEYS = [];
-  let CURRENT = makeEmptySurvey();
-  let LEADS = [];
-  let KW_MAP = {};
-  let ACTIVE_NUT_KEY = "";
-  let BATCH_NUT_FILES = [];
+const qs = new URLSearchParams(location.search);
+const userId = qs.get("userId") || "";
+if(!userId) document.getElementById("status").textContent = "missing userId";
 
-  const $ = (id) => document.getElementById(id);
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
 
-  const showErr = (msg) => {
-    try{
-      $("errBanner").classList.remove("hidden");
-      $("errText").textContent = String(msg || "");
-    }catch{}
-  };
-  window.addEventListener("error", (e) => {
-    showErr(e?.error?.stack || e?.message || e);
+document.getElementById("btnGen").onclick = () => run(true);
+
+run(false);
+
+async function run(forceUpload){
+  setStatus("讀取報告資料...");
+  const rep = await fetchJSON(`${API_BASE}/reportData?userId=${encodeURIComponent(userId)}`);
+
+  setStatus("載入背景/頭貼...");
+  const bg = await loadImg(BG_URL);
+  const avatar = rep.pictureUrl ? await loadImg(rep.pictureUrl).catch(()=>null) : null;
+
+  setStatus("繪製...");
+  drawReport(rep, bg, avatar);
+
+  if(forceUpload){
+    setStatus("輸出PNG並上傳...");
+    const pngBase64 = cv.toDataURL("image/png");
+    const up = await fetchJSON(`${API_BASE}/uploadReport`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ userId, pngBase64 })
+    });
+    setStatus(`完成，上傳網址：${up.imageUrl}`);
+  }else{
+    setStatus("完成（未上傳）");
+  }
+}
+
+function setStatus(s){ document.getElementById("status").textContent = s; }
+
+function drawReport(rep, bg, avatar){
+  // 背景
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.drawImage(bg, 0, 0, cv.width, cv.height);
+
+  // Header文字（A+Health / Line ID / 名字）
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 56px Microsoft JhengHei";
+  ctx.fillText("A+Health", 370, 120);
+
+  ctx.font = "24px Microsoft JhengHei";
+  ctx.fillText(`Line: ${rep.lineId || rep.userId}`, 370, 160);
+
+  ctx.font = "bold 34px Microsoft JhengHei";
+  ctx.fillText(`${rep.displayName || "—"}`, 370, 210);
+
+  ctx.font = "24px Microsoft JhengHei";
+  ctx.fillText(`年齡:${rep.age || "—"}  性別:${rep.sex || "—"}`, 370, 250);
+
+  // 圓形頭貼
+  const ax=110, ay=110, ar=90;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(ax, ay, ar, 0, Math.PI*2);
+  ctx.closePath();
+  ctx.clip();
+  if(avatar){
+    // cover
+    const s = Math.max((ar*2)/avatar.width, (ar*2)/avatar.height);
+    const w = avatar.width*s, h = avatar.height*s;
+    ctx.drawImage(avatar, ax-ar-(w-(ar*2))/2, ay-ar-(h-(ar*2))/2, w, h);
+  }else{
+    ctx.fillStyle="#0b1220";
+    ctx.fillRect(ax-ar, ay-ar, ar*2, ar*2);
+  }
+  ctx.restore();
+  // 外圈
+  ctx.strokeStyle="#ffffff";
+  ctx.lineWidth=10;
+  ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI*2); ctx.stroke();
+
+  // 紅色長條（照你圖的排列）
+  const items = [
+    ["維生素A", rep.display.vita, rep.need.vita],
+    ["維生素B", rep.display.vitb, rep.need.vitb],
+    ["維生素C", rep.display.vitc, rep.need.vitc],
+    ["維生素D", rep.display.vitd, rep.need.vitd],
+    ["維生素E", rep.display.vite, rep.need.vite],
+    ["鈣鎂",     rep.display.camg, rep.need.camg],
+    ["鐵",       rep.display.iron, rep.need.iron],
+    ["纖維",     rep.display.fiber, rep.need.fiber],
+    ["微量元素", rep.display.trace, rep.need.trace],
+  ];
+
+  const leftLabelX = 110;
+  const barX = 300;
+  const barW = 520;
+  const barH = 42;
+  let y = 330;
+  const gap = 54;
+
+  ctx.font = "26px Microsoft JhengHei";
+  items.forEach(([label, value, need])=>{
+    // label
+    ctx.fillStyle="#ffffff";
+    ctx.fillText(label + ":", leftLabelX, y+30);
+
+    // bar background (透明底)
+    ctx.globalAlpha = 0.25;
+    roundRect(ctx, barX, y, barW, barH, 20);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // red bar length
+    const pct = clamp(need/100, 0.08, 1); // 至少有一點紅，不然看不到
+    const w = Math.round(barW*pct);
+    roundRect(ctx, barX, y, w, barH, 20);
+    ctx.fillStyle = "#e11d48";
+    ctx.fill();
+
+    // value text inside bar
+    ctx.fillStyle="#0b1220";
+    ctx.font = "24px Microsoft JhengHei";
+    ctx.fillText(value, barX + 18, y + 29);
+
+    ctx.font = "26px Microsoft JhengHei";
+    y += gap;
   });
 
-  function toast(msg, type="ok"){
-    const wrap = $("toastWrap");
-    if(!wrap) return alert(msg);
-    const div = document.createElement("div");
-    div.className = `card rounded-2xl px-4 py-3 border ${
-      type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
-    }`;
-    div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
-    wrap.appendChild(div);
-    setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
-    setTimeout(()=>{ div.remove(); }, 2600);
-  }
-  function escapeHtml(s){
-    return (s ?? "").toString()
-      .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-  function normKw(s){
-    return String(s||"").trim().replace(/\s+/g,"").toLowerCase();
-  }
-
-  function setTab(tab){
-    $("tabBuilder").classList.toggle("hidden", tab!=="builder");
-    $("tabRules").classList.toggle("hidden", tab!=="rules");
-    $("tabLeads").classList.toggle("hidden", tab!=="leads");
-
-    $("btnTabBuilder").className = tab==="builder"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-0 font-semibold text-slate-900";
-
-    $("btnTabRules").className = tab==="rules"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
-
-    $("btnTabLeads").className = tab==="leads"
-      ? "w-full text-left px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold mt-2"
-      : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
-  }
-
-  async function api(path, bodyObj){
-    if(!API_BASE) throw new Error("Worker 網址未設定");
-    const res = await fetch(API_BASE.replace(/\/$/,"") + path, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify(bodyObj || {})
-    });
-    const data = await res.json().catch(()=>null);
-    if(!res.ok) throw new Error((data && (data.error||data.detail)) || (res.status + " " + res.statusText));
-    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
-    return data;
-  }
-
-  async function uploadImageToR2(file){
-    if(!API_BASE) throw new Error("請先連線並設定 Worker 網址");
-    const url = API_BASE.replace(/\/$/,"") + "/upload";
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch(url, { method:"POST", body: fd });
-    const data = await res.json().catch(()=>null);
-    if(!res.ok || !data || data.ok !== true){
-      const msg = (data && (data.error || data.detail)) ? (data.error || data.detail) : ("上傳失敗 " + res.status);
-      throw new Error(msg);
-    }
-    return data;
-  }
-
-  async function kvGet(key){
-    const r = await api("/loadAny", { namespace:"DB", keyword: key });
-    return r?.payload ?? r;
-  }
-  async function kvPut(key, payload){
-    await api("/putAny", { namespace:"DB", keyword: key, payload });
-  }
-  async function kvDel(key){
-    await api("/deleteAny", { namespace:"DB", keyword: key });
-  }
-
-  async function refreshKwMap(){
-    try{
-      const raw = await kvGet(KW_MAP_KEY);
-      KW_MAP = (raw && typeof raw === "object") ? raw : {};
-    }catch{
-      KW_MAP = {};
-    }
-  }
-  async function saveKwMap(){
-    await kvPut(KW_MAP_KEY, KW_MAP);
-  }
-  function keywordOwner(kw){
-    const k = normKw(kw);
-    if(!k) return "";
-    return KW_MAP[k] || "";
-  }
-  function updateKwHint(){
-    const kw = normKw($("inKeyword").value);
-    const name = String($("inName").value || CURRENT.name || "").trim();
-    const owner = keywordOwner(kw);
-    const el = $("kwHint");
-    el.textContent = "";
-    el.className = "text-xs font-semibold text-slate-500";
-    if(!kw) return;
-    if(owner && owner !== name){
-      el.textContent = "已被使用";
-      el.className = "text-xs font-extrabold text-rose-600";
-    }else{
-      el.textContent = "可用";
-      el.className = "text-xs font-extrabold text-emerald-700";
-    }
-  }
-
-  function makeEmptySurvey(){
-    return {
-      name: "",
-      title: "",
-      keyword: "",
-      start: "q1",
-      final: { text: "" },
-      nodes: {},
-      rules: { nutrients: {} }
-    };
-  }
-
-  function normalizeSurvey(obj){
-    const base = makeEmptySurvey();
-    if(obj && typeof obj === "object"){
-      base.name = obj.name || base.name;
-      base.title = obj.title || base.title;
-      base.keyword = obj.keyword || base.keyword;
-      base.start = obj.start || base.start;
-      base.final = (obj.final && typeof obj.final==="object") ? obj.final : base.final;
-      base.nodes = (obj.nodes && typeof obj.nodes==="object") ? obj.nodes : base.nodes;
-      base.rules = (obj.rules && typeof obj.rules==="object") ? obj.rules : base.rules;
-    }
-
-    base.nodes = base.nodes || {};
-    for(const nodeId of Object.keys(base.nodes)){
-      const n = base.nodes[nodeId] || {};
-      n.q = String(n.q || "").trim();
-      n.options = Array.isArray(n.options) ? n.options : [];
-      n.options = n.options.map(o => {
-        const effects = (o && typeof o.effects === "object") ? o.effects : {};
-        const nutrients = (effects && typeof effects.nutrients === "object") ? effects.nutrients : {};
-        return {
-          t: String(o?.t || "").trim(),
-          next: String(o?.next || "").trim(),
-          effects: { nutrients: sanitizeScoreMap(nutrients) },
-        };
-      });
-      base.nodes[nodeId] = n;
-    }
-
-    base.rules = base.rules || { nutrients:{} };
-    base.rules.nutrients = (base.rules.nutrients && typeof base.rules.nutrients==="object") ? base.rules.nutrients : {};
-    return base;
-  }
-
-  function sanitizeScoreMap(m){
-    const out = {};
-    if(!m || typeof m !== "object") return out;
-    for(const k of Object.keys(m)){
-      const key = String(k).trim();
-      if(!key) continue;
-      const v = Number(m[k]);
-      if(Number.isFinite(v) && v !== 0) out[key] = v;
-      if(Number.isFinite(v) && v === 0) out[key] = 0;
-    }
-    return out;
-  }
-
-  async function refreshSurveyList(){
-    const data = await api("/listAll", {});
-    const db = data.db || [];
-    SURVEYS = db
-      .filter(k => k.startsWith(Q_PREFIX))
-      .map(k => ({ key:k, name:k.replace(Q_PREFIX,"") }))
-      .sort((a,b)=>a.name.localeCompare(b.name,"zh-Hant"));
-    renderSurveyList();
-  }
-
-  function renderSurveyList(){
-    const wrap = $("surveyList");
-    wrap.innerHTML = "";
-    const q = ($("qSearch").value || "").trim().toLowerCase();
-    const items = SURVEYS.filter(x => !q || x.name.toLowerCase().includes(q));
-
-    if(items.length===0){
-      const d = document.createElement("div");
-      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
-      d.textContent = "目前沒有問卷。按「新增」建立。";
-      wrap.appendChild(d);
-      return;
-    }
-
-    items.forEach(x=>{
-      const row = document.createElement("div");
-      row.className = "rounded-2xl bg-white/70 border border-slate-200 overflow-hidden";
-
-      const btn = document.createElement("button");
-      btn.className = "w-full text-left px-4 py-3 hover:bg-white flex items-start justify-between gap-3";
-      btn.innerHTML = `
-        <div class="min-w-0">
-          <div class="font-semibold text-slate-900 truncate">${escapeHtml(x.name)}</div>
-          <div class="text-xs text-slate-500 mono truncate">${escapeHtml(x.key)}</div>
-        </div>
-        <div class="shrink-0 flex items-center gap-2">
-          <span class="text-xs px-2 py-1 rounded-full bg-slate-50 border border-slate-200 font-semibold text-slate-600">載入</span>
-        </div>
-      `;
-      btn.onclick = async ()=>{
-        try{
-          const loaded = await kvGet(x.key);
-          CURRENT = normalizeSurvey(loaded);
-          fillBuilder();
-          syncNutrientsUI(false);
-          toast("已載入：" + x.name);
-          setTab("builder");
-        }catch(e){
-          toast(e.message, "err");
-        }
-      };
-
-      const del = document.createElement("button");
-      del.className = "w-full px-4 py-2 bg-rose-600 text-white hover:bg-rose-500 font-extrabold";
-      del.textContent = "刪除";
-      del.onclick = async ()=>{
-        const ok = confirm(`確定刪除「${x.name}」？（會連同關鍵字綁定一起刪）`);
-        if(!ok) return;
-        try{
-          await surveyDeleteByName(x.name);
-          toast("已刪除：" + x.name);
-          if((CURRENT.name||"") === x.name){
-            CURRENT = makeEmptySurvey();
-            fillBuilder();
-            syncNutrientsUI(false);
-          }
-          await refreshKwMap();
-          await refreshSurveyList();
-        }catch(e){
-          toast(e.message, "err");
-        }
-      };
-
-      row.appendChild(btn);
-      row.appendChild(del);
-      wrap.appendChild(row);
-    });
-  }
-
-  async function surveyDeleteByName(name){
-    const key = Q_PREFIX + name;
-    let survey = null;
-    try{ survey = await kvGet(key); }catch{}
-    await kvDel(key);
-
-    await refreshKwMap();
-    const kw = normKw(survey?.keyword || "");
-    if(kw && KW_MAP[kw] === name) delete KW_MAP[kw];
-    for(const k of Object.keys(KW_MAP)){
-      if(KW_MAP[k] === name) delete KW_MAP[k];
-    }
-    await saveKwMap();
-  }
-
-  function fillBuilder(){
-    $("inName").value = CURRENT.name || "";
-    $("inTitle").value = CURRENT.title || "";
-    $("inKeyword").value = CURRENT.keyword || "";
-    $("inStart").value = CURRENT.start || "q1";
-    $("inFinalText").value = (CURRENT.final && CURRENT.final.text) ? CURRENT.final.text : "";
-    renderNodes();
-    updateKwHint();
-    syncNutrientsUI(false);
-  }
-
-  function renderNodes(){
-    const wrap = $("nodesWrap");
-    wrap.innerHTML = "";
-
-    const nodeIds = Object.keys(CURRENT.nodes || {}).sort((a,b)=>a.localeCompare(b));
-    if(nodeIds.length===0){
-      const empty = document.createElement("div");
-      empty.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
-      empty.textContent = "目前沒有 nodes。按「新增節點」。";
-      wrap.appendChild(empty);
-      return;
-    }
-
-    nodeIds.forEach(nodeId=>{
-      const node = CURRENT.nodes[nodeId];
-      const card = document.createElement("div");
-      card.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
-
-      const opts = Array.isArray(node.options) ? node.options : [];
-      card.innerHTML = `
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
-            <div class="text-xs text-slate-500">nodeId</div>
-            <div class="mono font-extrabold text-slate-900">${escapeHtml(nodeId)}</div>
-          </div>
-          <div class="flex gap-2 shrink-0">
-            <button data-act="addopt" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-sm font-semibold">+ 選項</button>
-            <button data-act="delnode" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold">刪節點</button>
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <label class="text-sm font-semibold text-slate-700">題目文字</label>
-          <input data-k="q" class="mt-1 w-full px-4 py-2 rounded-xl border border-slate-200" placeholder="請輸入題目" />
-        </div>
-
-        <div class="mt-4">
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-extrabold text-slate-900">選項（t / next / effects.nutrients）</div>
-            <div class="text-xs text-slate-500">支援 2～4 選項（性別/分流題可 2 選）</div>
-          </div>
-          <div class="mt-2 space-y-2" data-optwrap></div>
-        </div>
-      `;
-
-      const qInput = card.querySelector('[data-k="q"]');
-      qInput.value = node.q || "";
-      qInput.oninput = (e)=>{ node.q = e.target.value; };
-
-      const optWrap = card.querySelector("[data-optwrap]");
-      const drawOpts = ()=>{
-        optWrap.innerHTML = "";
-        if(opts.length===0){
-          const d = document.createElement("div");
-          d.className = "rounded-xl border border-dashed border-slate-300 bg-white/60 p-4 text-slate-600 text-sm";
-          d.textContent = "沒有選項，按「+ 選項」新增。";
-          optWrap.appendChild(d);
-          return;
-        }
-
-        opts.forEach((o, idx)=>{
-          o.effects = (o.effects && typeof o.effects==="object") ? o.effects : { nutrients:{} };
-          o.effects.nutrients = sanitizeScoreMap(o.effects.nutrients || {});
-
-          const row = document.createElement("div");
-          row.className = "rounded-2xl border border-slate-200 bg-white p-3";
-          row.innerHTML = `
-            <div class="grid md:grid-cols-12 gap-2 items-end">
-              <div class="md:col-span-5">
-                <label class="text-xs font-bold text-slate-500">顯示文字 t</label>
-                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" data-k="t" placeholder="例如：常醒/難睡" />
-              </div>
-              <div class="md:col-span-3">
-                <label class="text-xs font-bold text-slate-500">下一題 next</label>
-                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="next" placeholder="例如：q2（留空=結束）" />
-              </div>
-              <div class="md:col-span-3">
-                <label class="text-xs font-bold text-slate-500">營養計分 effects（JSON）</label>
-                <input class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono" data-k="fx"
-                  placeholder='例如：{"b_complex":2,"magnesium":1}' />
-              </div>
-              <div class="md:col-span-1 flex justify-end">
-                <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold" data-act="delopt">刪</button>
-              </div>
-            </div>
-            <div class="mt-2 text-[11px] text-slate-500 leading-5">
-              • 分數越高＝越需要注意（最後報告會把高分項目排前面）　• 你可以用 0 / 正負數
-            </div>
-          `;
-          const t = row.querySelector('[data-k="t"]');
-          const n = row.querySelector('[data-k="next"]');
-          const fx = row.querySelector('[data-k="fx"]');
-
-          t.value = o.t || "";
-          n.value = o.next || "";
-          fx.value = JSON.stringify(o.effects.nutrients || {}, null, 0);
-
-          t.oninput = (e)=>{ o.t = e.target.value; };
-          n.oninput = (e)=>{ o.next = e.target.value; };
-
-          fx.oninput = (e)=>{
-            const v = (e.target.value || "").trim();
-            if(!v){ o.effects.nutrients = {}; syncNutrientsUI(false); return; }
-            try{
-              const obj = JSON.parse(v);
-              o.effects.nutrients = sanitizeScoreMap(obj);
-              fx.classList.remove("border-rose-300");
-              syncNutrientsUI(false);
-            }catch{
-              fx.classList.add("border-rose-300");
-            }
-          };
-
-          row.querySelector('[data-act="delopt"]').onclick = ()=>{
-            opts.splice(idx,1);
-            node.options = opts;
-            drawOpts();
-            syncNutrientsUI(false);
-          };
-          optWrap.appendChild(row);
-        });
-      };
-      drawOpts();
-
-      card.querySelector('[data-act="addopt"]').onclick = ()=>{
-        opts.push({ t:"", next:"", effects:{ nutrients:{} } });
-        node.options = opts;
-        drawOpts();
-      };
-
-      card.querySelector('[data-act="delnode"]').onclick = ()=>{
-        const ok = confirm(`確定刪除 node「${nodeId}」？`);
-        if(!ok) return;
-        delete CURRENT.nodes[nodeId];
-        renderNodes();
-        syncNutrientsUI(false);
-      };
-
-      wrap.appendChild(card);
-    });
-  }
-
-  function validateSurvey(){
-    const name = ($("inName").value||"").trim();
-    const title = ($("inTitle").value||"").trim();
-    const kw = normKw($("inKeyword").value);
-    const start = ($("inStart").value||"").trim();
-
-    if(!name) throw new Error("請先填『問卷檔名』");
-    if(!title) throw new Error("請先填『問卷標題』");
-    if(!kw) throw new Error("請先填『關鍵字』");
-    if(!start) throw new Error("請先填『起始節點 ID』");
-
-    const owner = keywordOwner(kw);
-    if(owner && owner !== name) throw new Error("關鍵字已被其他問卷使用");
-
-    const nodes = CURRENT.nodes || {};
-    if(!nodes[start]) throw new Error(`起始節點不存在：${start}`);
-
-    for(const nodeId of Object.keys(nodes)){
-      const node = nodes[nodeId];
-      if(!String(node.q||"").trim()) throw new Error(`node ${nodeId} 題目是空的`);
-      if(!Array.isArray(node.options) || node.options.length===0) throw new Error(`node ${nodeId} 沒有選項`);
-
-      // ✅ 改：支援 2～4 選項
-      if(node.options.length < 2 || node.options.length > 4){
-        throw new Error(`node ${nodeId} 選項數需 2～4（目前 ${node.options.length} 個）`);
-      }
-
-      node.options.forEach((o, i)=>{
-        if(!String(o.t||"").trim()) throw new Error(`node ${nodeId} 選項 ${i+1} 文字是空的`);
-        const nx = String(o.next||"").trim();
-        if(nx && !nodes[nx]) throw new Error(`node ${nodeId} 選項 ${i+1} next 指向不存在：${nx}`);
-
-        const nut = o?.effects?.nutrients;
-        if(nut && typeof nut !== "object") throw new Error(`node ${nodeId} 選項 ${i+1} effects 格式錯誤`);
-      });
-    }
-
-    const used = scanNutrientsFromNodes();
-    if(used.length === 0) throw new Error("目前沒有任何營養計分（options.effects.nutrients 是空的）");
-
-    return { name, title, kw, start };
-  }
-
-  async function saveSurveyToKV(){
-    const { name, title, kw, start } = validateSurvey();
-
-    CURRENT.name = name;
-    CURRENT.title = title;
-    CURRENT.keyword = kw;
-    CURRENT.start = start;
-    CURRENT.final = { text: ($("inFinalText").value||"").trim() };
-    CURRENT.rules = CURRENT.rules || { nutrients:{} };
-    CURRENT.rules.nutrients = CURRENT.rules.nutrients || {};
-
-    await kvPut(Q_PREFIX + CURRENT.name, CURRENT);
-
-    await refreshKwMap();
-    for(const k of Object.keys(KW_MAP)){
-      if(KW_MAP[k] === CURRENT.name && k !== kw){
-        delete KW_MAP[k];
-      }
-    }
-    KW_MAP[kw] = CURRENT.name;
-    await saveKwMap();
-
-    toast("已儲存（問卷 + 規則庫 + 關鍵字綁定）");
-    $("txtLastSync").textContent = new Date().toLocaleString();
-
-    await refreshSurveyList();
-    await refreshKwMap();
-    updateKwHint();
-  }
-
-  function scanNutrientsFromNodes(){
-    const nodes = CURRENT.nodes || {};
-    const used = new Set();
-    for(const nodeId of Object.keys(nodes)){
-      const opts = Array.isArray(nodes[nodeId]?.options) ? nodes[nodeId].options : [];
-      for(const o of opts){
-        const m = o?.effects?.nutrients;
-        if(m && typeof m === "object"){
-          for(const k of Object.keys(m)){
-            const kk = String(k).trim();
-            if(kk) used.add(kk);
-          }
-        }
-      }
-    }
-    return Array.from(used).sort((a,b)=>a.localeCompare(b));
-  }
-
-  function defaultNutRule(key){
-    return {
-      label: key,
-      priority: 50,
-      thresholds: { low: 3, mid: 6 },
-      messages: {
-        low: "這個方向可能是你近期的常見缺口之一，可優先補齊基礎飲食與作息。",
-        mid: "這個方向可做維持型調整與補充。",
-        high: "目前這個方向表現不錯，維持即可。"
-      },
-      today: ["先把三餐吃完整", "水分分段補足", "晚餐提早 1 小時"],
-      products: [],
-      imageUrl: ""
-    };
-  }
-
-  function syncNutrientsUI(showToast=true){
-    const usedKeys = scanNutrientsFromNodes();
-    const rules = (CURRENT.rules && CURRENT.rules.nutrients) ? CURRENT.rules.nutrients : (CURRENT.rules = {nutrients:{}}).nutrients;
-
-    let okCount = 0, missCount = 0;
-    const merged = Array.from(new Set([...usedKeys, ...Object.keys(rules)])).sort((a,b)=>a.localeCompare(b));
-    const q = ($("nutSearch").value || "").trim().toLowerCase();
-
-    const list = $("nutList");
-    list.innerHTML = "";
-
-    merged
-      .filter(k => !q || k.toLowerCase().includes(q))
-      .forEach(k=>{
-        const has = !!rules[k];
-        if(has) okCount++; else missCount++;
-
-        const row = document.createElement("button");
-        row.className = `w-full text-left rounded-2xl border px-4 py-3 hover:bg-white ${
-          k===ACTIVE_NUT_KEY ? "border-slate-900 bg-white" : "border-slate-200 bg-white/70"
-        }`;
-
-        const label = has ? (rules[k].label || k) : k;
-
-        row.innerHTML = `
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <div class="mono font-extrabold text-slate-900">${escapeHtml(k)}</div>
-              <div class="text-xs mt-1 truncate ${has ? "text-slate-500" : "text-rose-600 font-bold"}">
-                ${has ? escapeHtml(String(label)) : "⚠️ 缺規則（按『補齊缺規則』可自動補）"}
-              </div>
-            </div>
-            <div class="shrink-0 flex items-center gap-2">
-              ${has
-                ? `<span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold">✅ 已有</span>`
-                : `<span class="text-xs px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100 font-semibold">⚠️ 缺</span>`
-              }
-            </div>
-          </div>
-        `;
-
-        row.onclick = ()=>{
-          ACTIVE_NUT_KEY = k;
-          $("inNutKey").value = k;
-          const ruleObj = rules[k] || defaultNutRule(k);
-          $("inNutRule").value = JSON.stringify(ruleObj, null, 2);
-          syncNutrientsUI(false);
-        };
-
-        list.appendChild(row);
-      });
-
-    $("txtNutOk").textContent = "✅ " + okCount;
-    $("txtNutMissing").textContent = "⚠️ " + missCount;
-
-    if(!ACTIVE_NUT_KEY){
-      const first = merged[0];
-      if(first){
-        ACTIVE_NUT_KEY = first;
-        $("inNutKey").value = first;
-        $("inNutRule").value = JSON.stringify(rules[first] || defaultNutRule(first), null, 2);
-      }
-    }
-
-    if(showToast) toast(`已掃描營養素：✅${okCount} / ⚠️${missCount}`);
-  }
-
-  function fillMissingRules(){
-    const used = scanNutrientsFromNodes();
-    if(used.length === 0) return toast("目前問卷還沒有任何營養 key", "warn");
-
-    CURRENT.rules = CURRENT.rules || { nutrients:{} };
-    CURRENT.rules.nutrients = CURRENT.rules.nutrients || {};
-    let filled = 0;
-
-    for(const k of used){
-      if(!CURRENT.rules.nutrients[k]){
-        CURRENT.rules.nutrients[k] = defaultNutRule(k);
-        filled++;
-      }
-    }
-    syncNutrientsUI(false);
-    toast(filled ? `已補齊 ${filled} 個缺規則（記得寫入 KV）` : "沒有缺規則 ✅");
-  }
-
-  function rulesSaveLocal(){
-    const k = String($("inNutKey").value||"").trim();
-    if(!k) return toast("nutrientKey 不可空白", "err");
-    const raw = String($("inNutRule").value||"").trim();
-    if(!raw) return toast("rule JSON 不可空白", "err");
-    try{
-      const obj = JSON.parse(raw);
-      CURRENT.rules = CURRENT.rules || { nutrients:{} };
-      CURRENT.rules.nutrients = CURRENT.rules.nutrients || {};
-      CURRENT.rules.nutrients[k] = obj;
-      ACTIVE_NUT_KEY = k;
-      toast("已更新規則（本地）");
-      syncNutrientsUI(false);
-    }catch(e){
-      toast("rule JSON 格式錯誤", "err");
-    }
-  }
-
-  function rulesDelete(){
-    const k = String($("inNutKey").value||"").trim();
-    if(!k) return;
-    const ok = confirm(`確定刪除規則「${k}」？`);
-    if(!ok) return;
-    if(CURRENT.rules && CURRENT.rules.nutrients && CURRENT.rules.nutrients[k]){
-      delete CURRENT.rules.nutrients[k];
-      $("inNutKey").value = "";
-      $("inNutRule").value = "";
-      ACTIVE_NUT_KEY = "";
-      toast("已刪除規則（本地）");
-      syncNutrientsUI(false);
-    }
-  }
-
-  function parseKeyFromFilename(filename){
-    const n = String(filename||"").trim();
-    if(!n) return "";
-    return n.replace(/\.[^.]+$/,"").trim();
-  }
-
-  async function runBatchNutImageApply(){
-    if(!BATCH_NUT_FILES.length) return toast("請先選多張圖片", "warn");
-    if(!API_BASE) return toast("請先連線 Worker 網址", "warn");
-
-    CURRENT.rules = CURRENT.rules || { nutrients:{} };
-    CURRENT.rules.nutrients = CURRENT.rules.nutrients || {};
-
-    let ok = 0, fail = 0, skipped = 0;
-    $("txtBatchNutImg").textContent = "上傳中…";
-
-    for(const f of BATCH_NUT_FILES){
-      const k = parseKeyFromFilename(f.name);
-      if(!k){ skipped++; continue; }
-      if(!CURRENT.rules.nutrients[k]) CURRENT.rules.nutrients[k] = defaultNutRule(k);
-
-      try{
-        const up = await uploadImageToR2(f);
-        const url = up.url || "";
-        if(!url) throw new Error("沒有拿到 URL");
-        CURRENT.rules.nutrients[k].imageUrl = url;
-        ok++;
-      }catch{
-        fail++;
-      }
-    }
-
-    BATCH_NUT_FILES = [];
-    $("txtBatchNutImg").textContent = `完成：成功 ${ok}｜失敗 ${fail}｜略過 ${skipped}`;
-    syncNutrientsUI(false);
-    toast(`整批圖片套用完成：成功 ${ok}｜失敗 ${fail}`, fail ? "warn" : "ok");
-  }
-
-  async function refreshLeads(){
-    const data = await api("/listAll", {});
-    const db = data.db || [];
-    const keys = db.filter(k=>k.startsWith(LEAD_PREFIX)).sort((a,b)=>b.localeCompare(a));
-    $("txtLeadCount").textContent = String(keys.length);
-
-    const top = keys.slice(0, 50);
-    const rows = await Promise.all(top.map(k => kvGet(k).catch(()=>null)));
-    LEADS = rows.filter(Boolean);
-    renderLeads();
-  }
-
-  function renderLeads(){
-    const q = ($("leadSearch").value||"").trim().toLowerCase();
-    const items = LEADS.filter(x=> !q || JSON.stringify(x).toLowerCase().includes(q));
-    const wrap = $("leadList");
-    wrap.innerHTML = "";
-
-    if(items.length===0){
-      const d = document.createElement("div");
-      d.className = "rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-slate-600";
-      d.textContent = "目前沒有 Leads。";
-      wrap.appendChild(d);
-      return;
-    }
-
-    items.forEach(x=>{
-      const when = x.createdAt ? new Date(x.createdAt).toLocaleString()
-        : (x.created_at ? new Date(x.created_at).toLocaleString() : "-");
-
-      const uid = x.userId || x.user_id || "-";
-      const survey = x.surveyName || x.survey_name || x.survey || "-";
-      const displayName = x.displayName || x.name || "";
-      const pictureUrl = x.pictureUrl || x.pictureURL || x.avatar || "";
-      const score = x.scores || x.nutrients || x.scoreMap || x.score_map || {};
-      const report = x.report || x.summary || x.result || "";
-
-      const img = pictureUrl
-        ? `<img src="${escapeHtml(pictureUrl)}" class="w-10 h-10 rounded-full border border-slate-200 object-cover" alt="avatar">`
-        : `<div class="w-10 h-10 rounded-full border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-500 text-xs">無圖</div>`;
-
-      const nameLine = (displayName || "").trim()
-        ? `<div class="font-extrabold text-slate-900">${escapeHtml(displayName)}</div>`
-        : `<div class="font-extrabold text-slate-900">（未存姓名）</div>`;
-
-      const scoreStr = (() => {
-        try{
-          if(score && typeof score === "object"){
-            const entries = Object.entries(score).sort((a,b)=>Number(b[1])-Number(a[1])).slice(0, 8);
-            if(entries.length===0) return "（沒有計分）";
-            return entries.map(([k,v])=>`${k}:${v}`).join("  ");
-          }
-          return "（沒有計分）";
-        }catch{ return "（沒有計分）"; }
-      })();
-
-      const reportBlock = report ? escapeHtml(report) : "（沒有報告內容 / 或 Worker 沒有把 report 寫進 Lead）";
-
-      const card = document.createElement("div");
-      card.className = "rounded-2xl border border-slate-200 bg-white/70 p-4";
-      card.innerHTML = `
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex items-start gap-3 min-w-0">
-            ${img}
-            <div class="min-w-0">
-              ${nameLine}
-              <div class="mt-0.5 text-xs text-slate-500">${escapeHtml(when)}</div>
-              <div class="mt-1 text-xs text-slate-500 mono break-all">userId: ${escapeHtml(uid)}</div>
-            </div>
-          </div>
-          <div class="shrink-0 flex flex-col gap-2 items-end">
-            <span class="text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 font-semibold">
-              ${escapeHtml(survey)}
-            </span>
-          </div>
-        </div>
-
-        <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 whitespace-pre-line">
-          <div class="text-xs font-bold text-slate-500 mb-1">計分（Top）</div>
-          <div class="mono text-[12px] text-slate-700">${escapeHtml(scoreStr)}</div>
-        </div>
-
-        <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-800 whitespace-pre-line">
-          ${reportBlock}
-        </div>
-
-        <div class="mt-3 flex flex-wrap gap-2">
-          <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold text-sm" data-act="copyUid">複製 userId</button>
-          <button class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold text-sm" data-act="copyReport">複製報告</button>
-        </div>
-      `;
-
-      card.querySelector('[data-act="copyUid"]').onclick = async ()=>{
-        try{ await navigator.clipboard.writeText(String(uid||"")); toast("已複製 userId"); }
-        catch{ toast("複製失敗（瀏覽器限制）", "warn"); }
-      };
-      card.querySelector('[data-act="copyReport"]').onclick = async ()=>{
-        try{ await navigator.clipboard.writeText(String(report||"")); toast("已複製報告"); }
-        catch{ toast("複製失敗（瀏覽器限制）", "warn"); }
-      };
-
-      wrap.appendChild(card);
-    });
-  }
-
-  function parseAddClause(s){
-    const out = {};
-    const raw = String(s||"").trim();
-    if(!raw) return out;
-    const parts = raw.split(",").map(x=>x.trim()).filter(Boolean);
-    for(const p of parts){
-      const m = p.match(/^([A-Za-z0-9_\-]+)\s*:\s*([+\-]?\d+(\.\d+)?)$/);
-      if(!m) continue;
-      out[m[1]] = Number(m[2]);
-    }
-    return out;
-  }
-
-  function parseBulk(text){
-    const lines = (text||"").replace(/\r/g,"").split("\n");
-    const out = { name:"", title:"", keyword:"", start:"q1", final:"", nodes:{} };
-
-    let curNodeId = "";
-    let curQ = "";
-    let curOpts = [];
-
-    const flushNode = ()=>{
-      if(!curNodeId) return;
-      out.nodes[curNodeId] = out.nodes[curNodeId] || { q:"", options:[] };
-      out.nodes[curNodeId].q = curQ || out.nodes[curNodeId].q || "";
-      out.nodes[curNodeId].options = curOpts.slice();
-    };
-
-    for(let i=0;i<lines.length;i++){
-      const raw = lines[i] ?? "";
-      const line = raw.trim();
-      if(!line) continue;
-
-      if(/^NAME\s*:/i.test(line)){ out.name = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^TITLE\s*:/i.test(line)){ out.title = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^KEYWORD\s*:/i.test(line)){ out.keyword = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^START\s*:/i.test(line)){ out.start = line.split(":").slice(1).join(":").trim(); continue; }
-      if(/^FINAL\s*:/i.test(line)){ out.final = line.split(":").slice(1).join(":").trim(); continue; }
-
-      if(/^NODE\s*:/i.test(line)){
-        flushNode();
-        curNodeId = line.split(":").slice(1).join(":").trim();
-        curQ = "";
-        curOpts = [];
-        continue;
-      }
-
-      if(/^Q\s*:/i.test(line)){
-        curQ = line.split(":").slice(1).join(":").trim();
-        continue;
-      }
-
-      const optm = line.match(/^\-\s*(.+)$/);
-      if(optm && curNodeId){
-        const full = optm[1].trim();
-        const parts = full.split("->").map(x=>x.trim());
-        const t = parts[0] || "";
-        let next = "";
-        let add = {};
-
-        if(parts[1]){
-          const p = parts[1];
-          const nextm = p.match(/next\s*=\s*([A-Za-z0-9_\-]+)/i);
-          next = nextm ? nextm[1] : "";
-          if(String(next).toUpperCase() === "END") next = "";
-
-          const addm = p.match(/add\s*=\s*([A-Za-z0-9_\-:+\.,\s]+)/i);
-          if(addm) add = parseAddClause(addm[1]);
-        }
-
-        curOpts.push({ t, next, effects:{ nutrients: add } });
-        continue;
-      }
-    }
-    flushNode();
-
-    if(!out.name || !out.title || !out.keyword) throw new Error("缺少 NAME/TITLE/KEYWORD");
-    if(!Object.keys(out.nodes).length) throw new Error("沒有讀到 NODE");
-    if(!out.start) out.start = "q1";
-
-    // ✅ 改：NODE 支援 2～4 選項（你那份 sex 只有 2 個）
-    for(const nid of Object.keys(out.nodes)){
-      const o = out.nodes[nid]?.options || [];
-      if(o.length < 2 || o.length > 4){
-        throw new Error(`NODE ${nid} 選項數需 2～4（目前 ${o.length} 個）`);
-      }
-    }
-    return out;
-  }
-
-  function applyBulkToCurrent(parsed){
-    CURRENT = makeEmptySurvey();
-    CURRENT.name = parsed.name || "";
-    CURRENT.title = parsed.title || "";
-    CURRENT.keyword = parsed.keyword || "";
-    CURRENT.start = parsed.start || "q1";
-    CURRENT.final = { text: parsed.final || "" };
-    CURRENT.nodes = parsed.nodes || {};
-    fillBuilder();
-    syncNutrientsUI(false);
-  }
-
-  function openBulk(){ $("bulkModal").classList.remove("hidden"); setTimeout(()=>{ $("bulkText").focus(); }, 50); }
-  function closeBulk(){ $("bulkModal").classList.add("hidden"); }
-
-  function setApiBaseFromInput(){
-    const v = ($("inApiBase").value || "").trim();
-    if(!v) throw new Error("請輸入 Worker 網址");
-    API_BASE = v;
-    localStorage.setItem("ai_survey_admin_api_base", v);
-  }
-  function initApiBase(){
-    const v = (localStorage.getItem("ai_survey_admin_api_base") || "").trim();
-    if(v){
-      API_BASE = v;
-      $("inApiBase").value = v;
-    }
-  }
-
-  function bind(){
-    $("inName").oninput = ()=> updateKwHint();
-    $("inKeyword").oninput = ()=> updateKwHint();
-    $("qSearch").oninput = ()=> renderSurveyList();
-    $("leadSearch").oninput = ()=> renderLeads();
-    $("nutSearch").oninput = ()=> syncNutrientsUI(false);
-
-    $("btnTabBuilder").onclick = ()=> setTab("builder");
-    $("btnTabRules").onclick = ()=>{ setTab("rules"); syncNutrientsUI(false); };
-    $("btnTabLeads").onclick = async ()=>{ setTab("leads"); await refreshLeads().catch(()=>{}); };
-
-    $("btnNew").onclick = ()=>{
-      CURRENT = makeEmptySurvey();
-      fillBuilder();
-      toast("已建立新問卷（尚未儲存）");
-      setTab("builder");
-    };
-
-    $("btnAddNode").onclick = ()=>{
-      const nid = prompt("輸入 nodeId（例如：q21 / s3 / g2）");
-      if(!nid) return;
-      const id = String(nid).trim();
-      CURRENT.nodes = CURRENT.nodes || {};
-      if(CURRENT.nodes[id]) return toast("這個 nodeId 已存在", "warn");
-      CURRENT.nodes[id] = { q:"", options:[
-        {t:"", next:"", effects:{ nutrients:{} }},
-        {t:"", next:"", effects:{ nutrients:{} }},
-        {t:"", next:"", effects:{ nutrients:{} }},
-        {t:"", next:"", effects:{ nutrients:{} }},
-      ] };
-      renderNodes();
-      syncNutrientsUI(false);
-      toast("已新增節點（記得儲存）");
-    };
-
-    $("btnValidate").onclick = ()=>{
-      try{ validateSurvey(); toast("檢查通過 ✅"); }
-      catch(e){ toast(e.message, "err"); }
-    };
-
-    $("btnConnect").onclick = async ()=>{
-      try{
-        setApiBaseFromInput();
-        $("txtStatus").textContent = "已連線";
-        $("txtStatus").className = "font-semibold text-emerald-700";
-        $("txtLastSync").textContent = new Date().toLocaleString();
-
-        await refreshKwMap();
-        await refreshSurveyList();
-        await refreshLeads().catch(()=>{});
-        updateKwHint();
-        syncNutrientsUI(false);
-
-        toast("連線成功");
-      }catch(e){
-        $("txtStatus").textContent = "連線失敗";
-        $("txtStatus").className = "font-semibold text-rose-700";
-        toast(e.message, "err");
-      }
-    };
-
-    $("btnSaveSurvey").onclick = async ()=>{
-      try{
-        setApiBaseFromInput();
-        await refreshKwMap();
-        await saveSurveyToKV();
-      }catch(e){
-        toast(e.message, "err");
-      }
-    };
-
-    $("btnBulk").onclick = openBulk;
-    $("btnBulkClose").onclick = closeBulk;
-    $("bulkModal").addEventListener("click", (e)=>{ if(e.target === $("bulkModal")) closeBulk(); });
-
-    $("btnBulkExample").onclick = ()=>{
-      $("bulkText").value =
-`NAME: 生活健康問卷_示範
-TITLE: 3分鐘生活健康分析（示範）
-KEYWORD: 生活問卷
-START: q1
-FINAL: 想要我幫你做 7 天調整建議，回我「7天」。
-
-NODE: q1
-Q: 你最近整體精神感受比較像？
-- 很有精神 -> next=q2 add=hydration:-1,protein:-1
-- 普通還可以 -> next=q2 add=hydration:0
-- 常覺得疲累 -> next=q2 add=b_complex:2,iron:1
-- 起床就沒力 -> next=q2 add=b_complex:3,protein:1
-
-NODE: q2
-Q: 你最近的睡眠品質？
-- 好，醒來清爽 -> next=q3 add=magnesium:-1
-- 還行，偶爾醒 -> next=q3 add=magnesium:1
-- 常醒/淺眠 -> next=q3 add=magnesium:2,omega3:1
-- 難入睡 -> next=q3 add=magnesium:3,stress_support:2
-
-NODE: q3
-Q: 你腸胃感受比較像？
-- 順暢 -> next=END add=fiber:-1
-- 偶爾不適 -> next=END add=fiber:1,probiotics:1
-- 常脹氣/悶 -> next=END add=probiotics:2,fiber:2
-- 容易拉肚子或便祕 -> next=END add=probiotics:3,fiber:3`;
-      toast("已塞入示範");
-      $("bulkText").focus();
-    };
-
-    $("btnBulkApply").onclick = ()=>{
-      try{
-        const parsed = parseBulk($("bulkText").value || "");
-        applyBulkToCurrent(parsed);
-        closeBulk();
-        toast("已套用（記得儲存）");
-      }catch(e){
-        toast(e.message, "err");
-      }
-    };
-
-    $("btnScanNutrients").onclick = ()=> syncNutrientsUI(true);
-    $("btnRulesFillMissing").onclick = ()=> fillMissingRules();
-    $("btnRulesSaveLocal").onclick = ()=> rulesSaveLocal();
-    $("btnRulesWriteKV").onclick = async ()=>{
-      try{
-        setApiBaseFromInput();
-        await refreshKwMap();
-        rulesSaveLocal();
-        await saveSurveyToKV();
-        toast("已把規則庫寫入 KV ✅");
-      }catch(e){
-        toast(e.message, "err");
-      }
-    };
-    $("btnRulesDelete").onclick = ()=> rulesDelete();
-
-    $("btnBatchNutImgPick").onclick = ()=>{
-      if(!API_BASE) return toast("請先連線 Worker 網址", "warn");
-      $("fileBatchNutImg").click();
-    };
-    $("fileBatchNutImg").onchange = ()=>{
-      const files = Array.from($("fileBatchNutImg").files || []);
-      $("fileBatchNutImg").value = "";
-      BATCH_NUT_FILES = files;
-      $("txtBatchNutImg").textContent = files.length ? `已選 ${files.length} 張` : "";
-      if(files.length) toast(`已選 ${files.length} 張圖片（按『開始整批套用』）`);
-    };
-    $("btnBatchNutImgRun").onclick = ()=> runBatchNutImageApply();
-
-    $("btnLeadsReload").onclick = async ()=>{
-      try{ await refreshLeads(); toast("已刷新 Leads"); }
-      catch(e){ toast(e.message,"err"); }
-    };
-  }
-
-  async function init(){
-    initApiBase();
-    bind();
-    fillBuilder();
-    setTab("builder");
-  }
-
-  init().catch(err => showErr(err?.stack || err));
-})();
+  // 底部按鈕（像你圖的那種灰色膠囊）
+  const btns = [
+    "維生素A","維生素B","維生素C",
+    "維生素D","維生素E","鈣鎂",
+    "鐵","膳食纖維","微量元素","蛋白質"
+  ];
+  ctx.font = "22px Microsoft JhengHei";
+  let bx=120, by=980;
+  const bw=190, bh=60, bgap=18;
+  btns.forEach((t,i)=>{
+    roundRect(ctx, bx, by, bw, bh, 18);
+    ctx.fillStyle="rgba(255,255,255,0.45)";
+    ctx.fill();
+    ctx.fillStyle="#ffffff";
+    ctx.fillText(t, bx+26, by+38);
+
+    bx += bw + bgap;
+    if((i+1)%3===0){ bx=120; by += bh + 18; }
+  });
+
+  // footer
+  ctx.fillStyle="#ffffff";
+  ctx.font="bold 46px Microsoft JhengHei";
+  ctx.fillText("A TEAM", 370, 1325);
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y, x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x, y+h, rr);
+  ctx.arcTo(x, y+h, x, y, rr);
+  ctx.arcTo(x, y, x+w, y, rr);
+  ctx.closePath();
+}
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+async function fetchJSON(url, opt){
+  const r = await fetch(url, opt);
+  if(!r.ok) throw new Error(await r.text());
+  return await r.json();
+}
+function loadImg(src){
+  return new Promise((res, rej)=>{
+    const im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = ()=>res(im);
+    im.onerror = rej;
+    im.src = src;
+  });
+}
 </script>
 </body>
 </html>
