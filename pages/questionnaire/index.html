@@ -23,6 +23,10 @@
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
     .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
     .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.18); border-radius: 999px; }
+    table th, table td { vertical-align: middle; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
   </style>
 </head>
 
@@ -31,7 +35,7 @@
     <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台（11題）</h1>
-        <p class="text-sm text-slate-600 mt-1">這頁就是你的唯一中控台：一鍵把題目/關鍵字/計分/營養素連結寫進 Cloudflare KV。</p>
+        <p class="text-sm text-slate-600 mt-1">這頁就是你的唯一中控台：一鍵把題目/關鍵字/扣分規則/年齡層攝取量/引流圖設定寫進 Cloudflare KV。</p>
       </div>
       <div class="text-xs text-slate-600 leading-6">
         <div class="font-bold">需要 Worker 提供 API：</div>
@@ -93,13 +97,16 @@
           </div>
 
           <div class="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4">
-            <div class="text-sm font-extrabold text-indigo-900">年齡選項（唯一可修改）</div>
-            <div class="text-xs text-indigo-900/70 mt-1">題目文字不改，只改選項三個。</div>
+            <div class="text-sm font-extrabold text-indigo-900">年齡選項（可改字）</div>
+            <div class="text-xs text-indigo-900/70 mt-1">⚠️ 這裡會影響問卷 Q11 選項；攝取量數值在下面「Excel 表」調整。</div>
 
             <div class="mt-3 grid gap-2">
-              <input id="age1" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="18歲以下" />
-              <input id="age2" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="19–39歲" />
-              <input id="age3" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="40歲以上" />
+              <input id="ageChild" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="0~10 歲 (兒童)" />
+              <input id="ageTeen"  class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="11~18 歲 (青少年)" />
+              <input id="ageAdult" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="19 歲以上" />
+            </div>
+            <div class="text-[12px] text-indigo-900/70 mt-2">
+              19 歲以上會依 Q10 性別自動套用「女/男」的攝取量（跟你的 Excel 一樣）。
             </div>
           </div>
 
@@ -125,7 +132,7 @@
               <div><label class="text-xs font-bold text-slate-500">鐵 連結</label><input id="lnk_iron" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
               <div><label class="text-xs font-bold text-slate-500">膳食纖維 連結</label><input id="lnk_fiber" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
               <div><label class="text-xs font-bold text-slate-500">微量元素 連結</label><input id="lnk_trace" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">蛋白質 連結</label><input id="lnk_protein" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
+              <div><label class="text-xs font-bold text-slate-500">（保留）蛋白質 連結</label><input id="lnk_protein" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
             </div>
 
             <div class="mt-3 text-xs text-slate-500">
@@ -133,9 +140,25 @@
             </div>
           </div>
 
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div class="text-sm font-extrabold text-slate-900">引流圖（報告後面保留位置）</div>
+            <div class="text-xs text-slate-500 mt-1">你放一張統一的引流圖（客戶點擊購買）。</div>
+            <div class="mt-3 grid gap-2">
+              <div>
+                <label class="text-xs font-bold text-slate-500">引流圖「圖片網址」</label>
+                <input id="leadImgUrl" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://.../lead.png" />
+              </div>
+              <div>
+                <label class="text-xs font-bold text-slate-500">引流圖「點擊連結」</label>
+                <input id="leadImgLink" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://...（購買頁/選購頁）" />
+              </div>
+            </div>
+          </div>
+
           <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">重要：飲食都很OK就不硬推</div>
-            <div>• 如果風險很低（多數都填「不是」），報告會顯示「維持即可」，不會叫你補一堆營養素。</div>
+            <div class="font-extrabold">扣分模型規則（你要的邏輯）</div>
+            <div>• 從 100% 開始，答「是」就扣分；全部都答「是」時，多數營養素會被扣到 0%（會自動夾到 0～100）。</div>
+            <div>• 文字報告會「每個營養素都顯示 %」。</div>
           </div>
         </div>
       </section>
@@ -145,14 +168,14 @@
         <div class="flex items-end justify-between gap-3">
           <div>
             <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">這裡只用來確認報告文字。寫入 KV 後由 LINE OA 使用。</p>
+            <p class="text-sm text-slate-600 mt-1">這裡只用來確認文字報告（% + 年齡層參考值 + 引流圖位置）。寫入 KV 後由 LINE OA 使用。</p>
           </div>
           <div class="flex gap-2">
             <button id="btnSimAllGood" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
               一鍵「都很健康」
             </button>
-            <button id="btnSimDefault" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
-              一鍵「常見不足」
+            <button id="btnSimAllYes" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+              一鍵「全部都選是」
             </button>
           </div>
         </div>
@@ -160,7 +183,7 @@
         <div class="mt-4 grid gap-3">
           <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="text-sm font-extrabold text-slate-900">11 題（照圖不改字）</div>
-            <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡（年齡選項可改）</div>
+            <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡（年齡名稱可改）</div>
 
             <div id="simWrap" class="mt-3 space-y-3 max-h-[420px] overflow-auto thinbar pr-1"></div>
           </div>
@@ -176,24 +199,64 @@
 
           <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="text-sm font-extrabold text-slate-900">文字版報告輸出</div>
-            <textarea id="outReport" rows="12" class="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200"
+            <textarea id="outReport" rows="14" class="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200"
               placeholder="按『產生文字報告』後會出現在這裡"></textarea>
             <div class="text-xs text-slate-500 mt-2">
-              （已改成你提供的「百分比扣分模型」：從 100% 逐題扣分）
+              顯示內容：所有營養素%（固定順序）＋ 你所屬年齡層參考值（依 Excel）＋ 引流圖位置
             </div>
           </div>
         </div>
       </section>
     </div>
 
+    <!-- EXCEL TABLE -->
+    <section class="card rounded-2xl p-5 border border-slate-200 mt-4">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">③ 年齡層參考值（Excel 版｜可改）</h2>
+          <p class="text-sm text-slate-600 mt-1">這段就是你 Excel 的內容：你改這裡，就會寫進 KV（用於報告/圖片版的「每日建議攝取量」文字）。</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnResetTargets" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">恢復 Excel 預設</button>
+          <button id="btnCopyTargetsJson" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">複製 JSON</button>
+        </div>
+      </div>
+
+      <div class="mt-4 overflow-auto thinbar">
+        <table class="w-full min-w-[980px] border-collapse">
+          <thead>
+            <tr class="text-xs text-slate-600">
+              <th class="text-left p-2 border-b border-slate-200">項目</th>
+              <th class="text-left p-2 border-b border-slate-200">單位</th>
+              <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
+              <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
+              <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
+              <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
+            </tr>
+          </thead>
+          <tbody id="targetsTbody" class="text-sm"></tbody>
+        </table>
+      </div>
+
+      <div class="mt-3 text-xs text-slate-500">
+        ※ 這裡的數值會組合成：<span class="mono font-semibold">vitB(B1/B2/B6)</span>、<span class="mono font-semibold">ca_mg(鈣/鎂)</span>、<span class="mono font-semibold">trace(碘/硒)</span> 來顯示在報告中。
+      </div>
+    </section>
+
     <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
   </div>
 
 <script>
 (() => {
+  // =====================
+  // KV keys
+  // =====================
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
+  // =====================
+  // Questions (fixed)
+  // =====================
   const QUESTIONS = [
     { id:"q1",  type:"yn",  text:"我經常只有兩餐" },
     { id:"q2",  type:"yn",  text:"我每天攝取的蔬菜和水果少於5份（以成人手掌大小盤子為標準）" },
@@ -209,6 +272,9 @@
     { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
   ];
 
+  // =====================
+  // Nutrient labels (for %)
+  // =====================
   const LABEL = {
     vitA:"維生素A",
     vitB:"維生素B群",
@@ -219,9 +285,56 @@
     iron:"鐵",
     fiber:"膳食纖維",
     trace:"微量元素",
-    protein:"蛋白質", // 你提供的圖沒有「蛋白質百分比」，目前不扣分；先保留連結欄位
+    // 保留欄位（不做 % 扣分、也不在 % 清單顯示）
+    protein:"蛋白質",
   };
 
+  // 固定顯示順序（你要「全部都顯示」就用固定順序，不用排序）
+  const PCT_ORDER = ["vitA","vitB","vitC","vitD","vitE","ca_mg","iron","fiber","trace"];
+
+  // =====================
+  // Excel 來源（你上傳的 xlsx 內容已內建成預設值）
+  // Sheet1：扣分規則（選「是」就扣）
+  // ※ 注意：這裡用「正數」表示扣分（最後用 100 - deduct 變成剩餘%）
+  // =====================
+  const DEDUCT_EXCEL_DEFAULT = {
+    q1: { vitA:20, vitB:17, vitC:20, vitD:25, vitE:17, ca_mg:25, iron:17, fiber:25, trace:17 },
+    q2: { vitA:20, vitB:16, vitC:20, vitD:0,  vitE:16, ca_mg:0,  iron:0,  fiber:25, trace:16 },
+    q3: { vitA:0,  vitB:17, vitC:0,  vitD:0,  vitE:17, ca_mg:0,  iron:16, fiber:25, trace:17 },
+    q4: { vitA:20, vitB:17, vitC:0,  vitD:25, vitE:0,  ca_mg:25, iron:0,  fiber:0,  trace:0  },
+    q5: { vitA:0,  vitB:0,  vitC:0,  vitD:0,  vitE:0,  ca_mg:25, iron:17, fiber:0,  trace:17 },
+    q6: { vitA:0,  vitB:0,  vitC:0,  vitD:25, vitE:0,  ca_mg:0,  iron:17, fiber:0,  trace:16 },
+    q7: { vitA:0,  vitB:16, vitC:20, vitD:0,  vitE:17, ca_mg:0,  iron:0,  fiber:0,  trace:0  },
+    q8: { vitA:20, vitB:0,  vitC:20, vitD:0,  vitE:16, ca_mg:0,  iron:16, fiber:0,  trace:0  },
+    q9: { vitA:20, vitB:17, vitC:20, vitD:25, vitE:17, ca_mg:25, iron:17, fiber:25, trace:17 },
+  };
+
+  // Sheet2：年齡層攝取量（可在 UI 直接改）
+  // 欄位：child(0-10)、teen(11-18)、adultF(19+女)、adultM(19+男)
+  const TARGETS_EXCEL_DEFAULT = [
+    { id:"vitA",   name:"維生素A", unit:"µg",  child:1500, teen:2500, adultF:3000, adultM:3000 },
+
+    { id:"b1",     name:"維生素B1", unit:"mg", child:0.9,  teen:1.2,  adultF:0.9,  adultM:1.2 },
+    { id:"b2",     name:"維生素B2", unit:"mg", child:1.0,  teen:1.3,  adultF:1.0,  adultM:1.3 },
+    { id:"b6",     name:"維生素B6", unit:"mg", child:1.0,  teen:1.5,  adultF:1.5,  adultM:1.6 },
+
+    { id:"vitC",   name:"維生素C", unit:"mg",  child:1200, teen:1800, adultF:2000, adultM:2000 },
+    { id:"vitD",   name:"維生素D", unit:"µg",  child:50,   teen:50,   adultF:50,   adultM:50   },
+    { id:"vitE",   name:"維生素E", unit:"mg",  child:300,  teen:800,  adultF:1000, adultM:1000 },
+
+    { id:"ca",     name:"鈣",       unit:"mg",  child:1500, teen:2500, adultF:2500, adultM:2500 },
+    { id:"mg",     name:"鎂",       unit:"mg",  child:250,  teen:350,  adultF:320,  adultM:380  },
+
+    { id:"iron",   name:"鐵",       unit:"mg",  child:30,   teen:40,   adultF:45,   adultM:40   },
+    { id:"fiber",  name:"纖維",     unit:"g",   child:20,   teen:25,   adultF:27,   adultM:34   },
+
+    { id:"iodine", name:"微量(碘)", unit:"µg",  child:90,   teen:130,  adultF:150,  adultM:150  },
+    { id:"selen",  name:"微量(硒)", unit:"µg",  child:30,   teen:55,   adultF:55,   adultM:55   },
+  ];
+
+  // =====================
+  // DOM helpers
+  // =====================
   const $ = (id)=>document.getElementById(id);
 
   function toast(msg, type="ok"){
@@ -250,6 +363,9 @@
     $("errText").textContent = "";
   }
 
+  // =====================
+  // API
+  // =====================
   function apiBase(){
     return ($("inApiBase").value || "").trim().replace(/\/$/,"");
   }
@@ -281,6 +397,9 @@
     await api("/putAny", { namespace:"DB", keyword:key, payload });
   }
 
+  // =====================
+  // Connect status
+  // =====================
   let CONNECTED = false;
   function setStatus(ok, msg){
     CONNECTED = !!ok;
@@ -295,38 +414,114 @@
     toast("連線成功");
   }
 
-  // ============================
-  // ✅ 你要的「評分方式」已改：
-  // - 從 100% 開始
-  // - 每題選「是」就依你提供的差分資料做扣分（百分比）
-  // - 不再用我之前的「點數制」
-  // ============================
-function buildRules(ageOpts){
-  return {
-    // q1~q9：單題為「是」時的扣分％（完全依你圖 1~9 反推）
-    yn_yes: {
-      q1: { vitA:20, vitB:17, vitC:20, vitD:25, vitE:17, ca_mg:25, iron:17, fiber:25, trace:17 },
-      q2: { vitA:20, vitB:16, vitC:20, fiber:25, trace:16 },
-      q3: { vitB:17, vitE:17, iron:16, fiber:25, trace:17 },
-      q4: { vitA:20, vitB:17, vitD:25, ca_mg:25 },
-      q5: { ca_mg:25, iron:17, trace:17 },
-      q6: { vitD:25, iron:17, trace:16 },
-      q7: { vitB:16, vitC:20, vitE:17 },
-      q8: { vitA:20, vitC:20, vitE:16, iron:16 },
-      q9: { vitA:20, vitB:17, vitC:20, vitD:25, vitE:17, ca_mg:25, iron:17, fiber:25, trace:17 },
-    },
+  // =====================
+  // Targets table (Excel)
+  // =====================
+  let targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
 
-    // q10/q11：目前不影響「百分比扣分」（你給的是建議攝取量基準，圖片版用）
-    sex: { "男": {}, "女": {} },
-    age: {
-      [ageOpts[0]]: {},
-      [ageOpts[1]]: {},
-      [ageOpts[2]]: {},
-    }
-  };
-}
+  function numOrText(v){
+    if(v === "" || v === null || v === undefined) return "";
+    const n = Number(v);
+    return Number.isFinite(n) ? n : String(v);
+  }
 
+  function renderTargetsTable(){
+    const tb = $("targetsTbody");
+    tb.innerHTML = "";
+    targetsRows.forEach(row=>{
+      const tr = document.createElement("tr");
+      tr.className = "border-b border-slate-100";
+      tr.innerHTML = `
+        <td class="p-2 font-semibold text-slate-900">${escapeHtml(row.name)}</td>
+        <td class="p-2 text-slate-600">${escapeHtml(row.unit)}</td>
 
+        <td class="p-2">
+          <input data-col="child" data-id="${row.id}" type="number" step="any"
+            class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white"
+            value="${escapeHtml(row.child)}" />
+        </td>
+        <td class="p-2">
+          <input data-col="teen" data-id="${row.id}" type="number" step="any"
+            class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white"
+            value="${escapeHtml(row.teen)}" />
+        </td>
+        <td class="p-2">
+          <input data-col="adultF" data-id="${row.id}" type="number" step="any"
+            class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white"
+            value="${escapeHtml(row.adultF)}" />
+        </td>
+        <td class="p-2">
+          <input data-col="adultM" data-id="${row.id}" type="number" step="any"
+            class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white"
+            value="${escapeHtml(row.adultM)}" />
+        </td>
+      `;
+      tb.appendChild(tr);
+    });
+
+    tb.querySelectorAll("input[data-id][data-col]").forEach(inp=>{
+      inp.addEventListener("input", ()=>{
+        const id = inp.getAttribute("data-id");
+        const col = inp.getAttribute("data-col");
+        const row = targetsRows.find(r=>r.id===id);
+        if(!row) return;
+        row[col] = numOrText(inp.value);
+      });
+    });
+  }
+
+  function resetTargets(){
+    targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
+    renderTargetsTable();
+    toast("已恢復 Excel 預設");
+  }
+
+  function getTargetsObject(){
+    // 回傳原始 rows + 組合版（給報告/worker圖片用）
+    const byId = {};
+    targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
+
+    const pack = (ageKey, sexKey) => {
+      // ageKey: child|teen|adult, sexKey: female|male (only for adult)
+      const pick = (rid) => {
+        const r = byId[rid];
+        if(!r) return null;
+        if(ageKey==="child") return r.child;
+        if(ageKey==="teen") return r.teen;
+        // adult
+        return (sexKey==="female") ? r.adultF : r.adultM;
+      };
+
+      const vitB = `B1:${pick("b1")}mg, B2:${pick("b2")}mg, B6:${pick("b6")}mg`;
+      const ca_mg = `鈣:${pick("ca")}mg, 鎂:${pick("mg")}mg`;
+      const trace = `碘:${pick("iodine")}µg, 硒:${pick("selen")}µg`;
+
+      return {
+        vitA: `${pick("vitA")}µg`,
+        vitB,
+        vitC: `${pick("vitC")}mg`,
+        vitD: `${pick("vitD")}µg`,
+        vitE: `${pick("vitE")}mg`,
+        ca_mg,
+        iron: `${pick("iron")}mg`,
+        fiber: `${pick("fiber")}g`,
+        trace,
+      };
+    };
+
+    const combined = {
+      child: pack("child"),
+      teen: pack("teen"),
+      adultFemale: pack("adult","female"),
+      adultMale: pack("adult","male"),
+    };
+
+    return { rows: structuredClone(targetsRows), combined };
+  }
+
+  // =====================
+  // Links & Lead image
+  // =====================
   function getNutrientLinks(){
     return {
       vitA: ($("lnk_vitA").value||"").trim(),
@@ -341,16 +536,42 @@ function buildRules(ageOpts){
       protein: ($("lnk_protein").value||"").trim(),
     };
   }
+  function getLeadImage(){
+    return {
+      imageUrl: ($("leadImgUrl").value||"").trim(),
+      linkUrl:  ($("leadImgLink").value||"").trim(),
+    };
+  }
 
+  // =====================
+  // Rules builder (deduct)
+  // =====================
+  function getAgeOpts(){
+    return [
+      ($("ageChild").value || "0~10 歲 (兒童)").trim(),
+      ($("ageTeen").value  || "11~18 歲 (青少年)").trim(),
+      ($("ageAdult").value || "19 歲以上").trim(),
+    ];
+  }
+
+  function buildRules(){
+    // 這裡只回傳扣分規則（yn_yes）
+    // 性別/年齡不做扣分：只用於「每日攝取量」選擇
+    return {
+      yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT),
+      sex: { "男": {}, "女": {} },
+      age: {}
+    };
+  }
+
+  // =====================
+  // Survey payload (write KV)
+  // =====================
   function buildSurveyPayload(){
     const kw = ($("inKeyword").value || "").trim();
     if(!kw) throw new Error("請填『啟動關鍵字』");
 
-    const ageOpts = [
-      ($("age1").value || "").trim(),
-      ($("age2").value || "").trim(),
-      ($("age3").value || "").trim(),
-    ];
+    const ageOpts = getAgeOpts();
     if(ageOpts.some(x => !x)) throw new Error("年齡選項不可空白（需要 3 個）");
 
     const nodes = {};
@@ -390,18 +611,33 @@ function buildRules(ageOpts){
       }
     }
 
+    const targets = getTargetsObject();
+    const lead = getLeadImage();
+
     return {
-      version: "life11-v4-percent-deduct",
+      version: "life11-v5-percent-deduct-excel-targets",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
       start: "q1",
-      rules: buildRules(ageOpts),
-      nutrientLinks: getNutrientLinks(),
+
+      rules: buildRules(),                 // 扣分規則
+      nutrientLinks: getNutrientLinks(),   // 連結
+      targetsExcel: targets,               // 年齡層攝取量（Excel）
+      leadImage: lead,                     // 引流圖
+
       nodes,
       order: QUESTIONS.filter(x=>x.type!=="done").map(x=>x.id),
+
       nutrients: LABEL,
-      ui: { showAllLinks: !!$("chkShowAllLinks").checked }
+      ui: {
+        showAllLinks: !!$("chkShowAllLinks").checked,
+        ageOptions: {
+          child: getAgeOpts()[0],
+          teen:  getAgeOpts()[1],
+          adult: getAgeOpts()[2],
+        }
+      }
     };
   }
 
@@ -422,17 +658,16 @@ function buildRules(ageOpts){
     map[kw] = "life11";
     await kvPut(KW_MAP_KEY, map);
 
-    toast("已寫入 KV ✅（問卷 + KW_MAP + nutrientLinks + 百分比扣分規則）");
+    toast("已寫入 KV ✅（問卷 + KW_MAP + 扣分規則 + Excel攝取量 + 引流圖）");
   }
 
-  // ====== simulation ======
+  // =====================
+  // Simulation UI
+  // =====================
   const simState = {};
+
   function renderSim(){
-    const ageOpts = [
-      ($("age1").value || "18歲以下").trim(),
-      ($("age2").value || "19–39歲").trim(),
-      ($("age3").value || "40歲以上").trim(),
-    ];
+    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
 
     const wrap = $("simWrap");
     wrap.innerHTML = "";
@@ -459,10 +694,11 @@ function buildRules(ageOpts){
           </div>
         `;
       }else if(q.type==="age"){
-        const v = simState[q.id] ?? ageOpts[1];
+        const v = simState[q.id] ?? ageAdult;
+        const opts = [ageChild, ageTeen, ageAdult];
         optsHtml = `
           <div class="flex gap-2 flex-wrap mt-2">
-            ${ageOpts.map(a => `
+            ${opts.map(a => `
               <button data-v="${escapeHtml(a)}" class="px-3 py-2 rounded-xl border ${v===a?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">${escapeHtml(a)}</button>
             `).join("")}
           </div>
@@ -487,84 +723,101 @@ function buildRules(ageOpts){
     });
   }
 
-  // ====== report (百分比扣分制) ======
-  function addDeduct(deduct, obj){
-    for(const k in obj){
-      deduct[k] = (deduct[k] || 0) + obj[k];
-    }
-  }
+  // =====================
+  // Report (simple % show all)
+  // =====================
   function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-  // 依「剩餘百分比」判級（更貼近你圖上呈現）
-  function levelByRemain(remain){
-    if(remain <= 40) return "優先";
-    if(remain <= 60) return "建議補強";
-    if(remain <= 80) return "可加強";
-    return "穩定";
-  }
+  function getSelectedTargetLines(ans){
+    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
+    const t = getTargetsObject().combined;
 
-function makeReport(){
-  const ageOpts = [
-    ($("age1").value || "18歲以下").trim(),
-    ($("age2").value || "19–39歲").trim(),
-    ($("age3").value || "40歲以上").trim(),
-  ];
-  const rules = buildRules(ageOpts);
-  const links = getNutrientLinks();
-  const showAllLinks = !!$("chkShowAllLinks").checked;
-
-  const ans = {};
-  QUESTIONS.filter(x=>x.type!=="done").forEach(q=>{
-    if(q.type==="yn") ans[q.id] = simState[q.id] ?? "不是";
-    if(q.type==="sex") ans[q.id] = simState[q.id] ?? "男";
-    if(q.type==="age") ans[q.id] = simState[q.id] ?? ageOpts[1];
-  });
-
-  // 1) 加總扣分
-  const deduct = {};
-  for(const qid of Object.keys(rules.yn_yes)){
-    if(ans[qid] === "是") {
-      const obj = rules.yn_yes[qid];
-      for(const k in obj) deduct[k] = (deduct[k] || 0) + obj[k];
+    let pack = t.adultMale;
+    if(ans.q11 === ageChild) pack = t.child;
+    else if(ans.q11 === ageTeen) pack = t.teen;
+    else {
+      // adult
+      pack = (ans.q10 === "女") ? t.adultFemale : t.adultMale;
     }
+
+    // 固定順序顯示（跟你的圖的「每日攝取上限/需求」一致）
+    return [
+      `- 維生素A：${pack.vitA}`,
+      `- 維生素B群：${pack.vitB}`,
+      `- 維生素C：${pack.vitC}`,
+      `- 維生素D：${pack.vitD}`,
+      `- 維生素E：${pack.vitE}`,
+      `- 鈣鎂：${pack.ca_mg}`,
+      `- 鐵：${pack.iron}`,
+      `- 膳食纖維：${pack.fiber}`,
+      `- 微量元素：${pack.trace}`,
+    ].join("\n");
   }
 
-  // 2) 轉成「剩餘％」（從100開始扣，最低到0）
-  const remain = {};
-  Object.keys(LABEL).forEach(k=>{
-    const d = deduct[k] || 0;
-    remain[k] = Math.max(0, Math.min(100, 100 - d));
-  });
+  function makeReport(){
+    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
+    const rules = buildRules();
+    const links = getNutrientLinks();
+    const showAllLinks = !!$("chkShowAllLinks").checked;
+    const lead = getLeadImage();
 
-  // 3) 你圖上沒有蛋白質% → 報告先不顯示（避免困惑）
-  const keys = Object.keys(LABEL).filter(k => k !== "protein");
+    const ans = {};
+    QUESTIONS.filter(x=>x.type!=="done").forEach(q=>{
+      if(q.type==="yn")  ans[q.id] = simState[q.id] ?? "不是";
+      if(q.type==="sex") ans[q.id] = simState[q.id] ?? "男";
+      if(q.type==="age") ans[q.id] = simState[q.id] ?? ageAdult;
+    });
 
-  // 4) 由「最需要」（剩餘%最低）排序
-  const sorted = keys
-    .map(k => ({ key:k, name: LABEL[k], pct: remain[k] }))
-    .sort((a,b)=>a.pct - b.pct);
+    // 1) 加總扣分
+    const deduct = {};
+    Object.keys(rules.yn_yes).forEach(qid=>{
+      if(ans[qid] === "是"){
+        const obj = rules.yn_yes[qid];
+        for(const k in obj){
+          deduct[k] = (deduct[k] || 0) + (Number(obj[k]) || 0);
+        }
+      }
+    });
 
-  // 5) 只列出 <80% 的項目（其他當穩定）
-  const need = sorted.filter(x => x.pct < 80);
-  const isAllStable = need.length === 0;
+    // 2) 轉成「剩餘％」
+    const remain = {};
+    PCT_ORDER.forEach(k=>{
+      const d = deduct[k] || 0;
+      remain[k] = clamp(100 - d, 0, 100);
+    });
 
-  // 6) 連結：只列需要 or 全列
-  const keysToShow = showAllLinks ? keys : need.map(x=>x.key);
-  const linkLines = [];
-  keysToShow.forEach(k=>{
-    const url = links[k] || "";
-    if(url) linkLines.push(`- ${LABEL[k]}：${url}`);
-  });
+    // 3) 需要關注（<80%）
+    const needKeys = PCT_ORDER.filter(k => remain[k] < 80);
 
-  const kw = ($("inKeyword").value||"").trim() || "-";
+    // 4) % 文字：全部都列出（固定順序、簡單）
+    const pctLinesAll = PCT_ORDER.map(k => `• ${LABEL[k]}：${remain[k]}%`).join("\n");
+    const pctNeed = needKeys.length
+      ? needKeys.map(k => `• ${LABEL[k]}：${remain[k]}%`).join("\n")
+      : "（目前都 ≥ 80%：維持即可）";
 
-  // ✅ 超簡單的%呈現：一行一個「名稱：XX%」
-  const pctLines = isAllStable
-    ? "目前全部穩定（皆 ≥ 80%）"
-    : need.map(x => `• ${x.name}：${x.pct}%`).join("\n");
+    // 5) 連結列出：只列需要 or 全列
+    const keysToShow = showAllLinks ? PCT_ORDER : needKeys;
+    const linkLines = [];
+    keysToShow.forEach(k=>{
+      const url = links[k] || "";
+      if(url) linkLines.push(`- ${LABEL[k]}：${url}`);
+    });
 
-  const report =
-`【生活型態營養問卷｜結果（百分比）】
+    const kw = ($("inKeyword").value||"").trim() || "-";
+
+    // 6) 年齡層參考值（依你 Excel，且依 19+ 性別分流）
+    const targetLines = getSelectedTargetLines(ans);
+
+    // 7) 引流圖位置
+    const leadBlock = (lead.imageUrl || lead.linkUrl)
+      ? `【引流圖（點擊購買）】
+- 圖片：${lead.imageUrl || "（未填）"}
+- 連結：${lead.linkUrl || "（未填）"}`
+      : `【引流圖（點擊購買）】
+（未設定：請在中控台左側填入「圖片網址」與「點擊連結」）`;
+
+    const report =
+`【生活型態營養問卷｜結果（%）】
 
 啟動關鍵字：${kw}
 
@@ -572,19 +825,28 @@ function makeReport(){
 - 性別：${ans.q10}
 - 年齡：${ans.q11}
 
-你的營養狀態（剩餘%）：  
-${pctLines}
+【你需要關注的項目（< 80%）】
+${pctNeed}
+
+【全部營養素 %（固定順序）】
+${pctLinesAll}
+
+【你的每日攝取參考值（依年齡/性別）】
+${targetLines}
 
 【相關連結】
 ${linkLines.length ? linkLines.join("\n") : "（你尚未填入對應連結）"}
 
+${leadBlock}
+
 提醒：本分析為生活營養評估，不涉及醫療診斷；若有慢性病、孕哺或用藥，請先詢問專業人員。`;
 
-  $("outReport").value = report;
-}
+    $("outReport").value = report;
+  }
 
-
-  // ====== events ======
+  // =====================
+  // Events
+  // =====================
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
     catch(e){
@@ -604,31 +866,6 @@ ${linkLines.length ? linkLines.join("\n") : "（你尚未填入對應連結）"}
     }
   });
 
-  $("btnSimAllGood").addEventListener("click", ()=>{
-    ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
-    simState.q10="男";
-    simState.q11=($("age2").value||"19–39歲").trim();
-    renderSim();
-    toast("已填入『都很健康』測試答案");
-  });
-
-  $("btnSimDefault").addEventListener("click", ()=>{
-    // 一組偏常見不足（你可自行調）
-    simState.q1="是";
-    simState.q2="是";
-    simState.q3="是";
-    simState.q4="是";
-    simState.q5="是";
-    simState.q6="是";
-    simState.q7="是";
-    simState.q8="不是";
-    simState.q9="是";
-    simState.q10="男";
-    simState.q11=($("age2").value||"19–39歲").trim();
-    renderSim();
-    toast("已填入『常見不足』測試答案");
-  });
-
   $("btnMakeReport").addEventListener("click", ()=>{
     try{ makeReport(); toast("已產生文字報告 ✅"); }
     catch(e){ toast(e.message, "err"); }
@@ -645,11 +882,44 @@ ${linkLines.length ? linkLines.join("\n") : "（你尚未填入對應連結）"}
     }
   });
 
-  ["age1","age2","age3"].forEach(id=>{
+  $("btnSimAllGood").addEventListener("click", ()=>{
+    // 健康：q1~q9 都不是
+    ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
+    simState.q10="男";
+    simState.q11=($("ageAdult").value||"19 歲以上").trim();
+    renderSim();
+    toast("已填入『都很健康』測試答案");
+  });
+
+  $("btnSimAllYes").addEventListener("click", ()=>{
+    // 你要驗證的：全部都選是（理論上多數營養素會到 0%）
+    ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="是");
+    simState.q10="男";
+    simState.q11=($("ageAdult").value||"19 歲以上").trim();
+    renderSim();
+    toast("已填入『全部都選是』測試答案");
+  });
+
+  ["ageChild","ageTeen","ageAdult"].forEach(id=>{
     $(id).addEventListener("input", ()=> renderSim());
   });
 
+  $("btnResetTargets").addEventListener("click", resetTargets);
+
+  $("btnCopyTargetsJson").addEventListener("click", async ()=>{
+    try{
+      const obj = getTargetsObject();
+      await navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
+      toast("已複製 Targets JSON ✅");
+    }catch{
+      toast("複製失敗（瀏覽器限制）", "warn");
+    }
+  });
+
+  // =====================
   // init
+  // =====================
+  renderTargetsTable();
   renderSim();
 })();
 </script>
