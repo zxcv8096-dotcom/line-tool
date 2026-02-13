@@ -3,102 +3,173 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>生活型態營養問卷（11題）</title>
+  <title>生活型態營養問卷｜中控台（11題）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
-      --ink:#0f172a; --muted:#64748b; --bd:#e5e7eb; --bg:#f6f7fb; --card:#fff;
-      --accent:#1d4ed8; --shadow: 0 10px 30px rgba(15,23,42,.08); --radius: 18px;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --bd:rgba(15,23,42,.10);
+      --glass: rgba(255,255,255,.88);
+      --shadow: 0 18px 55px rgba(15,23,42,.10);
     }
-    *{ box-sizing:border-box; }
     body{
-      margin:0; background:var(--bg); color:var(--ink);
-      font-family:"Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-      -webkit-text-size-adjust:100%;
-      display:flex; justify-content:center;
-      padding:18px 14px calc(18px + env(safe-area-inset-bottom));
+      color:var(--ink);
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
     }
-    .wrap{ width:min(520px, 100%); }
-    .card{ background:var(--card); border:1px solid var(--bd); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
-    .hero{
-      height:168px;
-      background:
-        radial-gradient(900px 260px at 30% 10%, rgba(29,78,216,.10), transparent 60%),
-        linear-gradient(135deg, #fafafa, #f1f5f9);
-      display:flex; align-items:center; justify-content:center;
-      border-bottom:1px solid var(--bd);
-    }
-    .hero img{ width:78%; max-width:360px; height:auto; opacity:.95; filter: drop-shadow(0 6px 10px rgba(0,0,0,.10)); user-select:none; -webkit-user-drag:none; }
-    .body{ padding:18px 18px 14px; }
-    .q{ font-weight:800; font-size:20px; line-height:1.35; margin:0 0 8px; }
-    .meta{ color:var(--muted); font-size:14px; margin:0 0 12px; }
-    .divider{ height:1px; background:var(--bd); margin:14px -18px 14px; }
-    .btn{
-      width:100%; background:#fff; border:none; padding:16px 14px;
-      font-size:18px; font-weight:700; color:var(--accent); cursor:pointer;
-    }
-    .btn + .btn{ border-top:1px solid var(--bd); }
-    .btn:active{ transform: translateY(1px); }
-    .hint{ margin-top:12px; font-size:13px; color:var(--muted); line-height:1.6; }
-    .pill{
-      display:inline-block; padding:6px 10px; border-radius:999px;
-      background:#eff6ff; border:1px solid #dbeafe; color:#1e40af;
-      font-weight:800; font-size:12px;
-    }
-    .pill.bad{ background:#fff1f2; border-color:#fecdd3; color:#9f1239; }
-    .pill.ok{ background:#ecfdf5; border-color:#bbf7d0; color:#065f46; }
-    .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-    .report{ white-space:pre-wrap; font-size:15px; line-height:1.75; }
-    .actions{ margin-top:14px; display:grid; gap:10px; }
-    .linkbtn{
-      display:block; text-align:center; text-decoration:none;
-      padding:14px 12px; border-radius:14px; font-weight:900;
-      border:1px solid var(--bd); background:#0f172a; color:#fff;
-    }
-    .ghost{ background:#fff; color:#0f172a; }
-    .small{ font-size:12px; color:var(--muted); line-height:1.6; margin-top:10px; }
-    .kv{
-      display:grid; grid-template-columns:110px 1fr; gap:8px 10px;
-      margin-top:10px; padding:12px; border:1px solid var(--bd);
-      border-radius:14px; background:#fff;
-    }
-    .k{ color:var(--muted); font-weight:800; font-size:13px; }
-    .v{ font-weight:800; font-size:13px; }
+    .card{ background: var(--glass); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
+    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.18); border-radius: 999px; }
   </style>
 </head>
 
-<body>
-  <div class="wrap">
-    <div class="card">
-      <div class="hero">
-        <img alt="A TEAM" src="https://a-plus-team.com/logo.png" onerror="this.style.display='none'">
+<body class="min-h-screen">
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台（11題）</h1>
+        <p class="text-sm text-slate-600 mt-1">這頁就是你的唯一中控台：一鍵把題目/關鍵字/營養計分規則寫進 Cloudflare KV。</p>
       </div>
-      <div class="body" id="app"></div>
+      <div class="text-xs text-slate-600 leading-6">
+        <div class="font-bold">需要 Worker 提供 API：</div>
+        <div class="mono">POST /listAll /putAny /loadAny</div>
+        <div class="text-[11px] text-slate-500 mt-1">（若你 Worker 有驗證，也可在下方填 Admin Key）</div>
+      </div>
+    </header>
+
+    <!-- CONNECT -->
+    <section class="card rounded-2xl p-5 mb-4 border border-slate-200">
+      <div class="grid md:grid-cols-3 gap-4 items-end">
+        <div class="md:col-span-2">
+          <label class="text-sm font-semibold text-slate-700">Worker API（固定）</label>
+          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 value="https://api.zxcv8096.workers.dev/" />
+          <div class="text-xs text-slate-500 mt-2">
+            寫入位置：
+            <span class="mono font-semibold">AI_SURVEY:Q:life11</span>｜
+            <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Admin Key（可空白）</label>
+          <input id="inAdminKey" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 placeholder="若你的 Worker 有驗證才需要填" />
+        </div>
+
+        <div class="flex gap-2">
+          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線檢查</button>
+          <button id="btnWrite" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">一鍵寫入KV</button>
+        </div>
+      </div>
+
+      <div class="mt-3 text-xs text-slate-500">
+        狀態：<span id="txtStatus" class="font-semibold">未連線</span>　
+        最後測試：<span id="txtLast" class="mono">-</span>
+      </div>
+
+      <div id="errBanner" class="hidden mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+        <div class="font-extrabold">錯誤</div>
+        <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
+      </div>
+    </section>
+
+    <div class="grid lg:grid-cols-2 gap-4">
+      <!-- LEFT: SETTINGS -->
+      <section class="card rounded-2xl p-5 border border-slate-200">
+        <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定</h2>
+
+        <div class="mt-4 grid gap-3">
+          <div>
+            <label class="text-sm font-semibold text-slate-700">啟動關鍵字（LINE 使用者輸入這個開始）</label>
+            <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                   placeholder="例如：生活營養" />
+            <div class="text-xs text-slate-500 mt-2">
+              會寫入到 <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-semibold text-slate-700">產品/專屬連結（報告最後顯示）</label>
+            <input id="inLink" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                   placeholder="https://..." />
+          </div>
+
+          <div class="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4">
+            <div class="text-sm font-extrabold text-indigo-900">年齡選項（唯一可修改）</div>
+            <div class="text-xs text-indigo-900/70 mt-1">題目文字不改，只改選項三個。</div>
+
+            <div class="mt-3 grid gap-2">
+              <input id="age1" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="18歲以下" />
+              <input id="age2" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="19–39歲" />
+              <input id="age3" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="40歲以上" />
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
+            <div class="font-extrabold">你目前的設計邏輯（我照做）</div>
+            <div>• 問卷題目固定 11 題（照圖）。</div>
+            <div>• 中控台只負責「寫入題目 + 啟動關鍵字 + 計分規則」。</div>
+            <div>• Worker 端只要依這份資料去問答、算分、回報告即可。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: PREVIEW / SIM -->
+      <section class="card rounded-2xl p-5 border border-slate-200">
+        <div class="flex items-end justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
+            <p class="text-sm text-slate-600 mt-1">這裡只是讓你確認題目與報告文字樣式，寫入 KV 後由 LINE OA 使用。</p>
+          </div>
+          <button id="btnSimDefault" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+            一鍵填入測試答案
+          </button>
+        </div>
+
+        <div class="mt-4 grid gap-3">
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div class="text-sm font-extrabold text-slate-900">11 題（照圖不改字）</div>
+            <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡（年齡選項可改）</div>
+
+            <div id="simWrap" class="mt-3 space-y-3 max-h-[420px] overflow-auto thinbar pr-1"></div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-2">
+            <button id="btnMakeReport" class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
+              產生文字報告（模擬）
+            </button>
+            <button id="btnCopyReport" class="px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+              複製報告
+            </button>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div class="text-sm font-extrabold text-slate-900">文字版報告輸出</div>
+            <textarea id="outReport" rows="12" class="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200"
+              placeholder="按『產生文字報告』後會出現在這裡"></textarea>
+            <div class="text-xs text-slate-500 mt-2">
+              之後你要做圖片版（像你貼的那張），可以直接用這份 score 當資料來源。
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+
+    <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
   </div>
 
 <script>
 (() => {
-  // ==========================
-  // ✅ 你的 Worker API（固定）
-  // ==========================
-  const API_BASE = "https://api.zxcv8096.workers.dev";
-
-  // 你的 KV keys（沿用你 admin.html 的規格）
+  // ====== 固定 KV Key 規格（跟你之前一致）======
+  const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
-  const LEAD_PREFIX = "AI_SURVEY:LEAD:";
-  const LAST_PREFIX = "AI_SURVEY:LAST:";
 
-  // 啟動關鍵字（從網址參數 k 取得）
-  const params = new URLSearchParams(location.search);
-  const keyword = (params.get("k") || "").trim(); // 例如：生活營養
-
-  // 你之後再換成你的產品連結
-  const PRODUCT_LINK = "https://你的產品連結";
-  const SEVEN_DAYS_KEYWORD = "7天";
-
-  // 題目（照圖不改）
-  const Q = [
+  // ====== 題目（照圖，不改字）======
+  const QUESTIONS = [
     { id:"q1",  type:"yn",  text:"我經常只有兩餐" },
     { id:"q2",  type:"yn",  text:"我每天攝取的蔬菜和水果少於5份（以成人手掌大小盤子為標準）" },
     { id:"q3",  type:"yn",  text:"我每天攝取的米飯或麵條少於1.5碗" },
@@ -109,24 +180,72 @@
     { id:"q8",  type:"yn",  text:"我有吸菸習慣" },
     { id:"q9",  type:"yn",  text:"我常節食以減輕體重" },
     { id:"q10", type:"sex", text:"我的性別" },
-    // ✅ 只有年齡改動（更合理，仍 3 選項）
     { id:"q11", type:"age", text:"我的年齡範圍" },
+    { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
   ];
 
-  // 分數（未來可對圖表）
-  const score = { vitA:0, vitB:0, vitC:0, vitD:0, vitE:0, ca_mg:0, iron:0, fiber:0, trace:0, protein:0 };
-  const answers = {}; // 保存答題（Yes/No/男/女/年齡段）
-  const profile = { sex:"", age:"" };
+  // ====== 計分 key（對齊你圖中的大方向）======
+  const LABEL = {
+    vitA:"維生素A",
+    vitB:"維生素B群",
+    vitC:"維生素C",
+    vitD:"維生素D",
+    vitE:"維生素E",
+    ca_mg:"鈣鎂",
+    iron:"鐵",
+    fiber:"膳食纖維",
+    trace:"微量元素",
+    protein:"蛋白質",
+  };
 
-  // UI
-  const app = document.getElementById("app");
-  let idx = 0;
+  // ====== DOM ======
+  const $ = (id)=>document.getElementById(id);
 
-  // ============ API helpers ============
+  // ====== toast ======
+  function toast(msg, type="ok"){
+    const wrap = $("toastWrap");
+    const div = document.createElement("div");
+    div.className = `card rounded-2xl px-4 py-3 border ${
+      type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
+    }`;
+    div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
+    wrap.appendChild(div);
+    setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
+    setTimeout(()=>{ div.remove(); }, 2600);
+  }
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+  function showErr(e){
+    $("errBanner").classList.remove("hidden");
+    $("errText").textContent = String(e?.stack || e?.message || e || "");
+  }
+  function clearErr(){
+    $("errBanner").classList.add("hidden");
+    $("errText").textContent = "";
+  }
+
+  // ====== API ======
+  function apiBase(){
+    return ($("inApiBase").value || "").trim().replace(/\/$/,"");
+  }
+  function adminKey(){
+    return ($("inAdminKey").value || "").trim();
+  }
   async function api(path, bodyObj){
-    const res = await fetch(API_BASE.replace(/\/$/,"") + path, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
+    const base = apiBase();
+    if(!base) throw new Error("API Base 不可空白");
+    const headers = { "Content-Type":"application/json" };
+    // 如果你的 Worker 有用 X-Admin-Key，就會吃這個；沒有也不會影響
+    const k = adminKey();
+    if(k) headers["X-Admin-Key"] = k;
+
+    const res = await fetch(base + path, {
+      method:"POST",
+      headers,
       body: JSON.stringify(bodyObj || {})
     });
     const data = await res.json().catch(()=>null);
@@ -135,77 +254,283 @@
     return data;
   }
   async function kvGet(key){
-    const r = await api("/loadAny", { namespace:"DB", keyword: key });
+    const r = await api("/loadAny", { namespace:"DB", keyword:key });
     return r?.payload ?? r;
   }
   async function kvPut(key, payload){
-    await api("/putAny", { namespace:"DB", keyword: key, payload });
+    await api("/putAny", { namespace:"DB", keyword:key, payload });
   }
 
-  // ============ scoring ============
-  function add(obj){
+  // ====== connection ======
+  let CONNECTED = false;
+  function setStatus(ok, msg){
+    CONNECTED = !!ok;
+    $("txtStatus").textContent = msg;
+    $("txtStatus").className = ok ? "font-semibold text-emerald-700" : "font-semibold text-rose-700";
+    $("txtLast").textContent = new Date().toLocaleString();
+  }
+  async function connect(){
+    clearErr();
+    // 用 listAll 來測試最直接
+    await api("/listAll", {});
+    setStatus(true, "已連線");
+    toast("連線成功");
+  }
+
+  // ====== rules (給 Worker 用) ======
+  // 規則設計：每題每個選項（是/不是、男女、年齡）對應一組加分
+  // 你之後做圖片版：直接用 score 當資料來源
+  function buildRules(ageOpts){
+    return {
+      // YN 題：選「是」才加分
+      yn_yes: {
+        q1:  { vitB:1, protein:1, trace:1 },
+        q2:  { vitA:1, vitC:2, fiber:2, trace:1 },
+        q3:  { vitB:2, trace:1 },
+        q4:  { ca_mg:2, vitD:1 },
+        q5:  { ca_mg:1, vitB:1, trace:1 },
+        q6:  { protein:3, iron:1, vitB:1 },
+        q7:  { vitC:1, vitE:2, trace:1 },
+        q8:  { vitC:2, vitE:1, trace:1 },
+        q9:  { protein:1, iron:1, vitB:2, trace:1 },
+      },
+      sex: {
+        "男": { },
+        "女": { iron:1 }
+      },
+      age: {
+        [ageOpts[0]]: { ca_mg:1, vitD:1, protein:1 },
+        [ageOpts[1]]: { vitB:1 },
+        [ageOpts[2]]: { ca_mg:2, vitD:2, trace:1 },
+      }
+    };
+  }
+
+  // ====== survey payload (寫進 KV) ======
+  function buildSurveyPayload(){
+    const kw = ($("inKeyword").value || "").trim();
+    if(!kw) throw new Error("請填『啟動關鍵字』");
+
+    const link = ($("inLink").value || "").trim();
+    const ageOpts = [
+      ($("age1").value || "").trim(),
+      ($("age2").value || "").trim(),
+      ($("age3").value || "").trim(),
+    ];
+    if(ageOpts.some(x => !x)) throw new Error("年齡選項不可空白（需要 3 個）");
+
+    // nodes 形式：讓 Worker 可以照序問（next 指向下一題）
+    const nodes = {};
+    for(let i=0;i<QUESTIONS.length;i++){
+      const q = QUESTIONS[i];
+      if(q.type === "done") continue;
+
+      const nextId = (QUESTIONS[i+1] && QUESTIONS[i+1].id !== "done") ? QUESTIONS[i+1].id : "";
+      if(q.type === "yn"){
+        nodes[q.id] = {
+          q: q.text,
+          type: "yn",
+          options: [
+            { t:"是",   value:"是",   next: nextId },
+            { t:"不是", value:"不是", next: nextId },
+          ]
+        };
+      } else if(q.type === "sex"){
+        nodes[q.id] = {
+          q: q.text,
+          type: "sex",
+          options: [
+            { t:"男", value:"男", next: nextId },
+            { t:"女", value:"女", next: nextId },
+          ]
+        };
+      } else if(q.type === "age"){
+        nodes[q.id] = {
+          q: q.text,
+          type: "age",
+          options: [
+            { t:ageOpts[0], value:ageOpts[0], next: nextId },
+            { t:ageOpts[1], value:ageOpts[1], next: nextId },
+            { t:ageOpts[2], value:ageOpts[2], next: nextId },
+          ]
+        };
+      }
+    }
+
+    const payload = {
+      version: "life11-v1",
+      name: "life11",
+      title: "生活型態營養問卷（11題）",
+      keyword: kw,
+      start: "q1",
+      // 你要 Worker 做計算就看 rules
+      rules: buildRules(ageOpts),
+      // 報告最後要放連結
+      productLink: link,
+      // 題目
+      nodes,
+      // 方便 Worker 顯示 (問題No.X/11)
+      order: QUESTIONS.filter(x=>x.type!=="done").map(x=>x.id),
+      // labels 給 Worker 或你之後圖片版用
+      nutrients: LABEL,
+    };
+
+    return payload;
+  }
+
+  // ====== write KV ======
+  async function writeKV(){
+    if(!CONNECTED) throw new Error("未連線，不能寫入（先按『連線檢查』）");
+
+    const payload = buildSurveyPayload();
+
+    // 1) 存問卷本體
+    await kvPut(Q_KEY, payload);
+
+    // 2) 更新 KW_MAP：keyword -> life11
+    const kw = payload.keyword.trim();
+    let map = {};
+    try{
+      const raw = await kvGet(KW_MAP_KEY);
+      if(raw && typeof raw === "object") map = raw;
+    }catch{
+      map = {};
+    }
+    map[kw] = "life11";
+    await kvPut(KW_MAP_KEY, map);
+
+    toast("已寫入 KV ✅（問卷 + KW_MAP）");
+  }
+
+  // ====== simulation UI ======
+  const simState = {}; // qid -> value
+
+  function renderSim(){
+    const ageOpts = [
+      ($("age1").value || "18歲以下").trim(),
+      ($("age2").value || "19–39歲").trim(),
+      ($("age3").value || "40歲以上").trim(),
+    ];
+
+    const wrap = $("simWrap");
+    wrap.innerHTML = "";
+
+    QUESTIONS.filter(x=>x.type!=="done").forEach((q, i)=>{
+      const box = document.createElement("div");
+      box.className = "rounded-2xl border border-slate-200 bg-white p-4";
+
+      let optsHtml = "";
+      if(q.type==="yn"){
+        const v = simState[q.id] ?? "不是";
+        optsHtml = `
+          <div class="flex gap-2 flex-wrap mt-2">
+            <button data-v="是" class="px-3 py-2 rounded-xl border ${v==="是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">是</button>
+            <button data-v="不是" class="px-3 py-2 rounded-xl border ${v==="不是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">不是</button>
+          </div>
+        `;
+      }else if(q.type==="sex"){
+        const v = simState[q.id] ?? "男";
+        optsHtml = `
+          <div class="flex gap-2 flex-wrap mt-2">
+            <button data-v="男" class="px-3 py-2 rounded-xl border ${v==="男"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">男</button>
+            <button data-v="女" class="px-3 py-2 rounded-xl border ${v==="女"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">女</button>
+          </div>
+        `;
+      }else if(q.type==="age"){
+        const v = simState[q.id] ?? ageOpts[1];
+        optsHtml = `
+          <div class="flex gap-2 flex-wrap mt-2">
+            ${ageOpts.map(a => `
+              <button data-v="${escapeHtml(a)}" class="px-3 py-2 rounded-xl border ${v===a?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">${escapeHtml(a)}</button>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      box.innerHTML = `
+        <div class="text-xs text-slate-500">問題 No.${i+1}/11</div>
+        <div class="mt-1 font-extrabold text-slate-900">${escapeHtml(q.text)}</div>
+        ${optsHtml}
+      `;
+
+      box.querySelectorAll("button[data-v]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const v = btn.getAttribute("data-v");
+          simState[q.id] = v;
+          renderSim();
+        });
+      });
+
+      wrap.appendChild(box);
+    });
+  }
+
+  // ====== report generator (文字版) ======
+  function add(score, obj){
     for(const k in obj){
-      if(score[k] === undefined) score[k] = 0;
-      score[k] += obj[k];
+      score[k] = (score[k] || 0) + obj[k];
     }
   }
-  function applyYNRules(qid, yes){
-    if(!yes) return;
-    switch(qid){
-      case "q1": add({ vitB:1, protein:1, trace:1 }); break;
-      case "q2": add({ vitA:1, vitC:2, fiber:2, trace:1 }); break;
-      case "q3": add({ vitB:2, trace:1 }); break;
-      case "q4": add({ ca_mg:2, vitD:1 }); break;
-      case "q5": add({ ca_mg:1, vitB:1, trace:1 }); break;
-      case "q6": add({ protein:3, iron:1, vitB:1 }); break;
-      case "q7": add({ vitC:1, vitE:2, trace:1 }); break;
-      case "q8": add({ vitC:2, vitE:1, trace:1 }); break;
-      case "q9": add({ protein:1, iron:1, vitB:2, trace:1 }); break;
-    }
+  function level(v){
+    if(v>=6) return "優先";
+    if(v>=4) return "建議補強";
+    if(v>=2) return "可加強";
+    return "穩定";
   }
-  function applySexRules(sex){
-    profile.sex = sex;
-    if(sex === "女") add({ iron:1 });
-  }
-  function applyAgeRules(age){
-    profile.age = age;
-    if(age === "18歲以下") add({ ca_mg:1, vitD:1, protein:1 });
-    if(age === "19–39歲")  add({ vitB:1 });
-    if(age === "40歲以上") add({ ca_mg:2, vitD:2, trace:1 });
-  }
+  function makeReport(){
+    const ageOpts = [
+      ($("age1").value || "18歲以下").trim(),
+      ($("age2").value || "19–39歲").trim(),
+      ($("age3").value || "40歲以上").trim(),
+    ];
+    const rules = buildRules(ageOpts);
 
-  // ============ report ============
-  const label = {
-    vitA:"維生素A", vitB:"維生素B群", vitC:"維生素C", vitD:"維生素D", vitE:"維生素E",
-    ca_mg:"鈣鎂", iron:"鐵", fiber:"膳食纖維", trace:"微量元素", protein:"蛋白質",
-  };
-  function level(s){ if(s>=6) return "優先"; if(s>=4) return "建議補強"; if(s>=2) return "可加強"; return "穩定"; }
-  function sortedNutrients(){
-    const arr = Object.keys(label).map(k => [k, score[k] || 0]);
-    arr.sort((a,b)=> b[1]-a[1]);
-    return arr;
-  }
-  function buildReport(){
-    const arr = sortedNutrients();
-    const top = arr.slice(0,3).filter(x=>x[1] > 0);
-    const topText = top.length ? top.map(([k,v], i)=> `${i+1}) ${label[k]}（${level(v)}）`).join("\n") : "目前沒有明顯需要優先加強的項目（維持即可）";
-    const blocks = arr.map(([k,v]) => `• ${label[k]}：${level(v)}`).join("\n");
+    // 收答案
+    const ans = {};
+    QUESTIONS.filter(x=>x.type!=="done").forEach(q=>{
+      if(q.type==="yn") ans[q.id] = simState[q.id] ?? "不是";
+      if(q.type==="sex") ans[q.id] = simState[q.id] ?? "男";
+      if(q.type==="age") ans[q.id] = simState[q.id] ?? ageOpts[1];
+    });
+
+    const score = {};
+    // yn
+    for(const qid of Object.keys(rules.yn_yes)){
+      if(ans[qid] === "是") add(score, rules.yn_yes[qid]);
+    }
+    // sex
+    add(score, rules.sex[ans.q10] || {});
+    // age
+    add(score, rules.age[ans.q11] || {});
+
+    // 排序
+    const arr = Object.keys(LABEL).map(k => [k, score[k] || 0]).sort((a,b)=>b[1]-a[1]);
+    const top = arr.slice(0,3).filter(x=>x[1]>0);
+    const topText = top.length
+      ? top.map(([k,v],i)=>`${i+1}) ${LABEL[k]}（${level(v)}）`).join("\n")
+      : "目前沒有明顯需要優先加強的項目（維持即可）";
+
+    const blocks = arr.map(([k,v]) => `• ${LABEL[k]}：${level(v)}`).join("\n");
 
     const tips = [];
-    if(score.fiber >= 2) tips.push("把「蔬菜+水果」拉到每天至少 5 份（用手掌大小盤子估算）。");
-    if(score.protein >= 3) tips.push("每餐安排 1 份優質蛋白（豆/魚/蛋/肉/乳），先把「總量」補足。");
-    if(score.ca_mg >= 2) tips.push("乳製品不足時，可用豆製品/小魚乾/深綠蔬菜分段補鈣，並維持日曬習慣。");
-    if(score.vitC >= 2) tips.push("高溫油炸/吸菸/蔬果不足者，優先用新鮮蔬果與規律作息做支持。");
-    if(score.vitB >= 2) tips.push("若常兩餐/節食/主食偏少，先把三餐節奏與主食比例調回穩定。");
+    if((score.fiber||0) >= 2) tips.push("把「蔬菜+水果」拉到每天至少 5 份（用手掌大小盤子估算）。");
+    if((score.protein||0) >= 3) tips.push("每餐安排 1 份優質蛋白（豆/魚/蛋/肉/乳），先把總量補足。");
+    if((score.ca_mg||0) >= 2) tips.push("乳製品不足時，可用豆製品/深綠蔬菜分段補鈣，並維持日曬習慣。");
+    if((score.vitC||0) >= 2) tips.push("蔬果不足/高溫油炸/吸菸者，優先用新鮮蔬果與規律作息做支持。");
+    if((score.vitB||0) >= 2) tips.push("若常兩餐/節食/主食偏少，先把三餐節奏調回穩定。");
     if(!tips.length) tips.push("目前整體偏穩定：維持規律飲食、蛋白質與蔬果量，並留意水分補充。");
 
-    return `【生活型態營養問卷｜文字版評估結果】
+    const kw = ($("inKeyword").value||"").trim() || "-";
+    const link = ($("inLink").value||"").trim() || "（尚未填連結）";
 
-啟動關鍵字：${keyword || "-"}
+    const report =
+`【生活型態營養問卷｜文字版評估結果】
+
+啟動關鍵字：${kw}
 
 基本資料：
-- 性別：${profile.sex || "未填"}
-- 年齡：${profile.age || "未填"}
+- 性別：${ans.q10}
+- 年齡：${ans.q11}
 
 你的優先關注方向（Top 3）：
 ${topText}
@@ -214,212 +539,79 @@ ${topText}
 ${blocks}
 
 【你可以先做的 3 件事】
-1) ${tips[0] || "維持規律三餐與均衡飲食。"}
-2) ${tips[1] || "每天至少 5 份蔬果，並把蛋白質補到每餐都有。"}
-3) ${tips[2] || "固定日曬與充足睡眠，減少高溫油炸與含糖飲料。"}
+1) ${tips[0]}
+2) ${tips[1] || tips[0]}
+3) ${tips[2] || tips[0]}
 
 【專屬連結】
-${PRODUCT_LINK}
+${link}
 
 提醒：本分析為生活營養評估，不涉及醫療診斷；若有慢性病、孕哺或用藥，請先詢問專業人員。`;
+
+    $("outReport").value = report;
   }
 
-  // ============ UI ============
-  function esc(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  }
-
-  function renderNeedKeyword(){
-    app.innerHTML = `
-      <div class="row"><span class="pill bad">缺少啟動關鍵字</span></div>
-      <div class="q" style="margin-top:10px;">無法開始問卷</div>
-      <p class="meta">請從 LINE 點擊帶參數的連結，例如：</p>
-      <div class="hint mono">${esc(location.origin + location.pathname)}?k=生活營養</div>
-    `;
-  }
-
-  function renderConnecting(){
-    app.innerHTML = `
-      <div class="row"><span class="pill">連線檢查中…</span></div>
-      <div class="q" style="margin-top:10px;">正在連到 API</div>
-      <p class="meta mono">${esc(API_BASE)}</p>
-      <div class="hint">若你看到這頁卡住，代表 Worker 連線失敗或 CORS 未開。</div>
-    `;
-  }
-
-  function renderConnectFail(msg){
-    app.innerHTML = `
-      <div class="row"><span class="pill bad">未連線</span></div>
-      <div class="q" style="margin-top:10px;">無法開始（必須連到 API）</div>
-      <p class="meta">API 連線失敗：</p>
-      <div class="hint mono">${esc(msg || "")}</div>
-      <div class="divider"></div>
-      <div class="hint">
-        你目前設定的 API：<span class="mono">${esc(API_BASE)}</span><br>
-        請確認 Worker 有提供：<span class="mono">POST /loadAny</span> 與 <span class="mono">CORS</span> 允許你的 GitHub Pages 網域。
-      </div>
-      <div class="actions">
-        <button class="linkbtn ghost" id="btnRetry">重試連線</button>
-      </div>
-    `;
-    document.getElementById("btnRetry").onclick = () => boot();
-  }
-
-  function renderKeywordNotRegistered(){
-    app.innerHTML = `
-      <div class="row"><span class="pill bad">關鍵字未註冊</span></div>
-      <div class="q" style="margin-top:10px;">此關鍵字尚未在後台綁定</div>
-      <p class="meta">目前網址參數 k：</p>
-      <div class="hint mono">${esc(keyword)}</div>
-      <div class="divider"></div>
-      <div class="hint">
-        你需要在 KV 的 <span class="mono">${KW_MAP_KEY}</span> 裡面，建立對應：<br>
-        <span class="mono">{"${esc(keyword)}":"某個問卷名稱"}</span><br>
-        （或你要我改成「不檢查 KW_MAP，只要有 k 就能開始」也可以）
-      </div>
-    `;
-  }
-
-  function renderQuestion(){
-    const q = Q[idx];
-    const no = idx + 1;
-    const total = Q.length;
-
-    let buttons = "";
-    if(q.type === "yn"){
-      buttons = `<button class="btn" data-v="yes">是</button><button class="btn" data-v="no">不是</button>`;
-    }else if(q.type === "sex"){
-      buttons = `<button class="btn" data-v="男">男</button><button class="btn" data-v="女">女</button>`;
-    }else if(q.type === "age"){
-      buttons = `
-        <button class="btn" data-v="18歲以下">18歲以下</button>
-        <button class="btn" data-v="19–39歲">19–39歲</button>
-        <button class="btn" data-v="40歲以上">40歲以上</button>
-      `;
-    }
-
-    app.innerHTML = `
-      <div class="row">
-        <span class="pill ok">已連線</span>
-        <span class="pill">問題 No.${no}/${total}</span>
-      </div>
-      <div class="q" style="margin-top:10px;">${esc(q.text)}</div>
-      <div class="meta">請依照你目前的狀態選擇。</div>
-      <div class="divider"></div>
-      ${buttons}
-    `;
-
-    app.querySelectorAll(".btn").forEach(b=>{
-      b.addEventListener("click", async ()=>{
-        const v = b.getAttribute("data-v");
-        // 記錄答案
-        answers[q.id] = (q.type==="yn") ? (v==="yes" ? "是" : "不是") : v;
-
-        // 計分
-        if(q.type === "yn") applyYNRules(q.id, v === "yes");
-        if(q.type === "sex") applySexRules(v);
-        if(q.type === "age") applyAgeRules(v);
-
-        idx++;
-        if(idx >= Q.length) await renderDone();
-        else renderQuestion();
-      });
-    });
-  }
-
-  async function renderDone(){
-    const reportText = buildReport();
-    const now = Date.now();
-
-    // 寫入 KV（Lead + Last）
-    const lead = {
-      createdAt: new Date(now).toISOString(),
-      keyword,
-      profile,
-      answers,
-      score,
-      reportText
-    };
-
-    app.innerHTML = `
-      <div class="row"><span class="pill">寫入結果中…</span></div>
-      <div class="q" style="margin-top:10px;">生活型態營養問卷評估完畢！</div>
-      <p class="meta">正在把結果存進後台（必須成功才顯示報告）。</p>
-    `;
-
+  // ====== events ======
+  $("btnConnect").addEventListener("click", async ()=>{
     try{
-      await kvPut(LEAD_PREFIX + now, lead);
-      await kvPut(LAST_PREFIX + keyword, lead);
+      await connect();
     }catch(e){
-      renderConnectFail("寫入 KV 失敗：" + (e?.message || e));
-      return;
+      setStatus(false, "連線失敗");
+      showErr(e);
+      toast("連線失敗", "err");
     }
+  });
 
-    app.innerHTML = `
-      <div class="row"><span class="pill ok">已完成</span></div>
-      <div class="q" style="margin-top:10px;">馬上看看評估結果！</div>
-
-      <div class="kv">
-        <div class="k">性別</div><div class="v">${esc(profile.sex || "-")}</div>
-        <div class="k">年齡</div><div class="v">${esc(profile.age || "-")}</div>
-      </div>
-
-      <div class="divider"></div>
-      <div class="report" id="reportText">${esc(reportText)}</div>
-
-      <div class="actions">
-        <a class="linkbtn" href="${esc(PRODUCT_LINK)}" target="_blank" rel="noopener">查看專屬連結</a>
-        <button class="linkbtn ghost" id="btnCopy">複製報告文字</button>
-      </div>
-
-      <div class="small">
-        若你想拿到你的「7天生活調整清單」，回覆「${SEVEN_DAYS_KEYWORD}」。（通常由 LINE webhook 端處理）
-      </div>
-    `;
-
-    document.getElementById("btnCopy").onclick = async ()=>{
-      try{
-        await navigator.clipboard.writeText(reportText);
-        const b = document.getElementById("btnCopy");
-        b.textContent = "已複製 ✅";
-        setTimeout(()=> b.textContent = "複製報告文字", 1200);
-      }catch{
-        alert("瀏覽器限制導致複製失敗，請手動選取複製。");
-      }
-    };
-  }
-
-  // ============ boot ============
-  async function boot(){
-    if(!keyword){
-      renderNeedKeyword();
-      return;
-    }
-    renderConnecting();
-
+  $("btnWrite").addEventListener("click", async ()=>{
     try{
-      // 1) 先測試 loadAny 可用（也順便抓 KW_MAP）
-      const kwMap = await kvGet(KW_MAP_KEY);
-
-      // 2) 如果你想「必須後台有綁定關鍵字」才開放，就保留這段
-      const mapObj = (kwMap && typeof kwMap === "object") ? kwMap : {};
-      if(!mapObj[keyword]){
-        renderKeywordNotRegistered();
-        return;
-      }
-
-      // 3) 開始問卷
-      idx = 0;
-      renderQuestion();
-
+      clearErr();
+      await writeKV();
     }catch(e){
-      renderConnectFail(e?.message || String(e));
+      showErr(e);
+      toast(e.message || "寫入失敗", "err");
     }
-  }
+  });
 
-  boot();
+  $("btnSimDefault").addEventListener("click", ()=>{
+    // 給一組「比較常見」的測試答案（你可自行點選改）
+    simState.q1="是";
+    simState.q2="是";
+    simState.q3="不是";
+    simState.q4="是";
+    simState.q5="是";
+    simState.q6="是";
+    simState.q7="是";
+    simState.q8="不是";
+    simState.q9="是";
+    simState.q10="男";
+    simState.q11=($("age2").value||"19–39歲").trim();
+    renderSim();
+    toast("已填入測試答案");
+  });
+
+  $("btnMakeReport").addEventListener("click", ()=>{
+    try{ makeReport(); toast("已產生文字報告 ✅"); }
+    catch(e){ toast(e.message, "err"); }
+  });
+
+  $("btnCopyReport").addEventListener("click", async ()=>{
+    try{
+      const t = $("outReport").value || "";
+      if(!t.trim()) return toast("沒有報告可複製", "warn");
+      await navigator.clipboard.writeText(t);
+      toast("已複製報告 ✅");
+    }catch{
+      toast("複製失敗（瀏覽器限制）", "warn");
+    }
+  });
+
+  // 年齡選項改動 → 立即刷新模擬 UI
+  ["age1","age2","age3"].forEach(id=>{
+    $(id).addEventListener("input", ()=> renderSim());
+  });
+
+  // ====== init ======
+  renderSim();
 })();
 </script>
 </body>
