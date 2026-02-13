@@ -2,208 +2,471 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Report Renderer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>生活型態營養問卷（11題）</title>
   <style>
-    body{font-family:"Microsoft JhengHei",system-ui;margin:16px}
-    canvas{border:1px solid #ddd;border-radius:12px;max-width:100%}
-    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
-    button{padding:10px 12px;border:0;border-radius:10px;background:#111827;color:#fff;cursor:pointer}
-    .muted{color:#64748b}
+    :root{
+      --ink:#0f172a;
+      --muted:#64748b;
+      --bd:#e5e7eb;
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --accent:#1d4ed8;
+      --btn:#ffffff;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --radius: 18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:"Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+      -webkit-text-size-adjust:100%;
+      display:flex;
+      justify-content:center;
+      padding:18px 14px calc(18px + env(safe-area-inset-bottom));
+    }
+    .wrap{ width:min(520px, 100%); }
+    .card{
+      background:var(--card);
+      border:1px solid var(--bd);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .hero{
+      height:168px;
+      background:
+        radial-gradient(900px 260px at 30% 10%, rgba(29,78,216,.10), transparent 60%),
+        linear-gradient(135deg, #fafafa, #f1f5f9);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-bottom:1px solid var(--bd);
+      position:relative;
+    }
+    .hero img{
+      width:78%;
+      max-width:360px;
+      height:auto;
+      opacity:.95;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+    .body{ padding:18px 18px 14px; }
+    .q{
+      font-weight:800;
+      font-size:20px;
+      line-height:1.35;
+      margin:0 0 8px;
+    }
+    .meta{
+      color:var(--muted);
+      font-size:14px;
+      margin:0 0 12px;
+    }
+    .divider{ height:1px; background:var(--bd); margin:14px -18px 14px; }
+    .btn{
+      width:100%;
+      background:var(--btn);
+      border:none;
+      padding:16px 14px;
+      font-size:18px;
+      font-weight:700;
+      color:var(--accent);
+      cursor:pointer;
+    }
+    .btn + .btn{ border-top:1px solid var(--bd); }
+    .btn:active{ transform: translateY(1px); }
+    .hint{
+      margin-top:12px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#eff6ff;
+      border:1px solid #dbeafe;
+      color:#1e40af;
+      font-weight:800;
+      font-size:12px;
+    }
+    .row{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .report{
+      white-space:pre-wrap;
+      font-size:15px;
+      line-height:1.75;
+      color:#0f172a;
+    }
+    .actions{ margin-top:14px; display:grid; gap:10px; }
+    .linkbtn{
+      display:block;
+      text-align:center;
+      text-decoration:none;
+      padding:14px 12px;
+      border-radius:14px;
+      font-weight:900;
+      border:1px solid var(--bd);
+      background:#0f172a;
+      color:#fff;
+    }
+    .ghost{
+      background:#fff;
+      color:#0f172a;
+    }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.6;
+      margin-top:10px;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 110px 1fr;
+      gap:8px 10px;
+      margin-top:10px;
+      padding:12px;
+      border:1px solid var(--bd);
+      border-radius:14px;
+      background:#fff;
+    }
+    .k{ color:var(--muted); font-weight:800; font-size:13px; }
+    .v{ font-weight:800; font-size:13px; }
   </style>
 </head>
-<body>
-  <div class="muted" id="status">loading...</div>
-  <canvas id="cv" width="900" height="1400"></canvas>
 
-  <div class="row">
-    <button id="btnGen">重新產生並上傳</button>
+<body>
+  <div class="wrap">
+    <div class="card" id="card">
+      <div class="hero">
+        <!-- 你可以換成你自己的 LOGO 圖 -->
+        <img alt="A TEAM" src="https://a-plus-team.com/logo.png" onerror="this.style.display='none'">
+      </div>
+      <div class="body" id="app"></div>
+    </div>
   </div>
 
 <script>
-const API_BASE = location.origin; // Worker 同網域
-const BG_URL = "https://YOUR_BG_IMAGE_URL/report_bg.png"; // 你那張藍底模板（請換成你的網址）
+(() => {
+  // ==========================
+  // ✅ 啟動關鍵字（必須）
+  // ==========================
+  const START_KEYWORD = "生活營養";
 
-const qs = new URLSearchParams(location.search);
-const userId = qs.get("userId") || "";
-if(!userId) document.getElementById("status").textContent = "missing userId";
+  // ==========================
+  // ✅ 連結（你之後再換）
+  // ==========================
+  const PRODUCT_LINK = "https://你的產品連結";
+  const SEVEN_DAYS_KEYWORD = "7天";
 
-const cv = document.getElementById("cv");
-const ctx = cv.getContext("2d");
+  // ==========================
+  // ✅ 題目（照圖：不改字）
+  // ==========================
+  const Q = [
+    { id:"q1",  type:"yn", text:"我經常只有兩餐" },
+    { id:"q2",  type:"yn", text:"我每天攝取的蔬菜和水果少於5份（以成人手掌大小盤子為標準）" },
+    { id:"q3",  type:"yn", text:"我每天攝取的米飯或麵條少於1.5碗" },
+    { id:"q4",  type:"yn", text:"我每天喝的乳製品少於1.5杯" },
+    { id:"q5",  type:"yn", text:"我每天飲用咖啡或茶（至少兩杯）" },
+    { id:"q6",  type:"yn", text:"我每天攝取的蛋白質類食物少於5份（以成人三根手指的量為標準）" },
+    { id:"q7",  type:"yn", text:"我經常食用高溫、油炸或燒煮的食物" },
+    { id:"q8",  type:"yn", text:"我有吸菸習慣" },
+    { id:"q9",  type:"yn", text:"我常節食以減輕體重" },
+    { id:"q10", type:"sex", text:"我的性別" },
+    // ✅ 只有年齡改動（仍維持 3 選項、好填）
+    { id:"q11", type:"age", text:"我的年齡範圍" },
+  ];
 
-document.getElementById("btnGen").onclick = () => run(true);
+  // ==========================
+  // ✅ 分數表（營養素 keys）
+  // 你之後要做圖片版，這些 keys 就直接對到圖表
+  // ==========================
+  const score = {
+    vitA:0, vitB:0, vitC:0, vitD:0, vitE:0,
+    ca_mg:0, iron:0, fiber:0, trace:0, protein:0
+  };
 
-run(false);
+  // 儲存基本資訊（未來你要塞入姓名/LINE ID 也好用）
+  const profile = { sex:"", age:"" };
 
-async function run(forceUpload){
-  setStatus("讀取報告資料...");
-  const rep = await fetchJSON(`${API_BASE}/reportData?userId=${encodeURIComponent(userId)}`);
+  // ==========================
+  // ✅ 每題加分規則（Yes=風險/需求上升）
+  // 這裡是「生活營養評估」不是醫療；用字中性
+  // ==========================
+  function add(obj){
+    for(const k in obj){
+      if(score[k] === undefined) score[k] = 0;
+      score[k] += obj[k];
+    }
+  }
 
-  setStatus("載入背景/頭貼...");
-  const bg = await loadImg(BG_URL);
-  const avatar = rep.pictureUrl ? await loadImg(rep.pictureUrl).catch(()=>null) : null;
+  function applyYNRules(qid, yes){
+    if(!yes) return; // 不是 → 不加（保持簡單、可擴充）
+    switch(qid){
+      case "q1": // 兩餐
+        add({ vitB:1, protein:1, trace:1 });
+        break;
+      case "q2": // 蔬果不足
+        add({ vitA:1, vitC:2, fiber:2, trace:1 });
+        break;
+      case "q3": // 主食偏少（可能能量不足/代謝支持）
+        add({ vitB:2, trace:1 });
+        break;
+      case "q4": // 乳製品不足
+        add({ ca_mg:2, vitD:1 });
+        break;
+      case "q5": // 咖啡茶較多
+        add({ ca_mg:1, vitB:1, trace:1 });
+        break;
+      case "q6": // 蛋白質不足
+        add({ protein:3, iron:1, vitB:1 });
+        break;
+      case "q7": // 高溫油炸燒烤
+        add({ vitC:1, vitE:2, trace:1 });
+        break;
+      case "q8": // 吸菸
+        add({ vitC:2, vitE:1, trace:1 });
+        break;
+      case "q9": // 節食
+        add({ protein:1, iron:1, vitB:2, trace:1 });
+        break;
+    }
+  }
 
-  setStatus("繪製...");
-  drawReport(rep, bg, avatar);
+  function applySexRules(sex){
+    profile.sex = sex;
+    // 女：鐵需求傾向提高（僅作生活營養提示）
+    if(sex === "女") add({ iron:1 });
+  }
 
-  if(forceUpload){
-    setStatus("輸出PNG並上傳...");
-    const pngBase64 = cv.toDataURL("image/png");
-    const up = await fetchJSON(`${API_BASE}/uploadReport`, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ userId, pngBase64 })
+  function applyAgeRules(age){
+    profile.age = age;
+    // 年齡越高：鈣鎂/維D支持傾向提高（生活建議層級）
+    if(age === "18歲以下") add({ ca_mg:1, vitD:1, protein:1 });
+    if(age === "19–39歲")  add({ vitB:1 });
+    if(age === "40歲以上") add({ ca_mg:2, vitD:2, trace:1 });
+  }
+
+  // ==========================
+  // ✅ 報告生成
+  // ==========================
+  const label = {
+    vitA:"維生素A",
+    vitB:"維生素B群",
+    vitC:"維生素C",
+    vitD:"維生素D",
+    vitE:"維生素E",
+    ca_mg:"鈣鎂",
+    iron:"鐵",
+    fiber:"膳食纖維",
+    trace:"微量元素",
+    protein:"蛋白質",
+  };
+
+  function level(s){
+    // 0~1 穩定 / 2~3 可加強 / 4~5 建議補強 / 6+ 優先
+    if(s >= 6) return "優先";
+    if(s >= 4) return "建議補強";
+    if(s >= 2) return "可加強";
+    return "穩定";
+  }
+
+  function sortedNutrients(){
+    const arr = Object.keys(label).map(k => [k, score[k] || 0]);
+    arr.sort((a,b)=> b[1]-a[1]);
+    return arr;
+  }
+
+  function buildReport(){
+    const arr = sortedNutrients();
+    const top = arr.slice(0,3).filter(x=>x[1] > 0);
+    const topText = top.length ? top.map(([k,v], idx)=> `${idx+1}) ${label[k]}（${level(v)}）`).join("\n") : "目前沒有明顯需要優先加強的項目（維持即可）";
+
+    const blocks = arr.map(([k,v]) => `• ${label[k]}：${level(v)}`).join("\n");
+
+    // 生活建議（中性、非醫療）
+    const tips = [];
+    if(score.fiber >= 2) tips.push("把「蔬菜+水果」拉到每天至少 5 份（用手掌大小盤子估算）。");
+    if(score.protein >= 3) tips.push("每餐安排 1 份優質蛋白（豆/魚/蛋/肉/乳），先把「總量」補足。");
+    if(score.ca_mg >= 2) tips.push("乳製品不足時，可用豆製品/小魚乾/深綠蔬菜分段補鈣，並維持日曬習慣。");
+    if(score.vitC >= 2) tips.push("高溫油炸/吸菸/蔬果不足者，優先用新鮮蔬果與規律作息做支持。");
+    if(score.vitB >= 2) tips.push("若常兩餐/節食/主食偏少，先把三餐節奏與主食比例調回穩定。");
+    if(!tips.length) tips.push("目前整體偏穩定：維持規律飲食、蛋白質與蔬果量，並留意水分補充。");
+
+    const header =
+`【生活型態營養問卷｜文字版評估結果】
+
+基本資料：
+- 性別：${profile.sex || "未填"}
+- 年齡：${profile.age || "未填"}
+
+你的優先關注方向（Top 3）：
+${topText}
+
+各項營養方向概況：
+${blocks}
+
+【你可以先做的 3 件事】
+1) ${tips[0] || "維持規律三餐與均衡飲食。"}
+2) ${tips[1] || "每天至少 5 份蔬果，並把蛋白質補到每餐都有。"}
+3) ${tips[2] || "固定日曬與充足睡眠，減少高溫油炸與含糖飲料。"}
+
+【專屬連結】
+${PRODUCT_LINK}
+
+提醒：本分析為生活營養評估，不涉及醫療診斷；若有慢性病、孕哺或用藥，請先詢問專業人員。`;
+
+    return header;
+  }
+
+  // ==========================
+  // ✅ UI
+  // ==========================
+  const app = document.getElementById("app");
+  let idx = 0;
+
+  function renderStartGate(){
+    const kw = START_KEYWORD;
+    app.innerHTML = `
+      <div class="row"><span class="pill">需要關鍵字啟動</span></div>
+      <h2 class="q" style="margin-top:10px;">尚未啟動問卷</h2>
+      <p class="meta" style="margin-bottom:0;">
+        你需要用 LINE 端帶參數開啟本頁，或網址加上：<b>?k=${kw}</b>
+      </p>
+      <div class="divider"></div>
+      <div class="hint">
+        例：<span style="font-weight:800;">https://你的網域/survey.html?k=${kw}</span><br>
+        你也可以在 LINE 輸入「<b>${kw}</b>」後，由 webhook 回傳上面的連結。
+      </div>
+    `;
+  }
+
+  function renderQuestion(){
+    const q = Q[idx];
+    const no = idx + 1;
+    const total = Q.length;
+
+    // 題目區
+    const head = `
+      <div class="row">
+        <span class="pill">問題 No.${no}/${total}</span>
+      </div>
+      <div class="q" style="margin-top:10px;">${escapeHtml(q.text)}</div>
+      <div class="meta">請依照你目前的狀態選擇。</div>
+      <div class="divider"></div>
+    `;
+
+    // 選項區
+    let buttons = "";
+    if(q.type === "yn"){
+      buttons = `
+        <button class="btn" data-v="yes">是</button>
+        <button class="btn" data-v="no">不是</button>
+      `;
+    }else if(q.type === "sex"){
+      buttons = `
+        <button class="btn" data-v="男">男</button>
+        <button class="btn" data-v="女">女</button>
+      `;
+    }else if(q.type === "age"){
+      // ✅ 只有這題改動（更合理、仍 3 選項）
+      buttons = `
+        <button class="btn" data-v="18歲以下">18歲以下</button>
+        <button class="btn" data-v="19–39歲">19–39歲</button>
+        <button class="btn" data-v="40歲以上">40歲以上</button>
+      `;
+    }
+
+    app.innerHTML = head + buttons;
+
+    // 綁定
+    app.querySelectorAll(".btn").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const v = b.getAttribute("data-v");
+
+        if(q.type === "yn"){
+          applyYNRules(q.id, v === "yes");
+        }else if(q.type === "sex"){
+          applySexRules(v);
+        }else if(q.type === "age"){
+          applyAgeRules(v);
+        }
+
+        idx++;
+        if(idx >= Q.length) renderDone();
+        else renderQuestion();
+      });
     });
-    setStatus(`完成，上傳網址：${up.imageUrl}`);
-  }else{
-    setStatus("完成（未上傳）");
   }
-}
 
-function setStatus(s){ document.getElementById("status").textContent = s; }
+  function renderDone(){
+    const report = buildReport();
+    app.innerHTML = `
+      <div class="row"><span class="pill">生活型態營養問卷評估完畢！</span></div>
+      <div class="q" style="margin-top:10px;">馬上看看評估結果！</div>
 
-function drawReport(rep, bg, avatar){
-  // 背景
-  ctx.clearRect(0,0,cv.width,cv.height);
-  ctx.drawImage(bg, 0, 0, cv.width, cv.height);
+      <div class="kv">
+        <div class="k">性別</div><div class="v">${escapeHtml(profile.sex || "-")}</div>
+        <div class="k">年齡</div><div class="v">${escapeHtml(profile.age || "-")}</div>
+      </div>
 
-  // Header文字（A+Health / Line ID / 名字）
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 56px Microsoft JhengHei";
-  ctx.fillText("A+Health", 370, 120);
+      <div class="divider"></div>
 
-  ctx.font = "24px Microsoft JhengHei";
-  ctx.fillText(`Line: ${rep.lineId || rep.userId}`, 370, 160);
+      <div class="report" id="reportText">${escapeHtml(report)}</div>
 
-  ctx.font = "bold 34px Microsoft JhengHei";
-  ctx.fillText(`${rep.displayName || "—"}`, 370, 210);
+      <div class="actions">
+        <a class="linkbtn" href="${escapeAttr(PRODUCT_LINK)}" target="_blank" rel="noopener">查看專屬連結</a>
+        <button class="linkbtn ghost" id="btnCopy">複製報告文字</button>
+      </div>
 
-  ctx.font = "24px Microsoft JhengHei";
-  ctx.fillText(`年齡:${rep.age || "—"}  性別:${rep.sex || "—"}`, 370, 250);
+      <div class="small">
+        若你想拿到你的「7天生活調整清單」，回覆「${SEVEN_DAYS_KEYWORD}」。（此功能通常由 LINE webhook 端處理）
+      </div>
+    `;
 
-  // 圓形頭貼
-  const ax=110, ay=110, ar=90;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(ax, ay, ar, 0, Math.PI*2);
-  ctx.closePath();
-  ctx.clip();
-  if(avatar){
-    // cover
-    const s = Math.max((ar*2)/avatar.width, (ar*2)/avatar.height);
-    const w = avatar.width*s, h = avatar.height*s;
-    ctx.drawImage(avatar, ax-ar-(w-(ar*2))/2, ay-ar-(h-(ar*2))/2, w, h);
-  }else{
-    ctx.fillStyle="#0b1220";
-    ctx.fillRect(ax-ar, ay-ar, ar*2, ar*2);
+    const btnCopy = document.getElementById("btnCopy");
+    btnCopy.addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(report);
+        btnCopy.textContent = "已複製 ✅";
+        setTimeout(()=> btnCopy.textContent = "複製報告文字", 1200);
+      }catch{
+        alert("瀏覽器限制導致複製失敗，請手動選取複製。");
+      }
+    });
   }
-  ctx.restore();
-  // 外圈
-  ctx.strokeStyle="#ffffff";
-  ctx.lineWidth=10;
-  ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI*2); ctx.stroke();
 
-  // 紅色長條（照你圖的排列）
-  const items = [
-    ["維生素A", rep.display.vita, rep.need.vita],
-    ["維生素B", rep.display.vitb, rep.need.vitb],
-    ["維生素C", rep.display.vitc, rep.need.vitc],
-    ["維生素D", rep.display.vitd, rep.need.vitd],
-    ["維生素E", rep.display.vite, rep.need.vite],
-    ["鈣鎂",     rep.display.camg, rep.need.camg],
-    ["鐵",       rep.display.iron, rep.need.iron],
-    ["纖維",     rep.display.fiber, rep.need.fiber],
-    ["微量元素", rep.display.trace, rep.need.trace],
-  ];
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+  function escapeAttr(s){
+    return String(s ?? "").replaceAll('"',"&quot;");
+  }
 
-  const leftLabelX = 110;
-  const barX = 300;
-  const barW = 520;
-  const barH = 42;
-  let y = 330;
-  const gap = 54;
-
-  ctx.font = "26px Microsoft JhengHei";
-  items.forEach(([label, value, need])=>{
-    // label
-    ctx.fillStyle="#ffffff";
-    ctx.fillText(label + ":", leftLabelX, y+30);
-
-    // bar background (透明底)
-    ctx.globalAlpha = 0.25;
-    roundRect(ctx, barX, y, barW, barH, 20);
-    ctx.fillStyle = "#ffffff";
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // red bar length
-    const pct = clamp(need/100, 0.08, 1); // 至少有一點紅，不然看不到
-    const w = Math.round(barW*pct);
-    roundRect(ctx, barX, y, w, barH, 20);
-    ctx.fillStyle = "#e11d48";
-    ctx.fill();
-
-    // value text inside bar
-    ctx.fillStyle="#0b1220";
-    ctx.font = "24px Microsoft JhengHei";
-    ctx.fillText(value, barX + 18, y + 29);
-
-    ctx.font = "26px Microsoft JhengHei";
-    y += gap;
-  });
-
-  // 底部按鈕（像你圖的那種灰色膠囊）
-  const btns = [
-    "維生素A","維生素B","維生素C",
-    "維生素D","維生素E","鈣鎂",
-    "鐵","膳食纖維","微量元素","蛋白質"
-  ];
-  ctx.font = "22px Microsoft JhengHei";
-  let bx=120, by=980;
-  const bw=190, bh=60, bgap=18;
-  btns.forEach((t,i)=>{
-    roundRect(ctx, bx, by, bw, bh, 18);
-    ctx.fillStyle="rgba(255,255,255,0.45)";
-    ctx.fill();
-    ctx.fillStyle="#ffffff";
-    ctx.fillText(t, bx+26, by+38);
-
-    bx += bw + bgap;
-    if((i+1)%3===0){ bx=120; by += bh + 18; }
-  });
-
-  // footer
-  ctx.fillStyle="#ffffff";
-  ctx.font="bold 46px Microsoft JhengHei";
-  ctx.fillText("A TEAM", 370, 1325);
-}
-
-function roundRect(ctx,x,y,w,h,r){
-  const rr = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr, y);
-  ctx.arcTo(x+w, y, x+w, y+h, rr);
-  ctx.arcTo(x+w, y+h, x, y+h, rr);
-  ctx.arcTo(x, y+h, x, y, rr);
-  ctx.arcTo(x, y, x+w, y, rr);
-  ctx.closePath();
-}
-function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-
-async function fetchJSON(url, opt){
-  const r = await fetch(url, opt);
-  if(!r.ok) throw new Error(await r.text());
-  return await r.json();
-}
-function loadImg(src){
-  return new Promise((res, rej)=>{
-    const im = new Image();
-    im.crossOrigin = "anonymous";
-    im.onload = ()=>res(im);
-    im.onerror = rej;
-    im.src = src;
-  });
-}
+  // ==========================
+  // ✅ 啟動檢查：?k=生活營養 才開始
+  // ==========================
+  const params = new URLSearchParams(location.search);
+  const k = (params.get("k") || "").trim();
+  if(k === START_KEYWORD){
+    renderQuestion();
+  }else{
+    renderStartGate();
+  }
+})();
 </script>
 </body>
 </html>
