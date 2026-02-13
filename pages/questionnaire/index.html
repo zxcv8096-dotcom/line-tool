@@ -36,9 +36,6 @@
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">AI 問卷後台 admin</h1>
-        <p class="text-slate-600 mt-1">
-          ✅ 批次匯入（20題/四選一可一鍵產生）｜✅ reportKey 自動掃描｜✅ 模板圖片「整批上傳」自動套用｜✅ Leads 顯示（有資料就顯示大頭貼/名稱）
-        </p>
       </div>
       <div class="text-xs text-slate-600 leading-5">
         <div class="font-bold">你現在的 Worker 需要至少有：</div>
@@ -130,7 +127,6 @@
             </div>
             <div class="flex gap-2 flex-wrap">
               <button id="btnBulk" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">批次匯入</button>
-              <button id="btnGen20" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">一鍵產生 20 題（四選一）</button>
               <button id="btnAddNode" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">新增節點</button>
               <button id="btnValidate" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">檢查</button>
             </div>
@@ -1241,87 +1237,12 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
     syncReportKeysUI(false);
   }
 
-  // ---------- generator: 20 questions (4 options) ----------
-  function genLifeSurvey20(){
-    // 20 題，最後一題給 4 個 reportKey（睡眠/壓力/腸胃/代謝）
-    const name = "生活健康問卷_20題_四選一";
-    const title = "3分鐘生活健康分析（20題）";
-    const keyword = "生活問卷";
-    const nodes = {};
-    for(let i=1;i<=20;i++){
-      const id = "q"+i;
-      const next = (i<20) ? "q"+(i+1) : "";
-      const qText = lifeQuestions[i-1]?.q || `第${i}題（請替換成你要的題目）`;
-      const opts = (lifeQuestions[i-1]?.options || ["選項A","選項B","選項C","選項D"]).slice(0,4);
-      nodes[id] = {
-        q: qText,
-        options: [
-          { t: opts[0], next: next, reportKey: "" },
-          { t: opts[1], next: next, reportKey: "" },
-          { t: opts[2], next: next, reportKey: "" },
-          { t: opts[3], next: next, reportKey: "" },
-        ]
-      };
-    }
-    // q20 的四個選項改成 reportKey 分流（最後一題）
-    nodes["q20"].q = "最後一題：你比較想先從哪個方向開始調整？";
-    nodes["q20"].options = [
-      { t:"睡眠與作息", next:"", reportKey:"life_sleep" },
-      { t:"壓力與放鬆", next:"", reportKey:"life_stress" },
-      { t:"飲食與腸胃", next:"", reportKey:"life_gut" },
-      { t:"體態與代謝", next:"", reportKey:"life_metabolism" },
-    ];
-
-    CURRENT = makeEmptySurvey();
-    CURRENT.name = name;
-    CURRENT.title = title;
-    CURRENT.keyword = keyword;
-    CURRENT.start = "q1";
-    CURRENT.final = { text: "如果你願意，我可以再幫你做 7 天調整建議。" };
-    CURRENT.nodes = nodes;
-    // 先補基本模板（你可再改）
-    CURRENT.reports = {
-      life_sleep: defaultTemplateSkeleton("life_sleep"),
-      life_stress: defaultTemplateSkeleton("life_stress"),
-      life_gut: defaultTemplateSkeleton("life_gut"),
-      life_metabolism: defaultTemplateSkeleton("life_metabolism"),
-    };
-    fillBuilder();
-    syncReportKeysUI(false);
-    toast("已產生 20 題四選一（記得儲存）");
-  }
-
-  const lifeQuestions = [
-    { q:"你最近整體精神感受比較像？", options:["很有精神","普通還可以","常覺得疲累","起床就沒力"] },
-    { q:"你最近的睡眠品質？", options:["好，醒來清爽","還行，偶爾醒","常醒/淺眠","難入睡"] },
-    { q:"你平常入睡時間多半在？", options:["22:00前","22:00~24:00","24:00~02:00","02:00後"] },
-    { q:"你白天的專注狀態？", options:["很專注","還可以","容易分心","常覺得腦袋卡"] },
-    { q:"你最近的壓力感受？", options:["不太有","偶爾有","常常有","很明顯、難放鬆"] },
-    { q:"你最近情緒起伏？", options:["穩定","偶爾波動","容易煩躁","常覺得低落"] },
-    { q:"你一天喝水量大概？", options:["足夠（>1500ml）","普通（1000~1500ml）","偏少（500~1000ml）","很少（<500ml）"] },
-    { q:"你平常外食頻率？", options:["很少","一週1~3次","一週4~6次","幾乎天天"] },
-    { q:"你吃蔬果的頻率？", options:["每天都有","大多有","偶爾有","很少"] },
-    { q:"你吃蛋白質（肉/魚/蛋/豆）狀況？", options:["每餐都有","一天2餐","一天1餐","不固定"] },
-    { q:"你腸胃感受比較像？", options:["順暢","偶爾不適","常胀氣/悶","容易拉肚子或便祕"] },
-    { q:"你排便頻率？", options:["每天","2天1次","3天以上","不固定"] },
-    { q:"你飯後狀態？", options:["精神OK","有點想睡","很容易昏沉","常覺得胃悶"] },
-    { q:"你運動頻率？", options:["一週4次以上","一週2~3次","一週1次","幾乎不運動"] },
-    { q:"你肌力/體力狀態？", options:["很好","普通","偏弱","很容易累"] },
-    { q:"你最近體態/體重感受？", options:["穩定","小幅變動","慢慢上升","很難控制"] },
-    { q:"你甜食/含糖飲頻率？", options:["很少","偶爾","常常","幾乎每天"] },
-    { q:"你咖啡因攝取？", options:["不喝","一天1杯","一天2杯","2杯以上"] },
-    { q:"你皮膚/嘴唇乾燥感？", options:["不太","偶爾","常常","很明顯"] },
-    // 第20題會被覆蓋成分流題
-    { q:"（保留）", options:["A","B","C","D"] },
-  ];
-
   // ---------- image batch import ----------
   function parseReportKeyFromFilename(filename){
     const n = String(filename||"").trim();
     if(!n) return "";
     // 取副檔名之前
     const base = n.replace(/\.[^.]+$/,"");
-    // 取第一段（允許 reportKey 裡有底線）
     // 這裡直接用整個 base 當 reportKey（最符合你用底線命名）
     return base.trim();
   }
@@ -1340,9 +1261,7 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
       if(!rk){
         skipped++; continue;
       }
-      // 沒有模板就略過（或你也可改成自動新建）
       if(!CURRENT.reports[rk]){
-        // 自動新建：更符合你「整批」的期待
         CURRENT.reports[rk] = defaultTemplateSkeleton(rk);
       }
 
@@ -1351,14 +1270,10 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
         const url = up.url || "";
         if(!url) throw new Error("沒有拿到 URL");
 
-        // 把 URL 寫進模板的【圖片】區塊（替換或追加）
         let body = ensureReportSection(CURRENT.reports[rk]);
-        // 找「【圖片】」下一行到下一個【...】前，做覆蓋（簡單可靠）
         body = body.replace(/【圖片】\n([\s\S]*?)(\n【|$)/, (m, p1, p2) => {
-          const suffix = p2 ? "\n【" : "";
           return `【圖片】\n${url}\n` + (p2 ? "【" : "");
         });
-        // 如果上面替換失敗（沒命中），直接插入
         if(!body.includes(url)){
           body = ensureReportSection(CURRENT.reports[rk]) + "\n" + url + "\n";
         }
@@ -1476,7 +1391,6 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
     $("btnDeleteReport").onclick = ()=> deleteCurrentReport();
     $("btnSaveTemplatesToKV").onclick = async ()=>{
       try{
-        // 把 CURRENT 寫回 KV（包含 templates）
         setApiBaseFromInput();
         await refreshKwMap();
         await saveSurveyToKV();
@@ -1504,7 +1418,6 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
         if(LAST_IMG_URL){
           $("imgPreview").src = LAST_IMG_URL;
           $("imgPreview").classList.remove("hidden");
-          // 自動插入到模板
           if(!$("inReportBody").value.includes("【圖片】")) $("inReportBody").value = ensureReportSection($("inReportBody").value);
           insertAtCursor($("inReportBody"), `\n${LAST_IMG_URL}\n`);
           toast("圖片已上傳並插入模板");
@@ -1704,9 +1617,6 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
         toast(e.message, "err");
       }
     };
-
-    // generator
-    $("btnGen20").onclick = ()=> genLifeSurvey20();
 
     $("btnLeadsReload").onclick = async ()=>{
       try{ await refreshLeads(); toast("已刷新 Leads"); }
