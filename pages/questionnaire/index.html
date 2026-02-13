@@ -152,7 +152,7 @@
 
             <div class="md:col-span-2">
               <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 leading-6">
-                ✅ 每題四選一：每個 node 維持 4 個選項即可<br/>
+                ✅ 每題四選一：每個 node 維持 4 個選項即可（但也支援 2～4 選項，用在性別/分流題）<br/>
                 ✅ 計分方式：選項的 effects.nutrients 直接累加（例如：{"b_complex":2,"magnesium":1}）<br/>
                 ✅ 最後報告：由「②營養規則庫」把累積分數轉成分級＋建議＋產品連結
               </div>
@@ -237,7 +237,6 @@
 }'></textarea>
               </div>
 
-              <!-- ✅ 圖片：整批匯入（對應 nutrientKey） -->
               <div class="mt-3 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-3">
                 <div class="flex items-center justify-between gap-2">
                   <div class="text-xs font-extrabold text-indigo-900">圖片整批匯入（自動對應 nutrientKey）</div>
@@ -303,7 +302,7 @@
           <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
             <div class="font-bold">匯入格式（重點：add=營養素:分數）</div>
             <div class="text-xs text-slate-500 mt-1">
-              • 每個 NODE 四個選項。 • next 可接下一題。 • add 會寫進 options.effects.nutrients，最後會加總。
+              • NODE 支援 2～4 選項（性別/分流題可 2 選）。 • next 可接下一題。 • add 會寫進 options.effects.nutrients，最後會加總。
             </div>
 
 <pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap thinbar">NAME: 生活健康問卷_示範
@@ -350,12 +349,10 @@ Q: 你腸胃感受比較像？
 
 <script>
 (() => {
-  // ---------- constants ----------
   const Q_PREFIX = "AI_SURVEY:Q:";
   const LEAD_PREFIX = "AI_SURVEY:LEAD:";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ---------- state ----------
   let API_BASE = "";
   let SURVEYS = [];
   let CURRENT = makeEmptySurvey();
@@ -364,10 +361,8 @@ Q: 你腸胃感受比較像？
   let ACTIVE_NUT_KEY = "";
   let BATCH_NUT_FILES = [];
 
-  // ---------- DOM helper ----------
   const $ = (id) => document.getElementById(id);
 
-  // ---------- safe run wrapper ----------
   const showErr = (msg) => {
     try{
       $("errBanner").classList.remove("hidden");
@@ -378,7 +373,6 @@ Q: 你腸胃感受比較像？
     showErr(e?.error?.stack || e?.message || e);
   });
 
-  // ---------- ui ----------
   function toast(msg, type="ok"){
     const wrap = $("toastWrap");
     if(!wrap) return alert(msg);
@@ -419,7 +413,6 @@ Q: 你腸胃感受比較像？
       : "w-full text-left px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 mt-2 font-semibold text-slate-900";
   }
 
-  // ---------- API ----------
   async function api(path, bodyObj){
     if(!API_BASE) throw new Error("Worker 網址未設定");
     const res = await fetch(API_BASE.replace(/\/$/,"") + path, {
@@ -444,10 +437,9 @@ Q: 你腸胃感受比較像？
       const msg = (data && (data.error || data.detail)) ? (data.error || data.detail) : ("上傳失敗 " + res.status);
       throw new Error(msg);
     }
-    return data; // {ok:true, key, url}
+    return data;
   }
 
-  // ---------- KV helpers ----------
   async function kvGet(key){
     const r = await api("/loadAny", { namespace:"DB", keyword: key });
     return r?.payload ?? r;
@@ -459,7 +451,6 @@ Q: 你腸胃感受比較像？
     await api("/deleteAny", { namespace:"DB", keyword: key });
   }
 
-  // ---------- KW MAP ----------
   async function refreshKwMap(){
     try{
       const raw = await kvGet(KW_MAP_KEY);
@@ -493,7 +484,6 @@ Q: 你腸胃感受比較像？
     }
   }
 
-  // ---------- survey model ----------
   function makeEmptySurvey(){
     return {
       name: "",
@@ -502,7 +492,7 @@ Q: 你腸胃感受比較像？
       start: "q1",
       final: { text: "" },
       nodes: {},
-      rules: { nutrients: {} } // ✅ 你的規則庫放這裡
+      rules: { nutrients: {} }
     };
   }
 
@@ -553,7 +543,6 @@ Q: 你腸胃感受比較像？
     return out;
   }
 
-  // ---------- survey list ----------
   async function refreshSurveyList(){
     const data = await api("/listAll", {});
     const db = data.db || [];
@@ -648,7 +637,6 @@ Q: 你腸胃感受比較像？
     await saveKwMap();
   }
 
-  // ---------- builder render ----------
   function fillBuilder(){
     $("inName").value = CURRENT.name || "";
     $("inTitle").value = CURRENT.title || "";
@@ -657,7 +645,6 @@ Q: 你腸胃感受比較像？
     $("inFinalText").value = (CURRENT.final && CURRENT.final.text) ? CURRENT.final.text : "";
     renderNodes();
     updateKwHint();
-    // rules UI
     syncNutrientsUI(false);
   }
 
@@ -700,7 +687,7 @@ Q: 你腸胃感受比較像？
         <div class="mt-4">
           <div class="flex items-center justify-between">
             <div class="text-sm font-extrabold text-slate-900">選項（t / next / effects.nutrients）</div>
-            <div class="text-xs text-slate-500">每題四選一（保持 4 個選項）</div>
+            <div class="text-xs text-slate-500">支援 2～4 選項（性別/分流題可 2 選）</div>
           </div>
           <div class="mt-2 space-y-2" data-optwrap></div>
         </div>
@@ -824,20 +811,22 @@ Q: 你腸胃感受比較像？
       const node = nodes[nodeId];
       if(!String(node.q||"").trim()) throw new Error(`node ${nodeId} 題目是空的`);
       if(!Array.isArray(node.options) || node.options.length===0) throw new Error(`node ${nodeId} 沒有選項`);
-      if(node.options.length !== 4) throw new Error(`node ${nodeId} 不是四選一（目前 ${node.options.length} 個選項）`);
+
+      // ✅ 改：支援 2～4 選項
+      if(node.options.length < 2 || node.options.length > 4){
+        throw new Error(`node ${nodeId} 選項數需 2～4（目前 ${node.options.length} 個）`);
+      }
 
       node.options.forEach((o, i)=>{
         if(!String(o.t||"").trim()) throw new Error(`node ${nodeId} 選項 ${i+1} 文字是空的`);
         const nx = String(o.next||"").trim();
         if(nx && !nodes[nx]) throw new Error(`node ${nodeId} 選項 ${i+1} next 指向不存在：${nx}`);
 
-        // effects JSON 必須可用
         const nut = o?.effects?.nutrients;
         if(nut && typeof nut !== "object") throw new Error(`node ${nodeId} 選項 ${i+1} effects 格式錯誤`);
       });
     }
 
-    // 至少有一個營養 key
     const used = scanNutrientsFromNodes();
     if(used.length === 0) throw new Error("目前沒有任何營養計分（options.effects.nutrients 是空的）");
 
@@ -857,7 +846,6 @@ Q: 你腸胃感受比較像？
 
     await kvPut(Q_PREFIX + CURRENT.name, CURRENT);
 
-    // 更新 KW_MAP
     await refreshKwMap();
     for(const k of Object.keys(KW_MAP)){
       if(KW_MAP[k] === CURRENT.name && k !== kw){
@@ -875,7 +863,6 @@ Q: 你腸胃感受比較像？
     updateKwHint();
   }
 
-  // ---------- Nutrient rules ----------
   function scanNutrientsFromNodes(){
     const nodes = CURRENT.nodes || {};
     const used = new Set();
@@ -1066,7 +1053,6 @@ Q: 你腸胃感受比較像？
     toast(`整批圖片套用完成：成功 ${ok}｜失敗 ${fail}`, fail ? "warn" : "ok");
   }
 
-  // ---------- leads ----------
   async function refreshLeads(){
     const data = await api("/listAll", {});
     const db = data.db || [];
@@ -1172,9 +1158,7 @@ Q: 你腸胃感受比較像？
     });
   }
 
-  // ---------- bulk import parser (add=nut:score,...) ----------
   function parseAddClause(s){
-    // add=b_complex:2,magnesium:1
     const out = {};
     const raw = String(s||"").trim();
     if(!raw) return out;
@@ -1253,9 +1237,13 @@ Q: 你腸胃感受比較像？
     if(!out.name || !out.title || !out.keyword) throw new Error("缺少 NAME/TITLE/KEYWORD");
     if(!Object.keys(out.nodes).length) throw new Error("沒有讀到 NODE");
     if(!out.start) out.start = "q1";
+
+    // ✅ 改：NODE 支援 2～4 選項（你那份 sex 只有 2 個）
     for(const nid of Object.keys(out.nodes)){
       const o = out.nodes[nid]?.options || [];
-      if(o.length !== 4) throw new Error(`NODE ${nid} 不是四選一（目前 ${o.length} 個選項）`);
+      if(o.length < 2 || o.length > 4){
+        throw new Error(`NODE ${nid} 選項數需 2～4（目前 ${o.length} 個）`);
+      }
     }
     return out;
   }
@@ -1272,11 +1260,9 @@ Q: 你腸胃感受比較像？
     syncNutrientsUI(false);
   }
 
-  // ---------- bulk modal ----------
   function openBulk(){ $("bulkModal").classList.remove("hidden"); setTimeout(()=>{ $("bulkText").focus(); }, 50); }
   function closeBulk(){ $("bulkModal").classList.add("hidden"); }
 
-  // ---------- events ----------
   function setApiBaseFromInput(){
     const v = ($("inApiBase").value || "").trim();
     if(!v) throw new Error("請輸入 Worker 網址");
@@ -1362,7 +1348,6 @@ Q: 你腸胃感受比較像？
       }
     };
 
-    // bulk
     $("btnBulk").onclick = openBulk;
     $("btnBulkClose").onclick = closeBulk;
     $("bulkModal").addEventListener("click", (e)=>{ if(e.target === $("bulkModal")) closeBulk(); });
@@ -1410,7 +1395,6 @@ Q: 你腸胃感受比較像？
       }
     };
 
-    // rules tab
     $("btnScanNutrients").onclick = ()=> syncNutrientsUI(true);
     $("btnRulesFillMissing").onclick = ()=> fillMissingRules();
     $("btnRulesSaveLocal").onclick = ()=> rulesSaveLocal();
@@ -1418,7 +1402,6 @@ Q: 你腸胃感受比較像？
       try{
         setApiBaseFromInput();
         await refreshKwMap();
-        // 先把規則欄位存回 CURRENT
         rulesSaveLocal();
         await saveSurveyToKV();
         toast("已把規則庫寫入 KV ✅");
@@ -1428,7 +1411,6 @@ Q: 你腸胃感受比較像？
     };
     $("btnRulesDelete").onclick = ()=> rulesDelete();
 
-    // batch nutrient images
     $("btnBatchNutImgPick").onclick = ()=>{
       if(!API_BASE) return toast("請先連線 Worker 網址", "warn");
       $("fileBatchNutImg").click();
@@ -1448,7 +1430,6 @@ Q: 你腸胃感受比較像？
     };
   }
 
-  // ---------- init ----------
   async function init(){
     initApiBase();
     bind();
@@ -1457,7 +1438,6 @@ Q: 你腸胃感受比較像？
   }
 
   init().catch(err => showErr(err?.stack || err));
-
 })();
 </script>
 </body>
