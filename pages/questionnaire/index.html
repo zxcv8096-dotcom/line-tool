@@ -1,697 +1,208 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>生活型態營養問卷｜中控台（11題）</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root{
-      --ink:#0f172a;
-      --muted:#64748b;
-      --bd:rgba(15,23,42,.10);
-      --glass: rgba(255,255,255,.88);
-      --shadow: 0 18px 55px rgba(15,23,42,.10);
-    }
-    body{
-      color:var(--ink);
-      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
-      font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      -webkit-text-size-adjust: 100%;
-    }
-    .card{ background: var(--glass); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
-    .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
-    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.18); border-radius: 999px; }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>生活型態營養問卷</title>
+
+<style>
+body{
+  margin:0;
+  background:#f1f5f9;
+  font-family:"Microsoft JhengHei",system-ui;
+  display:flex;
+  justify-content:center;
+  padding:20px;
+}
+.card{
+  width:520px;
+  max-width:100%;
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  overflow:hidden;
+}
+.hero{
+  height:160px;
+  background:linear-gradient(135deg,#eef2ff,#f8fafc);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:28px;
+  color:#1e3a8a;
+}
+.body{padding:20px}
+.q{font-size:20px;font-weight:900;margin-bottom:10px}
+.meta{color:#64748b;font-size:14px;margin-bottom:14px}
+.btn{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-top:1px solid #e5e7eb;
+  font-size:18px;
+  font-weight:800;
+  background:#fff;
+  color:#1d4ed8;
+  cursor:pointer;
+}
+.result{white-space:pre-wrap;line-height:1.8;font-size:15px}
+.link{
+  display:block;
+  margin-top:12px;
+  padding:14px;
+  text-align:center;
+  background:#0f172a;
+  color:#fff;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:900;
+}
+</style>
 </head>
 
-<body class="min-h-screen">
-  <div class="max-w-6xl mx-auto p-4 md:p-8">
-    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台（11題）</h1>
-        <p class="text-sm text-slate-600 mt-1">這頁就是你的唯一中控台：一鍵把題目/關鍵字/計分/營養素連結寫進 Cloudflare KV。</p>
-      </div>
-      <div class="text-xs text-slate-600 leading-6">
-        <div class="font-bold">需要 Worker 提供 API：</div>
-        <div class="mono">POST /listAll /putAny /loadAny</div>
-        <div class="text-[11px] text-slate-500 mt-1">（若你 Worker 有驗證，可在下方填 Admin Key）</div>
-      </div>
-    </header>
-
-    <!-- CONNECT -->
-    <section class="card rounded-2xl p-5 mb-4 border border-slate-200">
-      <div class="grid md:grid-cols-3 gap-4 items-end">
-        <div class="md:col-span-2">
-          <label class="text-sm font-semibold text-slate-700">Worker API（固定）</label>
-          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 value="https://api.zxcv8096.workers.dev/" />
-          <div class="text-xs text-slate-500 mt-2">
-            寫入位置：
-            <span class="mono font-semibold">AI_SURVEY:Q:life11</span>｜
-            <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>
-          </div>
-        </div>
-
-        <div>
-          <label class="text-sm font-semibold text-slate-700">Admin Key（可空白）</label>
-          <input id="inAdminKey" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 placeholder="若你的 Worker 有驗證才需要填" />
-        </div>
-
-        <div class="flex gap-2">
-          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線檢查</button>
-          <button id="btnWrite" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">一鍵寫入KV</button>
-        </div>
-      </div>
-
-      <div class="mt-3 text-xs text-slate-500">
-        狀態：<span id="txtStatus" class="font-semibold">未連線</span>　
-        最後測試：<span id="txtLast" class="mono">-</span>
-      </div>
-
-      <div id="errBanner" class="hidden mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-        <div class="font-extrabold">錯誤</div>
-        <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
-      </div>
-    </section>
-
-    <div class="grid lg:grid-cols-2 gap-4">
-      <!-- LEFT -->
-      <section class="card rounded-2xl p-5 border border-slate-200">
-        <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定</h2>
-
-        <div class="mt-4 grid gap-3">
-          <div>
-            <label class="text-sm font-semibold text-slate-700">啟動關鍵字（LINE 使用者輸入這個開始）</label>
-            <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                   placeholder="例如：生活營養" />
-            <div class="text-xs text-slate-500 mt-2">
-              會寫入到 <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
-            </div>
-          </div>
-
-          <div class="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4">
-            <div class="text-sm font-extrabold text-indigo-900">年齡選項（唯一可修改）</div>
-            <div class="text-xs text-indigo-900/70 mt-1">題目文字不改，只改選項三個。</div>
-
-            <div class="mt-3 grid gap-2">
-              <input id="age1" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="18歲以下" />
-              <input id="age2" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="19–39歲" />
-              <input id="age3" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="40歲以上" />
-            </div>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="flex items-center justify-between gap-2">
-              <div>
-                <div class="text-sm font-extrabold text-slate-900">營養素連結（每項一個）</div>
-                <div class="text-xs text-slate-500 mt-1">報告會「只列出需要關注的項目」對應連結（你也可切換）。</div>
-              </div>
-              <label class="flex items-center gap-2 text-xs font-bold text-slate-700 select-none">
-                <input id="chkShowAllLinks" type="checkbox" class="w-4 h-4">
-                全部都列出
-              </label>
-            </div>
-
-            <div class="mt-3 grid md:grid-cols-2 gap-2">
-              <div>
-                <label class="text-xs font-bold text-slate-500">維生素A 連結</label>
-                <input id="lnk_vitA" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">維生素B群 連結</label>
-                <input id="lnk_vitB" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">維生素C 連結</label>
-                <input id="lnk_vitC" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">維生素D 連結</label>
-                <input id="lnk_vitD" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">維生素E 連結</label>
-                <input id="lnk_vitE" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">鈣鎂 連結</label>
-                <input id="lnk_ca_mg" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">鐵 連結</label>
-                <input id="lnk_iron" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">膳食纖維 連結</label>
-                <input id="lnk_fiber" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">微量元素 連結</label>
-                <input id="lnk_trace" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">蛋白質 連結</label>
-                <input id="lnk_protein" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." />
-              </div>
-            </div>
-
-            <div class="mt-3 text-xs text-slate-500">
-              也會一起寫入問卷 payload：<span class="mono">nutrientLinks</span>（給 Worker 產報告用）
-            </div>
-          </div>
-
-          <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">重要：飲食都很OK就不硬推</div>
-            <div>• 如果總分很低（幾乎都填「不是」），報告會顯示「維持即可」，不會叫你補一堆營養素。</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT -->
-      <section class="card rounded-2xl p-5 border border-slate-200">
-        <div class="flex items-end justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">這裡只用來確認報告文字。寫入 KV 後由 LINE OA 使用。</p>
-          </div>
-          <div class="flex gap-2">
-            <button id="btnSimAllGood" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
-              一鍵「都很健康」
-            </button>
-            <button id="btnSimDefault" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
-              一鍵「常見不足」
-            </button>
-          </div>
-        </div>
-
-        <div class="mt-4 grid gap-3">
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="text-sm font-extrabold text-slate-900">11 題（照圖不改字）</div>
-            <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡（年齡選項可改）</div>
-
-            <div id="simWrap" class="mt-3 space-y-3 max-h-[420px] overflow-auto thinbar pr-1"></div>
-          </div>
-
-          <div class="grid md:grid-cols-2 gap-2">
-            <button id="btnMakeReport" class="px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">
-              產生文字報告（模擬）
-            </button>
-            <button id="btnCopyReport" class="px-4 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
-              複製報告
-            </button>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="text-sm font-extrabold text-slate-900">文字版報告輸出</div>
-            <textarea id="outReport" rows="12" class="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200"
-              placeholder="按『產生文字報告』後會出現在這裡"></textarea>
-            <div class="text-xs text-slate-500 mt-2">
-              之後你做圖片版：直接用 score + 需要項目清單做長條圖即可。
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
-  </div>
+<body>
+<div class="card">
+<div class="hero">營養問卷</div>
+<div class="body" id="app"></div>
+</div>
 
 <script>
-(() => {
-  const Q_KEY = "AI_SURVEY:Q:life11";
-  const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
+const START_KEYWORD="生活營養";
 
-  const QUESTIONS = [
-    { id:"q1",  type:"yn",  text:"我經常只有兩餐" },
-    { id:"q2",  type:"yn",  text:"我每天攝取的蔬菜和水果少於5份（以成人手掌大小盤子為標準）" },
-    { id:"q3",  type:"yn",  text:"我每天攝取的米飯或麵條少於1.5碗" },
-    { id:"q4",  type:"yn",  text:"我每天喝的乳製品少於1.5杯" },
-    { id:"q5",  type:"yn",  text:"我每天飲用咖啡或茶（至少兩杯）" },
-    { id:"q6",  type:"yn",  text:"我每天攝取的蛋白質類食物少於5份（以成人三根手指的量為標準）" },
-    { id:"q7",  type:"yn",  text:"我經常食用高溫、油炸或燒煮的食物" },
-    { id:"q8",  type:"yn",  text:"我有吸菸習慣" },
-    { id:"q9",  type:"yn",  text:"我常節食以減輕體重" },
-    { id:"q10", type:"sex", text:"我的性別" },
-    { id:"q11", type:"age", text:"我的年齡範圍" },
-    { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
-  ];
+const LINKS={
+ vitA:"https://填A",
+ vitB:"https://填B",
+ vitC:"https://填C",
+ vitD:"https://填D",
+ vitE:"https://填E",
+ ca_mg:"https://填鈣",
+ iron:"https://填鐵",
+ fiber:"https://填纖維",
+ trace:"https://填微量",
+ protein:"https://填蛋白"
+};
 
-  const LABEL = {
-    vitA:"維生素A",
-    vitB:"維生素B群",
-    vitC:"維生素C",
-    vitD:"維生素D",
-    vitE:"維生素E",
-    ca_mg:"鈣鎂",
-    iron:"鐵",
-    fiber:"膳食纖維",
-    trace:"微量元素",
-    protein:"蛋白質",
-  };
+const Q=[
+{id:"q1",type:"yn",t:"我經常只有兩餐"},
+{id:"q2",type:"yn",t:"我每天攝取的蔬菜和水果少於5份"},
+{id:"q3",type:"yn",t:"我每天攝取的米飯或麵條少於1.5碗"},
+{id:"q4",type:"yn",t:"我每天喝的乳製品少於1.5杯"},
+{id:"q5",type:"yn",t:"我每天飲用咖啡或茶（至少兩杯）"},
+{id:"q6",type:"yn",t:"我每天攝取的蛋白質少於5份"},
+{id:"q7",type:"yn",t:"我經常食用高溫油炸食物"},
+{id:"q8",type:"yn",t:"我有吸菸習慣"},
+{id:"q9",type:"yn",t:"我常節食減肥"},
+{id:"q10",type:"sex",t:"性別"},
+{id:"q11",type:"age",t:"年齡"}
+];
 
-  const $ = (id)=>document.getElementById(id);
+const score={vitA:0,vitB:0,vitC:0,vitD:0,vitE:0,ca_mg:0,iron:0,fiber:0,trace:0,protein:0};
+const ans={};
 
-  function toast(msg, type="ok"){
-    const wrap = $("toastWrap");
-    const div = document.createElement("div");
-    div.className = `card rounded-2xl px-4 py-3 border ${
-      type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
-    }`;
-    div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
-    wrap.appendChild(div);
-    setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
-    setTimeout(()=>{ div.remove(); }, 2600);
-  }
-  function escapeHtml(s){
-    return (s ?? "").toString()
-      .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-  function showErr(e){
-    $("errBanner").classList.remove("hidden");
-    $("errText").textContent = String(e?.stack || e?.message || e || "");
-  }
-  function clearErr(){
-    $("errBanner").classList.add("hidden");
-    $("errText").textContent = "";
-  }
+function add(o){for(let k in o){score[k]+=o[k];}}
 
-  function apiBase(){
-    return ($("inApiBase").value || "").trim().replace(/\/$/,"");
-  }
-  function adminKey(){
-    return ($("inAdminKey").value || "").trim();
-  }
-  async function api(path, bodyObj){
-    const base = apiBase();
-    if(!base) throw new Error("API Base 不可空白");
-    const headers = { "Content-Type":"application/json" };
-    const k = adminKey();
-    if(k) headers["X-Admin-Key"] = k;
+function buildRules(){
+return{
+yn:{
+q1:{vitB:1,protein:1,trace:1},
+q2:{vitA:1,vitC:2,fiber:2,trace:1},
+q3:{vitB:2},
+q4:{ca_mg:3,vitD:2},
+q5:{ca_mg:1,vitB:1},
+q6:{protein:3,iron:1,vitB:1},
+q7:{vitC:1,vitE:2},
+q8:{vitC:3,vitE:1},
+q9:{protein:2,iron:2,vitB:2,trace:1}
+},
+sex:{男:{},女:{iron:1}},
+age:{
+"18以下":{protein:1},
+"19-39":{vitB:1},
+"40以上":{ca_mg:2,vitD:2}
+},
+sy:[
+{if:["q4","q5"],add:{ca_mg:2}},
+{if:["q6","q9"],add:{protein:2}},
+{if:["q2","q7"],add:{vitC:1,vitE:1}},
+{if:["q2","q8"],add:{vitC:1}},
+{if:["q1","q9"],add:{vitB:1}}
+]
+}}
+const rules=buildRules();
 
-    const res = await fetch(base + path, {
-      method:"POST",
-      headers,
-      body: JSON.stringify(bodyObj || {})
-    });
-    const data = await res.json().catch(()=>null);
-    if(!res.ok) throw new Error((data && (data.error||data.detail)) || (res.status + " " + res.statusText));
-    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
-    return data;
-  }
-  async function kvGet(key){
-    const r = await api("/loadAny", { namespace:"DB", keyword:key });
-    return r?.payload ?? r;
-  }
-  async function kvPut(key, payload){
-    await api("/putAny", { namespace:"DB", keyword:key, payload });
-  }
+let i=0;
+const app=document.getElementById("app");
 
-  let CONNECTED = false;
-  function setStatus(ok, msg){
-    CONNECTED = !!ok;
-    $("txtStatus").textContent = msg;
-    $("txtStatus").className = ok ? "font-semibold text-emerald-700" : "font-semibold text-rose-700";
-    $("txtLast").textContent = new Date().toLocaleString();
-  }
-  async function connect(){
-    clearErr();
-    await api("/listAll", {});
-    setStatus(true, "已連線");
-    toast("連線成功");
-  }
+function ask(){
+const q=Q[i];
+let btn="";
+if(q.type==="yn"){
+btn=`<button class=btn data=v>是</button>
+<button class=btn data=n>不是</button>`;
+}
+if(q.type==="sex"){
+btn=`<button class=btn data=v>男</button>
+<button class=btn data=v>女</button>`;
+}
+if(q.type==="age"){
+btn=`<button class=btn data=v>18以下</button>
+<button class=btn data=v>19-39</button>
+<button class=btn data=v>40以上</button>`;
+}
+app.innerHTML=`<div class=q>${q.t}</div><div class=meta>${i+1}/11</div>${btn}`;
 
-  function buildRules(ageOpts){
-    return {
-      yn_yes: {
-        q1:  { vitB:1, protein:1, trace:1 },
-        q2:  { vitA:1, vitC:2, fiber:2, trace:1 },
-        q3:  { vitB:2, trace:1 },
-        q4:  { ca_mg:2, vitD:1 },
-        q5:  { ca_mg:1, vitB:1, trace:1 },
-        q6:  { protein:3, iron:1, vitB:1 },
-        q7:  { vitC:1, vitE:2, trace:1 },
-        q8:  { vitC:2, vitE:1, trace:1 },
-        q9:  { protein:1, iron:1, vitB:2, trace:1 },
-      },
-      sex: {
-        "男": { },
-        "女": { iron:1 }
-      },
-      age: {
-        [ageOpts[0]]: { ca_mg:1, vitD:1, protein:1 },
-        [ageOpts[1]]: { vitB:1 },
-        [ageOpts[2]]: { ca_mg:2, vitD:2, trace:1 },
-      }
-    };
-  }
+document.querySelectorAll(".btn").forEach(b=>{
+b.onclick=()=>{
+let v=b.textContent;
+ans[q.id]=v;
 
-  function getNutrientLinks(){
-    return {
-      vitA: ($("lnk_vitA").value||"").trim(),
-      vitB: ($("lnk_vitB").value||"").trim(),
-      vitC: ($("lnk_vitC").value||"").trim(),
-      vitD: ($("lnk_vitD").value||"").trim(),
-      vitE: ($("lnk_vitE").value||"").trim(),
-      ca_mg: ($("lnk_ca_mg").value||"").trim(),
-      iron: ($("lnk_iron").value||"").trim(),
-      fiber: ($("lnk_fiber").value||"").trim(),
-      trace: ($("lnk_trace").value||"").trim(),
-      protein: ($("lnk_protein").value||"").trim(),
-    };
-  }
+if(q.type==="yn"&&v==="是") add(rules.yn[q.id]);
+if(q.type==="sex") add(rules.sex[v]||{});
+if(q.type==="age") add(rules.age[v]||{});
 
-  function buildSurveyPayload(){
-    const kw = ($("inKeyword").value || "").trim();
-    if(!kw) throw new Error("請填『啟動關鍵字』");
+i++;
+if(i>=Q.length) calc();
+else ask();
+};
+});
+}
 
-    const ageOpts = [
-      ($("age1").value || "").trim(),
-      ($("age2").value || "").trim(),
-      ($("age3").value || "").trim(),
-    ];
-    if(ageOpts.some(x => !x)) throw new Error("年齡選項不可空白（需要 3 個）");
+function calc(){
+rules.sy.forEach(r=>{
+if(r.if.every(id=>ans[id]==="是")) add(r.add);
+});
 
-    const nodes = {};
-    for(let i=0;i<QUESTIONS.length;i++){
-      const q = QUESTIONS[i];
-      if(q.type === "done") continue;
+let arr=Object.entries(score).sort((a,b)=>b[1]-a[1]);
+let need=arr.filter(v=>v[1]>=4);
 
-      const nextId = (QUESTIONS[i+1] && QUESTIONS[i+1].id !== "done") ? QUESTIONS[i+1].id : "";
-      if(q.type === "yn"){
-        nodes[q.id] = {
-          q: q.text,
-          type: "yn",
-          options: [
-            { t:"是",   value:"是",   next: nextId },
-            { t:"不是", value:"不是", next: nextId },
-          ]
-        };
-      } else if(q.type === "sex"){
-        nodes[q.id] = {
-          q: q.text,
-          type: "sex",
-          options: [
-            { t:"男", value:"男", next: nextId },
-            { t:"女", value:"女", next: nextId },
-          ]
-        };
-      } else if(q.type === "age"){
-        nodes[q.id] = {
-          q: q.text,
-          type: "age",
-          options: [
-            { t:ageOpts[0], value:ageOpts[0], next: nextId },
-            { t:ageOpts[1], value:ageOpts[1], next: nextId },
-            { t:ageOpts[2], value:ageOpts[2], next: nextId },
-          ]
-        };
-      }
-    }
+if(!need.length){
+app.innerHTML=`<div class=result>
+結果分析
 
-    return {
-      version: "life11-v2",
-      name: "life11",
-      title: "生活型態營養問卷（11題）",
-      keyword: kw,
-      start: "q1",
-      rules: buildRules(ageOpts),
-      nutrientLinks: getNutrientLinks(),
-      nodes,
-      order: QUESTIONS.filter(x=>x.type!=="done").map(x=>x.id),
-      nutrients: LABEL,
-      ui: {
-        showAllLinks: !!$("chkShowAllLinks").checked
-      }
-    };
-  }
+目前整體飲食狀態穩定
+沒有明顯需要優先補充的營養方向
 
-  async function writeKV(){
-    if(!CONNECTED) throw new Error("未連線，不能寫入（先按『連線檢查』）");
-    const payload = buildSurveyPayload();
+建議維持目前飲食習慣即可
+</div>`;
+return;
+}
 
-    await kvPut(Q_KEY, payload);
+let text="結果分析\n\n建議優先補充：\n";
+need.forEach(v=> text+="• "+v[0]+"\n");
 
-    const kw = payload.keyword.trim();
-    let map = {};
-    try{
-      const raw = await kvGet(KW_MAP_KEY);
-      if(raw && typeof raw === "object") map = raw;
-    }catch{
-      map = {};
-    }
-    map[kw] = "life11";
-    await kvPut(KW_MAP_KEY, map);
+let links="";
+need.forEach(v=>{
+if(LINKS[v[0]])
+links+=`<a class=link href="${LINKS[v[0]]}" target=_blank>查看 ${v[0]} 建議</a>`;
+});
 
-    toast("已寫入 KV ✅（問卷 + KW_MAP + nutrientLinks）");
-  }
+app.innerHTML=`<div class=result>${text}</div>${links}`;
+}
 
-  // ====== simulation ======
-  const simState = {};
-  function renderSim(){
-    const ageOpts = [
-      ($("age1").value || "18歲以下").trim(),
-      ($("age2").value || "19–39歲").trim(),
-      ($("age3").value || "40歲以上").trim(),
-    ];
-
-    const wrap = $("simWrap");
-    wrap.innerHTML = "";
-
-    QUESTIONS.filter(x=>x.type!=="done").forEach((q, i)=>{
-      const box = document.createElement("div");
-      box.className = "rounded-2xl border border-slate-200 bg-white p-4";
-
-      let optsHtml = "";
-      if(q.type==="yn"){
-        const v = simState[q.id] ?? "不是";
-        optsHtml = `
-          <div class="flex gap-2 flex-wrap mt-2">
-            <button data-v="是" class="px-3 py-2 rounded-xl border ${v==="是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">是</button>
-            <button data-v="不是" class="px-3 py-2 rounded-xl border ${v==="不是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">不是</button>
-          </div>
-        `;
-      }else if(q.type==="sex"){
-        const v = simState[q.id] ?? "男";
-        optsHtml = `
-          <div class="flex gap-2 flex-wrap mt-2">
-            <button data-v="男" class="px-3 py-2 rounded-xl border ${v==="男"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">男</button>
-            <button data-v="女" class="px-3 py-2 rounded-xl border ${v==="女"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">女</button>
-          </div>
-        `;
-      }else if(q.type==="age"){
-        const v = simState[q.id] ?? ageOpts[1];
-        optsHtml = `
-          <div class="flex gap-2 flex-wrap mt-2">
-            ${ageOpts.map(a => `
-              <button data-v="${escapeHtml(a)}" class="px-3 py-2 rounded-xl border ${v===a?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">${escapeHtml(a)}</button>
-            `).join("")}
-          </div>
-        `;
-      }
-
-      box.innerHTML = `
-        <div class="text-xs text-slate-500">問題 No.${i+1}/11</div>
-        <div class="mt-1 font-extrabold text-slate-900">${escapeHtml(q.text)}</div>
-        ${optsHtml}
-      `;
-
-      box.querySelectorAll("button[data-v]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const v = btn.getAttribute("data-v");
-          simState[q.id] = v;
-          renderSim();
-        });
-      });
-
-      wrap.appendChild(box);
-    });
-  }
-
-  // ====== report ======
-  function add(score, obj){
-    for(const k in obj){
-      score[k] = (score[k] || 0) + obj[k];
-    }
-  }
-  function level(v){
-    if(v>=6) return "優先";
-    if(v>=4) return "建議補強";
-    if(v>=2) return "可加強";
-    return "穩定";
-  }
-  function makeReport(){
-    const ageOpts = [
-      ($("age1").value || "18歲以下").trim(),
-      ($("age2").value || "19–39歲").trim(),
-      ($("age3").value || "40歲以上").trim(),
-    ];
-    const rules = buildRules(ageOpts);
-    const links = getNutrientLinks();
-    const showAllLinks = !!$("chkShowAllLinks").checked;
-
-    const ans = {};
-    QUESTIONS.filter(x=>x.type!=="done").forEach(q=>{
-      if(q.type==="yn") ans[q.id] = simState[q.id] ?? "不是";
-      if(q.type==="sex") ans[q.id] = simState[q.id] ?? "男";
-      if(q.type==="age") ans[q.id] = simState[q.id] ?? ageOpts[1];
-    });
-
-    const score = {};
-    for(const qid of Object.keys(rules.yn_yes)){
-      if(ans[qid] === "是") add(score, rules.yn_yes[qid]);
-    }
-    add(score, rules.sex[ans.q10] || {});
-    add(score, rules.age[ans.q11] || {});
-
-    const arr = Object.keys(LABEL).map(k => [k, score[k] || 0]).sort((a,b)=>b[1]-a[1]);
-    const total = arr.reduce((s, [,v])=>s+v, 0);
-
-    // ✅ 健康/維持判斷：幾乎沒有加分 → 不推補充
-    const isMaintain = total <= 2; // 門檻你之後要更嚴/更鬆都可調
-
-    const top = arr.slice(0,3).filter(x=>x[1]>0);
-    const topText = isMaintain
-      ? "目前沒有明顯需要優先加強的項目（維持即可）"
-      : (top.length
-          ? top.map(([k,v],i)=>`${i+1}) ${LABEL[k]}（${level(v)}）`).join("\n")
-          : "目前沒有明顯需要優先加強的項目（維持即可）"
-        );
-
-    const blocks = arr.map(([k,v]) => `• ${LABEL[k]}：${level(v)}`).join("\n");
-
-    const tips = [];
-    if(isMaintain){
-      tips.push("你的填答顯示生活型態相對穩定：維持三餐節奏、蛋白質與蔬果量即可。");
-      tips.push("若近期偶爾疲勞或壓力大，先從睡眠時間固定、減少含糖飲料與規律走動開始。");
-      tips.push("每週檢視一次：蔬果是否有達 5 份、蛋白質是否每餐都有。");
-    }else{
-      if((score.fiber||0) >= 2) tips.push("把「蔬菜+水果」拉到每天至少 5 份（用手掌大小盤子估算）。");
-      if((score.protein||0) >= 3) tips.push("每餐安排 1 份優質蛋白（豆/魚/蛋/肉/乳），先把總量補足。");
-      if((score.ca_mg||0) >= 2) tips.push("乳製品不足時，可用豆製品/深綠蔬菜分段補鈣，並維持日曬習慣。");
-      if((score.vitC||0) >= 2) tips.push("蔬果不足/高溫油炸/吸菸者，先把新鮮蔬果與作息穩定做起來。");
-      if((score.vitB||0) >= 2) tips.push("若常兩餐/節食/主食偏少，先把三餐節奏調回穩定。");
-      if(!tips.length) tips.push("目前整體偏穩定：維持規律飲食、蛋白質與蔬果量，並留意水分補充。");
-      while(tips.length < 3) tips.push(tips[tips.length-1]);
-      tips.length = 3;
-    }
-
-    // 連結列出：只列需要 or 全列
-    const needKeys = isMaintain
-      ? [] // 維持就不列「需要補充」
-      : arr.filter(([,v])=>v>=4).map(([k])=>k); // 門檻：>=4 才算「建議補強以上」
-
-    const linkLines = [];
-    const keysToShow = showAllLinks ? Object.keys(LABEL) : needKeys;
-    keysToShow.forEach(k=>{
-      const url = links[k] || "";
-      if(!url) return; // 沒填就不顯示
-      linkLines.push(`- ${LABEL[k]}：${url}`);
-    });
-
-    const kw = ($("inKeyword").value||"").trim() || "-";
-
-    const report =
-`【生活型態營養問卷｜文字版評估結果】
-
-啟動關鍵字：${kw}
-
-基本資料：
-- 性別：${ans.q10}
-- 年齡：${ans.q11}
-
-你的優先關注方向（Top 3）：
-${topText}
-
-各項營養方向概況：
-${blocks}
-
-【你可以先做的 3 件事】
-1) ${tips[0]}
-2) ${tips[1]}
-3) ${tips[2]}
-
-【相關連結】
-${linkLines.length ? linkLines.join("\n") : (isMaintain ? "（目前以維持為主，沒有必須額外補充的項目）" : "（你尚未填入對應連結）")}
-
-提醒：本分析為生活營養評估，不涉及醫療診斷；若有慢性病、孕哺或用藥，請先詢問專業人員。`;
-
-    $("outReport").value = report;
-  }
-
-  // ====== events ======
-  $("btnConnect").addEventListener("click", async ()=>{
-    try{ await connect(); }
-    catch(e){
-      setStatus(false, "連線失敗");
-      showErr(e);
-      toast("連線失敗", "err");
-    }
-  });
-
-  $("btnWrite").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      await writeKV();
-    }catch(e){
-      showErr(e);
-      toast(e.message || "寫入失敗", "err");
-    }
-  });
-
-  $("btnSimAllGood").addEventListener("click", ()=>{
-    // ✅ 都很健康：所有 yn = 不是
-    ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
-    simState.q10="男";
-    simState.q11=($("age2").value||"19–39歲").trim();
-    renderSim();
-    toast("已填入『都很健康』測試答案");
-  });
-
-  $("btnSimDefault").addEventListener("click", ()=>{
-    // 常見不足：給一組偏需要調整的答案
-    simState.q1="是";
-    simState.q2="是";
-    simState.q3="不是";
-    simState.q4="是";
-    simState.q5="是";
-    simState.q6="是";
-    simState.q7="是";
-    simState.q8="不是";
-    simState.q9="是";
-    simState.q10="男";
-    simState.q11=($("age2").value||"19–39歲").trim();
-    renderSim();
-    toast("已填入『常見不足』測試答案");
-  });
-
-  $("btnMakeReport").addEventListener("click", ()=>{
-    try{ makeReport(); toast("已產生文字報告 ✅"); }
-    catch(e){ toast(e.message, "err"); }
-  });
-
-  $("btnCopyReport").addEventListener("click", async ()=>{
-    try{
-      const t = $("outReport").value || "";
-      if(!t.trim()) return toast("沒有報告可複製", "warn");
-      await navigator.clipboard.writeText(t);
-      toast("已複製報告 ✅");
-    }catch{
-      toast("複製失敗（瀏覽器限制）", "warn");
-    }
-  });
-
-  ["age1","age2","age3"].forEach(id=>{
-    $(id).addEventListener("input", ()=> renderSim());
-  });
-
-  // init
-  renderSim();
-})();
+const p=new URLSearchParams(location.search);
+if(p.get("k")===START_KEYWORD) ask();
+else app.innerHTML="請從LINE輸入「生活營養」啟動";
 </script>
 </body>
 </html>
