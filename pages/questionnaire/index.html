@@ -338,8 +338,8 @@
           <div class="mt-4 rounded-2xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
             <div class="font-bold">格式（最完整）</div>
             <div class="text-xs text-slate-500 mt-1">每個 NODE 最少 4 個選項才符合你「每題四個選項」。</div>
-<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap thinbar">NAME: 生活健康問卷_20題_四選一
-TITLE: 3分鐘生活健康分析（20題）
+<pre class="mt-2 p-3 rounded-xl bg-slate-900 text-slate-50 text-xs overflow-auto mono whitespace-pre-wrap thinbar">NAME: 生活健康問卷_精簡版
+TITLE: 3分鐘生活健康分析（精簡版）
 KEYWORD: 生活問卷
 START: q1
 FINAL: 需要我幫你做 7 天調整建議，回我「7天」。
@@ -354,13 +354,18 @@ Q: 你最近整體精神感受比較像？
 NODE: q2
 Q: 你最近的睡眠品質？
 - 好，醒來清爽 -> next=q3 report=
-- 還行，但偶爾醒 -> next=q3 report=
+- 還行，偶爾醒 -> next=q3 report=
 - 常醒/淺眠 -> next=q3 report=
 - 難入睡 -> next=q3 report=
 
-...
-（一路到 q20）
-NODE: q20
+NODE: q3
+Q: 你腸胃感受比較像？
+- 順暢 -> next=q4 report=
+- 偶爾不適 -> next=q4 report=
+- 常脹氣/悶 -> next=q4 report=
+- 容易拉肚子或便祕 -> next=q4 report=
+
+NODE: q4
 Q: 最後一題：你比較想先從哪個方向開始調整？
 - 睡眠與作息 -> next=END report=life_sleep
 - 壓力與放鬆 -> next=END report=life_stress
@@ -374,7 +379,7 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
             placeholder="把完整格式貼這裡…（手機也能滑到底）"></textarea>
 
           <div class="mt-4 flex flex-wrap gap-2 justify-end">
-            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入完整範例</button>
+            <button id="btnBulkExample" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">塞入精簡範例</button>
             <button id="btnBulkApply" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">套用</button>
           </div>
         </div>
@@ -389,6 +394,7 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
    - KW_MAP 改用 KV key：AI_SURVEY:KW_MAP（用 putAny/loadAny 自己做）
    - surveyDelete 改用 deleteAny + 更新 KW_MAP
    - 圖片整批匯入：多選檔 → /upload → 依「檔名 reportKey 開頭」自動寫入模板
+   - ✅ 已把「塞入完整範例」的 20 題改成「精簡 4 題」
    ============================================================ */
 
 (() => {
@@ -829,7 +835,6 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
       const node = nodes[nodeId];
       if(!String(node.q||"").trim()) throw new Error(`node ${nodeId} 題目是空的`);
       if(!Array.isArray(node.options) || node.options.length===0) throw new Error(`node ${nodeId} 沒有選項`);
-      // 你要「每題 4 個選項」：這裡直接驗
       if(node.options.length !== 4) throw new Error(`node ${nodeId} 不是四選一（目前 ${node.options.length} 個選項）`);
 
       node.options.forEach((o, i)=>{
@@ -867,7 +872,7 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
 
     await kvPut(Q_PREFIX + CURRENT.name, CURRENT);
 
-    // 更新 KW_MAP：同一問卷可能改了 keyword
+    // 更新 KW_MAP
     await refreshKwMap();
     for(const k of Object.keys(KW_MAP)){
       if(KW_MAP[k] === CURRENT.name && k !== kw){
@@ -1216,7 +1221,6 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
     if(!Object.keys(out.nodes).length) throw new Error("沒有讀到 NODE");
     if(!out.start) out.start = "q1";
 
-    // 你要求：每題 4 個選項
     for(const nid of Object.keys(out.nodes)){
       const o = out.nodes[nid]?.options || [];
       if(o.length !== 4) throw new Error(`NODE ${nid} 不是四選一（目前 ${o.length} 個選項）`);
@@ -1241,9 +1245,7 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
   function parseReportKeyFromFilename(filename){
     const n = String(filename||"").trim();
     if(!n) return "";
-    // 取副檔名之前
     const base = n.replace(/\.[^.]+$/,"");
-    // 這裡直接用整個 base 當 reportKey（最符合你用底線命名）
     return base.trim();
   }
 
@@ -1456,10 +1458,11 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
     $("btnBulkClose").onclick = closeBulk;
     $("bulkModal").addEventListener("click", (e)=>{ if(e.target === $("bulkModal")) closeBulk(); });
 
+    // ✅ 這裡就是「塞入範例」：已改成精簡 4 題
     $("btnBulkExample").onclick = ()=>{
       $("bulkText").value =
-`NAME: 生活健康問卷_20題_四選一
-TITLE: 3分鐘生活健康分析（20題）
+`NAME: 生活健康問卷_精簡版
+TITLE: 3分鐘生活健康分析（精簡版）
 KEYWORD: 生活問卷
 START: q1
 FINAL: 需要我幫你做 7 天調整建議，回我「7天」。
@@ -1479,131 +1482,19 @@ Q: 你最近的睡眠品質？
 - 難入睡 -> next=q3 report=
 
 NODE: q3
-Q: 你平常入睡時間多半在？
-- 22:00前 -> next=q4 report=
-- 22:00~24:00 -> next=q4 report=
-- 24:00~02:00 -> next=q4 report=
-- 02:00後 -> next=q4 report=
+Q: 你腸胃感受比較像？
+- 順暢 -> next=q4 report=
+- 偶爾不適 -> next=q4 report=
+- 常脹氣/悶 -> next=q4 report=
+- 容易拉肚子或便祕 -> next=q4 report=
 
 NODE: q4
-Q: 你最近的壓力感受？
-- 不太有 -> next=q5 report=
-- 偶爾有 -> next=q5 report=
-- 常常有 -> next=q5 report=
-- 很明顯、難放鬆 -> next=q5 report=
-
-NODE: q5
-Q: 你平常外食頻率？
-- 很少 -> next=q6 report=
-- 一週1~3次 -> next=q6 report=
-- 一週4~6次 -> next=q6 report=
-- 幾乎天天 -> next=q6 report=
-
-NODE: q6
-Q: 你平常喝水量大概？
-- 足夠（>1500ml） -> next=q7 report=
-- 普通（1000~1500ml） -> next=q7 report=
-- 偏少（500~1000ml） -> next=q7 report=
-- 很少（<500ml） -> next=q7 report=
-
-NODE: q7
-Q: 你吃蔬果的頻率？
-- 每天都有 -> next=q8 report=
-- 大多有 -> next=q8 report=
-- 偶爾有 -> next=q8 report=
-- 很少 -> next=q8 report=
-
-NODE: q8
-Q: 你腸胃感受比較像？
-- 順暢 -> next=q9 report=
-- 偶爾不適 -> next=q9 report=
-- 常胀氣/悶 -> next=q9 report=
-- 容易拉肚子或便祕 -> next=q9 report=
-
-NODE: q9
-Q: 你運動頻率？
-- 一週4次以上 -> next=q10 report=
-- 一週2~3次 -> next=q10 report=
-- 一週1次 -> next=q10 report=
-- 幾乎不運動 -> next=q10 report=
-
-NODE: q10
-Q: 你最近體態/體重感受？
-- 穩定 -> next=q11 report=
-- 小幅變動 -> next=q11 report=
-- 慢慢上升 -> next=q11 report=
-- 很難控制 -> next=q11 report=
-
-NODE: q11
-Q: 你白天的專注狀態？
-- 很專注 -> next=q12 report=
-- 還可以 -> next=q12 report=
-- 容易分心 -> next=q12 report=
-- 常覺得腦袋卡 -> next=q12 report=
-
-NODE: q12
-Q: 你情緒起伏？
-- 穩定 -> next=q13 report=
-- 偶爾波動 -> next=q13 report=
-- 容易煩躁 -> next=q13 report=
-- 常覺得低落 -> next=q13 report=
-
-NODE: q13
-Q: 你排便頻率？
-- 每天 -> next=q14 report=
-- 2天1次 -> next=q14 report=
-- 3天以上 -> next=q14 report=
-- 不固定 -> next=q14 report=
-
-NODE: q14
-Q: 你飯後狀態？
-- 精神OK -> next=q15 report=
-- 有點想睡 -> next=q15 report=
-- 很容易昏沉 -> next=q15 report=
-- 常覺得胃悶 -> next=q15 report=
-
-NODE: q15
-Q: 你甜食/含糖飲頻率？
-- 很少 -> next=q16 report=
-- 偶爾 -> next=q16 report=
-- 常常 -> next=q16 report=
-- 幾乎每天 -> next=q16 report=
-
-NODE: q16
-Q: 你咖啡因攝取？
-- 不喝 -> next=q17 report=
-- 一天1杯 -> next=q17 report=
-- 一天2杯 -> next=q17 report=
-- 2杯以上 -> next=q17 report=
-
-NODE: q17
-Q: 你肌力/體力狀態？
-- 很好 -> next=q18 report=
-- 普通 -> next=q18 report=
-- 偏弱 -> next=q18 report=
-- 很容易累 -> next=q18 report=
-
-NODE: q18
-Q: 你皮膚/嘴唇乾燥感？
-- 不太 -> next=q19 report=
-- 偶爾 -> next=q19 report=
-- 常常 -> next=q19 report=
-- 很明顯 -> next=q19 report=
-
-NODE: q19
-Q: 你最近有沒有固定曬太陽或戶外走路？
-- 幾乎每天 -> next=q20 report=
-- 一週幾次 -> next=q20 report=
-- 偶爾 -> next=q20 report=
-- 幾乎沒有 -> next=q20 report=
-
-NODE: q20
 Q: 最後一題：你比較想先從哪個方向開始調整？
 - 睡眠與作息 -> next=END report=life_sleep
 - 壓力與放鬆 -> next=END report=life_stress
 - 飲食與腸胃 -> next=END report=life_gut
 - 體態與代謝 -> next=END report=life_metabolism`;
-      toast("已塞入完整範例");
+      toast("已塞入精簡範例（已砍掉 20 題）");
       $("bulkText").focus();
     };
 
@@ -1623,8 +1514,6 @@ Q: 最後一題：你比較想先從哪個方向開始調整？
       catch(e){ toast(e.message,"err"); }
     };
   }
-
-  function renderLeads(){ renderLeads = renderLeads; } // no-op placeholder for search binding safety
 
   // ---------- init ----------
   async function init(){
