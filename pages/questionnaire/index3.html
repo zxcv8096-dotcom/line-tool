@@ -35,7 +35,7 @@
     <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台（11題）</h1>
-        <p class="text-sm text-slate-600 mt-1">一鍵把題目/關鍵字/扣分規則/年齡層攝取量寫進 Cloudflare KV；右側直接產生圖片版報告 PNG（取代文字報告）。</p>
+        <p class="text-sm text-slate-600 mt-1">這頁：一鍵寫入 KV（問卷/規則/攝取量）＋ 直接生成「圖片版營養素比例報告」PNG（不含文字報告、不含LOGO設定）。</p>
       </div>
       <div class="text-xs text-slate-600 leading-6">
         <div class="font-bold">需要 Worker 提供 API：</div>
@@ -112,7 +112,7 @@
           <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
             <div class="font-extrabold">扣分模型規則（固定邏輯）</div>
             <div>• 從 100% 開始，答「是」就扣分；會自動夾到 0～100%。</div>
-            <div>• 圖片報告固定順序顯示 9 種營養素 + 第10格 CTA。</div>
+            <div>• 圖片報告固定輸出 10 格：9 個營養素 + 1 個 CTA 區。</div>
           </div>
         </div>
       </section>
@@ -122,7 +122,7 @@
         <div class="flex items-end justify-between gap-3">
           <div>
             <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">這裡只做圖片報告 PNG（已刪除文字版報告輸出）。</p>
+            <p class="text-sm text-slate-600 mt-1">這裡只做圖片報告 PNG（已刪除文字報告、不含LOGO設定）。</p>
           </div>
           <div class="flex gap-2">
             <button id="btnSimAllGood" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
@@ -146,8 +146,8 @@
           <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="flex items-end justify-between gap-3">
               <div>
-                <div class="text-sm font-extrabold text-slate-900">R2 上傳（底板/LOGO）</div>
-                <div class="text-xs text-slate-500 mt-1">選檔 → 上傳到 Worker 的 <span class="mono">POST /upload</span> → 回傳 URL 後可一鍵套用。</div>
+                <div class="text-sm font-extrabold text-slate-900">R2 上傳（底板）</div>
+                <div class="text-xs text-slate-500 mt-1">選檔 → 上傳到 Worker 的 <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板URL。</div>
               </div>
               <div class="text-[11px] text-slate-500">
                 需求：你的 Worker /upload 需支援 <span class="mono">multipart/form-data</span>。
@@ -163,14 +163,13 @@
                 <div>
                   <label class="text-xs font-bold text-slate-500">存放路徑（key）</label>
                   <input id="upKey" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
-                    placeholder="assets/bg.png" />
+                    placeholder="assets/report_bg.png" />
                 </div>
               </div>
 
               <div class="flex gap-2">
                 <button id="btnUploadR2" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">上傳到 R2</button>
                 <button id="btnUseAsBg" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">設為底板URL</button>
-                <button id="btnUseAsLogo" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">設為LOGO URL</button>
               </div>
 
               <div class="rounded-xl border border-slate-200 bg-white p-3">
@@ -188,8 +187,8 @@
           <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="flex items-end justify-between gap-3">
               <div>
-                <div class="text-sm font-extrabold text-slate-900">圖片版報告（預覽/匯出PNG）</div>
-                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（9 種營養素 + 第10格 CTA）。</div>
+                <div class="text-sm font-extrabold text-slate-900">圖片版營養素比例報告（預覽/匯出PNG）</div>
+                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（9 種營養素長條 + 第10格 CTA）。</div>
               </div>
               <div class="flex gap-2">
                 <button id="btnRenderImg" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">產生圖片</button>
@@ -201,15 +200,12 @@
               <label class="text-xs font-bold text-slate-500">底板圖片URL（R2 公開網址）</label>
               <input id="inBgUrl" class="w-full px-3 py-2 rounded-xl border border-slate-200 mono"
                 placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
-              <label class="text-xs font-bold text-slate-500">LOGO圖片URL（可空白）</label>
-              <input id="inLogoUrl" class="w-full px-3 py-2 rounded-xl border border-slate-200 mono"
-                placeholder="https://.../logo.png" />
             </div>
 
             <div class="mt-3">
               <canvas id="cvReport" class="w-full rounded-2xl border border-slate-200 bg-white"></canvas>
               <div class="text-[11px] text-slate-500 mt-2">
-                ※ 若「下載PNG」失敗，多半是背景圖跨域（CORS）沒開。
+                ※ 若「下載PNG」失敗，多半是底板圖跨域（CORS）沒開。
               </div>
             </div>
           </div>
@@ -223,7 +219,7 @@
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
           <h2 class="text-lg font-extrabold text-slate-900">③ 年齡層參考值（Excel 版｜可改）</h2>
-          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（之後你要在 Worker 產圖也能用同一份 targets）。</p>
+          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（同一份資料可供 Worker 端產圖使用）。</p>
         </div>
         <div class="flex gap-2">
           <button id="btnResetTargets" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">恢復 Excel 預設</button>
@@ -419,7 +415,6 @@
       tr.innerHTML = `
         <td class="p-2 font-semibold text-slate-900">${escapeHtml(row.name)}</td>
         <td class="p-2 text-slate-600">${escapeHtml(row.unit)}</td>
-
         <td class="p-2"><input data-col="child" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.child)}" /></td>
         <td class="p-2"><input data-col="teen" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.teen)}" /></td>
         <td class="p-2"><input data-col="adultF" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.adultF)}" /></td>
@@ -511,7 +506,7 @@
     }
 
     return {
-      version: "life11-v7-image-only",
+      version: "life11-v8-image-only",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -628,7 +623,7 @@
     const f = $("upFile").files?.[0];
     if(!f) throw new Error("請先選擇檔案");
     const key = ($("upKey").value || "").trim();
-    if(!key) throw new Error("請填『存放路徑（key）』例如 assets/bg.png");
+    if(!key) throw new Error("請填『存放路徑（key）』例如 assets/report_bg.png");
 
     const fd = new FormData();
     fd.append("file", f);
@@ -643,8 +638,9 @@
     return url;
   }
 
-  // Canvas image render (C style bars)
+  // Canvas image render
   let lastPngDataUrl = "";
+
   function pctColor(p){
     if(p < 35) return "#ff4d4f";
     if(p < 70) return "#fbbf24";
@@ -673,7 +669,6 @@
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
     if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
-    const logoUrl = ($("inLogoUrl").value||"").trim();
 
     const W = 900, H = 1600;
     const cv = $("cvReport");
@@ -685,6 +680,7 @@
 
     const { ans, remain } = getRemainFromSim();
 
+    // 半透明面板
     const panelX = 60, panelY = 860, panelW = W-120, panelH = 680;
     ctx.save();
     ctx.globalAlpha = 0.22;
@@ -693,25 +689,17 @@
     ctx.fill();
     ctx.restore();
 
+    // 標題（不依賴LOGO）
     ctx.fillStyle = "rgba(255,255,255,.95)";
     ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("營養狀況總覽", panelX+34, panelY+70);
+    ctx.fillText("營養素比例報告", panelX+34, panelY+70);
 
     ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, panelX+34, panelY+108);
 
-    if(logoUrl){
-      try{
-        const logo = await loadImg(logoUrl);
-        const lw = 260, lh = 90;
-        ctx.globalAlpha = 0.95;
-        ctx.drawImage(logo, W/2 - lw/2, 60, lw, lh);
-        ctx.globalAlpha = 1;
-      }catch{}
-    }
-
+    // 10格：9營養素 + CTA
     const cols=2, rows=5, gap=18;
     const boxX=panelX+26, boxY=panelY+140;
     const boxW=(panelW-26*2-gap)/cols;
@@ -746,7 +734,7 @@
       if(items[i].key === "cta"){
         ctx.fillStyle = "rgba(255,255,255,.90)";
         ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-        ctx.fillText("（此格之後可做為可點擊區）", x+20, y+86);
+        ctx.fillText("（此格可做可點擊區）", x+20, y+86);
         continue;
       }
 
@@ -802,13 +790,6 @@
     if(!u) return toast("沒有可用的上傳URL","warn");
     $("inBgUrl").value = u;
     toast("已填入底板URL ✅");
-  });
-
-  $("btnUseAsLogo").addEventListener("click", ()=>{
-    const u = ($("upResultUrl").value||"").trim();
-    if(!u) return toast("沒有可用的上傳URL","warn");
-    $("inLogoUrl").value = u;
-    toast("已填入LOGO URL ✅");
   });
 
   $("btnRenderImg").addEventListener("click", async ()=>{
