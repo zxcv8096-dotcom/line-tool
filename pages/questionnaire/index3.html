@@ -35,11 +35,11 @@
     <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台（11題）</h1>
-        <p class="text-sm text-slate-600 mt-1">這頁就是你的唯一中控台：一鍵把題目/關鍵字/扣分規則/年齡層攝取量/引流圖設定寫進 Cloudflare KV。</p>
+        <p class="text-sm text-slate-600 mt-1">這頁就是你的唯一中控台：一鍵把題目/關鍵字/扣分規則/年齡層攝取量寫進 Cloudflare KV；右側可直接產生圖片版報告 PNG。</p>
       </div>
       <div class="text-xs text-slate-600 leading-6">
         <div class="font-bold">需要 Worker 提供 API：</div>
-        <div class="mono">POST /listAll /putAny /loadAny</div>
+        <div class="mono">POST /listAll /putAny /loadAny /upload</div>
         <div class="text-[11px] text-slate-500 mt-1">（若你 Worker 有驗證，可在下方填 Admin Key）</div>
       </div>
     </header>
@@ -106,59 +106,14 @@
               <input id="ageAdult" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="19 歲以上" />
             </div>
             <div class="text-[12px] text-indigo-900/70 mt-2">
-              19 歲以上會依 Q10 性別自動套用「女/男」的攝取量（跟你的 Excel 一樣）。
-            </div>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="flex items-center justify-between gap-2">
-              <div>
-                <div class="text-sm font-extrabold text-slate-900">營養素連結（每項一個）</div>
-                <div class="text-xs text-slate-500 mt-1">報告會「只列出需要關注的項目」對應連結（你也可切換）。</div>
-              </div>
-              <label class="flex items-center gap-2 text-xs font-bold text-slate-700 select-none">
-                <input id="chkShowAllLinks" type="checkbox" class="w-4 h-4">
-                全部都列出
-              </label>
-            </div>
-
-            <div class="mt-3 grid md:grid-cols-2 gap-2">
-              <div><label class="text-xs font-bold text-slate-500">維生素A 連結</label><input id="lnk_vitA" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">維生素B群 連結</label><input id="lnk_vitB" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">維生素C 連結</label><input id="lnk_vitC" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">維生素D 連結</label><input id="lnk_vitD" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">維生素E 連結</label><input id="lnk_vitE" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">鈣鎂 連結</label><input id="lnk_ca_mg" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">鐵 連結</label><input id="lnk_iron" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">膳食纖維 連結</label><input id="lnk_fiber" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">微量元素 連結</label><input id="lnk_trace" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-              <div><label class="text-xs font-bold text-slate-500">（保留）蛋白質 連結</label><input id="lnk_protein" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://..." /></div>
-            </div>
-
-            <div class="mt-3 text-xs text-slate-500">
-              也會一起寫入問卷 payload：<span class="mono">nutrientLinks</span>（給 Worker 產報告用）
-            </div>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="text-sm font-extrabold text-slate-900">引流圖（報告後面保留位置）</div>
-            <div class="text-xs text-slate-500 mt-1">你放一張統一的引流圖（客戶點擊購買）。</div>
-            <div class="mt-3 grid gap-2">
-              <div>
-                <label class="text-xs font-bold text-slate-500">引流圖「圖片網址」</label>
-                <input id="leadImgUrl" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://.../lead.png" />
-              </div>
-              <div>
-                <label class="text-xs font-bold text-slate-500">引流圖「點擊連結」</label>
-                <input id="leadImgLink" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200" placeholder="https://...（購買頁/選購頁）" />
-              </div>
+              19 歲以上會依 Q10 性別自動套用「女/男」的攝取量。
             </div>
           </div>
 
           <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">扣分模型規則（你要的邏輯）</div>
-            <div>• 從 100% 開始，答「是」就扣分；全部都答「是」時，多數營養素會被扣到 0%（會自動夾到 0～100）。</div>
-            <div>• 文字報告會「每個營養素都顯示 %」。</div>
+            <div class="font-extrabold">扣分模型規則（固定邏輯）</div>
+            <div>• 從 100% 開始，答「是」就扣分；會自動夾到 0～100%。</div>
+            <div>• 圖片與文字報告都會以固定順序顯示 9 種營養素。</div>
           </div>
         </div>
       </section>
@@ -168,7 +123,7 @@
         <div class="flex items-end justify-between gap-3">
           <div>
             <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">這裡只用來確認文字報告（% + 年齡層參考值 + 引流圖位置）。寫入 KV 後由 LINE OA 使用。</p>
+            <p class="text-sm text-slate-600 mt-1">這裡用來確認：文字報告 + 圖片報告（PNG）。</p>
           </div>
           <div class="flex gap-2">
             <button id="btnSimAllGood" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
@@ -199,10 +154,52 @@
 
           <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="text-sm font-extrabold text-slate-900">文字版報告輸出</div>
-            <textarea id="outReport" rows="14" class="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200"
+            <textarea id="outReport" rows="12" class="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200"
               placeholder="按『產生文字報告』後會出現在這裡"></textarea>
             <div class="text-xs text-slate-500 mt-2">
-              顯示內容：所有營養素%（固定順序）＋ 你所屬年齡層參考值（依 Excel）＋ 引流圖位置
+              顯示內容：9 種營養素%（固定順序）＋ 每日攝取參考值（依年齡/性別）。
+            </div>
+          </div>
+
+          <!-- R2 UPLOAD -->
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div class="flex items-end justify-between gap-3">
+              <div>
+                <div class="text-sm font-extrabold text-slate-900">R2 上傳（背景/LOGO）</div>
+                <div class="text-xs text-slate-500 mt-1">選檔 → 上傳到 Worker 的 <span class="mono">POST /upload</span> → 回傳 URL 後自動填入下方。</div>
+              </div>
+              <div class="text-[11px] text-slate-500">
+                需求：你的 Worker /upload 需支援 <span class="mono">multipart/form-data</span>。
+              </div>
+            </div>
+
+            <div class="mt-3 grid gap-2">
+              <div class="grid md:grid-cols-3 gap-2 items-end">
+                <div class="md:col-span-2">
+                  <label class="text-xs font-bold text-slate-500">選擇檔案</label>
+                  <input id="upFile" type="file" accept="image/*" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-slate-500">存放路徑（key）</label>
+                  <input id="upKey" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
+                    placeholder="assets/bg.png" />
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button id="btnUploadR2" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">上傳到 R2</button>
+                <button id="btnUseAsBg" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">設為底板URL</button>
+                <button id="btnUseAsLogo" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">設為LOGO URL</button>
+              </div>
+
+              <div class="rounded-xl border border-slate-200 bg-white p-3">
+                <div class="text-xs font-bold text-slate-500">上傳結果 URL</div>
+                <input id="upResultUrl" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
+                  placeholder="上傳成功後會出現在這裡" />
+                <div class="text-[11px] text-slate-500 mt-2">
+                  如果你回傳的是 <span class="mono">r2://</span> 或內部 key，請改成「可公開存取」的 URL 才能在 Canvas 匯出 PNG。
+                </div>
+              </div>
             </div>
           </div>
 
@@ -211,7 +208,7 @@
             <div class="flex items-end justify-between gap-3">
               <div>
                 <div class="text-sm font-extrabold text-slate-900">圖片版報告（預覽/匯出PNG）</div>
-                <div class="text-xs text-slate-500 mt-1">按「產生圖片」會依目前模擬答案輸出 900×1600 PNG（固定9種 + 第10格CTA）。</div>
+                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（固定9種 + 第10格CTA）。</div>
               </div>
               <div class="flex gap-2">
                 <button id="btnRenderImg" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">產生圖片</button>
@@ -231,7 +228,7 @@
             <div class="mt-3">
               <canvas id="cvReport" class="w-full rounded-2xl border border-slate-200 bg-white"></canvas>
               <div class="text-[11px] text-slate-500 mt-2">
-                ※ 若你點「下載PNG」沒反應，通常是背景圖跨域（CORS）沒開，請用 R2 公開網址並允許跨域讀取。
+                ※ 若「下載PNG」失敗，多半是背景圖跨域（CORS）沒開。請用可公開的 R2 URL，並允許跨域讀取。
               </div>
             </div>
           </div>
@@ -245,7 +242,7 @@
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
           <h2 class="text-lg font-extrabold text-slate-900">③ 年齡層參考值（Excel 版｜可改）</h2>
-          <p class="text-sm text-slate-600 mt-1">這段就是你 Excel 的內容：你改這裡，就會寫進 KV（用於報告/圖片版的「每日建議攝取量」文字）。</p>
+          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（用於文字/圖片版的「每日攝取參考值」）。</p>
         </div>
         <div class="flex gap-2">
           <button id="btnResetTargets" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">恢復 Excel 預設</button>
@@ -270,7 +267,7 @@
       </div>
 
       <div class="mt-3 text-xs text-slate-500">
-        ※ 這裡的數值會組合成：<span class="mono font-semibold">vitB(B1/B2/B6)</span>、<span class="mono font-semibold">ca_mg(鈣/鎂)</span>、<span class="mono font-semibold">trace(碘/硒)</span> 來顯示在報告中。
+        ※ 這裡的數值會組合成：<span class="mono font-semibold">vitB(B1/B2/B6)</span>、<span class="mono font-semibold">ca_mg(鈣/鎂)</span>、<span class="mono font-semibold">trace(碘/硒)</span>。
       </div>
     </section>
 
@@ -304,11 +301,11 @@
   ];
 
   // =====================
-  // Nutrient labels (for %)
+  // Nutrient labels (fixed 9)
   // =====================
   const LABEL = {
     vitA:"維生素A",
-    vitB:"維生素B群",
+    vitB:"維生素B",
     vitC:"維生素C",
     vitD:"維生素D",
     vitE:"維生素E",
@@ -316,16 +313,13 @@
     iron:"鐵",
     fiber:"膳食纖維",
     trace:"微量元素",
-    // 保留欄位（不做 % 扣分、也不在 % 清單顯示）
-    protein:"蛋白質",
   };
 
-  // 固定顯示順序（你要「固定種類」就用固定順序，不用排序）
+  // 固定顯示順序
   const PCT_ORDER = ["vitA","vitB","vitC","vitD","vitE","ca_mg","iron","fiber","trace"];
 
   // =====================
-  // Excel 來源（扣分規則）
-  // ※ 注意：這裡用「正數」表示扣分（最後用 100 - deduct 變成剩餘%）
+  // Deduct rules (answer "是" => deduct)
   // =====================
   const DEDUCT_EXCEL_DEFAULT = {
     q1: { vitA:20, vitB:17, vitC:20, vitD:25, vitE:17, ca_mg:25, iron:17, fiber:25, trace:17 },
@@ -340,8 +334,7 @@
   };
 
   // =====================
-  // Sheet2：年齡層攝取量（可在 UI 直接改）
-  // 欄位：child(0-10)、teen(11-18)、adultF(19+女)、adultM(19+男)
+  // Targets Excel (editable)
   // =====================
   const TARGETS_EXCEL_DEFAULT = [
     { id:"vitA",   name:"維生素A", unit:"µg",  child:1500, teen:2500, adultF:3000, adultM:3000 },
@@ -404,7 +397,7 @@
   function adminKey(){
     return ($("inAdminKey").value || "").trim();
   }
-  async function api(path, bodyObj){
+  async function apiJson(path, bodyObj){
     const base = apiBase();
     if(!base) throw new Error("API Base 不可空白");
     const headers = { "Content-Type":"application/json" };
@@ -421,12 +414,31 @@
     if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
     return data;
   }
+
+  async function apiForm(path, formData){
+    const base = apiBase();
+    if(!base) throw new Error("API Base 不可空白");
+    const headers = {};
+    const k = adminKey();
+    if(k) headers["X-Admin-Key"] = k;
+
+    const res = await fetch(base + path, {
+      method:"POST",
+      headers,
+      body: formData
+    });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok) throw new Error((data && (data.error||data.detail)) || (res.status + " " + res.statusText));
+    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
+    return data;
+  }
+
   async function kvGet(key){
-    const r = await api("/loadAny", { namespace:"DB", keyword:key });
+    const r = await apiJson("/loadAny", { namespace:"DB", keyword:key });
     return r?.payload ?? r;
   }
   async function kvPut(key, payload){
-    await api("/putAny", { namespace:"DB", keyword:key, payload });
+    await apiJson("/putAny", { namespace:"DB", keyword:key, payload });
   }
 
   // =====================
@@ -441,7 +453,7 @@
   }
   async function connect(){
     clearErr();
-    await api("/listAll", {});
+    await apiJson("/listAll", {});
     setStatus(true, "已連線");
     toast("連線成功");
   }
@@ -509,18 +521,15 @@
   }
 
   function getTargetsObject(){
-    // 回傳原始 rows + 組合版（給報告/worker圖片用）
     const byId = {};
     targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
 
     const pack = (ageKey, sexKey) => {
-      // ageKey: child|teen|adult, sexKey: female|male (only for adult)
       const pick = (rid) => {
         const r = byId[rid];
         if(!r) return null;
         if(ageKey==="child") return r.child;
         if(ageKey==="teen") return r.teen;
-        // adult
         return (sexKey==="female") ? r.adultF : r.adultM;
       };
 
@@ -552,31 +561,7 @@
   }
 
   // =====================
-  // Links & Lead image
-  // =====================
-  function getNutrientLinks(){
-    return {
-      vitA: ($("lnk_vitA").value||"").trim(),
-      vitB: ($("lnk_vitB").value||"").trim(),
-      vitC: ($("lnk_vitC").value||"").trim(),
-      vitD: ($("lnk_vitD").value||"").trim(),
-      vitE: ($("lnk_vitE").value||"").trim(),
-      ca_mg: ($("lnk_ca_mg").value||"").trim(),
-      iron: ($("lnk_iron").value||"").trim(),
-      fiber: ($("lnk_fiber").value||"").trim(),
-      trace: ($("lnk_trace").value||"").trim(),
-      protein: ($("lnk_protein").value||"").trim(),
-    };
-  }
-  function getLeadImage(){
-    return {
-      imageUrl: ($("leadImgUrl").value||"").trim(),
-      linkUrl:  ($("leadImgLink").value||"").trim(),
-    };
-  }
-
-  // =====================
-  // Rules builder (deduct)
+  // Age options + rules
   // =====================
   function getAgeOpts(){
     return [
@@ -587,8 +572,6 @@
   }
 
   function buildRules(){
-    // 這裡只回傳扣分規則（yn_yes）
-    // 性別/年齡不做扣分：只用於「每日攝取量」選擇
     return {
       yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT),
       sex: { "男": {}, "女": {} },
@@ -597,7 +580,7 @@
   }
 
   // =====================
-  // Survey payload (write KV)
+  // Survey payload (write KV) - 已移除：營養素連結、引流圖
   // =====================
   function buildSurveyPayload(){
     const kw = ($("inKeyword").value || "").trim();
@@ -644,31 +627,20 @@
     }
 
     const targets = getTargetsObject();
-    const lead = getLeadImage();
 
     return {
-      version: "life11-v5-percent-deduct-excel-targets",
+      version: "life11-v6-percent-deduct-no-links-no-lead",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
       start: "q1",
-
-      rules: buildRules(),                 // 扣分規則
-      nutrientLinks: getNutrientLinks(),   // 連結
-      targetsExcel: targets,               // 年齡層攝取量（Excel）
-      leadImage: lead,                     // 引流圖
-
+      rules: buildRules(),
+      targetsExcel: targets,
       nodes,
       order: QUESTIONS.filter(x=>x.type!=="done").map(x=>x.id),
-
       nutrients: LABEL,
       ui: {
-        showAllLinks: !!$("chkShowAllLinks").checked,
-        ageOptions: {
-          child: getAgeOpts()[0],
-          teen:  getAgeOpts()[1],
-          adult: getAgeOpts()[2],
-        }
+        ageOptions: { child: ageOpts[0], teen: ageOpts[1], adult: ageOpts[2] }
       }
     };
   }
@@ -690,7 +662,7 @@
     map[kw] = "life11";
     await kvPut(KW_MAP_KEY, map);
 
-    toast("已寫入 KV ✅（問卷 + KW_MAP + 扣分規則 + Excel攝取量 + 引流圖）");
+    toast("已寫入 KV ✅（問卷 + KW_MAP + 扣分規則 + Excel攝取量）");
   }
 
   // =====================
@@ -756,156 +728,9 @@
   }
 
   // =====================
-  // Report (simple % show all)
+  // Report (text)
   // =====================
   function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
-  function getSelectedTargetLines(ans){
-    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
-    const t = getTargetsObject().combined;
-
-    let pack = t.adultMale;
-    if(ans.q11 === ageChild) pack = t.child;
-    else if(ans.q11 === ageTeen) pack = t.teen;
-    else {
-      // adult
-      pack = (ans.q10 === "女") ? t.adultFemale : t.adultMale;
-    }
-
-    return [
-      `- 維生素A：${pack.vitA}`,
-      `- 維生素B群：${pack.vitB}`,
-      `- 維生素C：${pack.vitC}`,
-      `- 維生素D：${pack.vitD}`,
-      `- 維生素E：${pack.vitE}`,
-      `- 鈣鎂：${pack.ca_mg}`,
-      `- 鐵：${pack.iron}`,
-      `- 膳食纖維：${pack.fiber}`,
-      `- 微量元素：${pack.trace}`,
-    ].join("\n");
-  }
-
-  function makeReport(){
-    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
-    const rules = buildRules();
-    const links = getNutrientLinks();
-    const showAllLinks = !!$("chkShowAllLinks").checked;
-    const lead = getLeadImage();
-
-    const ans = {};
-    QUESTIONS.filter(x=>x.type!=="done").forEach(q=>{
-      if(q.type==="yn")  ans[q.id] = simState[q.id] ?? "不是";
-      if(q.type==="sex") ans[q.id] = simState[q.id] ?? "男";
-      if(q.type==="age") ans[q.id] = simState[q.id] ?? ageAdult;
-    });
-
-    // 1) 加總扣分
-    const deduct = {};
-    Object.keys(rules.yn_yes).forEach(qid=>{
-      if(ans[qid] === "是"){
-        const obj = rules.yn_yes[qid];
-        for(const k in obj){
-          deduct[k] = (deduct[k] || 0) + (Number(obj[k]) || 0);
-        }
-      }
-    });
-
-    // 2) 轉成「剩餘％」
-    const remain = {};
-    PCT_ORDER.forEach(k=>{
-      const d = deduct[k] || 0;
-      remain[k] = clamp(100 - d, 0, 100);
-    });
-
-    // 3) 需要關注（<80%）
-    const needKeys = PCT_ORDER.filter(k => remain[k] < 80);
-
-    // 4) % 文字：全部都列出
-    const pctLinesAll = PCT_ORDER.map(k => `• ${LABEL[k]}：${remain[k]}%`).join("\n");
-    const pctNeed = needKeys.length
-      ? needKeys.map(k => `• ${LABEL[k]}：${remain[k]}%`).join("\n")
-      : "（目前都 ≥ 80%：維持即可）";
-
-    // 5) 連結列出：只列需要 or 全列
-    const keysToShow = showAllLinks ? PCT_ORDER : needKeys;
-    const linkLines = [];
-    keysToShow.forEach(k=>{
-      const url = links[k] || "";
-      if(url) linkLines.push(`- ${LABEL[k]}：${url}`);
-    });
-
-    const kw = ($("inKeyword").value||"").trim() || "-";
-
-    // 6) 年齡層參考值
-    const targetLines = getSelectedTargetLines(ans);
-
-    // 7) 引流圖
-    const leadBlock = (lead.imageUrl || lead.linkUrl)
-      ? `【引流圖（點擊購買）】
-- 圖片：${lead.imageUrl || "（未填）"}
-- 連結：${lead.linkUrl || "（未填）"}`
-      : `【引流圖（點擊購買）】
-（未設定：請在中控台左側填入「圖片網址」與「點擊連結」）`;
-
-    const report =
-`【生活型態營養問卷｜結果（%）】
-
-啟動關鍵字：${kw}
-
-基本資料：
-- 性別：${ans.q10}
-- 年齡：${ans.q11}
-
-【你需要關注的項目（< 80%）】
-${pctNeed}
-
-【全部營養素 %（固定順序）】
-${pctLinesAll}
-
-【你的每日攝取參考值（依年齡/性別）】
-${targetLines}
-
-【相關連結】
-${linkLines.length ? linkLines.join("\n") : "（你尚未填入對應連結）"}
-
-${leadBlock}
-
-提醒：本分析為生活營養評估，不涉及醫療診斷；若有慢性病、孕哺或用藥，請先詢問專業人員。`;
-
-    $("outReport").value = report;
-  }
-
-  // =====================
-  // Image render (Canvas) - 固定9種 + 第10格CTA（你選 C：顏色條 + %）
-  // =====================
-  let lastPngDataUrl = "";
-
-  function pctColor(p){
-    if(p < 35) return "#ff4d4f";      // red
-    if(p < 70) return "#fbbf24";      // gold
-    return "#34d399";                 // green
-  }
-
-  async function loadImg(url){
-    return new Promise((resolve,reject)=>{
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = ()=>resolve(img);
-      img.onerror = ()=>reject(new Error("圖片載入失敗：" + url));
-      img.src = url;
-    });
-  }
-
-  function roundRect(ctx, x,y,w,h,r){
-    const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y, x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x, y+h, rr);
-    ctx.arcTo(x, y+h, x, y, rr);
-    ctx.arcTo(x, y, x+w, y, rr);
-    ctx.closePath();
-  }
 
   function getRemainFromSim(){
     const [ageChild, ageTeen, ageAdult] = getAgeOpts();
@@ -937,26 +762,140 @@ ${leadBlock}
     return { ans, remain };
   }
 
+  function getSelectedTargets(ans){
+    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
+    const t = getTargetsObject().combined;
+    if(ans.q11 === ageChild) return t.child;
+    if(ans.q11 === ageTeen) return t.teen;
+    return (ans.q10 === "女") ? t.adultFemale : t.adultMale;
+  }
+
+  function makeReport(){
+    const { ans, remain } = getRemainFromSim();
+    const pack = getSelectedTargets(ans);
+
+    const pctLinesAll = PCT_ORDER.map(k => `• ${LABEL[k]}：${remain[k]}%`).join("\n");
+
+    const targetLines =
+`- 維生素A：${pack.vitA}
+- 維生素B：${pack.vitB}
+- 維生素C：${pack.vitC}
+- 維生素D：${pack.vitD}
+- 維生素E：${pack.vitE}
+- 鈣鎂：${pack.ca_mg}
+- 鐵：${pack.iron}
+- 膳食纖維：${pack.fiber}
+- 微量元素：${pack.trace}`;
+
+    const kw = ($("inKeyword").value||"").trim() || "-";
+
+    const report =
+`【生活型態營養問卷｜結果（%）】
+
+啟動關鍵字：${kw}
+
+基本資料：
+- 性別：${ans.q10}
+- 年齡：${ans.q11}
+
+【全部營養素 %（固定順序）】
+${pctLinesAll}
+
+【你的每日攝取參考值（依年齡/性別）】
+${targetLines}
+
+提醒：本分析為生活營養評估，不涉及醫療診斷；若有慢性病、孕哺或用藥，請先詢問專業人員。`;
+
+    $("outReport").value = report;
+  }
+
+  // =====================
+  // R2 upload UI -> POST /upload (multipart/form-data)
+  // 送出欄位：
+  // - file: 檔案
+  // - key: 你輸入的路徑（例 assets/bg.png）
+  // - kind: bg|logo（可選）
+  // 期待回傳 JSON 其中之一：
+  // - { ok:true, url:"https://..." }
+  // - { ok:true, publicUrl:"https://..." }
+  // - { ok:true, result:{ url:"https://..." } }
+  // =====================
+  async function uploadToR2(){
+    if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
+    const f = $("upFile").files?.[0];
+    if(!f) throw new Error("請先選擇檔案");
+    const key = ($("upKey").value || "").trim();
+    if(!key) throw new Error("請填『存放路徑（key）』例如 assets/bg.png");
+
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("key", key);
+    fd.append("contentType", f.type || "application/octet-stream");
+
+    const r = await apiForm("/upload", fd);
+
+    const url =
+      r?.url ||
+      r?.publicUrl ||
+      r?.result?.url ||
+      r?.result?.publicUrl ||
+      r?.payload?.url ||
+      "";
+
+    if(!url) throw new Error("上傳成功但沒拿到 URL（請確認 Worker /upload 回傳 {url} 或 {publicUrl}）");
+
+    $("upResultUrl").value = url;
+    toast("上傳成功 ✅");
+    return url;
+  }
+
+  // =====================
+  // Image render (Canvas) - 固定9種 + 第10格CTA（C：顏色條 + %）
+  // =====================
+  let lastPngDataUrl = "";
+
+  function pctColor(p){
+    if(p < 35) return "#ff4d4f";
+    if(p < 70) return "#fbbf24";
+    return "#34d399";
+  }
+
+  async function loadImg(url){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error("圖片載入失敗：" + url));
+      img.src = url;
+    });
+  }
+
+  function roundRect(ctx, x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+  }
+
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
     if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
-
     const logoUrl = ($("inLogoUrl").value||"").trim();
 
-    // 固定輸出尺寸（與你前面討論一致）
     const W = 900, H = 1600;
     const cv = $("cvReport");
     cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d");
 
-    // 背景
     const bg = await loadImg(bgUrl);
     ctx.drawImage(bg, 0, 0, W, H);
 
-    // 取得目前模擬答案計算 remain%
     const { ans, remain } = getRemainFromSim();
 
-    // 半透明面板（下方留白區）
     const panelX = 60, panelY = 860, panelW = W-120, panelH = 680;
     ctx.save();
     ctx.globalAlpha = 0.22;
@@ -965,12 +904,16 @@ ${leadBlock}
     ctx.fill();
     ctx.restore();
 
-    // 標題
     ctx.fillStyle = "rgba(255,255,255,.95)";
     ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
+    ctx.textAlign = "left";
     ctx.fillText("營養狀況總覽", panelX+34, panelY+70);
 
-    // LOGO（可選）
+    // 基本資料小字（可刪）
+    ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, panelX+34, panelY+108);
+
     if(logoUrl){
       try{
         const logo = await loadImg(logoUrl);
@@ -978,25 +921,17 @@ ${leadBlock}
         ctx.globalAlpha = 0.95;
         ctx.drawImage(logo, W/2 - lw/2, 60, lw, lh);
         ctx.globalAlpha = 1;
-      }catch{
-        // 略過
-      }
+      }catch{}
     }
 
-    // 10格：2欄 × 5列（固定9種 + 第10格CTA）
     const cols=2, rows=5;
     const gap=18;
     const boxX=panelX+26;
-    const boxY=panelY+98;
+    const boxY=panelY+140;
     const boxW=(panelW-26*2-gap)/cols;
-    const boxH=(panelH-98-26-gap*(rows-1))/rows;
+    const boxH=(panelH-140-26-gap*(rows-1))/rows;
 
-    const items = PCT_ORDER.map(k=>({
-      key:k,
-      label: LABEL[k],
-      pct: remain[k],
-    }));
-    // 第10格：CTA（固定）
+    const items = PCT_ORDER.map(k=>({ key:k, label: LABEL[k], pct: remain[k] }));
     items.push({ key:"cta", label:"點擊查看建議產品", pct:null });
 
     for(let i=0;i<10;i++){
@@ -1005,7 +940,6 @@ ${leadBlock}
       const x = boxX + c*(boxW+gap);
       const y = boxY + r*(boxH+gap);
 
-      // 卡片底
       ctx.save();
       ctx.globalAlpha = 0.18;
       ctx.fillStyle = "#0b122b";
@@ -1013,43 +947,35 @@ ${leadBlock}
       ctx.fill();
       ctx.restore();
 
-      // 邊框
       ctx.strokeStyle = "rgba(255,255,255,.45)";
       ctx.lineWidth = 2;
       roundRect(ctx, x, y, boxW, boxH, 28);
       ctx.stroke();
 
-      // 名稱
       ctx.fillStyle = "rgba(255,255,255,.95)";
       ctx.font = "bold 28px Microsoft JhengHei, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText(items[i].label, x+20, y+44);
 
       if(items[i].key === "cta"){
-        // CTA 格：只顯示提示
         ctx.fillStyle = "rgba(255,255,255,.90)";
         ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-        ctx.fillText("（此格可連到產品頁）", x+20, y+86);
+        ctx.fillText("（此格之後可做為可點擊區）", x+20, y+86);
         continue;
       }
 
       const pct = items[i].pct;
-
-      // 進度條（C：顏色條 + %）
       const barX = x+20, barY = y+72, barW = boxW-40, barH = 16;
 
-      // bar bg
       ctx.fillStyle = "rgba(255,255,255,.22)";
       roundRect(ctx, barX, barY, barW, barH, 10);
       ctx.fill();
 
-      // bar fill
       const fillW = Math.max(0, Math.min(barW, barW * (pct/100)));
       ctx.fillStyle = pctColor(pct);
       roundRect(ctx, barX, barY, fillW, barH, 10);
       ctx.fill();
 
-      // percent number
       ctx.fillStyle = "rgba(255,255,255,.95)";
       ctx.font = "bold 30px Microsoft JhengHei, sans-serif";
       ctx.textAlign = "right";
@@ -1105,6 +1031,30 @@ ${leadBlock}
     }catch{
       toast("複製失敗（瀏覽器限制）", "warn");
     }
+  });
+
+  $("btnUploadR2").addEventListener("click", async ()=>{
+    try{
+      clearErr();
+      await uploadToR2();
+    }catch(e){
+      showErr(e);
+      toast(e.message || "上傳失敗", "err");
+    }
+  });
+
+  $("btnUseAsBg").addEventListener("click", ()=>{
+    const u = ($("upResultUrl").value||"").trim();
+    if(!u) return toast("沒有可用的上傳URL", "warn");
+    $("inBgUrl").value = u;
+    toast("已填入底板URL ✅");
+  });
+
+  $("btnUseAsLogo").addEventListener("click", ()=>{
+    const u = ($("upResultUrl").value||"").trim();
+    if(!u) return toast("沒有可用的上傳URL", "warn");
+    $("inLogoUrl").value = u;
+    toast("已填入LOGO URL ✅");
   });
 
   $("btnRenderImg").addEventListener("click", async ()=>{
