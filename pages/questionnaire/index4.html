@@ -7,202 +7,92 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
-      --ink:#0b1220;
+      --ink:#0f172a;
       --muted:#64748b;
       --bd:rgba(15,23,42,.10);
-      --glass: rgba(255,255,255,.78);
-      --glass2: rgba(255,255,255,.90);
-      --shadow: 0 22px 70px rgba(2,6,23,.10);
-      --shadow2: 0 10px 30px rgba(2,6,23,.08);
-      --ring: 0 0 0 4px rgba(99,102,241,.16);
+      --glass: rgba(255,255,255,.88);
+      --shadow: 0 18px 55px rgba(15,23,42,.10);
     }
     body{
       color:var(--ink);
-      background:
-        radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,.20), transparent 55%),
-        radial-gradient(1000px 520px at 90% 20%, rgba(34,197,94,.18), transparent 55%),
-        radial-gradient(900px 520px at 40% 95%, rgba(6,182,212,.16), transparent 55%),
-        linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
       font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
-    .card{
-      background: var(--glass);
-      backdrop-filter: blur(16px);
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,.55);
-    }
-    .card-soft{
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(12px);
-      box-shadow: var(--shadow2);
-      border: 1px solid rgba(15,23,42,.08);
-    }
+    .card{ background: var(--glass); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
     .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
-    .thinbar::-webkit-scrollbar-thumb{ background: rgba(2,6,23,.18); border-radius: 999px; }
+    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.18); border-radius: 999px; }
     table th, table td { vertical-align: middle; }
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
 
-    /* premium inputs */
-    .in{
-      width:100%;
-      border-radius: 16px;
-      border: 1px solid rgba(15,23,42,.10);
-      background: var(--glass2);
-      padding: 12px 14px;
-      transition: .2s ease;
-    }
-    .in:focus{
-      outline:none;
-      box-shadow: var(--ring);
-      border-color: rgba(99,102,241,.45);
-    }
-
-    /* buttons */
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:.55rem; border-radius: 16px;
-      padding: 12px 14px; font-weight: 800;
-      transition: .18s ease;
-      user-select:none;
-    }
-    .btn:active{ transform: translateY(1px) scale(.99); }
-    .btn-dark{ background:#0b1220; color:#fff; }
-    .btn-dark:hover{ background:#000; }
-    .btn-good{ background: linear-gradient(135deg, #10b981, #22c55e); color:#fff; }
-    .btn-good:hover{ filter: brightness(1.02); }
-    .btn-indigo{ background: linear-gradient(135deg, #4f46e5, #06b6d4); color:#fff; }
-    .btn-indigo:hover{ filter: brightness(1.02); }
-    .btn-ghost{ background: rgba(255,255,255,.85); border:1px solid rgba(15,23,42,.10); }
-    .btn-ghost:hover{ background: rgba(255,255,255,.95); }
-
-    /* pill tags */
-    .tag{
-      display:inline-flex; align-items:center; gap:.45rem;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.78);
-      border: 1px solid rgba(15,23,42,.08);
-      font-size: 12px;
-      color: rgba(15,23,42,.80);
-      font-weight: 800;
-      box-shadow: 0 8px 18px rgba(2,6,23,.06);
-    }
-
-    /* nicer canvas container */
-    .canvasWrap{
-      background: rgba(255,255,255,.65);
-      border: 1px solid rgba(15,23,42,.10);
-      border-radius: 22px;
-      overflow: hidden;
-      box-shadow: 0 14px 40px rgba(2,6,23,.08);
-    }
-    .divider{
-      height:1px;
-      background: linear-gradient(90deg, transparent, rgba(15,23,42,.15), transparent);
-    }
-
-    /* question card */
-    .qcard{
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(15,23,42,.10);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: 0 10px 24px rgba(2,6,23,.06);
-    }
-
-    /* sticky right panel on desktop */
-    @media (min-width: 1024px){
-      .stickyPanel{
-        position: sticky;
-        top: 14px;
-      }
-    }
-
-    /* subtle motion */
-    .lift:hover{ transform: translateY(-2px); }
-    .lift{ transition: transform .18s ease; }
-
+    /* ✅ 修正表格容器「卡住」：避免 sticky / scroll 衝突 */
+    .stickyPanel{ position:static !important; }
   </style>
 </head>
 
 <body class="min-h-screen">
   <div class="max-w-6xl mx-auto p-4 md:p-8">
-
-    <!-- HEADER -->
-    <header class="mb-6">
-      <div class="card rounded-[28px] p-5 md:p-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <div class="flex flex-wrap items-center gap-2 mb-2">
-              <span class="tag">KV 一鍵寫入</span>
-              <span class="tag">PNG 圖片報告</span>
-              <span class="tag">含 LINE 頭貼 / 名稱 / ID</span>
-            </div>
-            <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">
-              生活型態營養問卷｜中控台
-            </h1>
-            <p class="text-sm text-slate-600 mt-1">
-              一鍵寫入 KV（問卷/規則/攝取量）＋ 直接生成「圖片版營養素比例報告」PNG（900×1600）。
-            </p>
-          </div>
-
-          <div class="flex flex-col gap-2 w-full md:w-[420px]">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div>
-                <label class="text-xs font-extrabold text-slate-500">Worker API（固定）</label>
-                <input id="inApiBase" class="in mono mt-1" value="https://api.zxcv8096.workers.dev/" />
-              </div>
-              <div>
-                <label class="text-xs font-extrabold text-slate-500">Admin Key（可空白）</label>
-                <input id="inAdminKey" class="in mono mt-1" placeholder="若你的 Worker 有驗證才需要填" />
-              </div>
-            </div>
-
-            <div class="flex gap-2">
-              <button id="btnConnect" class="btn btn-dark w-full lift">連線檢查</button>
-              <button id="btnWrite" class="btn btn-good w-full lift">一鍵寫入KV</button>
-            </div>
-
-            <div class="text-xs text-slate-600 flex items-center justify-between">
-              <div>狀態：<span id="txtStatus" class="font-extrabold">未連線</span></div>
-              <div>最後測試：<span id="txtLast" class="mono">-</span></div>
-            </div>
-
-            <div id="errBanner" class="hidden rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-              <div class="font-extrabold">錯誤</div>
-              <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-4 text-xs text-slate-500">
-          寫入位置：
-          <span class="mono font-semibold">AI_SURVEY:Q:life11</span>｜
-          <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>
-        </div>
+    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台</h1>
+        <p class="text-sm text-slate-600 mt-1">這頁：一鍵寫入 KV（問卷/規則/攝取量）＋ 直接生成「圖片版營養素比例報告」PNG（固定預設顯示樣式）。</p>
+      </div>
+      <div class="text-xs text-slate-600 leading-6">
+        <div class="font-bold">需要 Worker 提供 API：</div>
+        <div class="mono">POST /listAll /putAny /loadAny /upload</div>
       </div>
     </header>
 
-    <div class="grid lg:grid-cols-2 gap-4">
-
-      <!-- LEFT -->
-      <section class="card rounded-[28px] p-5 md:p-6 border border-white/40">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <h2 class="text-lg font-black text-slate-900">① 問卷設定</h2>
-            <p class="text-sm text-slate-600 mt-1">設定「啟動關鍵字」，寫入後 LINE 使用者輸入即可開始。</p>
+    <!-- CONNECT -->
+    <section class="card rounded-2xl p-5 mb-4 border border-slate-200">
+      <div class="grid md:grid-cols-3 gap-4 items-end">
+        <div class="md:col-span-2">
+          <label class="text-sm font-semibold text-slate-700">Worker API（固定）</label>
+          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 value="https://api.zxcv8096.workers.dev/" />
+          <div class="text-xs text-slate-500 mt-2">
+            寫入位置：
+            <span class="mono font-semibold">AI_SURVEY:Q:life11</span>｜
+            <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>
           </div>
-          <span class="tag">life11（11題）</span>
         </div>
 
+        <div>
+          <label class="text-sm font-semibold text-slate-700">Admin Key（可空白）</label>
+          <input id="inAdminKey" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
+                 placeholder="若你的 Worker 有驗證才需要填" />
+        </div>
+
+        <div class="flex gap-2">
+          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線檢查</button>
+          <button id="btnWrite" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">一鍵寫入KV</button>
+        </div>
+      </div>
+
+      <div class="mt-3 text-xs text-slate-500">
+        狀態：<span id="txtStatus" class="font-semibold">未連線</span>
+        最後測試：<span id="txtLast" class="mono">-</span>
+      </div>
+
+      <div id="errBanner" class="hidden mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+        <div class="font-extrabold">錯誤</div>
+        <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
+      </div>
+    </section>
+
+    <div class="grid lg:grid-cols-2 gap-4">
+      <!-- LEFT -->
+      <section class="card rounded-2xl p-5 border border-slate-200">
+        <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定</h2>
+
         <div class="mt-4 grid gap-3">
-          <div class="card-soft rounded-2xl p-4">
-            <label class="text-sm font-extrabold text-slate-700">啟動關鍵字（LINE 使用者輸入這個開始）</label>
-            <input id="inKeyword" class="in mt-2" placeholder="例如：生活營養" />
+          <div>
+            <label class="text-sm font-semibold text-slate-700">啟動關鍵字（LINE 使用者輸入這個開始）</label>
+            <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
+                   placeholder="例如：生活營養" />
             <div class="text-xs text-slate-500 mt-2">
               會寫入到 <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
             </div>
@@ -213,134 +103,90 @@
             <div>• 從 100% 開始，答「是」就扣分；會自動夾到 0～100%。</div>
             <div>• 圖片報告固定輸出 10 格：9 個營養素 + 1 個 CTA 區。</div>
           </div>
-
-          <div class="divider my-1"></div>
-
-          <!-- EXCEL TABLE -->
-          <div class="card-soft rounded-2xl p-4">
-            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-              <div>
-                <h3 class="text-base font-black text-slate-900">③ 年齡層參考值（Excel 版｜可改）</h3>
-                <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（同一份資料可供 Worker 端產圖使用）。</p>
-              </div>
-              <div class="flex gap-2">
-                <button id="btnResetTargets" class="btn btn-ghost lift">恢復 Excel 預設</button>
-                <button id="btnCopyTargetsJson" class="btn btn-ghost lift">複製 JSON</button>
-              </div>
-            </div>
-
-            <div class="mt-4 overflow-auto thinbar">
-              <table class="w-full min-w-[980px] border-collapse">
-                <thead>
-                  <tr class="text-xs text-slate-600">
-                    <th class="text-left p-2 border-b border-slate-200">項目</th>
-                    <th class="text-left p-2 border-b border-slate-200">單位</th>
-                    <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
-                    <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
-                    <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
-                    <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
-                  </tr>
-                </thead>
-                <tbody id="targetsTbody" class="text-sm"></tbody>
-              </table>
-            </div>
-
-            <div class="mt-3 text-xs text-slate-500">
-              ※ 這裡的數值會組合成：<span class="mono font-semibold">vitB(B1/B2/B6)</span>、
-              <span class="mono font-semibold">ca_mg(鈣/鎂)</span>、
-              <span class="mono font-semibold">trace(碘/硒)</span>。
-            </div>
-          </div>
         </div>
       </section>
 
       <!-- RIGHT -->
-      <section class="stickyPanel card rounded-[28px] p-5 md:p-6 border border-white/40">
+      <section class="card rounded-2xl p-5 border border-slate-200">
         <div class="flex items-end justify-between gap-3">
           <div>
-            <h2 class="text-lg font-black text-slate-900">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">這裡只做圖片報告 PNG（含 LINE 頭貼 + 名稱 + LINE ID）。</p>
+            <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
+            <p class="text-sm text-slate-600 mt-1">這裡只做圖片報告 PNG（固定預設顯示樣式）。</p>
           </div>
           <div class="flex gap-2">
-            <button id="btnSimAllGood" class="btn btn-ghost lift">都很健康</button>
-            <button id="btnSimAllYes" class="btn btn-ghost lift">全部都選是</button>
+            <button id="btnSimAllGood" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+              一鍵「都很健康」
+            </button>
+            <button id="btnSimAllYes" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+              一鍵「全部都選是」
+            </button>
           </div>
         </div>
 
         <div class="mt-4 grid gap-3">
-
-          <div class="card-soft rounded-2xl p-4">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <div class="text-sm font-black text-slate-900">11 題（照圖不改字）</div>
-                <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡</div>
-              </div>
-              <span class="tag">模擬作答</span>
-            </div>
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div class="text-sm font-extrabold text-slate-900">11 題（照圖不改字）</div>
+            <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡</div>
             <div id="simWrap" class="mt-3 space-y-3 max-h-[420px] overflow-auto thinbar pr-1"></div>
           </div>
 
-          <div class="card-soft rounded-2xl p-4">
+          <!-- ✅ LINE PROFILE (DEFAULT DISPLAY ONLY) -->
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="flex items-end justify-between gap-3">
               <div>
-                <div class="text-sm font-black text-slate-900">報告顯示：LINE 頭貼 / 名稱 / LINE ID</div>
-                <div class="text-xs text-slate-500 mt-1">先手動輸入測試；之後你要接 LIFF 再自動帶入也可以。</div>
+                <div class="text-sm font-extrabold text-slate-900">報告預設顯示樣式</div>
+                <div class="text-xs text-slate-500 mt-1">此區僅為預覽樣式；正式時由 LINE 自動帶入（不在此匯入資料）。</div>
               </div>
               <div class="text-[11px] text-slate-500">
-                頭貼需可公開（CORS 會影響匯出 PNG）
+                若你要改「預設顯示文字」，請改 JS：DEFAULT_LINE_NAME / DEFAULT_LINE_ID。
               </div>
             </div>
 
-            <div class="mt-3 grid md:grid-cols-3 gap-2">
+            <div class="mt-4 flex items-center gap-4">
+              <img id="previewAvatar"
+                   src="https://i.pravatar.cc/150?img=12"
+                   class="w-16 h-16 rounded-full border border-slate-200 shadow" alt="avatar"/>
               <div>
-                <label class="text-xs font-extrabold text-slate-500">LINE 名稱</label>
-                <input id="inLineName" class="in mt-1" placeholder="例如：王小明" />
+                <div id="previewName" class="font-extrabold text-slate-900">LINE使用者名稱</div>
+                <div id="previewId" class="text-sm text-slate-500 mono">@line_id</div>
               </div>
-              <div>
-                <label class="text-xs font-extrabold text-slate-500">LINE ID（或你想顯示的識別碼）</label>
-                <input id="inLineId" class="in mono mt-1" placeholder="例如：@abcd1234" />
-              </div>
-              <div class="md:col-span-3">
-                <label class="text-xs font-extrabold text-slate-500">LINE 頭貼 URL</label>
-                <input id="inLineAvatar" class="in mono mt-1" placeholder="https://.../avatar.jpg" />
-              </div>
-            </div>
-
-            <div class="mt-3 flex gap-2">
-              <button id="btnFillDemoLine" class="btn btn-ghost w-full lift">填入示範</button>
-              <button id="btnClearLine" class="btn btn-ghost w-full lift">清空</button>
             </div>
           </div>
 
-          <div class="card-soft rounded-2xl p-4">
+          <!-- R2 UPLOAD -->
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="flex items-end justify-between gap-3">
               <div>
-                <div class="text-sm font-black text-slate-900">R2 上傳（底板）</div>
+                <div class="text-sm font-extrabold text-slate-900">R2 上傳（底板）</div>
                 <div class="text-xs text-slate-500 mt-1">選檔 → 上傳到 Worker 的 <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板URL。</div>
               </div>
-              <span class="tag">可選</span>
+              <div class="text-[11px] text-slate-500">
+                需求：你的 Worker /upload 需支援 <span class="mono">multipart/form-data</span>。
+              </div>
             </div>
 
             <div class="mt-3 grid gap-2">
               <div class="grid md:grid-cols-3 gap-2 items-end">
                 <div class="md:col-span-2">
-                  <label class="text-xs font-extrabold text-slate-500">選擇檔案</label>
-                  <input id="upFile" type="file" accept="image/*" class="in mt-1 bg-white" />
+                  <label class="text-xs font-bold text-slate-500">選擇檔案</label>
+                  <input id="upFile" type="file" accept="image/*" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
                 </div>
                 <div>
-                  <label class="text-xs font-extrabold text-slate-500">存放路徑（key）</label>
-                  <input id="upKey" class="in mono mt-1" placeholder="assets/report_bg.png" />
+                  <label class="text-xs font-bold text-slate-500">存放路徑（key）</label>
+                  <input id="upKey" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
+                    placeholder="assets/report_bg.png" />
                 </div>
               </div>
 
               <div class="flex gap-2">
-                <button id="btnUploadR2" class="btn btn-indigo w-full lift">上傳到 R2</button>
-                <button id="btnUseAsBg" class="btn btn-ghost w-full lift">設為底板URL</button>
+                <button id="btnUploadR2" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">上傳到 R2</button>
+                <button id="btnUseAsBg" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">設為底板URL</button>
               </div>
 
-              <div class="rounded-2xl border border-slate-200 bg-white p-3">
-                <div class="text-xs font-extrabold text-slate-500">上傳結果 URL</div>
-                <input id="upResultUrl" class="in mono mt-1" placeholder="上傳成功後會出現在這裡" />
+              <div class="rounded-xl border border-slate-200 bg-white p-3">
+                <div class="text-xs font-bold text-slate-500">上傳結果 URL</div>
+                <input id="upResultUrl" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
+                  placeholder="上傳成功後會出現在這裡" />
                 <div class="text-[11px] text-slate-500 mt-2">
                   要能匯出 PNG：請用「可公開存取」的 URL，並允許跨域（CORS）。
                 </div>
@@ -348,35 +194,70 @@
             </div>
           </div>
 
-          <div class="card-soft rounded-2xl p-4">
+          <!-- IMAGE PREVIEW -->
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
             <div class="flex items-end justify-between gap-3">
               <div>
-                <div class="text-sm font-black text-slate-900">圖片版營養素比例報告（預覽/匯出PNG）</div>
-                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（含頭貼+ID，9 種營養素長條 + 第10格 CTA）。</div>
+                <div class="text-sm font-extrabold text-slate-900">圖片版營養素比例報告（預覽/匯出PNG）</div>
+                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（9 種營養素長條 + 第10格 CTA）。</div>
               </div>
               <div class="flex gap-2">
-                <button id="btnRenderImg" class="btn btn-dark lift">產生圖片</button>
-                <button id="btnDownloadImg" class="btn btn-ghost lift">下載PNG</button>
+                <button id="btnRenderImg" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">產生圖片</button>
+                <button id="btnDownloadImg" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">下載PNG</button>
               </div>
             </div>
 
             <div class="mt-3 grid gap-2">
-              <label class="text-xs font-extrabold text-slate-500">底板圖片URL（R2 公開網址）</label>
-              <input id="inBgUrl" class="in mono" placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
+              <label class="text-xs font-bold text-slate-500">底板圖片URL（R2 公開網址）</label>
+              <input id="inBgUrl" class="w-full px-3 py-2 rounded-xl border border-slate-200 mono"
+                placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
             </div>
 
-            <div class="mt-3 canvasWrap">
-              <canvas id="cvReport" class="w-full bg-white"></canvas>
-            </div>
-
-            <div class="text-[11px] text-slate-500 mt-2">
-              ※ 若「下載PNG」失敗，多半是底板圖或頭貼跨域（CORS）沒開。
+            <div class="mt-3">
+              <canvas id="cvReport" class="w-full rounded-2xl border border-slate-200 bg-white"></canvas>
+              <div class="text-[11px] text-slate-500 mt-2">
+                ※ 若「下載PNG」失敗，多半是底板圖跨域（CORS）沒開。
+              </div>
             </div>
           </div>
 
         </div>
       </section>
     </div>
+
+    <!-- EXCEL TABLE -->
+    <section class="card rounded-2xl p-5 border border-slate-200 mt-4">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">③ 年齡層參考值</h2>
+          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（同一份資料可供 Worker 端產圖使用）。</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnResetTargets" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">恢復預設</button>
+          <button id="btnCopyTargetsJson" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">複製 JSON</button>
+        </div>
+      </div>
+
+      <div class="mt-4 overflow-auto thinbar stickyPanel">
+        <table class="w-full min-w-[980px] border-collapse">
+          <thead>
+            <tr class="text-xs text-slate-600">
+              <th class="text-left p-2 border-b border-slate-200">項目</th>
+              <th class="text-left p-2 border-b border-slate-200">單位</th>
+              <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
+              <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
+              <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
+              <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
+            </tr>
+          </thead>
+          <tbody id="targetsTbody" class="text-sm"></tbody>
+        </table>
+      </div>
+
+      <div class="mt-3 text-xs text-slate-500">
+        ※ 這裡的數值會組合成：<span class="mono font-semibold">vitB(B1/B2/B6)</span>、<span class="mono font-semibold">ca_mg(鈣/鎂)</span>、<span class="mono font-semibold">trace(碘/硒)</span>。
+      </div>
+    </section>
 
     <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
   </div>
@@ -386,7 +267,13 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ✅ 年齡選項已固定（不再提供可改 UI）
+  // ✅ 預設顯示樣式（你要改字就改這裡）
+  const DEFAULT_LINE_NAME = "LINE使用者名稱";
+  const DEFAULT_LINE_ID   = "@line_id";
+  // 預設頭貼（可留空字串 ""，就會畫「圓形預設頭貼」）
+  const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
+
+  // ✅ 年齡選項固定
   const AGE_CHILD = "0~10 歲 (兒童)";
   const AGE_TEEN  = "11~18 歲 (青少年)";
   const AGE_ADULT = "19 歲以上";
@@ -475,6 +362,18 @@
     $("errText").textContent = "";
   }
 
+  // ✅ 顯示預設樣式
+  function initPreviewLine(){
+    const av = $("previewAvatar");
+    const nm = $("previewName");
+    const id = $("previewId");
+    if(nm) nm.textContent = DEFAULT_LINE_NAME;
+    if(id) id.textContent = DEFAULT_LINE_ID;
+    if(av){
+      av.src = DEFAULT_LINE_AVATAR_URL || "https://i.pravatar.cc/150?img=12";
+    }
+  }
+
   function apiBase(){
     return ($("inApiBase").value || "").trim().replace(/\/$/,"");
   }
@@ -524,7 +423,7 @@
   function setStatus(ok, msg){
     CONNECTED = !!ok;
     $("txtStatus").textContent = msg;
-    $("txtStatus").className = ok ? "font-extrabold text-emerald-700" : "font-extrabold text-rose-700";
+    $("txtStatus").className = ok ? "font-semibold text-emerald-700" : "font-semibold text-rose-700";
     $("txtLast").textContent = new Date().toLocaleString();
   }
   async function connect(){
@@ -550,10 +449,10 @@
       tr.innerHTML = `
         <td class="p-2 font-semibold text-slate-900">${escapeHtml(row.name)}</td>
         <td class="p-2 text-slate-600">${escapeHtml(row.unit)}</td>
-        <td class="p-2"><input data-col="child" data-id="${row.id}" type="number" step="any" class="in w-28 bg-white" value="${escapeHtml(row.child)}" /></td>
-        <td class="p-2"><input data-col="teen" data-id="${row.id}" type="number" step="any" class="in w-28 bg-white" value="${escapeHtml(row.teen)}" /></td>
-        <td class="p-2"><input data-col="adultF" data-id="${row.id}" type="number" step="any" class="in w-28 bg-white" value="${escapeHtml(row.adultF)}" /></td>
-        <td class="p-2"><input data-col="adultM" data-id="${row.id}" type="number" step="any" class="in w-28 bg-white" value="${escapeHtml(row.adultM)}" /></td>
+        <td class="p-2"><input data-col="child" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.child)}" /></td>
+        <td class="p-2"><input data-col="teen" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.teen)}" /></td>
+        <td class="p-2"><input data-col="adultF" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.adultF)}" /></td>
+        <td class="p-2"><input data-col="adultM" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.adultM)}" /></td>
       `;
       tb.appendChild(tr);
     });
@@ -570,7 +469,7 @@
   function resetTargets(){
     targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
     renderTargetsTable();
-    toast("已恢復 Excel 預設");
+    toast("已恢復預設");
   }
   function getTargetsObject(){
     const byId = {};
@@ -640,7 +539,7 @@
     }
 
     return {
-      version: "life11-v10-image-only-with-line-profile-fixed-age",
+      version: "life11-v10-image-only-default-line-display",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -667,7 +566,7 @@
     }catch{ map = {}; }
     map[kw] = "life11";
     await kvPut(KW_MAP_KEY, map);
-    toast("已寫入 KV ✅（問卷 + KW_MAP + 扣分規則 + Excel攝取量）");
+    toast("已寫入 KV ✅（問卷 + KW_MAP + 扣分規則 + 攝取量）");
   }
 
   // Simulation answers
@@ -679,37 +578,37 @@
 
     QUESTIONS.filter(x=>x.type!=="done").forEach((q, i)=>{
       const box = document.createElement("div");
-      box.className = "qcard";
+      box.className = "rounded-2xl border border-slate-200 bg-white p-4";
 
       let optsHtml = "";
       if(q.type==="yn"){
         const v = simState[q.id] ?? "不是";
         optsHtml = `
-          <div class="flex gap-2 flex-wrap mt-3">
-            <button data-v="是" class="btn ${v==="是"?"btn-dark":"btn-ghost"} px-3 py-2">是</button>
-            <button data-v="不是" class="btn ${v==="不是"?"btn-dark":"btn-ghost"} px-3 py-2">不是</button>
+          <div class="flex gap-2 flex-wrap mt-2">
+            <button data-v="是" class="px-3 py-2 rounded-xl border ${v==="是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">是</button>
+            <button data-v="不是" class="px-3 py-2 rounded-xl border ${v==="不是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">不是</button>
           </div>`;
       }else if(q.type==="sex"){
         const v = simState[q.id] ?? "男";
         optsHtml = `
-          <div class="flex gap-2 flex-wrap mt-3">
-            <button data-v="男" class="btn ${v==="男"?"btn-dark":"btn-ghost"} px-3 py-2">男</button>
-            <button data-v="女" class="btn ${v==="女"?"btn-dark":"btn-ghost"} px-3 py-2">女</button>
+          <div class="flex gap-2 flex-wrap mt-2">
+            <button data-v="男" class="px-3 py-2 rounded-xl border ${v==="男"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">男</button>
+            <button data-v="女" class="px-3 py-2 rounded-xl border ${v==="女"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">女</button>
           </div>`;
       }else if(q.type==="age"){
         const v = simState[q.id] ?? ageAdult;
         const opts = [ageChild, ageTeen, ageAdult];
         optsHtml = `
-          <div class="flex gap-2 flex-wrap mt-3">
+          <div class="flex gap-2 flex-wrap mt-2">
             ${opts.map(a => `
-              <button data-v="${escapeHtml(a)}" class="btn ${v===a?"btn-dark":"btn-ghost"} px-3 py-2">${escapeHtml(a)}</button>
+              <button data-v="${escapeHtml(a)}" class="px-3 py-2 rounded-xl border ${v===a?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">${escapeHtml(a)}</button>
             `).join("")}
           </div>`;
       }
 
       box.innerHTML = `
-        <div class="text-xs text-slate-500 font-bold">問題 ${i+1}/11</div>
-        <div class="mt-1 font-black text-slate-900">${escapeHtml(q.text)}</div>
+        <div class="text-xs text-slate-500">問題 No.${i+1}/11</div>
+        <div class="mt-1 font-extrabold text-slate-900">${escapeHtml(q.text)}</div>
         ${optsHtml}
       `;
       box.querySelectorAll("button[data-v]").forEach(btn=>{
@@ -823,9 +722,10 @@
 
     const { ans, remain } = getRemainFromSim();
 
-    const lineName = ($("inLineName").value || "").trim() || "LINE使用者";
-    const lineId = ($("inLineId").value || "").trim() || "（未填ID）";
-    const avatarUrl = ($("inLineAvatar").value || "").trim();
+    // ✅ 改成固定預設顯示（不是匯入）
+    const lineName = DEFAULT_LINE_NAME;
+    const lineId = DEFAULT_LINE_ID;
+    const avatarUrl = DEFAULT_LINE_AVATAR_URL;
 
     // 上方資訊區
     ctx.save();
@@ -846,7 +746,15 @@
         ctx.arc(140, 132, 60, 0, Math.PI*2);
         ctx.stroke();
         ctx.restore();
-      }catch{}
+      }catch{
+        // fallback 圓形
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,.20)";
+        ctx.beginPath();
+        ctx.arc(140, 132, 58, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
     }else{
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.20)";
@@ -1006,20 +914,6 @@
     toast("已填入『全部都選是』測試答案");
   });
 
-  $("btnFillDemoLine").addEventListener("click", ()=>{
-    $("inLineName").value = "王小明";
-    $("inLineId").value = "@demo1234";
-    $("inLineAvatar").value = "";
-    toast("已填入示範資料","ok");
-  });
-
-  $("btnClearLine").addEventListener("click", ()=>{
-    $("inLineName").value = "";
-    $("inLineId").value = "";
-    $("inLineAvatar").value = "";
-    toast("已清空");
-  });
-
   $("btnResetTargets").addEventListener("click", resetTargets);
 
   $("btnCopyTargetsJson").addEventListener("click", async ()=>{
@@ -1033,6 +927,7 @@
   });
 
   // init
+  initPreviewLine();
   renderTargetsTable();
   renderSim();
 })();
