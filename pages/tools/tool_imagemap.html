@@ -40,6 +40,7 @@
       position: absolute;
       inset: 0;
       cursor: crosshair;
+      touch-action: none; /* ✅ pointer 畫框時不被捲動/縮放干擾 */
     }
   </style>
 </head>
@@ -62,23 +63,29 @@
       <div class="flex flex-wrap gap-2 items-center">
         <input type="text" id="workerUrl" placeholder="https://xxxx.workers.dev"
           class="border rounded px-2 py-2 text-sm w-56 bg-yellow-50">
-        <input type="text" id="triggerKeyword" placeholder="本圖關鍵字"
-          class="border rounded px-2 py-2 text-sm font-bold w-40 border-blue-500">
-        <button onclick="loadSettings()"
+        <input type="text" id="triggerKeyword" placeholder="本圖關鍵字（可不填）"
+          class="border rounded px-2 py-2 text-sm font-bold w-44 border-blue-500">
+
+        <button onclick="loadSettingsUI()"
           class="bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-600 font-bold">讀取</button>
-        <button onclick="saveSettings()"
+
+        <button onclick="saveSettingsUI(false)"
           class="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 font-bold">儲存</button>
+
+        <button onclick="saveSettingsUI(true)"
+          class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 font-bold">另存新檔</button>
       </div>
     </div>
 
-    <!-- ✅ 可折疊區（把你原本一堆說明放這裡，預設展開但不會太高） -->
+    <!-- ✅ 可折疊區 -->
     <div id="topBarBody" class="px-3 pb-3">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-2">
         <div class="bg-blue-50 p-2 rounded text-xs text-blue-700">
           <strong>imagemap 建議：</strong><br>
           - 常見是正方形風格（可勾「裁切正方形」）<br>
           - 熱區不限數量，右側逐一填內容<br>
-          - ✅ 你現在可以用縮放更好畫框
+          - ✅ 你現在可以用縮放更好畫框<br>
+          - ✅ 關鍵字可不填：不填會存在本機草稿
         </div>
 
         <!-- ✅ Zoom 控制 -->
@@ -103,7 +110,7 @@
           </div>
         </div>
 
-        <!-- ✅ 壓縮/裁切（原本你的） -->
+        <!-- ✅ 壓縮/裁切 -->
         <div class="bg-slate-50 border rounded p-2">
           <div class="font-bold text-xs text-slate-600 mb-2">圖片尺寸/壓縮（上傳時生效）</div>
 
@@ -156,7 +163,7 @@
     </div>
   </div>
 
-  <!-- ✅ 主編輯區（固定高度，畫布更大） -->
+  <!-- ✅ 主編輯區 -->
   <div class="flex flex-1 overflow-hidden w-full editor-h" id="mainArea">
     <!-- 左邊：圖片清單 -->
     <div class="w-72 bg-white border-r overflow-y-auto p-4 flex flex-col gap-4">
@@ -171,7 +178,7 @@
     <!-- 右邊：畫布 -->
     <div class="flex-1 bg-slate-200 relative overflow-auto flex justify-center p-4">
       <div id="editorWrap" class="hidden w-full max-w-6xl grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-4">
-        <!-- 右側左欄：框框設定 -->
+        <!-- 框框設定 -->
         <div class="bg-white rounded-lg shadow p-4 h-fit">
           <div class="flex items-center justify-between mb-2">
             <div class="font-bold text-slate-700">框框設定</div>
@@ -193,10 +200,9 @@
           </div>
 
           <div class="relative overflow-auto bg-gray-100" style="height: calc(100% - 44px);">
-            <!-- ✅ stage：會被 scale -->
             <div id="stage" class="inline-block">
               <img id="previewImage" class="block pointer-events-none select-none"
-                   style="max-width: none; display:block;">
+                   style="max-width:none; display:block;">
               <div id="drawLayer"></div>
             </div>
           </div>
@@ -260,7 +266,7 @@ function setZoom(v){
 }
 zoomRange.addEventListener('input', () => setZoom(zoomRange.value));
 
-/* 滾輪縮放：按 Ctrl/Alt/Shift 任一鍵 */
+/* 滾輪縮放：按 Ctrl/Alt/Shift 任一鍵（在畫布容器上監聽） */
 stage.parentElement?.addEventListener('wheel', (e) => {
   if(!(e.ctrlKey || e.altKey || e.shiftKey)) return;
   e.preventDefault();
@@ -372,6 +378,8 @@ let currentImgIndex = -1;
 window.onload = () => {
   const savedUrl = localStorage.getItem('line_worker_url');
   if(savedUrl) document.getElementById('workerUrl').value = savedUrl;
+
+  // ✅ 若本機有草稿，提示可讀取
   syncEditorHeight();
   setZoom(1);
 };
@@ -444,7 +452,6 @@ function clearAreas(){
 const layer = document.getElementById('drawLayer');
 function refreshLayerSize(){
   const imgEl = document.getElementById('previewImage');
-  // 確保 drawLayer 覆蓋圖片「原尺寸」(未縮放前)，縮放交給 stage transform
   const w = imgEl.naturalWidth || imgEl.clientWidth || 0;
   const h = imgEl.naturalHeight || imgEl.clientHeight || 0;
   if(w && h){
@@ -485,8 +492,6 @@ async function triggerUpload(idx, btn){
       images[idx].areas = [];
       renderImageList();
       selectImage(idx);
-
-      // 上傳新圖後重置 zoom，避免你縮太大找不到
       setZoom(1);
     }catch(err){
       alert('上傳失敗：\n' + err.message);
@@ -498,25 +503,21 @@ async function triggerUpload(idx, btn){
   input.click();
 }
 
-/* ---------- draw（注意：要除以 zoom 才會準） ---------- */
+/* ---------- draw（✅ pointer 版：不卡住） ---------- */
 let isDrawing = false;
 let sx = 0, sy = 0;
 let previewRect = null;
+let activePointerId = null;
 
-function getLayerPoint(e){
+function getLayerPointFromClient(clientX, clientY){
   const rect = layer.getBoundingClientRect();
-  // 因為 stage 有 scale，所以 screen 座標要除以 zoom 才是「未縮放座標」
-  const x = (e.clientX - rect.left) / ZOOM;
-  const y = (e.clientY - rect.top) / ZOOM;
-  return { x, y, rect };
+  const x = (clientX - rect.left) / ZOOM;
+  const y = (clientY - rect.top) / ZOOM;
+  return { x, y };
 }
 
-layer.addEventListener('mousedown', (e) => {
-  if(currentImgIndex < 0) return;
-  if(!images[currentImgIndex].url) return alert('請先上傳圖片（R2）再畫框');
-
-  isDrawing = true;
-  const p = getLayerPoint(e);
+function startDrawAt(clientX, clientY){
+  const p = getLayerPointFromClient(clientX, clientY);
   sx = p.x; sy = p.y;
 
   previewRect = document.createElement('div');
@@ -526,11 +527,10 @@ layer.addEventListener('mousedown', (e) => {
   previewRect.style.width = '0px';
   previewRect.style.height = '0px';
   layer.appendChild(previewRect);
-});
-
-layer.addEventListener('mousemove', (e) => {
+}
+function moveDrawTo(clientX, clientY){
   if(!isDrawing || !previewRect) return;
-  const p = getLayerPoint(e);
+  const p = getLayerPointFromClient(clientX, clientY);
   const cx = p.x, cy = p.y;
 
   const x = Math.min(sx, cx);
@@ -542,13 +542,12 @@ layer.addEventListener('mousemove', (e) => {
   previewRect.style.top = y + 'px';
   previewRect.style.width = w + 'px';
   previewRect.style.height = h + 'px';
-});
-
-layer.addEventListener('mouseup', (e) => {
+}
+function endDrawAt(clientX, clientY){
   if(!isDrawing) return;
   isDrawing = false;
 
-  const p = getLayerPoint(e);
+  const p = getLayerPointFromClient(clientX, clientY);
   const ex = p.x, ey = p.y;
 
   const x = Math.min(sx, ex);
@@ -557,9 +556,10 @@ layer.addEventListener('mouseup', (e) => {
   const h = Math.abs(ey - sy);
 
   if(previewRect){ previewRect.remove(); previewRect = null; }
+  activePointerId = null;
+
   if(w < 14 || h < 14) return;
 
-  // layer 原尺寸（未縮放）
   const baseW = layer.clientWidth;
   const baseH = layer.clientHeight;
 
@@ -572,8 +572,43 @@ layer.addEventListener('mouseup', (e) => {
   renderAreas();
   renderAreaList();
   renderImageList();
+}
+
+layer.addEventListener('pointerdown', (e) => {
+  if(currentImgIndex < 0) return;
+  if(!images[currentImgIndex].url) return alert('請先上傳圖片（R2）再畫框');
+  if(e.button !== 0) return;
+
+  isDrawing = true;
+  activePointerId = e.pointerId;
+  layer.setPointerCapture(activePointerId);
+
+  startDrawAt(e.clientX, e.clientY);
+  e.preventDefault();
+});
+layer.addEventListener('pointermove', (e) => {
+  if(!isDrawing) return;
+  if(activePointerId !== null && e.pointerId !== activePointerId) return;
+  moveDrawTo(e.clientX, e.clientY);
+  e.preventDefault();
+});
+layer.addEventListener('pointerup', (e) => {
+  if(activePointerId !== null && e.pointerId !== activePointerId) return;
+  endDrawAt(e.clientX, e.clientY);
+  e.preventDefault();
+});
+layer.addEventListener('pointercancel', () => {
+  if(previewRect){ previewRect.remove(); previewRect = null; }
+  isDrawing = false;
+  activePointerId = null;
+});
+window.addEventListener('blur', () => {
+  if(previewRect){ previewRect.remove(); previewRect = null; }
+  isDrawing = false;
+  activePointerId = null;
 });
 
+/* ---------- areas render ---------- */
 function renderAreas(){
   layer.querySelectorAll('.area-box').forEach(el => el.remove());
   if(currentImgIndex < 0) return;
@@ -697,18 +732,41 @@ function buildImagemapMessages(){
   })));
 }
 
-/* ---------- save/load（✅ 已移除 password） ---------- */
-async function saveSettings(){
+/* ---------- save/load：keyword 可選 + 本機草稿 ---------- */
+function getDraftKey(){ return "imagemap_draft_v1"; }
+
+function assertAreasFilled(){
+  if(images.length === 0) return "至少新增一張圖片";
+  if(images.some(i => !i.url)) return "有圖片尚未上傳到 R2";
+  if(images.some(img => img.areas.some(a => !String(a.text||'').trim()))) return "有框沒有填內容（關鍵字或網址）";
+  return "";
+}
+
+async function saveSettingsUI(forceNew){
+  const err = assertAreasFilled();
+  if(err) return alert(err);
+
   const raw = document.getElementById('workerUrl').value;
-  const keyword = document.getElementById('triggerKeyword').value.trim();
   const base = normalizeWorkerUrl(raw);
+  let keyword = document.getElementById('triggerKeyword').value.trim();
 
-  if(!base || !keyword) return alert('資料不全（WorkerUrl / 關鍵字）');
-  if(images.length === 0) return alert('至少新增一張圖片');
-  if(images.some(i => !i.url)) return alert('有圖片尚未上傳到 R2');
-  if(images.some(img => img.areas.some(a => !String(a.text||'').trim()))) return alert('有框沒有填內容（關鍵字或網址）');
+  // ✅ 沒填 keyword：存本機草稿
+  if(!keyword){
+    const messages = await buildImagemapMessages();
+    localStorage.setItem(getDraftKey(), JSON.stringify({ messages, savedAt: Date.now() }));
+    return alert('已儲存到本機草稿（未填關鍵字）。');
+  }
 
+  // ✅ 有填 keyword：走 Worker /save
+  if(!base) return alert('你有填關鍵字，所以 WorkerUrl 也必須填，才能存到雲端。');
   localStorage.setItem('line_worker_url', base);
+
+  // ✅ 另存新檔：避免覆蓋（自動加尾碼）
+  if(forceNew){
+    const suffix = new Date().toISOString().slice(0,10).replaceAll('-','') + '_' + Math.random().toString(36).slice(2,6);
+    keyword = `${keyword}_${suffix}`;
+    document.getElementById('triggerKeyword').value = keyword;
+  }
 
   try{
     const messages = await buildImagemapMessages();
@@ -716,18 +774,49 @@ async function saveSettings(){
       keyword,
       payload:{ mode:'imagemap', messages }
     });
-    alert('儲存成功！');
+    alert('儲存成功！（雲端）');
   }catch(e){
     alert('儲存失敗：\n' + e.message);
   }
 }
 
-async function loadSettings(){
+async function loadSettingsUI(){
   const raw = document.getElementById('workerUrl').value;
-  const keyword = document.getElementById('triggerKeyword').value.trim();
   const base = normalizeWorkerUrl(raw);
+  const keyword = document.getElementById('triggerKeyword').value.trim();
 
-  if(!base || !keyword) return alert('資料不全（WorkerUrl / 關鍵字）');
+  // ✅ 沒填 keyword：讀本機草稿
+  if(!keyword){
+    const rawDraft = localStorage.getItem(getDraftKey());
+    if(!rawDraft) return alert('本機沒有草稿（請先按「儲存」且不填關鍵字）。');
+    let obj;
+    try{ obj = JSON.parse(rawDraft); }catch{ obj = null; }
+    if(!obj?.messages || !Array.isArray(obj.messages)) return alert('本機草稿格式損壞。');
+
+    images = obj.messages.map(m => {
+      const bw = m.baseSize?.width || 1040;
+      const bh = m.baseSize?.height || 1040;
+      return {
+        url: m.baseUrl,
+        areas: (m.actions || []).map(a => ({
+          type: a.type,
+          text: a.type === 'message' ? (a.text || '') : (a.linkUri || ''),
+          x: (a.area.x || 0) / bw,
+          y: (a.area.y || 0) / bh,
+          w: (a.area.width || 0) / bw,
+          h: (a.area.height || 0) / bh
+        }))
+      };
+    });
+
+    renderImageList();
+    selectImage(images.length ? 0 : -1);
+    setZoom(1);
+    return alert('已讀取本機草稿。');
+  }
+
+  // ✅ 有 keyword：走 Worker /load
+  if(!base) return alert('請先填 WorkerUrl');
   localStorage.setItem('line_worker_url', base);
 
   try{
@@ -757,7 +846,7 @@ async function loadSettings(){
     renderImageList();
     selectImage(images.length ? 0 : -1);
     setZoom(1);
-    alert('讀取成功！');
+    alert('讀取成功！（雲端）');
   }catch(e){
     alert('讀取失敗：\n' + e.message);
   }
