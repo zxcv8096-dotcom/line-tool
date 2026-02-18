@@ -7,238 +7,348 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
-      --ink:#0f172a;
-      --muted:#64748b;
+      --ink:#0b1220;
+      --muted:#5b6b87;
       --bd:rgba(15,23,42,.10);
-      --glass: rgba(255,255,255,.88);
+      --glass: rgba(255,255,255,.82);
+      --glass2: rgba(255,255,255,.70);
       --shadow: 0 18px 55px rgba(15,23,42,.10);
+      --shadow2: 0 8px 22px rgba(2,6,23,.08);
+      --ring: 0 0 0 5px rgba(99,102,241,.14);
     }
     body{
       color:var(--ink);
-      background: linear-gradient(135deg, #f8fafc, #eef2ff, #ecfeff);
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,.20), transparent 60%),
+        radial-gradient(900px 520px at 90% 18%, rgba(16,185,129,.18), transparent 60%),
+        radial-gradient(900px 520px at 40% 92%, rgba(236,72,153,.14), transparent 60%),
+        linear-gradient(135deg, #fbfdff, #f1f6ff 35%, #ecfeff);
       font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
-    .card{ background: var(--glass); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
+    .card{
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(15,23,42,.08);
+    }
+    .card-soft{
+      background: var(--glass2);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow2);
+      border: 1px solid rgba(15,23,42,.08);
+    }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
     .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
-    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.18); border-radius: 999px; }
+    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.20); border-radius: 999px; }
     table th, table td { vertical-align: middle; }
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
 
-    /* ✅ 修正表格容器「卡住」：避免 sticky / scroll 衝突 */
+    /* 少空白：讓卡片更緊湊 */
+    .tight h2{ letter-spacing:-.02em; }
+    .tight .pad{ padding: 16px; }
+    .tight .pad-lg{ padding: 18px; }
+    .tight .gap-tight{ gap: 10px; }
+
+    /* 亮色藝術感按鈕 */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:.5rem; border-radius: 16px; padding:.72rem 1rem;
+      font-weight:900; font-size:13px;
+      transition: transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn-primary{
+      color:#fff;
+      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
+      box-shadow: 0 14px 28px rgba(99,102,241,.20);
+    }
+    .btn-primary:hover{ filter: brightness(1.04); }
+    .btn-dark{
+      color:#fff;
+      background: linear-gradient(135deg, #0b1220, #111827);
+      box-shadow: 0 12px 24px rgba(2,6,23,.18);
+    }
+    .btn-dark:hover{ filter: brightness(1.03); }
+    .btn-soft{
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(15,23,42,.12);
+      color: #0b1220;
+      box-shadow: 0 10px 20px rgba(2,6,23,.06);
+    }
+    .btn-soft:hover{ background: rgba(255,255,255,.98); border-color: rgba(99,102,241,.25); box-shadow: 0 14px 26px rgba(2,6,23,.08); }
+    .btn-emerald{
+      color:#fff;
+      background: linear-gradient(135deg, #10b981, #22c55e);
+      box-shadow: 0 14px 28px rgba(16,185,129,.18);
+    }
+    .btn-emerald:hover{ filter: brightness(1.03); }
+    .btn-indigo{
+      color:#fff;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 14px 28px rgba(99,102,241,.18);
+    }
+    .btn-indigo:hover{ filter: brightness(1.03); }
+
+    /* 輸入框更亮更有質感 */
+    .in{
+      width:100%;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.82);
+      padding: .78rem 1rem;
+      outline: none;
+      transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .in:focus{
+      border-color: rgba(99,102,241,.35);
+      box-shadow: var(--ring);
+      background: rgba(255,255,255,.96);
+    }
+
+    /* header 浮雕條 */
+    .hero{
+      background: linear-gradient(135deg, rgba(255,255,255,.70), rgba(255,255,255,.52));
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 14px 40px rgba(2,6,23,.08);
+      backdrop-filter: blur(14px);
+    }
+
+    /* ✅ 修正表格容器「卡住」 */
     .stickyPanel{ position:static !important; }
+
+    /* 小徽章 */
+    .pill{
+      display:inline-flex; align-items:center; gap:.35rem;
+      padding:.25rem .55rem;
+      border-radius:999px;
+      font-weight:800;
+      font-size:11px;
+      border:1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.70);
+      color: rgba(2,6,23,.72);
+    }
+    .pill-green{ border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.10); color: rgba(5,150,105,1); }
+    .pill-indigo{ border-color: rgba(99,102,241,.25); background: rgba(99,102,241,.10); color: rgba(79,70,229,1); }
+    .pill-amber{ border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.10); color: rgba(180,83,9,1); }
+    .pill-rose{ border-color: rgba(244,63,94,.25); background: rgba(244,63,94,.10); color: rgba(190,18,60,1); }
   </style>
 </head>
 
-<body class="min-h-screen">
-  <div class="max-w-6xl mx-auto p-4 md:p-8">
-    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台</h1>
-        <p class="text-sm text-slate-600 mt-1">這頁：一鍵寫入 KV（問卷/規則/攝取量）＋ 直接生成「圖片版營養素比例報告」PNG（固定預設顯示樣式）。</p>
+<body class="min-h-screen tight">
+  <div class="max-w-6xl mx-auto p-3 md:p-6">
+    <!-- HERO -->
+    <header class="hero rounded-3xl p-4 md:p-5 mb-3">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
+            <span class="pill pill-indigo">UI 明亮藝術感</span>
+            <span class="pill pill-green">功能保留</span>
+          </div>
+          <p class="text-sm text-slate-600 mt-1 leading-6">
+            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生「圖片版營養素比例報告」PNG（固定預設顯示樣式）。
+          </p>
+        </div>
+
+        <div class="text-xs text-slate-600 leading-6">
+          <div class="font-extrabold">需要 Worker API：</div>
+          <div class="mono">POST /listAll /putAny /loadAny /upload</div>
+        </div>
       </div>
-      <div class="text-xs text-slate-600 leading-6">
-        <div class="font-bold">需要 Worker 提供 API：</div>
-        <div class="mono">POST /listAll /putAny /loadAny /upload</div>
+
+      <!-- compact quick status -->
+      <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 text-xs">
+          <span class="pill" id="pillConn">未連線</span>
+          <span class="pill">最後測試：<span id="txtLast" class="mono ml-1">-</span></span>
+        </div>
+        <div class="text-[11px] text-slate-500">
+          KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜<span class="mono font-bold">AI_SURVEY:KW_MAP</span>
+        </div>
       </div>
     </header>
 
     <!-- CONNECT -->
-    <section class="card rounded-2xl p-5 mb-4 border border-slate-200">
-      <div class="grid md:grid-cols-3 gap-4 items-end">
+    <section class="card rounded-3xl pad-lg mb-3">
+      <div class="grid md:grid-cols-3 gap-3 items-end">
         <div class="md:col-span-2">
-          <label class="text-sm font-semibold text-slate-700">Worker API（固定）</label>
-          <input id="inApiBase" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 value="https://api.zxcv8096.workers.dev/" />
-          <div class="text-xs text-slate-500 mt-2">
-            寫入位置：
-            <span class="mono font-semibold">AI_SURVEY:Q:life11</span>｜
-            <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>
-          </div>
+          <label class="text-xs font-extrabold text-slate-600">Worker API（固定）</label>
+          <input id="inApiBase" class="in mono mt-1" value="https://api.zxcv8096.workers.dev/" />
         </div>
 
         <div>
-          <label class="text-sm font-semibold text-slate-700">Admin Key（可空白）</label>
-          <input id="inAdminKey" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 mono"
-                 placeholder="若你的 Worker 有驗證才需要填" />
+          <label class="text-xs font-extrabold text-slate-600">Admin Key（可空白）</label>
+          <input id="inAdminKey" class="in mono mt-1" placeholder="若 Worker 有驗證才需要填" />
         </div>
 
-        <div class="flex gap-2">
-          <button id="btnConnect" class="w-full px-4 py-3 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">連線檢查</button>
-          <button id="btnWrite" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-semibold">一鍵寫入KV</button>
+        <div class="md:col-span-3 flex gap-2">
+          <button id="btnConnect" class="btn btn-dark w-full">連線檢查</button>
+          <button id="btnWrite" class="btn btn-emerald w-full">一鍵寫入KV</button>
         </div>
       </div>
 
-      <div class="mt-3 text-xs text-slate-500">
-        狀態：<span id="txtStatus" class="font-semibold">未連線</span>
-        最後測試：<span id="txtLast" class="mono">-</span>
-      </div>
-
-      <div id="errBanner" class="hidden mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+      <div id="errBanner" class="hidden mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
         <div class="font-extrabold">錯誤</div>
         <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
       </div>
     </section>
 
-    <div class="grid lg:grid-cols-2 gap-4">
+    <div class="grid lg:grid-cols-2 gap-3">
       <!-- LEFT -->
-      <section class="card rounded-2xl p-5 border border-slate-200">
-        <h2 class="text-lg font-extrabold text-slate-900">① 問卷設定</h2>
+      <section class="card rounded-3xl pad-lg">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-lg font-black text-slate-950">① 問卷設定</h2>
+          <span class="pill pill-amber">扣分模型：固定</span>
+        </div>
 
-        <div class="mt-4 grid gap-3">
-          <div>
-            <label class="text-sm font-semibold text-slate-700">啟動關鍵字（LINE 使用者輸入這個開始）</label>
-            <input id="inKeyword" class="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200"
-                   placeholder="例如：生活營養" />
-            <div class="text-xs text-slate-500 mt-2">
-              會寫入到 <span class="mono font-semibold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
+        <div class="mt-3 grid gap-3">
+          <div class="card-soft rounded-3xl pad">
+            <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
+            <input id="inKeyword" class="in mt-1" placeholder="例如：生活營養" />
+            <div class="text-[11px] text-slate-500 mt-2 leading-5">
+              寫入 <span class="mono font-bold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
             </div>
           </div>
 
-          <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">扣分模型規則（固定邏輯）</div>
-            <div>• 從 100% 開始，答「是」就扣分；會自動夾到 0～100%。</div>
+          <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
+            <div class="font-extrabold">規則說明</div>
+            <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
             <div>• 圖片報告固定輸出 10 格：9 個營養素 + 1 個 CTA 區。</div>
           </div>
         </div>
       </section>
 
       <!-- RIGHT -->
-      <section class="card rounded-2xl p-5 border border-slate-200">
-        <div class="flex items-end justify-between gap-3">
+      <section class="card rounded-3xl pad-lg">
+        <div class="flex items-end justify-between gap-2">
           <div>
-            <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">這裡只做圖片報告 PNG（固定預設顯示樣式）。</p>
+            <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
+            <p class="text-sm text-slate-600 mt-1">只做圖片報告 PNG（固定預設顯示樣式）。</p>
           </div>
           <div class="flex gap-2">
-            <button id="btnSimAllGood" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
-              一鍵「都很健康」
-            </button>
-            <button id="btnSimAllYes" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
-              一鍵「全部都選是」
-            </button>
+            <button id="btnSimAllGood" class="btn btn-soft">都很健康</button>
+            <button id="btnSimAllYes" class="btn btn-soft">全部選是</button>
           </div>
         </div>
 
-        <div class="mt-4 grid gap-3">
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="text-sm font-extrabold text-slate-900">11 題（照圖不改字）</div>
-            <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡</div>
-            <div id="simWrap" class="mt-3 space-y-3 max-h-[420px] overflow-auto thinbar pr-1"></div>
+        <div class="mt-3 grid gap-3">
+          <div class="card-soft rounded-3xl pad">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-sm font-black text-slate-950">11 題（照圖不改字）</div>
+                <div class="text-[11px] text-slate-500 mt-1">是/不是、性別、年齡</div>
+              </div>
+              <span class="pill pill-indigo">模擬</span>
+            </div>
+            <div id="simWrap" class="mt-3 space-y-2 max-h-[360px] overflow-auto thinbar pr-1"></div>
           </div>
 
-          <!-- ✅ LINE PROFILE (DEFAULT DISPLAY ONLY) -->
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="flex items-end justify-between gap-3">
+          <!-- DEFAULT DISPLAY -->
+          <div class="card-soft rounded-3xl pad">
+            <div class="flex items-end justify-between gap-2">
               <div>
-                <div class="text-sm font-extrabold text-slate-900">報告預設顯示樣式</div>
-                <div class="text-xs text-slate-500 mt-1">此區僅為預覽樣式；正式時由 LINE 自動帶入（不在此匯入資料）。</div>
+                <div class="text-sm font-black text-slate-950">報告預設顯示樣式</div>
+                <div class="text-[11px] text-slate-500 mt-1">僅預覽；正式由 LINE 自動帶入（不在此匯入）。</div>
               </div>
-              <div class="text-[11px] text-slate-500">
-                若你要改「預設顯示文字」，請改 JS：DEFAULT_LINE_NAME / DEFAULT_LINE_ID。
-              </div>
+              <span class="pill">預設</span>
             </div>
 
-            <div class="mt-4 flex items-center gap-4">
-              <img id="previewAvatar"
-                   src="https://i.pravatar.cc/150?img=12"
-                   class="w-16 h-16 rounded-full border border-slate-200 shadow" alt="avatar"/>
-              <div>
-                <div id="previewName" class="font-extrabold text-slate-900">LINE使用者名稱</div>
-                <div id="previewId" class="text-sm text-slate-500 mono">@line_id</div>
+            <div class="mt-3 flex items-center gap-3">
+              <div class="relative">
+                <div class="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-400/50 to-emerald-400/50 blur"></div>
+                <img id="previewAvatar" src="https://i.pravatar.cc/150?img=12"
+                     class="relative w-14 h-14 rounded-full border border-white/60 shadow" alt="avatar"/>
+              </div>
+              <div class="min-w-0">
+                <div id="previewName" class="font-black text-slate-950 truncate">LINE使用者名稱</div>
+                <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
               </div>
             </div>
           </div>
 
           <!-- R2 UPLOAD -->
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="flex items-end justify-between gap-3">
+          <div class="card-soft rounded-3xl pad">
+            <div class="flex items-end justify-between gap-2">
               <div>
-                <div class="text-sm font-extrabold text-slate-900">R2 上傳（底板）</div>
-                <div class="text-xs text-slate-500 mt-1">選檔 → 上傳到 Worker 的 <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板URL。</div>
+                <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
+                <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板。</div>
               </div>
-              <div class="text-[11px] text-slate-500">
-                需求：你的 Worker /upload 需支援 <span class="mono">multipart/form-data</span>。
-              </div>
+              <span class="pill pill-indigo">upload</span>
             </div>
 
             <div class="mt-3 grid gap-2">
               <div class="grid md:grid-cols-3 gap-2 items-end">
                 <div class="md:col-span-2">
-                  <label class="text-xs font-bold text-slate-500">選擇檔案</label>
-                  <input id="upFile" type="file" accept="image/*" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
+                  <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
+                  <input id="upFile" type="file" accept="image/*"
+                         class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
                 </div>
                 <div>
-                  <label class="text-xs font-bold text-slate-500">存放路徑（key）</label>
-                  <input id="upKey" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
-                    placeholder="assets/report_bg.png" />
+                  <label class="text-[11px] font-extrabold text-slate-600">存放路徑（key）</label>
+                  <input id="upKey" class="in mono mt-1" placeholder="assets/report_bg.png" />
                 </div>
               </div>
 
               <div class="flex gap-2">
-                <button id="btnUploadR2" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 font-semibold">上傳到 R2</button>
-                <button id="btnUseAsBg" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">設為底板URL</button>
+                <button id="btnUploadR2" class="btn btn-indigo w-full">上傳到 R2</button>
+                <button id="btnUseAsBg" class="btn btn-soft w-full">設為底板URL</button>
               </div>
 
-              <div class="rounded-xl border border-slate-200 bg-white p-3">
-                <div class="text-xs font-bold text-slate-500">上傳結果 URL</div>
-                <input id="upResultUrl" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
-                  placeholder="上傳成功後會出現在這裡" />
-                <div class="text-[11px] text-slate-500 mt-2">
-                  要能匯出 PNG：請用「可公開存取」的 URL，並允許跨域（CORS）。
-                </div>
+              <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
+                <div class="text-[11px] font-extrabold text-slate-600">上傳結果 URL</div>
+                <input id="upResultUrl" class="in mono mt-1" placeholder="上傳成功後會出現在這裡" />
+                <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：底板圖需可公開存取並允許跨域（CORS）。</div>
               </div>
             </div>
           </div>
 
           <!-- IMAGE PREVIEW -->
-          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
-            <div class="flex items-end justify-between gap-3">
+          <div class="card-soft rounded-3xl pad">
+            <div class="flex items-end justify-between gap-2">
               <div>
-                <div class="text-sm font-extrabold text-slate-900">圖片版營養素比例報告（預覽/匯出PNG）</div>
-                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（9 種營養素長條 + 第10格 CTA）。</div>
+                <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
+                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（9 長條 + 第10格 CTA）。</div>
               </div>
               <div class="flex gap-2">
-                <button id="btnRenderImg" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">產生圖片</button>
-                <button id="btnDownloadImg" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">下載PNG</button>
+                <button id="btnRenderImg" class="btn btn-dark">產生圖片</button>
+                <button id="btnDownloadImg" class="btn btn-soft">下載PNG</button>
               </div>
             </div>
 
-            <div class="mt-3 grid gap-2">
-              <label class="text-xs font-bold text-slate-500">底板圖片URL（R2 公開網址）</label>
-              <input id="inBgUrl" class="w-full px-3 py-2 rounded-xl border border-slate-200 mono"
-                placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
+            <div class="mt-2 grid gap-2">
+              <label class="text-[11px] font-extrabold text-slate-600">底板圖片URL（R2 公開網址）</label>
+              <input id="inBgUrl" class="in mono" placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
             </div>
 
             <div class="mt-3">
-              <canvas id="cvReport" class="w-full rounded-2xl border border-slate-200 bg-white"></canvas>
+              <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
               <div class="text-[11px] text-slate-500 mt-2">
-                ※ 若「下載PNG」失敗，多半是底板圖跨域（CORS）沒開。
+                ※ 若下載 PNG 失敗，多半是底板圖跨域（CORS）沒開。
               </div>
             </div>
           </div>
-
         </div>
       </section>
     </div>
 
-    <!-- EXCEL TABLE -->
-    <section class="card rounded-2xl p-5 border border-slate-200 mt-4">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+    <!-- TARGETS -->
+    <section class="card rounded-3xl pad-lg mt-3">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
         <div>
-          <h2 class="text-lg font-extrabold text-slate-900">③ 年齡層參考值</h2>
-          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（同一份資料可供 Worker 端產圖使用）。</p>
+          <h2 class="text-lg font-black text-slate-950">③ 年齡層參考值</h2>
+          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（可供 Worker 端產圖使用）。</p>
         </div>
         <div class="flex gap-2">
-          <button id="btnResetTargets" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">恢復預設</button>
-          <button id="btnCopyTargetsJson" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">複製 JSON</button>
+          <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
+          <button id="btnCopyTargetsJson" class="btn btn-soft">複製 JSON</button>
         </div>
       </div>
 
-      <div class="mt-4 overflow-auto thinbar stickyPanel">
+      <div class="mt-3 overflow-auto thinbar stickyPanel">
         <table class="w-full min-w-[980px] border-collapse">
           <thead>
             <tr class="text-xs text-slate-600">
@@ -254,8 +364,8 @@
         </table>
       </div>
 
-      <div class="mt-3 text-xs text-slate-500">
-        ※ 這裡的數值會組合成：<span class="mono font-semibold">vitB(B1/B2/B6)</span>、<span class="mono font-semibold">ca_mg(鈣/鎂)</span>、<span class="mono font-semibold">trace(碘/硒)</span>。
+      <div class="mt-2 text-[11px] text-slate-500 leading-5">
+        ※ 數值會組合成：<span class="mono font-bold">vitB(B1/B2/B6)</span>、<span class="mono font-bold">ca_mg(鈣/鎂)</span>、<span class="mono font-bold">trace(碘/硒)</span>。
       </div>
     </section>
 
@@ -267,13 +377,11 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ✅ 預設顯示樣式（你要改字就改這裡）
+  // ✅ 預設顯示樣式（要改字改這裡）
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
-  // 預設頭貼（可留空字串 ""，就會畫「圓形預設頭貼」）
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
 
-  // ✅ 年齡選項固定
   const AGE_CHILD = "0~10 歲 (兒童)";
   const AGE_TEEN  = "11~18 歲 (青少年)";
   const AGE_ADULT = "19 歲以上";
@@ -294,15 +402,8 @@
   ];
 
   const LABEL = {
-    vitA:"維生素A",
-    vitB:"維生素B",
-    vitC:"維生素C",
-    vitD:"維生素D",
-    vitE:"維生素E",
-    ca_mg:"鈣鎂",
-    iron:"鐵",
-    fiber:"膳食纖維",
-    trace:"微量元素",
+    vitA:"維生素A", vitB:"維生素B", vitC:"維生素C", vitD:"維生素D", vitE:"維生素E",
+    ca_mg:"鈣鎂", iron:"鐵", fiber:"膳食纖維", trace:"微量元素",
   };
   const PCT_ORDER = ["vitA","vitB","vitC","vitD","vitE","ca_mg","iron","fiber","trace"];
 
@@ -342,7 +443,7 @@
     div.className = `card rounded-2xl px-4 py-3 border ${
       type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
     }`;
-    div.innerHTML = `<div class="text-sm text-slate-900 font-semibold">${escapeHtml(msg)}</div>`;
+    div.innerHTML = `<div class="text-sm text-slate-950 font-black">${escapeHtml(msg)}</div>`;
     wrap.appendChild(div);
     setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
     setTimeout(()=>{ div.remove(); }, 2600);
@@ -362,16 +463,10 @@
     $("errText").textContent = "";
   }
 
-  // ✅ 顯示預設樣式
   function initPreviewLine(){
-    const av = $("previewAvatar");
-    const nm = $("previewName");
-    const id = $("previewId");
-    if(nm) nm.textContent = DEFAULT_LINE_NAME;
-    if(id) id.textContent = DEFAULT_LINE_ID;
-    if(av){
-      av.src = DEFAULT_LINE_AVATAR_URL || "https://i.pravatar.cc/150?img=12";
-    }
+    $("previewName").textContent = DEFAULT_LINE_NAME;
+    $("previewId").textContent = DEFAULT_LINE_ID;
+    $("previewAvatar").src = DEFAULT_LINE_AVATAR_URL || "https://i.pravatar.cc/150?img=12";
   }
 
   function apiBase(){
@@ -420,17 +515,22 @@
   }
 
   let CONNECTED = false;
-  function setStatus(ok, msg){
+  function setPill(ok){
+    const el = document.getElementById("pillConn");
+    if(!el) return;
+    el.textContent = ok ? "已連線" : "未連線";
+    el.className = "pill " + (ok ? "pill-green" : "pill-rose");
+  }
+  function setStatus(ok){
     CONNECTED = !!ok;
-    $("txtStatus").textContent = msg;
-    $("txtStatus").className = ok ? "font-semibold text-emerald-700" : "font-semibold text-rose-700";
+    setPill(CONNECTED);
     $("txtLast").textContent = new Date().toLocaleString();
   }
   async function connect(){
     clearErr();
     await apiJson("/listAll", {});
-    setStatus(true, "已連線");
-    toast("連線成功");
+    setStatus(true);
+    toast("連線成功 ✅");
   }
 
   // Targets table
@@ -447,12 +547,12 @@
       const tr = document.createElement("tr");
       tr.className = "border-b border-slate-100";
       tr.innerHTML = `
-        <td class="p-2 font-semibold text-slate-900">${escapeHtml(row.name)}</td>
+        <td class="p-2 font-black text-slate-950">${escapeHtml(row.name)}</td>
         <td class="p-2 text-slate-600">${escapeHtml(row.unit)}</td>
-        <td class="p-2"><input data-col="child" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.child)}" /></td>
-        <td class="p-2"><input data-col="teen" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.teen)}" /></td>
-        <td class="p-2"><input data-col="adultF" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.adultF)}" /></td>
-        <td class="p-2"><input data-col="adultM" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-xl border border-slate-200 bg-white" value="${escapeHtml(row.adultM)}" /></td>
+        <td class="p-2"><input data-col="child" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-2xl border border-slate-200 bg-white/90 focus:outline-none focus:ring-4 focus:ring-indigo-100" value="${escapeHtml(row.child)}" /></td>
+        <td class="p-2"><input data-col="teen" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-2xl border border-slate-200 bg-white/90 focus:outline-none focus:ring-4 focus:ring-indigo-100" value="${escapeHtml(row.teen)}" /></td>
+        <td class="p-2"><input data-col="adultF" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-2xl border border-slate-200 bg-white/90 focus:outline-none focus:ring-4 focus:ring-indigo-100" value="${escapeHtml(row.adultF)}" /></td>
+        <td class="p-2"><input data-col="adultM" data-id="${row.id}" type="number" step="any" class="w-28 px-3 py-2 rounded-2xl border border-slate-200 bg-white/90 focus:outline-none focus:ring-4 focus:ring-indigo-100" value="${escapeHtml(row.adultM)}" /></td>
       `;
       tb.appendChild(tr);
     });
@@ -508,12 +608,8 @@
     return { rows: structuredClone(targetsRows), combined };
   }
 
-  function getAgeOpts(){
-    return [AGE_CHILD, AGE_TEEN, AGE_ADULT];
-  }
-  function buildRules(){
-    return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} };
-  }
+  function getAgeOpts(){ return ["0~10 歲 (兒童)","11~18 歲 (青少年)","19 歲以上"]; }
+  function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
 
   function buildSurveyPayload(){
     const kw = ($("inKeyword").value || "").trim();
@@ -539,7 +635,7 @@
     }
 
     return {
-      version: "life11-v10-image-only-default-line-display",
+      version: "life11-v11-bright-art-ui",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -566,10 +662,10 @@
     }catch{ map = {}; }
     map[kw] = "life11";
     await kvPut(KW_MAP_KEY, map);
-    toast("已寫入 KV ✅（問卷 + KW_MAP + 扣分規則 + 攝取量）");
+    toast("已寫入 KV ✅（問卷 + KW_MAP + 規則 + 攝取量）");
   }
 
-  // Simulation answers
+  // Simulation
   const simState = {};
   function renderSim(){
     const [ageChild, ageTeen, ageAdult] = getAgeOpts();
@@ -578,22 +674,22 @@
 
     QUESTIONS.filter(x=>x.type!=="done").forEach((q, i)=>{
       const box = document.createElement("div");
-      box.className = "rounded-2xl border border-slate-200 bg-white p-4";
+      box.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
 
       let optsHtml = "";
       if(q.type==="yn"){
         const v = simState[q.id] ?? "不是";
         optsHtml = `
           <div class="flex gap-2 flex-wrap mt-2">
-            <button data-v="是" class="px-3 py-2 rounded-xl border ${v==="是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">是</button>
-            <button data-v="不是" class="px-3 py-2 rounded-xl border ${v==="不是"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">不是</button>
+            <button data-v="是" class="btn ${v==="是"?"btn-dark":"btn-soft"}">是</button>
+            <button data-v="不是" class="btn ${v==="不是"?"btn-dark":"btn-soft"}">不是</button>
           </div>`;
       }else if(q.type==="sex"){
         const v = simState[q.id] ?? "男";
         optsHtml = `
           <div class="flex gap-2 flex-wrap mt-2">
-            <button data-v="男" class="px-3 py-2 rounded-xl border ${v==="男"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">男</button>
-            <button data-v="女" class="px-3 py-2 rounded-xl border ${v==="女"?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">女</button>
+            <button data-v="男" class="btn ${v==="男"?"btn-dark":"btn-soft"}">男</button>
+            <button data-v="女" class="btn ${v==="女"?"btn-dark":"btn-soft"}">女</button>
           </div>`;
       }else if(q.type==="age"){
         const v = simState[q.id] ?? ageAdult;
@@ -601,14 +697,17 @@
         optsHtml = `
           <div class="flex gap-2 flex-wrap mt-2">
             ${opts.map(a => `
-              <button data-v="${escapeHtml(a)}" class="px-3 py-2 rounded-xl border ${v===a?"border-slate-900 bg-slate-900 text-white":"border-slate-200 bg-white hover:bg-slate-50"} font-semibold">${escapeHtml(a)}</button>
+              <button data-v="${escapeHtml(a)}" class="btn ${v===a?"btn-dark":"btn-soft"}">${escapeHtml(a)}</button>
             `).join("")}
           </div>`;
       }
 
       box.innerHTML = `
-        <div class="text-xs text-slate-500">問題 No.${i+1}/11</div>
-        <div class="mt-1 font-extrabold text-slate-900">${escapeHtml(q.text)}</div>
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-[11px] text-slate-500">No.${i+1}/11</div>
+          <span class="pill">選擇</span>
+        </div>
+        <div class="mt-1 font-black text-slate-950">${escapeHtml(q.text)}</div>
         ${optsHtml}
       `;
       box.querySelectorAll("button[data-v]").forEach(btn=>{
@@ -621,7 +720,6 @@
     });
   }
 
-  // Compute remain %
   function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
   function getRemainFromSim(){
     const [ageChild, ageTeen, ageAdult] = getAgeOpts();
@@ -650,7 +748,6 @@
     return { ans, remain };
   }
 
-  // R2 upload
   async function uploadToR2(){
     if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
     const f = $("upFile").files?.[0];
@@ -671,7 +768,6 @@
     return url;
   }
 
-  // Canvas image render
   let lastPngDataUrl = "";
 
   function pctColor(p){
@@ -722,7 +818,6 @@
 
     const { ans, remain } = getRemainFromSim();
 
-    // ✅ 改成固定預設顯示（不是匯入）
     const lineName = DEFAULT_LINE_NAME;
     const lineId = DEFAULT_LINE_ID;
     const avatarUrl = DEFAULT_LINE_AVATAR_URL;
@@ -747,7 +842,6 @@
         ctx.stroke();
         ctx.restore();
       }catch{
-        // fallback 圓形
         ctx.save();
         ctx.fillStyle = "rgba(255,255,255,.20)";
         ctx.beginPath();
@@ -795,7 +889,6 @@
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.fillText("（依問卷選項自動計算）", panelX+34, panelY+108);
 
-    // 10格：9營養素 + CTA
     const cols=2, rows=5, gap=18;
     const boxX=panelX+26, boxY=panelY+140;
     const boxW=(panelW-26*2-gap)/cols;
@@ -868,7 +961,7 @@
   // Events
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
-    catch(e){ setStatus(false, "連線失敗"); showErr(e); toast("連線失敗","err"); }
+    catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
   });
 
   $("btnWrite").addEventListener("click", async ()=>{
