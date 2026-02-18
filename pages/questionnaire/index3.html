@@ -95,20 +95,6 @@
             </div>
           </div>
 
-          <div class="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4">
-            <div class="text-sm font-extrabold text-indigo-900">年齡選項（可改字）</div>
-            <div class="text-xs text-indigo-900/70 mt-1">⚠️ 這裡會影響問卷 Q11 選項；攝取量數值在下面「Excel 表」調整。</div>
-
-            <div class="mt-3 grid gap-2">
-              <input id="ageChild" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="0~10 歲 (兒童)" />
-              <input id="ageTeen"  class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="11~18 歲 (青少年)" />
-              <input id="ageAdult" class="w-full px-4 py-2 rounded-xl border border-indigo-200 bg-white" value="19 歲以上" />
-            </div>
-            <div class="text-[12px] text-indigo-900/70 mt-2">
-              19 歲以上會依 Q10 性別自動套用「女/男」的攝取量。
-            </div>
-          </div>
-
           <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
             <div class="font-extrabold">扣分模型規則（固定邏輯）</div>
             <div>• 從 100% 開始，答「是」就扣分；會自動夾到 0～100%。</div>
@@ -295,6 +281,11 @@
 (() => {
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
+
+  // ✅ 年齡選項已固定（不再提供可改 UI）
+  const AGE_CHILD = "0~10 歲 (兒童)";
+  const AGE_TEEN  = "11~18 歲 (青少年)";
+  const AGE_ADULT = "19 歲以上";
 
   const QUESTIONS = [
     { id:"q1",  type:"yn",  text:"我經常只有兩餐" },
@@ -515,11 +506,7 @@
   }
 
   function getAgeOpts(){
-    return [
-      ($("ageChild").value || "0~10 歲 (兒童)").trim(),
-      ($("ageTeen").value  || "11~18 歲 (青少年)").trim(),
-      ($("ageAdult").value || "19 歲以上").trim(),
-    ];
+    return [AGE_CHILD, AGE_TEEN, AGE_ADULT];
   }
   function buildRules(){
     return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} };
@@ -529,7 +516,6 @@
     const kw = ($("inKeyword").value || "").trim();
     if(!kw) throw new Error("請填『啟動關鍵字』");
     const ageOpts = getAgeOpts();
-    if(ageOpts.some(x => !x)) throw new Error("年齡選項不可空白（需要 3 個）");
 
     const nodes = {};
     for(let i=0;i<QUESTIONS.length;i++){
@@ -541,12 +527,16 @@
       } else if(q.type === "sex"){
         nodes[q.id] = { q: q.text, type:"sex", options:[ {t:"男",value:"男",next:nextId}, {t:"女",value:"女",next:nextId} ] };
       } else if(q.type === "age"){
-        nodes[q.id] = { q: q.text, type:"age", options:[ {t:ageOpts[0],value:ageOpts[0],next:nextId}, {t:ageOpts[1],value:ageOpts[1],next:nextId}, {t:ageOpts[2],value:ageOpts[2],next:nextId} ] };
+        nodes[q.id] = { q: q.text, type:"age", options:[
+          {t:ageOpts[0],value:ageOpts[0],next:nextId},
+          {t:ageOpts[1],value:ageOpts[1],next:nextId},
+          {t:ageOpts[2],value:ageOpts[2],next:nextId}
+        ] };
       }
     }
 
     return {
-      version: "life11-v9-image-only-with-line-profile",
+      version: "life11-v10-image-only-with-line-profile-fixed-age",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -729,13 +719,11 @@
 
     const { ans, remain } = getRemainFromSim();
 
-    // 讀取 LINE 資料（放到圖片上）
     const lineName = ($("inLineName").value || "").trim() || "LINE使用者";
     const lineId = ($("inLineId").value || "").trim() || "（未填ID）";
     const avatarUrl = ($("inLineAvatar").value || "").trim();
 
-    // ======= 顶部資訊區（頭貼 + 名稱 + ID）========
-    // 半透明條
+    // 上方資訊區
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
@@ -743,12 +731,10 @@
     ctx.fill();
     ctx.restore();
 
-    // 頭貼（可選）
     if(avatarUrl){
       try{
         const av = await loadImg(avatarUrl);
         drawCircleAvatar(ctx, av, 140, 132, 58);
-        // 白色外圈
         ctx.save();
         ctx.strokeStyle = "rgba(255,255,255,.85)";
         ctx.lineWidth = 6;
@@ -756,11 +742,8 @@
         ctx.arc(140, 132, 60, 0, Math.PI*2);
         ctx.stroke();
         ctx.restore();
-      }catch{
-        // 不阻斷產圖：頭貼失敗就略過
-      }
+      }catch{}
     }else{
-      // 沒頭貼：畫一個 placeholder 圓
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.20)";
       ctx.beginPath();
@@ -769,7 +752,6 @@
       ctx.restore();
     }
 
-    // 名稱 / ID
     ctx.fillStyle = "rgba(255,255,255,.96)";
     ctx.textAlign = "left";
     ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
@@ -779,12 +761,11 @@
     ctx.font = "bold 26px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\",\"Courier New\", monospace";
     ctx.fillText(lineId, 230, 168);
 
-    // 小字（性別/年齡）
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 205);
 
-    // ======= 下面面板：營養素格子 =======
+    // 面板
     const panelX = 60, panelY = 860, panelW = W-120, panelH = 680;
     ctx.save();
     ctx.globalAlpha = 0.22;
@@ -838,9 +819,6 @@
         ctx.fillStyle = "rgba(255,255,255,.90)";
         ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
         ctx.fillText("（此格可做可點擊區）", x+20, y+86);
-        ctx.fillStyle = "rgba(255,255,255,.80)";
-        ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
-        ctx.fillText("你之後接 Worker/LIFF 時，再把連結帶進來", x+20, y+116);
         continue;
       }
 
@@ -911,7 +889,7 @@
   $("btnSimAllGood").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
     simState.q10="男";
-    simState.q11=($("ageAdult").value||"19 歲以上").trim();
+    simState.q11=AGE_ADULT;
     renderSim();
     toast("已填入『都很健康』測試答案");
   });
@@ -919,7 +897,7 @@
   $("btnSimAllYes").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="是");
     simState.q10="男";
-    simState.q11=($("ageAdult").value||"19 歲以上").trim();
+    simState.q11=AGE_ADULT;
     renderSim();
     toast("已填入『全部都選是』測試答案");
   });
@@ -927,8 +905,8 @@
   $("btnFillDemoLine").addEventListener("click", ()=>{
     $("inLineName").value = "王小明";
     $("inLineId").value = "@demo1234";
-    $("inLineAvatar").value = "https://profile.line-scdn.net/0hxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; // 你可換成可公開圖片
-    toast("已填入示範資料（頭貼URL請換成可公開的）","warn");
+    $("inLineAvatar").value = "";
+    toast("已填入示範資料","ok");
   });
 
   $("btnClearLine").addEventListener("click", ()=>{
@@ -936,10 +914,6 @@
     $("inLineId").value = "";
     $("inLineAvatar").value = "";
     toast("已清空");
-  });
-
-  ["ageChild","ageTeen","ageAdult"].forEach(id=>{
-    $(id).addEventListener("input", ()=> renderSim());
   });
 
   $("btnResetTargets").addEventListener("click", resetTargets);
