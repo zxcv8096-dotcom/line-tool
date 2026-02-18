@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>生活型態營養問卷｜中控台</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+body{
+background:linear-gradient(135deg,#dbeafe,#ecfeff,#f0fdf4);
+font-family:"Microsoft JhengHei";
+}
+.glass{
+background:rgba(255,255,255,.7);
+backdrop-filter:blur(14px);
+box-shadow:0 20px 60px rgba(0,0,0,.08);
+border:1px solid rgba(255,255,255,.6);
+}
+.title{
+background:linear-gradient(90deg,#6366f1,#06b6d4,#22c55e);
+-webkit-background-clip:text;
+color:transparent;
+}
+.btn{
+padding:12px 18px;
+border-radius:14px;
+font-weight:700;
+transition:.2s;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn-dark{background:#0f172a;color:white}
+.btn-green{background:#22c55e;color:white}
+.btn-white{background:white}
+</style>
+</head>
+
+<body class="p-6">
+
+<div class="max-w-6xl mx-auto">
+
+<!-- HEADER -->
+<div class="text-center mb-8">
+<h1 class="text-4xl font-extrabold title">
+生活型態營養問卷｜中控台
+</h1>
+<p class="text-slate-600 mt-3">
+營養分析報告產生系統
+</p>
+</div>
+
+<!-- GRID -->
+<div class="grid lg:grid-cols-2 gap-6">
+
+<!-- LEFT -->
+<div class="space-y-6">
+
+<!-- CONNECT -->
+<div class="glass rounded-3xl p-6">
+<h2 class="font-bold text-lg mb-4">系統連線</h2>
+
+<label class="text-sm">API網址</label>
+<input id="inApiBase" class="w-full mt-1 p-3 rounded-xl border"
+value="https://api.zxcv8096.workers.dev/">
+
+<label class="text-sm mt-3 block">Admin Key</label>
+<input id="inAdminKey" class="w-full mt-1 p-3 rounded-xl border">
+
+<div class="flex gap-3 mt-4">
+<button id="btnConnect" class="btn btn-dark w-full">連線</button>
+<button id="btnWrite" class="btn btn-green w-full">寫入KV</button>
+</div>
+
+<div class="text-sm mt-3">
+狀態：<span id="txtStatus">未連線</span>
+</div>
+</div>
+
+<!-- LINE -->
+<div class="glass rounded-3xl p-6">
+<h2 class="font-bold text-lg mb-4">LINE 使用者資料</h2>
+
+<input id="inLineName" class="w-full p-3 border rounded-xl mb-2" placeholder="名稱">
+<input id="inLineId" class="w-full p-3 border rounded-xl mb-2" placeholder="ID">
+<input id="inLineAvatar" class="w-full p-3 border rounded-xl" placeholder="頭貼URL">
+
+<div class="flex gap-3 mt-4">
+<button id="btnFillDemoLine" class="btn btn-white w-full">示範資料</button>
+<button id="btnClearLine" class="btn btn-white w-full">清除</button>
+</div>
+</div>
+
+</div>
+
+<!-- RIGHT -->
+<div class="space-y-6">
+
+<!-- BG -->
+<div class="glass rounded-3xl p-6">
+<h2 class="font-bold text-lg mb-4">底板圖片</h2>
+
+<input id="inBgUrl" class="w-full p-3 border rounded-xl mb-3" placeholder="背景圖片URL">
+
+<div class="flex gap-3">
+<button id="btnUploadR2" class="btn btn-white w-full">上傳</button>
+<button id="btnUseAsBg" class="btn btn-white w-full">套用</button>
+</div>
+
+<input id="upFile" type="file" class="mt-3">
+<input id="upKey" class="w-full p-2 border rounded-xl mt-2" placeholder="存放key">
+<input id="upResultUrl" class="w-full p-2 border rounded-xl mt-2" placeholder="上傳結果URL">
+</div>
+
+<!-- REPORT -->
+<div class="glass rounded-3xl p-6">
+<h2 class="font-bold text-lg mb-4">報告生成</h2>
+
+<div class="flex gap-3 mb-4">
+<button id="btnSimAllGood" class="btn btn-white w-full">健康測試</button>
+<button id="btnSimAllYes" class="btn btn-white w-full">缺乏測試</button>
+</div>
+
+<div class="flex gap-3">
+<button id="btnRenderImg" class="btn btn-dark w-full">產生報告</button>
+<button id="btnDownloadImg" class="btn btn-green w-full">下載PNG</button>
+</div>
+
+<canvas id="cvReport" class="mt-5 w-full rounded-xl border"></canvas>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<script>
+// ⚠️ 不動你的原本JS邏輯
+// 直接把你原本script整段貼在這裡即可
+</script>
+
+</body>
+</html>
