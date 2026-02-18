@@ -46,13 +46,6 @@
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
 
-    /* 少空白：讓卡片更緊湊 */
-    .tight h2{ letter-spacing:-.02em; }
-    .tight .pad{ padding: 16px; }
-    .tight .pad-lg{ padding: 18px; }
-    .tight .gap-tight{ gap: 10px; }
-
-    /* 亮色藝術感按鈕 */
     .btn{
       display:inline-flex; align-items:center; justify-content:center;
       gap:.5rem; border-radius: 16px; padding:.72rem 1rem;
@@ -93,7 +86,6 @@
     }
     .btn-indigo:hover{ filter: brightness(1.03); }
 
-    /* 輸入框更亮更有質感 */
     .in{
       width:100%;
       border-radius: 16px;
@@ -109,7 +101,6 @@
       background: rgba(255,255,255,.96);
     }
 
-    /* header 浮雕條 */
     .hero{
       background: linear-gradient(135deg, rgba(255,255,255,.70), rgba(255,255,255,.52));
       border: 1px solid rgba(15,23,42,.08);
@@ -117,10 +108,6 @@
       backdrop-filter: blur(14px);
     }
 
-    /* ✅ 修正表格容器「卡住」 */
-    .stickyPanel{ position:static !important; }
-
-    /* 小徽章 */
     .pill{
       display:inline-flex; align-items:center; gap:.35rem;
       padding:.25rem .55rem;
@@ -133,20 +120,19 @@
     }
     .pill-green{ border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.10); color: rgba(5,150,105,1); }
     .pill-indigo{ border-color: rgba(99,102,241,.25); background: rgba(99,102,241,.10); color: rgba(79,70,229,1); }
-    .pill-amber{ border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.10); color: rgba(180,83,9,1); }
     .pill-rose{ border-color: rgba(244,63,94,.25); background: rgba(244,63,94,.10); color: rgba(190,18,60,1); }
   </style>
 </head>
 
-<body class="min-h-screen tight">
+<body class="min-h-screen">
   <div class="max-w-6xl mx-auto p-3 md:p-6">
-    <!-- HERO -->
+
     <header class="hero rounded-3xl p-4 md:p-5 mb-3">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
-            <span class="pill pill-indigo">UI 明亮藝術感</span>
+            <span class="pill pill-indigo">UI 明亮</span>
             <span class="pill pill-green">功能保留</span>
           </div>
           <p class="text-sm text-slate-600 mt-1 leading-6">
@@ -160,10 +146,9 @@
         </div>
       </div>
 
-      <!-- compact quick status -->
       <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2 text-xs">
-          <span class="pill" id="pillConn">未連線</span>
+          <span class="pill pill-rose" id="pillConn">未連線</span>
           <span class="pill">最後測試：<span id="txtLast" class="mono ml-1">-</span></span>
         </div>
         <div class="text-[11px] text-slate-500">
@@ -172,8 +157,7 @@
       </div>
     </header>
 
-    <!-- CONNECT -->
-    <section class="card rounded-3xl pad-lg mb-3">
+    <section class="card rounded-3xl p-4 md:p-5 mb-3">
       <div class="grid md:grid-cols-3 gap-3 items-end">
         <div class="md:col-span-2">
           <label class="text-xs font-extrabold text-slate-600">Worker API（固定）</label>
@@ -198,15 +182,14 @@
     </section>
 
     <div class="grid lg:grid-cols-2 gap-3">
-      <!-- LEFT -->
-      <section class="card rounded-3xl pad-lg">
+      <section class="card rounded-3xl p-4 md:p-5">
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-lg font-black text-slate-950">① 問卷設定</h2>
-          <span class="pill pill-amber">扣分模型：固定</span>
+          <span class="pill">扣分模型：固定</span>
         </div>
 
         <div class="mt-3 grid gap-3">
-          <div class="card-soft rounded-3xl pad">
+          <div class="card-soft rounded-3xl p-4">
             <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
             <input id="inKeyword" class="in mt-1" placeholder="例如：生活營養" />
             <div class="text-[11px] text-slate-500 mt-2 leading-5">
@@ -222,8 +205,7 @@
         </div>
       </section>
 
-      <!-- RIGHT -->
-      <section class="card rounded-3xl pad-lg">
+      <section class="card rounded-3xl p-4 md:p-5">
         <div class="flex items-end justify-between gap-2">
           <div>
             <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
@@ -236,7 +218,7 @@
         </div>
 
         <div class="mt-3 grid gap-3">
-          <div class="card-soft rounded-3xl pad">
+          <div class="card-soft rounded-3xl p-4">
             <div class="flex items-center justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">11 題（照圖不改字）</div>
@@ -247,8 +229,7 @@
             <div id="simWrap" class="mt-3 space-y-2 max-h-[360px] overflow-auto thinbar pr-1"></div>
           </div>
 
-          <!-- DEFAULT DISPLAY -->
-          <div class="card-soft rounded-3xl pad">
+          <div class="card-soft rounded-3xl p-4">
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">報告預設顯示樣式</div>
@@ -270,8 +251,7 @@
             </div>
           </div>
 
-          <!-- R2 UPLOAD -->
-          <div class="card-soft rounded-3xl pad">
+          <div class="card-soft rounded-3xl p-4">
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
@@ -282,15 +262,13 @@
 
             <div class="mt-3 grid gap-2">
               <div class="grid md:grid-cols-3 gap-2 items-end">
-                <div class="md:col-span-2">
+                <div class="md:col-span-3">
                   <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
                   <input id="upFile" type="file" accept="image/*"
                          class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
                 </div>
-                <div>
-                  <label class="text-[11px] font-extrabold text-slate-600">存放路徑（key）</label>
-                  <input id="upKey" class="in mono mt-1" placeholder="assets/report_bg.png" />
-                </div>
+                <!-- ✅ 這裡已改：不再讓你填 key，系統自動設定 -->
+                <input id="upKey" class="hidden" />
               </div>
 
               <div class="flex gap-2">
@@ -303,11 +281,14 @@
                 <input id="upResultUrl" class="in mono mt-1" placeholder="上傳成功後會出現在這裡" />
                 <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：底板圖需可公開存取並允許跨域（CORS）。</div>
               </div>
+
+              <div class="text-[11px] text-slate-500">
+                存放路徑（key）已自動設定：<span class="mono font-bold" id="txtAutoKey">assets/life11/report_bg.png</span>
+              </div>
             </div>
           </div>
 
-          <!-- IMAGE PREVIEW -->
-          <div class="card-soft rounded-3xl pad">
+          <div class="card-soft rounded-3xl p-4">
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
@@ -331,12 +312,12 @@
               </div>
             </div>
           </div>
+
         </div>
       </section>
     </div>
 
-    <!-- TARGETS -->
-    <section class="card rounded-3xl pad-lg mt-3">
+    <section class="card rounded-3xl p-4 md:p-5 mt-3">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
         <div>
           <h2 class="text-lg font-black text-slate-950">③ 年齡層參考值</h2>
@@ -348,7 +329,7 @@
         </div>
       </div>
 
-      <div class="mt-3 overflow-auto thinbar stickyPanel">
+      <div class="mt-3 overflow-auto thinbar">
         <table class="w-full min-w-[980px] border-collapse">
           <thead>
             <tr class="text-xs text-slate-600">
@@ -381,6 +362,17 @@
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
+
+  // ✅ R2 存放路徑（key）自動設定（你不用填）
+  // 規則：assets/life11/report_bg_YYYYMMDD_HHMMSS.png
+  function pad2(n){ return String(n).padStart(2,"0"); }
+  function autoKeyForUpload(file){
+    const d = new Date();
+    const stamp = `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+    const ext = (file?.name || "").split(".").pop()?.toLowerCase();
+    const safeExt = (ext && ext.length <= 6) ? ext : "png";
+    return `assets/life11/report_bg_${stamp}.${safeExt}`;
+  }
 
   const AGE_CHILD = "0~10 歲 (兒童)";
   const AGE_TEEN  = "11~18 歲 (青少年)";
@@ -614,8 +606,8 @@
   function buildSurveyPayload(){
     const kw = ($("inKeyword").value || "").trim();
     if(!kw) throw new Error("請填『啟動關鍵字』");
-    const ageOpts = getAgeOpts();
 
+    const ageOpts = getAgeOpts();
     const nodes = {};
     for(let i=0;i<QUESTIONS.length;i++){
       const q = QUESTIONS[i];
@@ -635,7 +627,7 @@
     }
 
     return {
-      version: "life11-v11-bright-art-ui",
+      version: "life11-v11-bright-art-ui-autokey",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -752,8 +744,11 @@
     if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
     const f = $("upFile").files?.[0];
     if(!f) throw new Error("請先選擇檔案");
-    const key = ($("upKey").value || "").trim();
-    if(!key) throw new Error("請填『存放路徑（key）』例如 assets/report_bg.png");
+
+    // ✅ 自動設定 key
+    const key = autoKeyForUpload(f);
+    $("upKey").value = key;
+    $("txtAutoKey").textContent = key;
 
     const fd = new FormData();
     fd.append("file", f);
@@ -763,9 +758,19 @@
     const r = await apiForm("/upload", fd);
     const url = r?.url || r?.publicUrl || r?.result?.url || r?.result?.publicUrl || r?.payload?.url || "";
     if(!url) throw new Error("上傳成功但沒拿到 URL（請確認 Worker /upload 回傳 {url} 或 {publicUrl}）");
+
     $("upResultUrl").value = url;
     toast("上傳成功 ✅");
     return url;
+  }
+
+  // 讓使用者一選檔就先算出 key（更直覺）
+  function onPickFile(){
+    const f = $("upFile").files?.[0];
+    if(!f) return;
+    const key = autoKeyForUpload(f);
+    $("upKey").value = key;
+    $("txtAutoKey").textContent = key;
   }
 
   let lastPngDataUrl = "";
@@ -822,7 +827,6 @@
     const lineId = DEFAULT_LINE_ID;
     const avatarUrl = DEFAULT_LINE_AVATAR_URL;
 
-    // 上方資訊區
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
@@ -841,14 +845,7 @@
         ctx.arc(140, 132, 60, 0, Math.PI*2);
         ctx.stroke();
         ctx.restore();
-      }catch{
-        ctx.save();
-        ctx.fillStyle = "rgba(255,255,255,.20)";
-        ctx.beginPath();
-        ctx.arc(140, 132, 58, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-      }
+      }catch{}
     }else{
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.20)";
@@ -871,7 +868,6 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 205);
 
-    // 面板
     const panelX = 60, panelY = 860, panelW = W-120, panelH = 680;
     ctx.save();
     ctx.globalAlpha = 0.22;
@@ -958,7 +954,7 @@
     a.click();
   }
 
-  // Events
+  // events
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
     catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
@@ -968,6 +964,8 @@
     try{ clearErr(); await writeKV(); }
     catch(e){ showErr(e); toast(e.message || "寫入失敗","err"); }
   });
+
+  $("upFile").addEventListener("change", onPickFile);
 
   $("btnUploadR2").addEventListener("click", async ()=>{
     try{ clearErr(); await uploadToR2(); }
@@ -1023,6 +1021,9 @@
   initPreviewLine();
   renderTargetsTable();
   renderSim();
+
+  // init auto key label
+  $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
 })();
 </script>
 </body>
