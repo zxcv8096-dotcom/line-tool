@@ -35,7 +35,7 @@
     <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
       <div>
         <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">生活型態營養問卷｜中控台（11題）</h1>
-        <p class="text-sm text-slate-600 mt-1">這頁：一鍵寫入 KV（問卷/規則/攝取量）＋ 直接生成「圖片版營養素比例報告」PNG（不含文字報告、不含LOGO設定）。</p>
+        <p class="text-sm text-slate-600 mt-1">這頁：一鍵寫入 KV（問卷/規則/攝取量）＋ 直接生成「圖片版營養素比例報告」PNG（含 LINE 頭貼 + 名稱 + LINE ID）。</p>
       </div>
       <div class="text-xs text-slate-600 leading-6">
         <div class="font-bold">需要 Worker 提供 API：</div>
@@ -122,7 +122,7 @@
         <div class="flex items-end justify-between gap-3">
           <div>
             <h2 class="text-lg font-extrabold text-slate-900">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">這裡只做圖片報告 PNG（已刪除文字報告、不含LOGO設定）。</p>
+            <p class="text-sm text-slate-600 mt-1">這裡只做圖片報告 PNG（含 LINE 頭貼 + 名稱 + LINE ID）。</p>
           </div>
           <div class="flex gap-2">
             <button id="btnSimAllGood" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
@@ -140,6 +140,46 @@
             <div class="text-xs text-slate-500 mt-1">是/不是、性別、年齡</div>
 
             <div id="simWrap" class="mt-3 space-y-3 max-h-[420px] overflow-auto thinbar pr-1"></div>
+          </div>
+
+          <!-- LINE PROFILE (FOR IMAGE) -->
+          <div class="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <div class="flex items-end justify-between gap-3">
+              <div>
+                <div class="text-sm font-extrabold text-slate-900">報告顯示：LINE 頭貼 / 名稱 / LINE ID</div>
+                <div class="text-xs text-slate-500 mt-1">先用這裡手動輸入測試；之後你要接 LIFF 再自動帶入也可以。</div>
+              </div>
+              <div class="text-[11px] text-slate-500">
+                頭貼需可公開（CORS 不會影響顯示，但會影響匯出 PNG）。
+              </div>
+            </div>
+
+            <div class="mt-3 grid md:grid-cols-3 gap-2">
+              <div>
+                <label class="text-xs font-bold text-slate-500">LINE 名稱</label>
+                <input id="inLineName" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200"
+                  placeholder="例如：王小明" />
+              </div>
+              <div>
+                <label class="text-xs font-bold text-slate-500">LINE ID（或你想顯示的識別碼）</label>
+                <input id="inLineId" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
+                  placeholder="例如：@abcd1234" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="text-xs font-bold text-slate-500">LINE 頭貼 URL</label>
+                <input id="inLineAvatar" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 mono"
+                  placeholder="https://.../avatar.jpg" />
+              </div>
+            </div>
+
+            <div class="mt-3 flex gap-2">
+              <button id="btnFillDemoLine" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+                填入示範資料
+              </button>
+              <button id="btnClearLine" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 font-semibold">
+                清空
+              </button>
+            </div>
           </div>
 
           <!-- R2 UPLOAD -->
@@ -188,7 +228,7 @@
             <div class="flex items-end justify-between gap-3">
               <div>
                 <div class="text-sm font-extrabold text-slate-900">圖片版營養素比例報告（預覽/匯出PNG）</div>
-                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（9 種營養素長條 + 第10格 CTA）。</div>
+                <div class="text-xs text-slate-500 mt-1">固定輸出 900×1600 PNG（含頭貼+ID，9 種營養素長條 + 第10格 CTA）。</div>
               </div>
               <div class="flex gap-2">
                 <button id="btnRenderImg" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-black font-semibold">產生圖片</button>
@@ -205,7 +245,7 @@
             <div class="mt-3">
               <canvas id="cvReport" class="w-full rounded-2xl border border-slate-200 bg-white"></canvas>
               <div class="text-[11px] text-slate-500 mt-2">
-                ※ 若「下載PNG」失敗，多半是底板圖跨域（CORS）沒開。
+                ※ 若「下載PNG」失敗，多半是底板圖或頭貼跨域（CORS）沒開。
               </div>
             </div>
           </div>
@@ -506,7 +546,7 @@
     }
 
     return {
-      version: "life11-v8-image-only",
+      version: "life11-v9-image-only-with-line-profile",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -665,6 +705,15 @@
     ctx.arcTo(x, y, x+w, y, rr);
     ctx.closePath();
   }
+  function drawCircleAvatar(ctx, img, cx, cy, r){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(img, cx - r, cy - r, r*2, r*2);
+    ctx.restore();
+  }
 
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
@@ -680,7 +729,62 @@
 
     const { ans, remain } = getRemainFromSim();
 
-    // 半透明面板
+    // 讀取 LINE 資料（放到圖片上）
+    const lineName = ($("inLineName").value || "").trim() || "LINE使用者";
+    const lineId = ($("inLineId").value || "").trim() || "（未填ID）";
+    const avatarUrl = ($("inLineAvatar").value || "").trim();
+
+    // ======= 顶部資訊區（頭貼 + 名稱 + ID）========
+    // 半透明條
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = "#000000";
+    roundRect(ctx, 48, 48, W-96, 170, 46);
+    ctx.fill();
+    ctx.restore();
+
+    // 頭貼（可選）
+    if(avatarUrl){
+      try{
+        const av = await loadImg(avatarUrl);
+        drawCircleAvatar(ctx, av, 140, 132, 58);
+        // 白色外圈
+        ctx.save();
+        ctx.strokeStyle = "rgba(255,255,255,.85)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(140, 132, 60, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }catch{
+        // 不阻斷產圖：頭貼失敗就略過
+      }
+    }else{
+      // 沒頭貼：畫一個 placeholder 圓
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.20)";
+      ctx.beginPath();
+      ctx.arc(140, 132, 58, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 名稱 / ID
+    ctx.fillStyle = "rgba(255,255,255,.96)";
+    ctx.textAlign = "left";
+    ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
+    ctx.fillText(lineName, 230, 124);
+
+    ctx.fillStyle = "rgba(255,255,255,.90)";
+    ctx.font = "bold 26px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\",\"Courier New\", monospace";
+    ctx.fillText(lineId, 230, 168);
+
+    // 小字（性別/年齡）
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+    ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 205);
+
+    // ======= 下面面板：營養素格子 =======
     const panelX = 60, panelY = 860, panelW = W-120, panelH = 680;
     ctx.save();
     ctx.globalAlpha = 0.22;
@@ -689,7 +793,6 @@
     ctx.fill();
     ctx.restore();
 
-    // 標題（不依賴LOGO）
     ctx.fillStyle = "rgba(255,255,255,.95)";
     ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
     ctx.textAlign = "left";
@@ -697,7 +800,7 @@
 
     ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,.85)";
-    ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, panelX+34, panelY+108);
+    ctx.fillText("（依問卷選項自動計算）", panelX+34, panelY+108);
 
     // 10格：9營養素 + CTA
     const cols=2, rows=5, gap=18;
@@ -735,6 +838,9 @@
         ctx.fillStyle = "rgba(255,255,255,.90)";
         ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
         ctx.fillText("（此格可做可點擊區）", x+20, y+86);
+        ctx.fillStyle = "rgba(255,255,255,.80)";
+        ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
+        ctx.fillText("你之後接 Worker/LIFF 時，再把連結帶進來", x+20, y+116);
         continue;
       }
 
@@ -816,6 +922,20 @@
     simState.q11=($("ageAdult").value||"19 歲以上").trim();
     renderSim();
     toast("已填入『全部都選是』測試答案");
+  });
+
+  $("btnFillDemoLine").addEventListener("click", ()=>{
+    $("inLineName").value = "王小明";
+    $("inLineId").value = "@demo1234";
+    $("inLineAvatar").value = "https://profile.line-scdn.net/0hxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; // 你可換成可公開圖片
+    toast("已填入示範資料（頭貼URL請換成可公開的）","warn");
+  });
+
+  $("btnClearLine").addEventListener("click", ()=>{
+    $("inLineName").value = "";
+    $("inLineId").value = "";
+    $("inLineAvatar").value = "";
+    toast("已清空");
   });
 
   ["ageChild","ageTeen","ageAdult"].forEach(id=>{
