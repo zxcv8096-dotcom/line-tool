@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>生活型態營養問卷｜中控台（新版介面＋引流圖可直接改圖）</title>
+  <title>生活型態營養問卷｜中控台（新版介面＋引流圖=imagemap畫框版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
@@ -173,99 +173,7 @@
     }
     .hint{ font-size: 11px; color: rgba(2,6,23,.55); line-height: 1.5; }
 
-    /* ===== 產圖 Canvas ===== */
     canvas{ display:block; max-width:100%; height:auto; }
-
-    /* ===== CTA 圖片編輯器（直接在圖片上修改） ===== */
-    .editor-shell{
-      border: 1px solid rgba(15,23,42,.10);
-      border-radius: 22px;
-      background: rgba(255,255,255,.78);
-      overflow: hidden;
-    }
-    .editor-toolbar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      padding:10px;
-      border-bottom: 1px solid rgba(15,23,42,.10);
-      background: rgba(255,255,255,.80);
-    }
-    .toolbtn{
-      padding:.55rem .78rem;
-      border-radius: 14px;
-      border: 1px solid rgba(15,23,42,.12);
-      background: rgba(255,255,255,.86);
-      font-weight:900;
-      font-size:12px;
-      user-select:none;
-      transition: all .16s ease;
-    }
-    .toolbtn:hover{ background: rgba(255,255,255,.98); border-color: rgba(99,102,241,.28); }
-    .toolbtn.active{
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-color: transparent;
-      color:#fff;
-      box-shadow: 0 10px 20px rgba(99,102,241,.18);
-    }
-    .toolrow{
-      display:flex; align-items:center; gap:8px;
-      padding: 0 10px 10px;
-      border-bottom: 1px solid rgba(15,23,42,.08);
-      background: rgba(255,255,255,.72);
-    }
-    .slider{
-      width: 140px;
-    }
-    .color{
-      width: 38px;
-      height: 38px;
-      padding:0;
-      border-radius: 12px;
-      border: 1px solid rgba(15,23,42,.12);
-      background: rgba(255,255,255,.9);
-      overflow:hidden;
-    }
-    .editor-stage{
-      display:grid;
-      grid-template-columns: 1fr 330px;
-      gap: 0;
-    }
-    @media (max-width: 1100px){
-      .editor-stage{ grid-template-columns: 1fr; }
-    }
-    .canvas-wrap{
-      background: radial-gradient(900px 420px at 30% 20%, rgba(99,102,241,.12), transparent 55%),
-                  radial-gradient(900px 420px at 70% 70%, rgba(16,185,129,.10), transparent 55%),
-                  #f8fafc;
-      padding: 12px;
-    }
-    .canvas-frame{
-      border-radius: 20px;
-      border: 1px solid rgba(15,23,42,.12);
-      background: #fff;
-      overflow: hidden;
-    }
-    #ctaEditCanvas{
-      width: 100%;
-      height: auto;
-      display:block;
-      touch-action: none;
-    }
-    .sidepanel{
-      padding: 12px;
-      border-left: 1px solid rgba(15,23,42,.10);
-      background: rgba(255,255,255,.78);
-    }
-    @media (max-width: 1100px){
-      .sidepanel{ border-left: none; border-top: 1px solid rgba(15,23,42,.10); }
-    }
-    .krow{ display:grid; grid-template-columns: 1fr; gap:8px; }
-    .kbd{
-      font-size:11px;
-      color: rgba(2,6,23,.58);
-      line-height:1.5;
-    }
 
     /* ===== Toast ===== */
     #toastWrap{
@@ -278,6 +186,40 @@
       display:flex;
       flex-direction:column;
       gap:8px;
+    }
+
+    /* =========================================================
+       ✅ 引流圖（imagemap）編輯器：跟你下面那份一樣（畫框/縮放/上傳R2/儲存讀取）
+       ========================================================= */
+    .area-box{
+      position:absolute;
+      border:2px solid rgba(255,0,0,.85);
+      background:rgba(255,0,0,.22);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:800;
+      font-size:14px;
+      text-shadow:0 1px 2px rgba(0,0,0,.9);
+      user-select:none;
+    }
+    .draw-rect{
+      position:absolute;
+      border:2px dashed rgba(0,0,0,.6);
+      background:rgba(0,0,0,.10);
+      pointer-events:none;
+    }
+    #imapStage{
+      position: relative;
+      transform-origin: top left;
+    }
+    #imapDrawLayer{
+      position:absolute;
+      inset:0;
+      cursor:crosshair;
+      touch-action:none;
     }
   </style>
 </head>
@@ -296,13 +238,13 @@
             <span class="pill">最後：<span id="txtLast" class="mono ml-1">-</span></span>
           </div>
           <div class="hint mt-1">
-            重點：<b>引流圖不是上傳</b>，而是「直接在圖片上修改」→ 右側 <b>引流圖編輯器</b> 可直接畫/打字/貼形狀/匯出。
+            ✅ 右側「引流圖」已改成你要的 <b>imagemap 畫框版</b>：新增圖片 → 上傳到 R2 → 拖曳畫框 → 填文字/網址 → 儲存/讀取。
           </div>
         </div>
 
         <div class="minw0 flex flex-wrap gap-2 justify-start md:justify-end">
           <button class="tab active" data-tab="tab-preview">預覽 / 產圖</button>
-          <button class="tab" data-tab="tab-cta">引流圖編輯器</button>
+          <button class="tab" data-tab="tab-cta">引流圖（畫框/上傳R2）</button>
           <button class="tab" data-tab="tab-targets">年齡層參考值</button>
         </div>
       </div>
@@ -397,9 +339,13 @@
                 <div class="font-black text-slate-950">底板圖片 URL（必填）</div>
                 <div class="hint mt-1">底板需可公開存取並允許跨域（CORS），不然下載會失敗。</div>
                 <input id="inBgUrl" class="in mono mt-2" placeholder="https://.../report_bg.png" />
+
                 <div class="mt-3">
                   <div class="font-black text-slate-950">引流圖來源（可選）</div>
-                  <div class="hint mt-1">你要「直接改圖」→ 去右側「引流圖編輯器」修改後，會產生一個 DataURL；這裡可直接用。</div>
+                  <div class="hint mt-1">
+                    ✅ 你現在的引流圖編輯器是「畫框/上傳R2」版。<br/>
+                    你可以在「引流圖」分頁選好圖片後，按<b>「套用到預覽/產圖」</b>，它會把圖片 URL 填到這裡。
+                  </div>
                   <input id="inCtaSource" class="in mono mt-2" placeholder="可貼：https://... 或 data:image/png;base64,..." />
                   <div class="grid grid-cols-2 gap-2 mt-2">
                     <button id="btnUseCtaFromEditor" class="btn btn-soft w-full">用編輯器的引流圖</button>
@@ -436,87 +382,167 @@
           </div>
         </section>
 
-        <!-- TAB: CTA Editor -->
+        <!-- TAB: CTA / Imagemap Editor -->
         <section id="tab-cta" class="hidden space-y-3">
           <div class="card p-4">
             <div class="section-title">
-              <span>引流圖編輯器（直接在圖片上修改）</span>
-              <span class="pill pill-indigo">畫筆 / 文字 / 方塊 / 橢圓 / 取消復原</span>
+              <span>引流圖編輯器（R2 上傳＋畫框＋縮放）</span>
+              <span class="pill pill-indigo">跟你提供的 R2 尺寸模式版一致</span>
             </div>
+
             <div class="hint mt-1">
-              這裡的引流圖<b>不用上傳</b>：你直接改圖 → 右側可「匯出成圖片」→ 再回到「預覽/產圖」套用。
+              使用流程：① 新增圖片 → ② 上傳到 R2（壓縮）→ ③ 在圖片上拖曳畫框 → ④ 右側填「發文字/開網址」→ ⑤ 儲存/讀取。<br/>
+              另外：你要把這張引流圖放進報告圖片底部 → 用「套用到預覽/產圖」，它會把「目前圖片 URL」填回去。
             </div>
 
-            <div class="editor-shell mt-3">
-              <div class="editor-toolbar">
-                <button class="toolbtn active" data-tool="move">移動</button>
-                <button class="toolbtn" data-tool="pen">畫筆</button>
-                <button class="toolbtn" data-tool="rect">方塊</button>
-                <button class="toolbtn" data-tool="ellipse">橢圓</button>
-                <button class="toolbtn" data-tool="text">文字</button>
-                <span class="pill ml-auto">支援：滑鼠/觸控</span>
+            <!-- Top controls -->
+            <div class="mt-3 grid grid-cols-1 xl:grid-cols-3 gap-3">
+              <div class="card2 p-3">
+                <div class="text-xs font-extrabold text-slate-600 mb-2">雲端設定（Worker /save /load）</div>
+                <div class="grid gap-2">
+                  <input type="text" id="imapWorkerUrl" placeholder="https://xxxx.workers.dev"
+                         class="in mono bg-yellow-50" />
+                  <input type="text" id="imapKeyword" placeholder="本圖關鍵字（可不填：存本機草稿）"
+                         class="in font-black border-indigo-300" />
+                  <div class="grid grid-cols-3 gap-2">
+                    <button id="btnIMapLoad" class="btn btn-soft w-full">讀取</button>
+                    <button id="btnIMapSave" class="btn btn-emerald w-full">儲存</button>
+                    <button id="btnIMapSaveAs" class="btn btn-indigo w-full">另存新檔</button>
+                  </div>
+                  <div class="hint">不填關鍵字：存到本機草稿；有填關鍵字：存到 Worker（/save）。</div>
+                </div>
               </div>
 
-              <div class="toolrow">
-                <div class="text-xs font-extrabold text-slate-600">粗細</div>
-                <input id="strokeSize" class="slider" type="range" min="2" max="48" value="10" />
-                <div class="text-xs font-extrabold text-slate-600 ml-2">顏色</div>
-                <input id="strokeColor" class="color" type="color" value="#111827" />
-                <div class="text-xs font-extrabold text-slate-600 ml-2">透明</div>
-                <input id="strokeAlpha" class="slider" type="range" min="0.1" max="1" step="0.05" value="1" />
-                <span class="pill">Ctrl+Z：復原</span>
+              <div class="card2 p-3">
+                <div class="flex items-center justify-between">
+                  <div class="text-xs font-extrabold text-slate-600">🔎 圖片縮放</div>
+                  <div class="text-[11px] text-slate-500">滾輪 + Ctrl/Alt/Shift</div>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                  <input id="imapZoomRange" type="range" min="0.5" max="3" step="0.01" value="1" class="w-full">
+                  <div class="text-xs font-black w-14 text-right" id="imapZoomLabel">100%</div>
+                </div>
+                <div class="mt-2 flex gap-2">
+                  <button class="btn btn-dark text-xs !py-2 !px-3" id="imapZoom100">100%</button>
+                  <button class="btn btn-soft text-xs !py-2 !px-3" id="imapZoom75">75%</button>
+                  <button class="btn btn-soft text-xs !py-2 !px-3" id="imapZoom150">150%</button>
+                </div>
               </div>
 
-              <div class="editor-stage">
-                <div class="canvas-wrap">
-                  <div class="canvas-frame">
-                    <canvas id="ctaEditCanvas"></canvas>
+              <div class="card2 p-3">
+                <div class="text-xs font-extrabold text-slate-600 mb-2">圖片尺寸/壓縮（上傳時生效）</div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <label class="flex flex-col gap-1 col-span-2">
+                    <span class="text-slate-500">尺寸模式</span>
+                    <select id="imapSizeMode" class="border rounded-2xl px-3 py-2 bg-white/90">
+                      <option value="line">LINE 建議（長邊 1280）</option>
+                      <option value="hd">清晰（長邊 1600）</option>
+                      <option value="small">省空間（長邊 960）</option>
+                      <option value="custom">自選尺寸（寬/高上限）</option>
+                    </select>
+                  </label>
+
+                  <label id="imapCustomWWrap" class="flex flex-col gap-1 hidden">
+                    <span class="text-slate-500">最大寬(px)</span>
+                    <input id="imapCustomW" type="number" value="1280" min="320" max="4096" class="border rounded-2xl px-3 py-2 bg-white/90">
+                  </label>
+                  <label id="imapCustomHWrap" class="flex flex-col gap-1 hidden">
+                    <span class="text-slate-500">最大高(px)</span>
+                    <input id="imapCustomH" type="number" value="1280" min="320" max="4096" class="border rounded-2xl px-3 py-2 bg-white/90">
+                  </label>
+
+                  <label class="flex flex-col gap-1">
+                    <span class="text-slate-500">格式</span>
+                    <select id="imapOutFormat" class="border rounded-2xl px-3 py-2 bg-white/90">
+                      <option value="image/webp" selected>WebP（推薦）</option>
+                      <option value="image/jpeg">JPEG</option>
+                      <option value="image/png">PNG（不建議）</option>
+                    </select>
+                  </label>
+
+                  <label class="flex flex-col gap-1">
+                    <span class="text-slate-500">品質</span>
+                    <input id="imapQuality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
+                    <div class="text-right text-[11px] text-slate-500">目前：<span id="imapQVal">0.82</span></div>
+                  </label>
+
+                  <label class="flex items-center gap-2 col-span-2 mt-1">
+                    <input id="imapCropSquare" type="checkbox" class="scale-110">
+                    <span class="text-slate-600">裁切成正方形（imagemap 常用）</span>
+                  </label>
+
+                  <div class="col-span-2 text-[11px] text-slate-500">
+                    * 上傳時會再自動限制：長寬不超過你目前螢幕可視大小
                   </div>
                 </div>
-                <div class="sidepanel">
-                  <div class="krow">
-                    <div>
-                      <div class="text-xs font-extrabold text-slate-600">載入圖片（任選其一）</div>
-                      <div class="mt-2 grid gap-2">
-                        <input id="ctaLoadUrl" class="in mono" placeholder="貼圖片 URL（https://...）" />
-                        <div class="grid grid-cols-2 gap-2">
-                          <button id="btnLoadCtaUrl" class="btn btn-dark w-full">用URL載入</button>
-                          <button id="btnClearCta" class="btn btn-soft w-full">清空</button>
-                        </div>
-                        <label class="text-xs font-extrabold text-slate-600 mt-2">或選檔（本機）</label>
-                        <input id="ctaLoadFile" type="file" accept="image/*"
-                               class="w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
+              </div>
+            </div>
+
+            <!-- Main editor -->
+            <div class="mt-3 grid grid-cols-1 xl:grid-cols-[300px_1fr] gap-3">
+              <!-- Left list -->
+              <div class="card2 p-3">
+                <button id="imapAddImage"
+                        class="w-full py-3 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-2xl font-black hover:bg-indigo-50">
+                  + 新增圖片
+                </button>
+                <div id="imapImageList" class="space-y-3 mt-3"></div>
+
+                <div class="mt-3 grid grid-cols-1 gap-2">
+                  <button id="btnApplyToPreview" class="btn btn-dark w-full">套用到預覽/產圖</button>
+                  <button id="btnCopyImagemapJson" class="btn btn-soft w-full">複製 imagemap JSON</button>
+                </div>
+
+                <div class="hint mt-2">
+                  • 「套用到預覽/產圖」只會把目前圖片 URL 帶回去（用來放在報告底部）。<br/>
+                  • 「複製 imagemap JSON」是給 LINE imagemap 用（含框座標）。
+                </div>
+              </div>
+
+              <!-- Right: area list + canvas -->
+              <div class="card2 p-3">
+                <div class="grid grid-cols-1 2xl:grid-cols-[360px_1fr] gap-3">
+                  <!-- Area settings -->
+                  <div class="bg-white/80 border border-slate-200 rounded-2xl p-3 h-fit">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-black text-slate-700">框框設定</div>
+                      <button id="imapClearAreas" class="text-xs text-rose-600 underline font-black">清空本圖全部框</button>
+                    </div>
+                    <div id="imapAreaList" class="space-y-2"></div>
+                  </div>
+
+                  <!-- Canvas zone -->
+                  <div class="bg-white/80 border border-slate-200 rounded-2xl overflow-hidden">
+                    <div class="p-2 bg-slate-50 border-b flex items-center justify-between">
+                      <div class="text-xs text-slate-600 font-black">
+                        ✅ 拖曳畫框，點紅框刪除。縮放不影響座標。
+                      </div>
+                      <button id="imapUploadBtn"
+                        class="bg-black/70 text-white text-xs px-3 py-2 rounded-xl font-black hover:bg-black">
+                        📷 上傳到 R2（壓縮）
+                      </button>
+                    </div>
+
+                    <div class="relative overflow-auto bg-gray-100" style="height: min(72vh, 720px);">
+                      <div id="imapStage" class="inline-block">
+                        <img id="imapPreviewImage" class="block pointer-events-none select-none" style="max-width:none; display:block;">
+                        <div id="imapDrawLayer"></div>
                       </div>
                     </div>
 
-                    <div class="card2 p-3">
-                      <div class="text-xs font-extrabold text-slate-600">文字工具</div>
-                      <input id="textValue" class="in mt-2" placeholder="輸入文字（點畫布放置）" />
-                      <div class="hint mt-2">提示：文字放上去後可以用「移動」拖曳。</div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <button id="btnUndo" class="btn btn-soft w-full">復原</button>
-                      <button id="btnRedo" class="btn btn-soft w-full">重做</button>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-2">
-                      <button id="btnExportCtaPng" class="btn btn-indigo w-full">匯出引流圖（PNG）</button>
-                      <button id="btnCopyCtaDataUrl" class="btn btn-soft w-full">複製引流圖 DataURL</button>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-extrabold text-slate-600">匯出結果（給「預覽/產圖」使用）</div>
-                      <textarea id="ctaExportOut" class="in mono mt-2" rows="6" placeholder="匯出後會出現在這裡（data:image/png;base64,...）"></textarea>
-                      <div class="kbd mt-2">
-                        • 你可以把這串 DataURL 貼到「預覽/產圖」的引流圖欄位<br/>
-                        • 或者先「下載 PNG」再丟到你自己的引流系統用
+                    <div id="imapEmptyState" class="text-slate-400 p-6 hidden">
+                      <div class="text-center">
+                        <div class="text-4xl mb-2">👈</div>
+                        <div class="font-black">請先從左側新增圖片</div>
+                        <div class="text-xs mt-1">上傳到 R2 後才能畫框</div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            <input type="file" id="imapFileInput" accept="image/*" class="hidden">
           </div>
         </section>
 
@@ -784,7 +810,7 @@
     }
 
     return {
-      version: "life11-vUI-redesign-cta-edit",
+      version: "life11-vUI-redesign-imagemap-editor",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -1193,7 +1219,7 @@
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(255,255,255,.92)";
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-    ctx.fillText("引流圖區（你編輯的圖片會放在這裡）", ctaX + ctaW/2, ctaY + 60);
+    ctx.fillText("引流圖區（可從引流圖分頁套用）", ctaX + ctaW/2, ctaY + 60);
 
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
@@ -1215,574 +1241,607 @@
     updatePreviewMeta();
   }
 
-  // ====== CTA Editor: real image editing on canvas ======
-  const cta = {
-    tool: "move",
-    stroke: { size: 10, color: "#111827", alpha: 1 },
-    canvas: null,
-    ctx: null,
-    baseImg: null, // Image element for base
-    view: { scale: 1, ox: 0, oy: 0 }, // pan/zoom
-    objects: [], // shapes & texts & paths (in image coords)
-    history: [],
-    redo: [],
-    down: null,
-    dragObjId: null,
-    lastExportDataUrl: ""
+  // =========================================================
+  // ✅ 引流圖（imagemap）編輯器：整套搬進來
+  // =========================================================
+  const imap = {
+    images: [], // {url:'', areas:[{x,y,w,h,type,text}]} 皆 0~1
+    current: -1,
+    ZOOM: 1,
+    isDrawing: false,
+    sx: 0, sy: 0,
+    previewRect: null,
+    activePointerId: null
   };
 
-  function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-  function pushHistory(){
-    cta.history.push(deepClone({ objects: cta.objects, view: cta.view }));
-    if(cta.history.length > 50) cta.history.shift();
-    cta.redo = [];
+  const elStage = $("imapStage");
+  const elLayer = $("imapDrawLayer");
+  const elImg = $("imapPreviewImage");
+  const elList = $("imapImageList");
+  const elAreaList = $("imapAreaList");
+  const elEmpty = $("imapEmptyState");
+
+  function normalizeWorkerUrl(raw){
+    if(!raw) return '';
+    let s = raw.trim();
+    if(!/^https?:\/\//i.test(s)) s = 'https://' + s;
+    return s.replace(/\/+$/,'');
   }
-  function undo(){
-    if(cta.history.length <= 1) return;
-    const cur = cta.history.pop();
-    cta.redo.push(cur);
-    const prev = cta.history[cta.history.length - 1];
-    cta.objects = deepClone(prev.objects);
-    cta.view = deepClone(prev.view);
-    drawEditor();
+  async function postJSON(url, data){
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    if(!res.ok){
+      const txt = await res.text().catch(()=> '');
+      throw new Error(`HTTP ${res.status} ${res.statusText}\n${txt}`);
+    }
+    const ct = res.headers.get('content-type') || '';
+    if(ct.includes('application/json')) return await res.json();
+    return await res.text();
   }
-  function redo(){
-    if(cta.redo.length === 0) return;
-    const state = cta.redo.pop();
-    cta.history.push(state);
-    cta.objects = deepClone(state.objects);
-    cta.view = deepClone(state.view);
-    drawEditor();
+  async function uploadToR2(workerBaseUrl, fileBlob, filename){
+    const form = new FormData();
+    form.append('file', fileBlob, filename || 'image.webp');
+    const res = await fetch(workerBaseUrl + '/upload', { method:'POST', body: form });
+    if(!res.ok){
+      const t = await res.text().catch(()=> '');
+      throw new Error(`HTTP ${res.status}\n${t}`);
+    }
+    const j = await res.json();
+    if(!j.ok || !j.url) throw new Error('上傳回傳格式不對');
+    return j.url;
   }
 
-  function setTool(t){
-    cta.tool = t;
-    document.querySelectorAll(".toolbtn").forEach(b=>{
-      b.classList.toggle("active", b.getAttribute("data-tool")===t);
+  function imapSizeModeSync(){
+    const show = ($("imapSizeMode").value === 'custom');
+    $("imapCustomWWrap").classList.toggle('hidden', !show);
+    $("imapCustomHWrap").classList.toggle('hidden', !show);
+  }
+  $("imapSizeMode").addEventListener('change', imapSizeModeSync);
+
+  $("imapQuality").addEventListener('input', ()=> $("imapQVal").textContent = $("imapQuality").value);
+
+  function setZoom(v){
+    imap.ZOOM = Math.max(0.5, Math.min(3, Number(v) || 1));
+    elStage.style.transform = `scale(${imap.ZOOM})`;
+    $("imapZoomRange").value = String(imap.ZOOM);
+    $("imapZoomLabel").textContent = Math.round(imap.ZOOM * 100) + '%';
+    refreshLayerSize();
+  }
+  $("imapZoomRange").addEventListener('input', ()=> setZoom($("imapZoomRange").value));
+  $("imapZoom100").addEventListener('click', ()=> setZoom(1));
+  $("imapZoom75").addEventListener('click', ()=> setZoom(0.75));
+  $("imapZoom150").addEventListener('click', ()=> setZoom(1.5));
+
+  elStage.parentElement?.addEventListener('wheel', (e) => {
+    if(!(e.ctrlKey || e.altKey || e.shiftKey)) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.08 : 0.08;
+    setZoom((imap.ZOOM + delta).toFixed(2));
+  }, { passive:false });
+
+  function getTargetMaxWH(){
+    const mode = $("imapSizeMode").value;
+    let maxW = 1280, maxH = 1280;
+
+    if(mode === 'line'){ maxW = 1280; maxH = 1280; }
+    if(mode === 'hd'){ maxW = 1600; maxH = 1600; }
+    if(mode === 'small'){ maxW = 960; maxH = 960; }
+    if(mode === 'custom'){
+      maxW = parseInt($("imapCustomW").value || '1280', 10);
+      maxH = parseInt($("imapCustomH").value || '1280', 10);
+    }
+
+    const dpr = window.devicePixelRatio || 1;
+    const vw = Math.max(320, Math.floor((elImg.clientWidth || 1280) * dpr));
+    const vh = Math.max(320, Math.floor((elImg.clientHeight || 1280) * dpr));
+    maxW = Math.min(maxW, vw);
+    maxH = Math.min(maxH, vh);
+
+    return { maxW, maxH };
+  }
+
+  async function compressImage(file, {maxW, maxH, mime, quality, cropSquare}){
+    const img = await createImageBitmap(file);
+
+    let sx = 0, sy = 0, sw = img.width, sh = img.height;
+    if(cropSquare){
+      const side = Math.min(img.width, img.height);
+      sx = Math.floor((img.width - side) / 2);
+      sy = Math.floor((img.height - side) / 2);
+      sw = side; sh = side;
+    }
+
+    const scale = Math.min(1, maxW / sw, maxH / sh);
+    const w = Math.max(1, Math.round(sw * scale));
+    const h = Math.max(1, Math.round(sh * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+
+    const outBlob = await new Promise((resolve) => {
+      if(mime === 'image/png') canvas.toBlob(resolve, mime);
+      else canvas.toBlob(resolve, mime, quality);
+    });
+    if(!outBlob) throw new Error('壓縮失敗（toBlob 空）');
+
+    const ext = (mime === 'image/webp') ? 'webp' : (mime === 'image/jpeg') ? 'jpg' : 'png';
+    const safeName = (file.name || 'image').replace(/\.[^/.]+$/, '');
+    return { blob: outBlob, filename: `${safeName}.${ext}`, w, h };
+  }
+
+  function renderImageList(){
+    elList.innerHTML = '';
+    imap.images.forEach((img, idx) => {
+      const div = document.createElement('div');
+      div.className = `p-2 border rounded-2xl ${idx === imap.current ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'} cursor-pointer`;
+      div.innerHTML = `
+        <div class="flex justify-between mb-2">
+          <span class="font-black text-xs">圖片 ${idx+1}</span>
+          <button class="text-rose-600 text-xs font-black" data-del="${idx}">✕</button>
+        </div>
+        ${img.url ? `<img src="${img.url}" class="w-full h-24 object-cover rounded-xl mb-2 border">`
+                 : `<div class="w-full h-24 bg-gray-100 flex items-center justify-center text-xs text-gray-400 rounded-xl mb-2 border">無圖片</div>`}
+        <button class="w-full bg-indigo-600 text-white text-xs py-2 rounded-xl hover:bg-indigo-700 font-black" data-up="${idx}">
+          上傳到 R2（壓縮）
+        </button>
+        <div class="mt-1 text-[10px] text-gray-500 text-right">熱區: ${img.areas.length}</div>
+      `;
+      div.addEventListener('click', ()=> selectImage(idx));
+      div.querySelector('[data-del]')?.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        removeImage(idx);
+      });
+      div.querySelector('[data-up]')?.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        triggerUpload(idx, e.currentTarget);
+      });
+      elList.appendChild(div);
     });
   }
-  document.querySelectorAll(".toolbtn").forEach(b=>{
-    b.addEventListener("click", ()=>setTool(b.getAttribute("data-tool")));
+
+  function addImageBlock(){
+    imap.images.push({ url:'', areas:[] });
+    renderImageList();
+    selectImage(imap.images.length - 1);
+  }
+
+  function removeImage(idx){
+    imap.images.splice(idx, 1);
+    renderImageList();
+    selectImage(imap.images.length ? Math.min(idx, imap.images.length-1) : -1);
+  }
+
+  function selectImage(idx){
+    imap.current = idx;
+
+    if(idx === -1 || !imap.images[idx]){
+      elImg.src = '';
+      elEmpty.classList.remove('hidden');
+      elAreaList.innerHTML = `<div class="text-xs text-slate-400">請從左側新增圖片。</div>`;
+      return;
+    }
+
+    elEmpty.classList.add('hidden');
+
+    elImg.src = imap.images[idx].url || '';
+    elImg.onload = () => {
+      refreshLayerSize();
+      renderAreas();
+      renderAreaList();
+    };
+
+    renderImageList();
+    renderAreas();
+    renderAreaList();
+  }
+
+  function clearAreas(){
+    if(imap.current < 0) return;
+    if(confirm('確定清空本圖全部框？')){
+      imap.images[imap.current].areas = [];
+      renderAreas(); renderAreaList(); renderImageList();
+    }
+  }
+
+  function refreshLayerSize(){
+    const w = elImg.naturalWidth || elImg.clientWidth || 0;
+    const h = elImg.naturalHeight || elImg.clientHeight || 0;
+    if(w && h){
+      elImg.style.width = w + 'px';
+      elImg.style.height = h + 'px';
+      elLayer.style.width = w + 'px';
+      elLayer.style.height = h + 'px';
+    }
+  }
+
+  async function triggerUpload(idx, btnEl){
+    const raw = $("imapWorkerUrl").value;
+    const base = normalizeWorkerUrl(raw);
+    if(!base) return alert('請先填 WorkerUrl（右上）');
+    localStorage.setItem('line_worker_url', base);
+
+    const input = $("imapFileInput");
+    input.value = '';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+
+      const oldText = btnEl.innerText;
+      btnEl.innerText = "⏳ 壓縮+上傳中...";
+      btnEl.disabled = true;
+
+      try{
+        const mime = $("imapOutFormat").value;
+        const quality = parseFloat($("imapQuality").value);
+        const cropSquare = $("imapCropSquare").checked;
+        const { maxW, maxH } = getTargetMaxWH();
+
+        const { blob, filename } = await compressImage(file, { maxW, maxH, mime, quality, cropSquare });
+        const url = await uploadToR2(base, blob, filename);
+
+        imap.images[idx].url = url;
+        imap.images[idx].areas = [];
+        renderImageList();
+        selectImage(idx);
+        setZoom(1);
+        toast("上傳成功 ✅");
+      }catch(err){
+        alert('上傳失敗：\n' + err.message);
+      }
+
+      btnEl.innerText = oldText;
+      btnEl.disabled = false;
+    };
+    input.click();
+  }
+
+  function getLayerPointFromClient(clientX, clientY){
+    const rect = elLayer.getBoundingClientRect();
+    const x = (clientX - rect.left) / imap.ZOOM;
+    const y = (clientY - rect.top) / imap.ZOOM;
+    return { x, y };
+  }
+
+  function startDrawAt(clientX, clientY){
+    const p = getLayerPointFromClient(clientX, clientY);
+    imap.sx = p.x; imap.sy = p.y;
+
+    imap.previewRect = document.createElement('div');
+    imap.previewRect.className = 'draw-rect';
+    imap.previewRect.style.left = imap.sx + 'px';
+    imap.previewRect.style.top = imap.sy + 'px';
+    imap.previewRect.style.width = '0px';
+    imap.previewRect.style.height = '0px';
+    elLayer.appendChild(imap.previewRect);
+  }
+  function moveDrawTo(clientX, clientY){
+    if(!imap.isDrawing || !imap.previewRect) return;
+    const p = getLayerPointFromClient(clientX, clientY);
+    const cx = p.x, cy = p.y;
+
+    const x = Math.min(imap.sx, cx);
+    const y = Math.min(imap.sy, cy);
+    const w = Math.abs(cx - imap.sx);
+    const h = Math.abs(cy - imap.sy);
+
+    imap.previewRect.style.left = x + 'px';
+    imap.previewRect.style.top = y + 'px';
+    imap.previewRect.style.width = w + 'px';
+    imap.previewRect.style.height = h + 'px';
+  }
+  function endDrawAt(clientX, clientY){
+    if(!imap.isDrawing) return;
+    imap.isDrawing = false;
+
+    const p = getLayerPointFromClient(clientX, clientY);
+    const ex = p.x, ey = p.y;
+
+    const x = Math.min(imap.sx, ex);
+    const y = Math.min(imap.sy, ey);
+    const w = Math.abs(ex - imap.sx);
+    const h = Math.abs(ey - imap.sy);
+
+    if(imap.previewRect){ imap.previewRect.remove(); imap.previewRect = null; }
+    imap.activePointerId = null;
+
+    if(w < 14 || h < 14) return;
+
+    const baseW = elLayer.clientWidth;
+    const baseH = elLayer.clientHeight;
+
+    imap.images[imap.current].areas.push({
+      x: x / baseW, y: y / baseH,
+      w: w / baseW, h: h / baseH,
+      type: 'message', text: ''
+    });
+
+    renderAreas();
+    renderAreaList();
+    renderImageList();
+  }
+
+  elLayer.addEventListener('pointerdown', (e) => {
+    if(imap.current < 0) return;
+    if(!imap.images[imap.current].url) return alert('請先上傳圖片（R2）再畫框');
+    if(e.button !== 0) return;
+
+    imap.isDrawing = true;
+    imap.activePointerId = e.pointerId;
+    elLayer.setPointerCapture(imap.activePointerId);
+
+    startDrawAt(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  elLayer.addEventListener('pointermove', (e) => {
+    if(!imap.isDrawing) return;
+    if(imap.activePointerId !== null && e.pointerId !== imap.activePointerId) return;
+    moveDrawTo(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  elLayer.addEventListener('pointerup', (e) => {
+    if(imap.activePointerId !== null && e.pointerId !== imap.activePointerId) return;
+    endDrawAt(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  elLayer.addEventListener('pointercancel', () => {
+    if(imap.previewRect){ imap.previewRect.remove(); imap.previewRect = null; }
+    imap.isDrawing = false;
+    imap.activePointerId = null;
+  });
+  window.addEventListener('blur', () => {
+    if(imap.previewRect){ imap.previewRect.remove(); imap.previewRect = null; }
+    imap.isDrawing = false;
+    imap.activePointerId = null;
   });
 
-  function setStrokeFromUI(){
-    cta.stroke.size = Number($("strokeSize").value)||10;
-    cta.stroke.color = $("strokeColor").value || "#111827";
-    cta.stroke.alpha = Number($("strokeAlpha").value)||1;
-  }
-  $("strokeSize").addEventListener("input", setStrokeFromUI);
-  $("strokeColor").addEventListener("input", setStrokeFromUI);
-  $("strokeAlpha").addEventListener("input", setStrokeFromUI);
+  function renderAreas(){
+    elLayer.querySelectorAll('.area-box').forEach(el => el.remove());
+    if(imap.current < 0) return;
 
-  function initEditorCanvas(){
-    cta.canvas = $("ctaEditCanvas");
-    cta.ctx = cta.canvas.getContext("2d");
+    imap.images[imap.current].areas.forEach((a, i) => {
+      const d = document.createElement('div');
+      d.className = 'area-box';
+      d.style.left = (a.x*100)+'%';
+      d.style.top  = (a.y*100)+'%';
+      d.style.width  = (a.w*100)+'%';
+      d.style.height = (a.h*100)+'%';
+      d.innerText = i+1;
 
-    // start with a default canvas size (will resize when image loaded)
-    cta.canvas.width = 1200;
-    cta.canvas.height = 760;
-
-    // initial history
-    cta.objects = [];
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-    cta.history = [deepClone({ objects: cta.objects, view: cta.view })];
-    cta.redo = [];
-    drawEditor();
-
-    // pointer events
-    cta.canvas.addEventListener("pointerdown", onEditorDown);
-    cta.canvas.addEventListener("pointermove", onEditorMove);
-    cta.canvas.addEventListener("pointerup", onEditorUp);
-    cta.canvas.addEventListener("pointercancel", ()=>{ cta.down=null; cta.dragObjId=null; });
-
-    // wheel zoom
-    cta.canvas.addEventListener("wheel", (e)=>{
-      e.preventDefault();
-      if(!cta.baseImg) return;
-      const delta = Math.sign(e.deltaY);
-      const factor = delta > 0 ? 0.92 : 1.08;
-      const p = screenToWorld(e.offsetX, e.offsetY);
-      const newScale = Math.max(0.35, Math.min(6, cta.view.scale * factor));
-      // zoom around pointer
-      const before = p;
-      cta.view.scale = newScale;
-      const after = screenToWorld(e.offsetX, e.offsetY);
-      cta.view.ox += (after.x - before.x);
-      cta.view.oy += (after.y - before.y);
-      drawEditor();
-    }, { passive:false });
-  }
-
-  function fitImageToCanvas(){
-    const img = cta.baseImg;
-    if(!img) return;
-    // Keep a comfortable editor resolution
-    const maxW = 1400;
-    const maxH = 900;
-    const s = Math.min(maxW/img.naturalWidth, maxH/img.naturalHeight, 1);
-    cta.canvas.width = Math.round(img.naturalWidth * s);
-    cta.canvas.height = Math.round(img.naturalHeight * s);
-
-    // reset view to fit nicely
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-  }
-
-  function drawEditor(){
-    const ctx = cta.ctx;
-    const cv = cta.canvas;
-    if(!ctx || !cv) return;
-
-    // background
-    ctx.clearRect(0,0,cv.width, cv.height);
-    ctx.save();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,cv.width,cv.height);
-    ctx.restore();
-
-    // if no image
-    if(!cta.baseImg){
-      ctx.save();
-      ctx.fillStyle = "rgba(2,6,23,.65)";
-      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("先用右側『URL載入』或『選檔』載入引流圖", cv.width/2, cv.height/2);
-      ctx.font = "bold 14px Microsoft JhengHei, sans-serif";
-      ctx.fillStyle = "rgba(2,6,23,.45)";
-      ctx.fillText("載入後可：畫筆 / 文字 / 方塊 / 橢圓 / 移動 / 取消復原", cv.width/2, cv.height/2 + 28);
-      ctx.restore();
-      return;
-    }
-
-    // world transform
-    ctx.save();
-    ctx.translate(cta.view.ox, cta.view.oy);
-    ctx.scale(cta.view.scale, cta.view.scale);
-
-    // draw base image fitted exactly at (0,0) in world coords
-    ctx.drawImage(cta.baseImg, 0,0);
-
-    // draw objects
-    cta.objects.forEach(o=>{
-      if(o.type==="path"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = o.size || 10;
-        ctx.beginPath();
-        const pts = o.points || [];
-        if(pts.length){
-          ctx.moveTo(pts[0].x, pts[0].y);
-          for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+      d.onclick = (e) => {
+        e.stopPropagation();
+        if(confirm(`刪除區域 ${i+1}?`)){
+          imap.images[imap.current].areas.splice(i, 1);
+          renderAreas(); renderAreaList(); renderImageList();
         }
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="rect"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = o.size || 6;
-        ctx.fillStyle = (o.fillColor || "rgba(0,0,0,0)");
-        if(o.fillColor) ctx.fillRect(o.x, o.y, o.w, o.h);
-        ctx.strokeRect(o.x, o.y, o.w, o.h);
-        ctx.restore();
-      }
-      if(o.type==="ellipse"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = o.size || 6;
-        ctx.fillStyle = (o.fillColor || "rgba(0,0,0,0)");
-        ctx.beginPath();
-        ctx.ellipse(o.cx, o.cy, Math.abs(o.rx), Math.abs(o.ry), 0, 0, Math.PI*2);
-        if(o.fillColor) ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="text"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.fillStyle = o.color || "#111827";
-        ctx.font = `900 ${o.size || 36}px Microsoft JhengHei, sans-serif`;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        // outline for readability
-        ctx.lineWidth = Math.max(2, (o.size||36)/12);
-        ctx.strokeStyle = "rgba(255,255,255,.75)";
-        ctx.strokeText(o.text || "", o.x, o.y);
-        ctx.fillText(o.text || "", o.x, o.y);
-        ctx.restore();
-      }
+      };
+
+      elLayer.appendChild(d);
     });
-
-    // draw selection if dragging an object
-    if(cta.dragObjId){
-      const o = cta.objects.find(x=>x.id===cta.dragObjId);
-      if(o){
-        ctx.save();
-        ctx.globalAlpha = 0.9;
-        ctx.setLineDash([10,6]);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(99,102,241,.85)";
-        const bb = getObjBounds(o);
-        if(bb) ctx.strokeRect(bb.x, bb.y, bb.w, bb.h);
-        ctx.restore();
-      }
-    }
-
-    // draw current drafting shape
-    if(cta.down && cta.down.draft){
-      const d = cta.down.draft;
-      ctx.save();
-      ctx.globalAlpha = 0.85;
-      ctx.setLineDash([8,6]);
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(244,63,94,.9)";
-      if(d.type==="rect") ctx.strokeRect(d.x, d.y, d.w, d.h);
-      if(d.type==="ellipse"){
-        ctx.beginPath();
-        ctx.ellipse(d.cx, d.cy, Math.abs(d.rx), Math.abs(d.ry), 0, 0, Math.PI*2);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    ctx.restore();
   }
 
-  function screenToWorld(sx, sy){
-    return {
-      x: (sx - cta.view.ox) / cta.view.scale,
-      y: (sy - cta.view.oy) / cta.view.scale,
-    };
-  }
-
-  function getObjBounds(o){
-    if(o.type==="rect") return { x:o.x, y:o.y, w:o.w, h:o.h };
-    if(o.type==="ellipse") return { x:o.cx-o.rx, y:o.cy-o.ry, w:o.rx*2, h:o.ry*2 };
-    if(o.type==="text"){
-      // rough bounds: estimate width
-      const size = o.size || 36;
-      const w = (o.text||"").length * (size*0.62);
-      const h = size*1.15;
-      return { x:o.x, y:o.y, w, h };
-    }
-    if(o.type==="path"){
-      const pts = o.points||[];
-      if(!pts.length) return null;
-      let minx=pts[0].x, maxx=pts[0].x, miny=pts[0].y, maxy=pts[0].y;
-      pts.forEach(p=>{
-        minx=Math.min(minx,p.x); maxx=Math.max(maxx,p.x);
-        miny=Math.min(miny,p.y); maxy=Math.max(maxy,p.y);
-      });
-      const pad = (o.size||10)/2;
-      return { x:minx-pad, y:miny-pad, w:(maxx-minx)+pad*2, h:(maxy-miny)+pad*2 };
-    }
-    return null;
-  }
-
-  function hitTest(worldX, worldY){
-    // topmost first
-    for(let i=cta.objects.length-1;i>=0;i--){
-      const o = cta.objects[i];
-      const bb = getObjBounds(o);
-      if(!bb) continue;
-      if(worldX>=bb.x && worldX<=bb.x+bb.w && worldY>=bb.y && worldY<=bb.y+bb.h){
-        return o;
-      }
-    }
-    return null;
-  }
-
-  function onEditorDown(e){
-    cta.canvas.setPointerCapture(e.pointerId);
-    setStrokeFromUI();
-
-    const p = screenToWorld(e.offsetX, e.offsetY);
-    cta.down = {
-      sx: e.offsetX, sy: e.offsetY,
-      wx: p.x, wy: p.y,
-      startOx: cta.view.ox, startOy: cta.view.oy,
-      start: { x:p.x, y:p.y },
-      draft: null
-    };
-
-    if(!cta.baseImg){
-      cta.down = null;
+  function renderAreaList(){
+    elAreaList.innerHTML = '';
+    if(imap.current < 0) {
+      elAreaList.innerHTML = `<div class="text-xs text-slate-400">請先新增圖片。</div>`;
       return;
     }
 
-    if(cta.tool==="move"){
-      // if click object -> drag it; else pan
-      const obj = hitTest(p.x, p.y);
-      if(obj){
-        cta.dragObjId = obj.id;
-        cta.down.dragType = "obj";
-        cta.down.objStart = deepClone(obj);
-      }else{
-        cta.dragObjId = null;
-        cta.down.dragType = "pan";
-      }
-      drawEditor();
+    const areas = imap.images[imap.current].areas;
+    if(areas.length === 0){
+      elAreaList.innerHTML = `<div class="text-xs text-slate-400">目前沒有框，去圖片上拖曳畫框。</div>`;
       return;
     }
 
-    if(cta.tool==="pen"){
-      pushHistory();
-      const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-      const o = { id, type:"path", color: cta.stroke.color, alpha: cta.stroke.alpha, size: cta.stroke.size, points:[{x:p.x,y:p.y}] };
-      cta.objects.push(o);
-      cta.down.dragType = "pen";
-      cta.down.objId = id;
-      drawEditor();
-      return;
-    }
+    areas.forEach((a, i) => {
+      const row = document.createElement('div');
+      row.className = 'border rounded-2xl p-3 bg-white';
+      row.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <div class="font-black text-sm">框 ${i+1}</div>
+          <button class="text-xs text-rose-600 underline font-black" data-del>刪除</button>
+        </div>
 
-    if(cta.tool==="rect"){
-      cta.down.dragType = "shape";
-      cta.down.shape = "rect";
-      cta.down.draft = { type:"rect", x:p.x, y:p.y, w:0, h:0 };
-      drawEditor();
-      return;
-    }
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <label class="col-span-1 flex flex-col gap-1">
+            <span class="text-slate-500 font-black">動作</span>
+            <select class="border rounded-xl px-2 py-2 bg-white">
+              <option value="message" ${a.type==='message'?'selected':''}>發文字</option>
+              <option value="uri" ${a.type==='uri'?'selected':''}>開網頁</option>
+            </select>
+          </label>
 
-    if(cta.tool==="ellipse"){
-      cta.down.dragType = "shape";
-      cta.down.shape = "ellipse";
-      cta.down.draft = { type:"ellipse", cx:p.x, cy:p.y, rx:0, ry:0 };
-      drawEditor();
-      return;
-    }
+          <label class="col-span-2 flex flex-col gap-1">
+            <span class="text-slate-500 font-black">內容</span>
+            <input class="border rounded-xl px-3 py-2" value="${escapeHtml(a.text||'')}"
+              placeholder="${a.type==='uri'?'貼網址 https://...':'填入關鍵字（訊息）'}">
+          </label>
+        </div>
+      `;
 
-    if(cta.tool==="text"){
-      const t = ($("textValue").value || "").trim();
-      if(!t) return toast("請先輸入文字", "warn");
-      pushHistory();
-      const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-      const size = Math.max(18, Math.min(96, cta.stroke.size*3.2)); // tie to stroke size
-      cta.objects.push({ id, type:"text", text:t, x:p.x, y:p.y, size, color: cta.stroke.color, alpha: cta.stroke.alpha });
-      drawEditor();
-      return;
-    }
-  }
+      const delBtn = row.querySelector('[data-del]');
+      const sel = row.querySelector('select');
+      const input = row.querySelector('input');
 
-  function onEditorMove(e){
-    if(!cta.down || !cta.baseImg) return;
-    const p = screenToWorld(e.offsetX, e.offsetY);
-
-    if(cta.tool==="move"){
-      if(cta.down.dragType==="pan"){
-        cta.view.ox = cta.down.startOx + (e.offsetX - cta.down.sx);
-        cta.view.oy = cta.down.startOy + (e.offsetY - cta.down.sy);
-        drawEditor();
-      }
-      if(cta.down.dragType==="obj" && cta.dragObjId){
-        const o = cta.objects.find(x=>x.id===cta.dragObjId);
-        if(!o) return;
-        const dx = p.x - cta.down.start.x;
-        const dy = p.y - cta.down.start.y;
-
-        if(o.type==="rect"){ o.x = cta.down.objStart.x + dx; o.y = cta.down.objStart.y + dy; }
-        if(o.type==="ellipse"){ o.cx = cta.down.objStart.cx + dx; o.cy = cta.down.objStart.cy + dy; }
-        if(o.type==="text"){ o.x = cta.down.objStart.x + dx; o.y = cta.down.objStart.y + dy; }
-        if(o.type==="path"){
-          const bb = getObjBounds(o);
-          if(!bb) return;
-          // move all points
-          const pts = cta.down.objStart.points || [];
-          o.points = pts.map(pt=>({ x: pt.x + dx, y: pt.y + dy }));
+      delBtn.onclick = () => {
+        if(confirm(`刪除框 ${i+1}？`)){
+          imap.images[imap.current].areas.splice(i, 1);
+          renderAreas(); renderAreaList(); renderImageList();
         }
-        drawEditor();
-      }
-      return;
-    }
+      };
+      sel.onchange = () => {
+        a.type = sel.value;
+        input.placeholder = a.type === 'uri' ? '貼網址 https://...' : '填入關鍵字（訊息）';
+      };
+      input.oninput = () => a.text = input.value;
 
-    if(cta.tool==="pen" && cta.down.dragType==="pen"){
-      const o = cta.objects.find(x=>x.id===cta.down.objId);
-      if(!o) return;
-      o.points.push({ x:p.x, y:p.y });
-      drawEditor();
-      return;
-    }
-
-    if((cta.tool==="rect" || cta.tool==="ellipse") && cta.down.dragType==="shape" && cta.down.draft){
-      const d = cta.down.draft;
-      if(d.type==="rect"){
-        d.w = p.x - d.x;
-        d.h = p.y - d.y;
-      }else if(d.type==="ellipse"){
-        d.rx = p.x - d.cx;
-        d.ry = p.y - d.cy;
-      }
-      drawEditor();
-      return;
-    }
+      elAreaList.appendChild(row);
+    });
   }
 
-  function onEditorUp(e){
-    if(!cta.down || !cta.baseImg) { cta.down=null; return; }
-
-    // finalize shapes
-    if((cta.tool==="rect" || cta.tool==="ellipse") && cta.down.dragType==="shape" && cta.down.draft){
-      const d = cta.down.draft;
-      const minSize = 10;
-      pushHistory();
-
-      if(d.type==="rect"){
-        let x=d.x, y=d.y, w=d.w, h=d.h;
-        // normalize
-        if(w<0){ x+=w; w=Math.abs(w); }
-        if(h<0){ y+=h; h=Math.abs(h); }
-        if(w>=minSize && h>=minSize){
-          const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-          cta.objects.push({ id, type:"rect", x, y, w, h, size: Math.max(2, cta.stroke.size/2), color: cta.stroke.color, alpha: cta.stroke.alpha });
-        }
-      }
-      if(d.type==="ellipse"){
-        const rx = Math.abs(d.rx), ry = Math.abs(d.ry);
-        if(rx>=minSize/2 && ry>=minSize/2){
-          const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-          cta.objects.push({ id, type:"ellipse", cx:d.cx, cy:d.cy, rx, ry, size: Math.max(2, cta.stroke.size/2), color: cta.stroke.color, alpha: cta.stroke.alpha });
-        }
-      }
-      cta.down.draft = null;
-      drawEditor();
-    }
-
-    // when moving object, commit history once at release (if moved)
-    if(cta.tool==="move" && cta.down.dragType==="obj" && cta.dragObjId){
-      // push state after move (if changed)
-      const moved = true;
-      if(moved) pushHistory();
-      cta.dragObjId = null;
-      drawEditor();
-    }
-
-    cta.down = null;
+  function assertAreasFilled(){
+    if(imap.images.length === 0) return "至少新增一張圖片";
+    if(imap.images.some(i => !i.url)) return "有圖片尚未上傳到 R2";
+    if(imap.images.some(img => img.areas.some(a => !String(a.text||'').trim()))) return "有框沒有填內容（關鍵字或網址）";
+    return "";
   }
 
-  async function loadCtaFromUrl(url){
-    const u = (url||"").trim();
-    if(!u) throw new Error("請貼圖片 URL");
-    const img = await loadImg(u);
-    cta.baseImg = img;
-    fitImageToCanvas();
-    cta.objects = [];
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-    cta.history = [deepClone({ objects: cta.objects, view: cta.view })];
-    cta.redo = [];
-    drawEditor();
-    toast("已載入引流圖 ✅");
-  }
-  async function loadCtaFromFile(file){
-    if(!file) throw new Error("請先選檔");
-    const url = URL.createObjectURL(file);
-    try{
-      await loadCtaFromUrl(url);
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
-  function clearCtaEditor(){
-    cta.baseImg = null;
-    cta.objects = [];
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-    cta.history = [deepClone({ objects: cta.objects, view: cta.view })];
-    cta.redo = [];
-    cta.lastExportDataUrl = "";
-    $("ctaExportOut").value = "";
-    drawEditor();
-    toast("已清空", "warn");
-  }
-  function exportCtaPng(){
-    if(!cta.baseImg) throw new Error("請先載入引流圖");
-    // export: create an offscreen canvas at original image size, render base + objects
-    const iw = cta.baseImg.naturalWidth || cta.baseImg.width;
-    const ih = cta.baseImg.naturalHeight || cta.baseImg.height;
-    const off = document.createElement("canvas");
-    off.width = iw; off.height = ih;
-    const ctx = off.getContext("2d");
-    ctx.drawImage(cta.baseImg, 0,0);
+  function buildImagemapMessages(){
+    return Promise.all(imap.images.map(img => new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => {
+        const baseW = 1040;
+        const ratio = im.naturalHeight / im.naturalWidth;
+        const baseH = Math.round(baseW * ratio);
 
-    // render objects in original image coords:
-    // NOTE: our editor canvas may be scaled from original; we need ratio
-    const ratioX = iw / cta.canvas.width;
-    const ratioY = ih / cta.canvas.height;
-
-    const mapPt = (p)=>({ x: p.x * ratioX, y: p.y * ratioY });
-    cta.objects.forEach(o=>{
-      if(o.type==="path"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = (o.size || 10) * ((ratioX+ratioY)/2);
-        ctx.beginPath();
-        const pts = o.points || [];
-        if(pts.length){
-          const p0 = mapPt(pts[0]);
-          ctx.moveTo(p0.x, p0.y);
-          for(let i=1;i<pts.length;i++){
-            const pi = mapPt(pts[i]);
-            ctx.lineTo(pi.x, pi.y);
+        const actions = img.areas.map(a => ({
+          type: a.type,
+          text: a.type === 'message' ? a.text : undefined,
+          linkUri: a.type === 'uri' ? a.text : undefined,
+          area: {
+            x: Math.round(a.x * baseW),
+            y: Math.round(a.y * baseH),
+            width: Math.round(a.w * baseW),
+            height: Math.round(a.h * baseH)
           }
-        }
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="rect"){
-        const x=o.x*ratioX, y=o.y*ratioY, w=o.w*ratioX, h=o.h*ratioY;
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = (o.size || 6) * ((ratioX+ratioY)/2);
-        if(o.fillColor){ ctx.fillStyle = o.fillColor; ctx.fillRect(x,y,w,h); }
-        ctx.strokeRect(x,y,w,h);
-        ctx.restore();
-      }
-      if(o.type==="ellipse"){
-        const cx=o.cx*ratioX, cy=o.cy*ratioY, rx=o.rx*ratioX, ry=o.ry*ratioY;
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = (o.size || 6) * ((ratioX+ratioY)/2);
-        if(o.fillColor) ctx.fillStyle = o.fillColor;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI*2);
-        if(o.fillColor) ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="text"){
-        const x=o.x*ratioX, y=o.y*ratioY;
-        const size=(o.size||36) * ((ratioX+ratioY)/2);
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.fillStyle = o.color || "#111827";
-        ctx.font = `900 ${size}px Microsoft JhengHei, sans-serif`;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        ctx.lineWidth = Math.max(2, size/12);
-        ctx.strokeStyle = "rgba(255,255,255,.75)";
-        ctx.strokeText(o.text || "", x, y);
-        ctx.fillText(o.text || "", x, y);
-        ctx.restore();
-      }
-    });
+        }));
 
-    const dataUrl = off.toDataURL("image/png");
-    cta.lastExportDataUrl = dataUrl;
-    $("ctaExportOut").value = dataUrl;
-    return dataUrl;
-  }
-  async function copyTextToClipboard(text){
-    await navigator.clipboard.writeText(text);
+        resolve({
+          type: "imagemap",
+          baseUrl: img.url,
+          altText: "選單",
+          baseSize: { width: baseW, height: baseH },
+          actions
+        });
+      };
+      im.onerror = () => resolve({
+        type: "imagemap",
+        baseUrl: img.url,
+        altText: "選單",
+        baseSize: { width: 1040, height: 1040 },
+        actions: []
+      });
+      im.src = img.url;
+    })));
   }
 
-  // ====== Hook UI events ======
+  function getDraftKey(){ return "imagemap_draft_v1"; }
+
+  async function saveSettingsUI(forceNew){
+    const err = assertAreasFilled();
+    if(err) return alert(err);
+
+    const raw = $("imapWorkerUrl").value;
+    const base = normalizeWorkerUrl(raw);
+    let keyword = $("imapKeyword").value.trim();
+
+    // 沒填 keyword：存本機草稿
+    if(!keyword){
+      const messages = await buildImagemapMessages();
+      localStorage.setItem(getDraftKey(), JSON.stringify({ messages, savedAt: Date.now() }));
+      return alert('已儲存到本機草稿（未填關鍵字）。');
+    }
+
+    // 有填 keyword：走 Worker /save
+    if(!base) return alert('你有填關鍵字，所以 WorkerUrl 也必須填，才能存到雲端。');
+    localStorage.setItem('line_worker_url', base);
+
+    // 另存新檔：避免覆蓋
+    if(forceNew){
+      const suffix = new Date().toISOString().slice(0,10).replaceAll('-','') + '_' + Math.random().toString(36).slice(2,6);
+      keyword = `${keyword}_${suffix}`;
+      $("imapKeyword").value = keyword;
+    }
+
+    try{
+      const messages = await buildImagemapMessages();
+      await postJSON(base + '/save', {
+        keyword,
+        payload:{ mode:'imagemap', messages }
+      });
+      alert('儲存成功！（雲端）');
+    }catch(e){
+      alert('儲存失敗：\n' + e.message);
+    }
+  }
+
+  async function loadSettingsUI(){
+    const raw = $("imapWorkerUrl").value;
+    const base = normalizeWorkerUrl(raw);
+    const keyword = $("imapKeyword").value.trim();
+
+    // 沒填 keyword：讀本機草稿
+    if(!keyword){
+      const rawDraft = localStorage.getItem(getDraftKey());
+      if(!rawDraft) return alert('本機沒有草稿（請先按「儲存」且不填關鍵字）。');
+      let obj;
+      try{ obj = JSON.parse(rawDraft); }catch{ obj = null; }
+      if(!obj?.messages || !Array.isArray(obj.messages)) return alert('本機草稿格式損壞。');
+
+      imap.images = obj.messages.map(m => {
+        const bw = m.baseSize?.width || 1040;
+        const bh = m.baseSize?.height || 1040;
+        return {
+          url: m.baseUrl,
+          areas: (m.actions || []).map(a => ({
+            type: a.type,
+            text: a.type === 'message' ? (a.text || '') : (a.linkUri || ''),
+            x: (a.area.x || 0) / bw,
+            y: (a.area.y || 0) / bh,
+            w: (a.area.width || 0) / bw,
+            h: (a.area.height || 0) / bh
+          }))
+        };
+      });
+
+      renderImageList();
+      selectImage(imap.images.length ? 0 : -1);
+      setZoom(1);
+      return alert('已讀取本機草稿。');
+    }
+
+    // 有 keyword：走 Worker /load
+    if(!base) return alert('請先填 WorkerUrl');
+    localStorage.setItem('line_worker_url', base);
+
+    try{
+      const data = await postJSON(base + '/load', { keyword });
+      const obj = (typeof data === 'string') ? JSON.parse(data) : data;
+
+      if(!obj.messages || !Array.isArray(obj.messages)){
+        return alert('讀到資料但格式不對（沒有 messages）');
+      }
+
+      imap.images = obj.messages.map(m => {
+        const bw = m.baseSize?.width || 1040;
+        const bh = m.baseSize?.height || 1040;
+        return {
+          url: m.baseUrl,
+          areas: (m.actions || []).map(a => ({
+            type: a.type,
+            text: a.type === 'message' ? (a.text || '') : (a.linkUri || ''),
+            x: (a.area.x || 0) / bw,
+            y: (a.area.y || 0) / bh,
+            w: (a.area.width || 0) / bw,
+            h: (a.area.height || 0) / bh
+          }))
+        };
+      });
+
+      renderImageList();
+      selectImage(imap.images.length ? 0 : -1);
+      setZoom(1);
+      alert('讀取成功！（雲端）');
+    }catch(e){
+      alert('讀取失敗：\n' + e.message);
+    }
+  }
+
+  // ====== Hook main UI events ======
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
     catch(e){ setConn(false); showErr(e); toast("連線失敗","err"); }
@@ -1844,70 +1903,52 @@
   $("btnCopyTargetsJson").addEventListener("click", async ()=>{
     try{
       const obj = getTargetsObject();
-      await copyTextToClipboard(JSON.stringify(obj, null, 2));
+      await navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
       toast("已複製 Targets JSON ✅");
     }catch{
       toast("複製失敗（瀏覽器限制）", "warn");
     }
   });
 
-  // CTA editor load
-  $("btnLoadCtaUrl").addEventListener("click", async ()=>{
+  // ====== Imagemap editor hooks ======
+  $("imapAddImage").addEventListener('click', addImageBlock);
+  $("imapClearAreas").addEventListener('click', clearAreas);
+  $("imapUploadBtn").addEventListener('click', ()=>{
+    if(imap.current < 0) return alert("請先新增圖片");
+    triggerUpload(imap.current, $("imapUploadBtn"));
+  });
+
+  $("btnIMapLoad").addEventListener('click', loadSettingsUI);
+  $("btnIMapSave").addEventListener('click', ()=>saveSettingsUI(false));
+  $("btnIMapSaveAs").addEventListener('click', ()=>saveSettingsUI(true));
+
+  $("btnApplyToPreview").addEventListener('click', ()=>{
+    if(imap.current < 0 || !imap.images[imap.current]?.url){
+      return toast("沒有可套用的圖片（先上傳到 R2）", "warn");
+    }
+    $("inCtaSource").value = imap.images[imap.current].url;
+    toast("已套用到『預覽/產圖』 ✅");
+    setTab("tab-preview");
+  });
+
+  $("btnCopyImagemapJson").addEventListener('click', async ()=>{
     try{
-      clearErr();
-      await loadCtaFromUrl($("ctaLoadUrl").value);
+      const err = assertAreasFilled();
+      if(err) return toast(err, "warn");
+      const messages = await buildImagemapMessages();
+      await navigator.clipboard.writeText(JSON.stringify({ mode:"imagemap", messages }, null, 2));
+      toast("已複製 imagemap JSON ✅");
     }catch(e){
-      showErr(e); toast(e.message||"載入失敗","err");
-    }
-  });
-  $("ctaLoadFile").addEventListener("change", async ()=>{
-    const f = $("ctaLoadFile").files?.[0];
-    if(!f) return;
-    try{
-      clearErr();
-      await loadCtaFromFile(f);
-    }catch(e){
-      showErr(e); toast(e.message||"載入失敗","err");
-    }
-  });
-  $("btnClearCta").addEventListener("click", clearCtaEditor);
-
-  $("btnUndo").addEventListener("click", undo);
-  $("btnRedo").addEventListener("click", redo);
-
-  document.addEventListener("keydown", (e)=>{
-    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==="z"){
-      e.preventDefault();
-      if(e.shiftKey) redo(); else undo();
+      toast(e.message || "複製失敗", "warn");
     }
   });
 
-  $("btnExportCtaPng").addEventListener("click", ()=>{
-    try{
-      const d = exportCtaPng();
-      // also auto-fill preview tab input for convenience
-      $("inCtaSource").value = d;
-      toast("已匯出引流圖 ✅（已自動填入預覽/產圖）");
-    }catch(e){
-      toast(e.message||"匯出失敗","err");
-    }
-  });
-
-  $("btnCopyCtaDataUrl").addEventListener("click", async ()=>{
-    try{
-      const t = $("ctaExportOut").value || cta.lastExportDataUrl;
-      if(!t) throw new Error("請先『匯出引流圖（PNG）』");
-      await copyTextToClipboard(t);
-      toast("已複製 DataURL ✅");
-    }catch(e){
-      toast(e.message||"複製失敗","warn");
-    }
-  });
-
+  // Preview tab: use editor image url
   $("btnUseCtaFromEditor").addEventListener("click", ()=>{
-    const t = $("ctaExportOut").value || cta.lastExportDataUrl;
-    if(!t) return toast("編輯器還沒匯出，引流圖不存在", "warn");
-    $("inCtaSource").value = t;
+    if(imap.current < 0 || !imap.images[imap.current]?.url){
+      return toast("編輯器目前沒有圖片 URL（先上傳到 R2）", "warn");
+    }
+    $("inCtaSource").value = imap.images[imap.current].url;
     toast("已套用編輯器的引流圖 ✅");
     setTab("tab-preview");
   });
@@ -1924,12 +1965,22 @@
     simState.q11=AGE_ADULT;
   }
 
+  // restore workerUrl for imap editor
+  const savedUrl = localStorage.getItem('line_worker_url');
+  if(savedUrl) $("imapWorkerUrl").value = savedUrl;
+
   safeDefaultSim();
   initPreviewLine();
   renderSim();
   renderTargetsTable();
-  initEditorCanvas();
   setConn(false);
+
+  // init imap editor
+  imapSizeModeSync();
+  $("imapQVal").textContent = $("imapQuality").value;
+  setZoom(1);
+  renderImageList();
+  selectImage(-1);
 })();
 </script>
 </body>
