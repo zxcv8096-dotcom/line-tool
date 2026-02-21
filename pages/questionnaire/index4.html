@@ -54,12 +54,6 @@
       user-select:none;
     }
     .btn:active{ transform: translateY(1px) scale(.99); }
-    .btn-primary{
-      color:#fff;
-      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
-      box-shadow: 0 14px 28px rgba(99,102,241,.20);
-    }
-    .btn-primary:hover{ filter: brightness(1.04); }
     .btn-dark{
       color:#fff;
       background: linear-gradient(135deg, #0b1220, #111827);
@@ -200,7 +194,7 @@
           <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
             <div class="font-extrabold">規則說明</div>
             <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-            <div>• 圖片報告：個人資料下方顯示 9 個營養素（單排），下方留白可放引流圖。</div>
+            <div>• 圖片報告：上方個資 → 單列 9 營養素 → 下方引流圖區。</div>
           </div>
         </div>
       </section>
@@ -249,6 +243,17 @@
                 <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
               </div>
             </div>
+
+            <!-- ✅ 新增：預覽頭像網址（只影響預覽與產圖，正式LINE會帶入） -->
+            <div class="mt-3">
+              <label class="text-[11px] font-extrabold text-slate-600">預覽頭像 URL（測試用）</label>
+              <input id="inPreviewAvatarUrl" class="in mono mt-1" value="https://i.pravatar.cc/150?img=12" />
+              <div class="mt-2 flex gap-2">
+                <button id="btnApplyPreviewAvatar" class="btn btn-soft w-full">套用到預覽</button>
+                <button id="btnRandPreviewAvatar" class="btn btn-soft w-full">換一張隨機頭像</button>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-2">提示：若 Canvas 產圖沒出現頭像，多半是頭像網址沒有 CORS；用 i.pravatar.cc 一定會出現。</div>
+            </div>
           </div>
 
           <div class="card-soft rounded-3xl p-4">
@@ -291,7 +296,7 @@
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
-                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（上方：個資+單排9營養素；下方：留白放引流圖）。</div>
+                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（營養素：一列一個；下方：引流圖）。</div>
               </div>
               <div class="flex gap-2">
                 <button id="btnRenderImg" class="btn btn-dark">產生圖片</button>
@@ -357,7 +362,6 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ✅ 預設顯示樣式（要改字改這裡）
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
@@ -455,7 +459,8 @@
   function initPreviewLine(){
     $("previewName").textContent = DEFAULT_LINE_NAME;
     $("previewId").textContent = DEFAULT_LINE_ID;
-    $("previewAvatar").src = DEFAULT_LINE_AVATAR_URL || "https://i.pravatar.cc/150?img=12";
+    const u = ($("inPreviewAvatarUrl")?.value || DEFAULT_LINE_AVATAR_URL).trim();
+    $("previewAvatar").src = u || DEFAULT_LINE_AVATAR_URL;
   }
 
   function apiBase(){
@@ -625,7 +630,7 @@
     }
 
     return {
-      version: "life11-v12-maxcap-single-row",
+      version: "life11-v13-one-per-row-fullname-cta",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -805,7 +810,7 @@
     ctx.restore();
   }
 
-  // ✅ 依「年齡/性別」抓上限值（來源：③ targetsRows）
+  // ✅ 依年齡/性別抓「數字+單位」（不顯示“上限”字樣）
   function capPick(row, ans){
     const age = ans?.q11 || AGE_ADULT;
     const sex = ans?.q10 || "男";
@@ -814,7 +819,7 @@
     if(ageKey==="teen") return row.teen;
     return (sex==="女") ? row.adultF : row.adultM;
   }
-  function capTextForKey(key, ans){
+  function capNumUnitForKey(key, ans){
     const byId = {};
     targetsRows.forEach(r=>byId[r.id]=r);
 
@@ -823,26 +828,14 @@
       return `${v}${unit||""}`;
     };
 
-    if(key==="vitA"){
-      const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="vitC"){
-      const r = byId.vitC; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="vitD"){
-      const r = byId.vitD; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="vitE"){
-      const r = byId.vitE; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="iron"){
-      const r = byId.iron; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="fiber"){
-      const r = byId.fiber; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
+    if(key==="vitA"){ const r=byId.vitA; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="vitC"){ const r=byId.vitC; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="vitD"){ const r=byId.vitD; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="vitE"){ const r=byId.vitE; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="iron"){ const r=byId.iron; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="fiber"){ const r=byId.fiber; return r?fmt(capPick(r,ans), r.unit):"-"; }
 
-    // 組合型：用「同單位」做簡短表示（單排才不會爆字）
+    // 組合型：用「/」串數字+單位
     if(key==="vitB"){
       const b1=byId.b1, b2=byId.b2, b6=byId.b6;
       if(!b1 || !b2 || !b6) return "-";
@@ -880,9 +873,11 @@
 
     const lineName = DEFAULT_LINE_NAME;
     const lineId = DEFAULT_LINE_ID;
-    const avatarUrl = DEFAULT_LINE_AVATAR_URL;
 
-    // ===== 上方個人資料區 =====
+    // ✅ 產圖頭像：用預覽欄位的 URL（確保預覽一定出現）
+    const avatarUrl = (($("inPreviewAvatarUrl")?.value || DEFAULT_LINE_AVATAR_URL) + "").trim() || DEFAULT_LINE_AVATAR_URL;
+
+    // ===== 個人資料區 =====
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
@@ -890,19 +885,19 @@
     ctx.fill();
     ctx.restore();
 
-    if(avatarUrl){
-      try{
-        const av = await loadImg(avatarUrl);
-        drawCircleAvatar(ctx, av, 140, 140, 58);
-        ctx.save();
-        ctx.strokeStyle = "rgba(255,255,255,.85)";
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.arc(140, 140, 60, 0, Math.PI*2);
-        ctx.stroke();
-        ctx.restore();
-      }catch{}
-    }else{
+    // ✅ 確保頭像一定畫出來（用可跨域的 URL）
+    try{
+      const av = await loadImg(avatarUrl);
+      drawCircleAvatar(ctx, av, 140, 140, 58);
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,.85)";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(140, 140, 60, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+    }catch{
+      // fallback 圓
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.20)";
       ctx.beginPath();
@@ -924,65 +919,55 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
 
-    // ===== ✅ 營養素：單排（在個資下方一點點） =====
-    const rowY = 260;          // <== 你要的位置：個資下方一點點
-    const rowX = 50;
-    const rowW = W - rowX*2;
-    const gap = 8;
-    const cardW = (rowW - gap*(PCT_ORDER.length-1)) / PCT_ORDER.length;
-    const cardH = 150;
+    // ===== ✅ 營養素：一列一個（直向列表） =====
+    const listX = 56;
+    const listY = 270;        // 個資下方一點點
+    const listW = W - listX*2;
+    const rowH = 66;
+    const rowsGap = 10;
 
-    const shortLabel = {
-      vitA:"A", vitB:"B群", vitC:"C", vitD:"D", vitE:"E",
-      ca_mg:"鈣鎂", iron:"鐵", fiber:"纖維", trace:"微量"
-    };
-
-    // 背後淡淡底（讓單排更清楚）
+    // 背後淡底
     ctx.save();
-    ctx.globalAlpha = 0.18;
+    ctx.globalAlpha = 0.14;
     ctx.fillStyle = "#0b122b";
-    roundRect(ctx, 42, rowY-14, W-84, cardH+28, 36);
+    roundRect(ctx, 44, listY-14, W-88, (rowH+rowsGap)*PCT_ORDER.length - rowsGap + 28, 36);
     ctx.fill();
     ctx.restore();
 
     for(let i=0;i<PCT_ORDER.length;i++){
       const k = PCT_ORDER[i];
-      const x = rowX + i*(cardW+gap);
-      const y = rowY;
+      const y = listY + i*(rowH+rowsGap);
       const pct = remain[k];
-      const capText = capTextForKey(k, ans); // ✅ 上限值（依③表）
+      const cap = capNumUnitForKey(k, ans); // ✅ 只顯示 數字+單位
 
-      // 卡片
+      // row card
       ctx.save();
       ctx.globalAlpha = 0.16;
       ctx.fillStyle = "#ffffff";
-      roundRect(ctx, x, y, cardW, cardH, 22);
+      roundRect(ctx, listX, y, listW, rowH, 20);
       ctx.fill();
       ctx.restore();
 
-      ctx.strokeStyle = "rgba(255,255,255,.40)";
+      ctx.strokeStyle = "rgba(255,255,255,.38)";
       ctx.lineWidth = 2;
-      roundRect(ctx, x, y, cardW, cardH, 22);
+      roundRect(ctx, listX, y, listW, rowH, 20);
       ctx.stroke();
 
-      // 標題（短字）
+      // 名稱（全名）
       ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
-      ctx.fillText(shortLabel[k] || LABEL[k] || k, x+12, y+26);
+      ctx.fillStyle = "rgba(255,255,255,.95)";
+      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
+      ctx.fillText(LABEL[k] || k, listX+16, y+26);
 
-      // 百分比（同一格內：百分比 + 上限值）
-      ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,.96)";
-      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
-      ctx.fillText(`${pct}%`, x+12, y+58);
-
+      // cap（右上：只數字+單位）
+      ctx.textAlign = "right";
       ctx.fillStyle = "rgba(255,255,255,.82)";
-      ctx.font = "bold 11px Microsoft JhengHei, sans-serif";
-      ctx.fillText(`上限 ${capText}`, x+12, y+78);
+      ctx.font = "bold 14px Microsoft JhengHei, sans-serif";
+      ctx.fillText(cap, listX+listW-16, y+26);
 
-      // 長條
-      const barX = x+12, barY = y+92, barW = cardW-24, barH = 12;
+      // bar
+      const barX = listX+16, barY = y+38, barW = listW-16-16-72, barH = 12;
+      ctx.textAlign = "left";
       ctx.fillStyle = "rgba(255,255,255,.22)";
       roundRect(ctx, barX, barY, barW, barH, 8);
       ctx.fill();
@@ -992,26 +977,104 @@
       roundRect(ctx, barX, barY, fillW, barH, 8);
       ctx.fill();
 
-      // 小字：完整名稱（避免卡片太小）
-      ctx.fillStyle = "rgba(255,255,255,.80)";
-      ctx.font = "bold 10px Microsoft JhengHei, sans-serif";
-      ctx.fillText(LABEL[k] || k, x+12, y+132);
+      // pct（右下）
+      ctx.textAlign = "right";
+      ctx.fillStyle = "rgba(255,255,255,.96)";
+      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`${pct}%`, listX+listW-16, y+55);
     }
 
-    // ===== ✅ 留白區（讓你放引流圖 / 可點擊區用）=====
-    // 不畫任何面板，不加字，保留底板原圖的空白
-    // 你之後做引流圖：直接用這張 PNG 當底，去你的引流圖編輯器畫點擊區即可
+    // ===== ✅ 最下面：畫引流圖（你要的） =====
+    // 區域：留在最底下（你可以換成你要的商品圖/CTA圖）
+    // 這裡先用「漸層卡 + 標題 + 按鈕感」做一張可當引流底圖的版面
+    const ctaX = 56;
+    const ctaY = 950;
+    const ctaW = W - ctaX*2;
+    const ctaH = 600;
 
-    // （可選）如果你想要「顯示一個淡淡框」提醒區域，把下面註解拿掉
-    /*
+    // 背景卡
     ctx.save();
-    ctx.setLineDash([10,8]);
-    ctx.strokeStyle = "rgba(255,255,255,.35)";
-    ctx.lineWidth = 3;
-    roundRect(ctx, 48, 450, W-96, 1080, 36);
-    ctx.stroke();
+    // 漸層
+    const g = ctx.createLinearGradient(ctaX, ctaY, ctaX+ctaW, ctaY+ctaH);
+    g.addColorStop(0, "rgba(99,102,241,.78)");
+    g.addColorStop(1, "rgba(16,185,129,.72)");
+    ctx.fillStyle = g;
+    roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 40);
+    ctx.fill();
+
+    // 玻璃光澤
+    ctx.globalAlpha = 0.20;
+    ctx.fillStyle = "#ffffff";
+    roundRect(ctx, ctaX+22, ctaY+22, ctaW-44, 110, 30);
+    ctx.fill();
     ctx.restore();
-    */
+
+    // CTA文字
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255,255,255,.96)";
+    ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
+    ctx.fillText("點我看推薦產品", ctaX+40, ctaY+95);
+
+    ctx.fillStyle = "rgba(255,255,255,.90)";
+    ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+    ctx.fillText("（這裡就是你的引流圖區，可做可點擊熱區）", ctaX+40, ctaY+132);
+
+    // 按鈕感（3顆）
+    const btnY = ctaY + 190;
+    const btnH = 86;
+    const btnGap = 18;
+    const btnW = (ctaW - 40*2 - btnGap*2)/3;
+    const btnX0 = ctaX + 40;
+
+    function drawCtaButton(x, y, w, h, title, sub){
+      ctx.save();
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "#0b122b";
+      roundRect(ctx, x, y, w, h, 24);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.strokeStyle = "rgba(255,255,255,.45)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, w, h, 24);
+      ctx.stroke();
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(255,255,255,.96)";
+      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.fillText(title, x+18, y+34);
+
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.font = "bold 14px Microsoft JhengHei, sans-serif";
+      ctx.fillText(sub, x+18, y+60);
+    }
+    drawCtaButton(btnX0 + (btnW+btnGap)*0, btnY, btnW, btnH, "方案A", "快速補足");
+    drawCtaButton(btnX0 + (btnW+btnGap)*1, btnY, btnW, btnH, "方案B", "日常維持");
+    drawCtaButton(btnX0 + (btnW+btnGap)*2, btnY, btnW, btnH, "方案C", "加強調整");
+
+    // 底下留一個大空白框（可放你自訂圖片/QR/商品拼貼）
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = "#0b122b";
+    roundRect(ctx, ctaX+40, ctaY+300, ctaW-80, ctaH-340, 34);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = "rgba(255,255,255,.45)";
+    ctx.setLineDash([10,8]);
+    ctx.lineWidth = 3;
+    roundRect(ctx, ctaX+40, ctaY+300, ctaW-80, ctaH-340, 34);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
+    ctx.fillText("你可以在這裡放：商品拼貼 / 影片封面 / QR Code / 促銷文案", ctaX + ctaW/2, ctaY+420);
+
+    ctx.fillStyle = "rgba(255,255,255,.84)";
+    ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
+    ctx.fillText("再用你的『引流圖編輯器』畫可點擊區（熱區）", ctaX + ctaW/2, ctaY+458);
 
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
@@ -1088,12 +1151,26 @@
     }
   });
 
+  // ✅ 預覽頭像控制
+  $("btnApplyPreviewAvatar")?.addEventListener("click", ()=>{
+    const u = ($("inPreviewAvatarUrl").value||"").trim();
+    $("previewAvatar").src = u || DEFAULT_LINE_AVATAR_URL;
+    toast("已套用預覽頭像 ✅");
+  });
+  $("btnRandPreviewAvatar")?.addEventListener("click", ()=>{
+    const n = Math.floor(Math.random()*70)+1;
+    const u = `https://i.pravatar.cc/150?img=${n}`;
+    $("inPreviewAvatarUrl").value = u;
+    $("previewAvatar").src = u;
+    toast("已更換隨機頭像 ✅");
+  });
+
   // init
-  initPreviewLine();
   renderTargetsTable();
   renderSim();
-
   $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
+  $("inPreviewAvatarUrl").value = DEFAULT_LINE_AVATAR_URL;
+  initPreviewLine();
 })();
 </script>
 </body>
