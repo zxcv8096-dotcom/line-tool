@@ -3,19 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>生活型態營養問卷｜中控台（新版介面＋引流圖=imagemap畫框版）</title>
+  <title>生活型態營養問卷｜中控台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
       --ink:#0b1220;
       --muted:#5b6b87;
       --bd:rgba(15,23,42,.10);
-      --glass: rgba(255,255,255,.86);
-      --glass2: rgba(255,255,255,.72);
+      --glass: rgba(255,255,255,.82);
+      --glass2: rgba(255,255,255,.70);
       --shadow: 0 18px 55px rgba(15,23,42,.10);
-      --shadow2: 0 10px 26px rgba(2,6,23,.08);
+      --shadow2: 0 8px 22px rgba(2,6,23,.08);
       --ring: 0 0 0 5px rgba(99,102,241,.14);
-      --radius: 22px;
     }
     body{
       color:var(--ink);
@@ -27,30 +26,32 @@
       font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
-    .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
-    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.20); border-radius: 999px; }
     .card{
       background: var(--glass);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(15,23,42,.08);
       box-shadow: var(--shadow);
-      border-radius: var(--radius);
+      border: 1px solid rgba(15,23,42,.08);
     }
-    .card2{
+    .card-soft{
       background: var(--glass2);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(15,23,42,.08);
       box-shadow: var(--shadow2);
-      border-radius: var(--radius);
+      border: 1px solid rgba(15,23,42,.08);
     }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
+    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.20); border-radius: 999px; }
+    table th, table td { vertical-align: middle; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center;
       gap:.5rem; border-radius: 16px; padding:.72rem 1rem;
       font-weight:900; font-size:13px;
-      transition: transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease, filter .18s ease;
+      transition: transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
       user-select:none;
-      white-space: nowrap;
     }
     .btn:active{ transform: translateY(1px) scale(.99); }
     .btn-dark{
@@ -60,29 +61,30 @@
     }
     .btn-dark:hover{ filter: brightness(1.03); }
     .btn-soft{
-      background: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.85);
       border: 1px solid rgba(15,23,42,.12);
       color: #0b1220;
       box-shadow: 0 10px 20px rgba(2,6,23,.06);
     }
-    .btn-soft:hover{ background: rgba(255,255,255,.98); border-color: rgba(99,102,241,.25); }
-    .btn-indigo{
-      color:#fff;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      box-shadow: 0 14px 28px rgba(99,102,241,.18);
-    }
-    .btn-indigo:hover{ filter: brightness(1.03); }
+    .btn-soft:hover{ background: rgba(255,255,255,.98); border-color: rgba(99,102,241,.25); box-shadow: 0 14px 26px rgba(2,6,23,.08); }
     .btn-emerald{
       color:#fff;
       background: linear-gradient(135deg, #10b981, #22c55e);
       box-shadow: 0 14px 28px rgba(16,185,129,.18);
     }
     .btn-emerald:hover{ filter: brightness(1.03); }
+    .btn-indigo{
+      color:#fff;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 14px 28px rgba(99,102,241,.18);
+    }
+    .btn-indigo:hover{ filter: brightness(1.03); }
+
     .in{
       width:100%;
       border-radius: 16px;
       border: 1px solid rgba(15,23,42,.12);
-      background: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.82);
       padding: .78rem 1rem;
       outline: none;
       transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
@@ -90,13 +92,21 @@
     .in:focus{
       border-color: rgba(99,102,241,.35);
       box-shadow: var(--ring);
-      background: rgba(255,255,255,.98);
+      background: rgba(255,255,255,.96);
     }
+
+    .hero{
+      background: linear-gradient(135deg, rgba(255,255,255,.70), rgba(255,255,255,.52));
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 14px 40px rgba(2,6,23,.08);
+      backdrop-filter: blur(14px);
+    }
+
     .pill{
       display:inline-flex; align-items:center; gap:.35rem;
       padding:.25rem .55rem;
       border-radius:999px;
-      font-weight:900;
+      font-weight:800;
       font-size:11px;
       border:1px solid rgba(15,23,42,.10);
       background: rgba(255,255,255,.70);
@@ -105,92 +115,8 @@
     .pill-green{ border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.10); color: rgba(5,150,105,1); }
     .pill-indigo{ border-color: rgba(99,102,241,.25); background: rgba(99,102,241,.10); color: rgba(79,70,229,1); }
     .pill-rose{ border-color: rgba(244,63,94,.25); background: rgba(244,63,94,.10); color: rgba(190,18,60,1); }
-    .minw0{ min-width:0; }
 
-    /* ===== 新版：版面更緊湊、好用、沒有大空白 ===== */
-    .wrap{
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: clamp(12px, 2.2vw, 22px);
-    }
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(15,23,42,.08);
-      box-shadow: 0 10px 30px rgba(2,6,23,.06);
-      border-radius: 22px;
-      background: rgba(255,255,255,.70);
-    }
-    .tab{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:.62rem .9rem;
-      border-radius: 14px;
-      border: 1px solid rgba(15,23,42,.10);
-      background: rgba(255,255,255,.75);
-      font-weight:900;
-      font-size:12px;
-      color: rgba(2,6,23,.86);
-      user-select:none;
-      transition: all .16s ease;
-    }
-    .tab:hover{ background: rgba(255,255,255,.95); border-color: rgba(99,102,241,.28); }
-    .tab.active{
-      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
-      color:#fff;
-      border-color: transparent;
-      box-shadow: 0 10px 22px rgba(99,102,241,.18);
-    }
-
-    .grid-main{
-      display:grid;
-      grid-template-columns: 360px 1fr;
-      gap: 14px;
-      align-items:start;
-      margin-top: 14px;
-    }
-    @media (max-width: 1100px){
-      .grid-main{ grid-template-columns: 1fr; }
-    }
-
-    .sidebar-sticky{
-      position: sticky;
-      top: 92px;
-    }
-    @media (max-width: 1100px){
-      .sidebar-sticky{ position: static; top:auto; }
-    }
-
-    .section-title{
-      font-weight: 900;
-      font-size: 14px;
-      color: rgba(2,6,23,.92);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .hint{ font-size: 11px; color: rgba(2,6,23,.55); line-height: 1.5; }
-
-    canvas{ display:block; max-width:100%; height:auto; }
-
-    /* ===== Toast ===== */
-    #toastWrap{
-      position: fixed;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(92vw, 560px);
-      z-index: 9999;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    /* =========================================================
-       ✅ 引流圖（imagemap）編輯器：跟你下面那份一樣（畫框/縮放/上傳R2/儲存讀取）
-       ========================================================= */
+    /* 引流圖熱區編輯器 */
     .area-box{
       position:absolute;
       border:2px solid rgba(255,0,0,.85);
@@ -200,8 +126,8 @@
       align-items:center;
       justify-content:center;
       color:white;
-      font-weight:800;
-      font-size:14px;
+      font-weight:900;
+      font-size:12px;
       text-shadow:0 1px 2px rgba(0,0,0,.9);
       user-select:none;
     }
@@ -211,391 +137,356 @@
       background:rgba(0,0,0,.10);
       pointer-events:none;
     }
-    #imapStage{
-      position: relative;
-      transform-origin: top left;
-    }
-    #imapDrawLayer{
-      position:absolute;
-      inset:0;
-      cursor:crosshair;
-      touch-action:none;
-    }
   </style>
 </head>
 
 <body class="min-h-screen">
-  <div class="wrap">
+  <div class="max-w-6xl mx-auto p-3 md:p-6">
 
-    <!-- Top bar -->
-    <div class="topbar p-3 md:p-4">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div class="minw0">
+    <header class="hero rounded-3xl p-4 md:p-5 mb-3">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
           <div class="flex items-center gap-2 flex-wrap">
-            <div class="text-lg md:text-xl font-black text-slate-950">生活型態營養問卷｜中控台</div>
-            <span class="pill pill-indigo">新版介面</span>
-            <span class="pill pill-green" id="pillConn">未連線</span>
-            <span class="pill">最後：<span id="txtLast" class="mono ml-1">-</span></span>
+            <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
+            <span class="pill pill-indigo">UI 明亮</span>
+            <span class="pill pill-green">營養素單列 + 上限值 + 引流圖</span>
           </div>
-          <div class="hint mt-1">
-            ✅ 右側「引流圖」已改成你要的 <b>imagemap 畫框版</b>：新增圖片 → 上傳到 R2 → 拖曳畫框 → 填文字/網址 → 儲存/讀取。
-          </div>
+          <p class="text-sm text-slate-600 mt-1 leading-6">
+            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生「圖片版營養素比例報告」PNG（含引流圖區，可上傳/可畫熱區）。
+          </p>
         </div>
 
-        <div class="minw0 flex flex-wrap gap-2 justify-start md:justify-end">
-          <button class="tab active" data-tab="tab-preview">預覽 / 產圖</button>
-          <button class="tab" data-tab="tab-cta">引流圖（畫框/上傳R2）</button>
-          <button class="tab" data-tab="tab-targets">年齡層參考值</button>
+        <div class="text-xs text-slate-600 leading-6">
+          <div class="font-extrabold">需要 Worker API：</div>
+          <div class="mono">POST /listAll /putAny /loadAny /upload</div>
         </div>
       </div>
-    </div>
 
-    <div class="grid-main">
+      <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 text-xs">
+          <span class="pill pill-rose" id="pillConn">未連線</span>
+          <span class="pill">最後測試：<span id="txtLast" class="mono ml-1">-</span></span>
+        </div>
+        <div class="text-[11px] text-slate-500">
+          KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜<span class="mono font-bold">AI_SURVEY:KW_MAP</span>
+        </div>
+      </div>
+    </header>
 
-      <!-- Sidebar -->
-      <aside class="sidebar-sticky space-y-3">
-        <div class="card p-4">
-          <div class="section-title">
-            <span>連線設定</span>
-            <span class="pill pill-rose" id="pillConn2">未連線</span>
-          </div>
-          <div class="mt-3 grid gap-2">
-            <label class="text-xs font-extrabold text-slate-600">Worker API</label>
-            <input id="inApiBase" class="in mono" value="https://api.zxcv8096.workers.dev/" />
-            <label class="text-xs font-extrabold text-slate-600 mt-1">Admin Key（可空白）</label>
-            <input id="inAdminKey" class="in mono" placeholder="若 Worker 有驗證才需要填" />
-            <div class="grid grid-cols-2 gap-2 mt-2">
-              <button id="btnConnect" class="btn btn-dark w-full">連線</button>
-              <button id="btnWrite" class="btn btn-emerald w-full">寫入KV</button>
-            </div>
-            <div class="hint mt-2">
-              需要 API：<span class="mono">POST /listAll /putAny /loadAny</span><br/>
-              圖片上傳若你有做也可用：<span class="mono">POST /upload</span>
-            </div>
-          </div>
-
-          <div id="errBanner" class="hidden mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-            <div class="font-extrabold">錯誤</div>
-            <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
-          </div>
+    <section class="card rounded-3xl p-4 md:p-5 mb-3">
+      <div class="grid md:grid-cols-3 gap-3 items-end">
+        <div class="md:col-span-2">
+          <label class="text-xs font-extrabold text-slate-600">Worker API（固定）</label>
+          <input id="inApiBase" class="in mono mt-1" value="https://api.zxcv8096.workers.dev/" />
         </div>
 
-        <div class="card p-4">
-          <div class="section-title"><span>問卷設定</span><span class="pill">life11</span></div>
-          <div class="mt-3 grid gap-2">
+        <div>
+          <label class="text-xs font-extrabold text-slate-600">Admin Key（可空白）</label>
+          <input id="inAdminKey" class="in mono mt-1" placeholder="若 Worker 有驗證才需要填" />
+        </div>
+
+        <div class="md:col-span-3 flex gap-2">
+          <button id="btnConnect" class="btn btn-dark w-full">連線檢查</button>
+          <button id="btnWrite" class="btn btn-emerald w-full">一鍵寫入KV</button>
+        </div>
+      </div>
+
+      <div id="errBanner" class="hidden mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+        <div class="font-extrabold">錯誤</div>
+        <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
+      </div>
+    </section>
+
+    <div class="grid lg:grid-cols-2 gap-3">
+      <section class="card rounded-3xl p-4 md:p-5">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-lg font-black text-slate-950">① 問卷設定</h2>
+          <span class="pill">扣分模型：固定</span>
+        </div>
+
+        <div class="mt-3 grid gap-3">
+          <div class="card-soft rounded-3xl p-4">
             <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
-            <input id="inKeyword" class="in" placeholder="例如：生活營養" />
-            <div class="hint">
-              會寫入：<span class="mono">AI_SURVEY:KW_MAP</span> 例如 <span class="mono">{"生活營養":"life11"}</span>
+            <input id="inKeyword" class="in mt-1" placeholder="例如：生活營養" />
+            <div class="text-[11px] text-slate-500 mt-2 leading-5">
+              寫入 <span class="mono font-bold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
             </div>
           </div>
-          <div class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">規則</div>
-            <div>• 從 100% 開始，答「是」就扣分（夾到 0～100%）。</div>
-            <div>• 產圖：個資 → 9 個營養素（單列）→ 最下面引流圖。</div>
+
+          <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
+            <div class="font-extrabold">規則說明</div>
+            <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
+            <div>• 報告：個資 → 9 個營養素（單列） → 引流圖（可上傳 + 可畫熱區）。</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card rounded-3xl p-4 md:p-5">
+        <div class="flex items-end justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
+            <p class="text-sm text-slate-600 mt-1">產圖用：底板 +（可選）引流圖 + 熱區資料（你自己畫）。</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="btnSimAllGood" class="btn btn-soft">都很健康</button>
+            <button id="btnSimAllYes" class="btn btn-soft">全部選是</button>
           </div>
         </div>
 
-        <div class="card p-4">
-          <div class="section-title"><span>快速測試</span><span class="pill pill-indigo">模擬</span></div>
-          <div class="grid grid-cols-2 gap-2 mt-3">
-            <button id="btnSimAllGood" class="btn btn-soft w-full">都很健康</button>
-            <button id="btnSimAllYes" class="btn btn-soft w-full">全部選是</button>
-          </div>
-
-          <div class="mt-3">
-            <label class="text-xs font-extrabold text-slate-600">預覽頭像 URL（測試用）</label>
-            <input id="inPreviewAvatarUrl" class="in mono mt-1" value="https://i.pravatar.cc/150?img=12" />
-            <div class="grid grid-cols-2 gap-2 mt-2">
-              <button id="btnApplyPreviewAvatar" class="btn btn-soft w-full">套用</button>
-              <button id="btnRandPreviewAvatar" class="btn btn-soft w-full">隨機</button>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Main -->
-      <main class="space-y-3 minw0">
-
-        <!-- TAB: Preview / Render -->
-        <section id="tab-preview" class="space-y-3">
-          <div class="card p-4">
-            <div class="section-title">
-              <span>問卷模擬（11題）</span>
-              <span class="pill">No.1～11</span>
-            </div>
-            <div class="hint mt-1">這裡只做測試；正式 LINE 由 Worker 控制。</div>
-            <div id="simWrap" class="mt-3 grid gap-2"></div>
-          </div>
-
-          <div class="card p-4">
-            <div class="section-title">
-              <span>產生圖片（900×1600 PNG）</span>
-              <span class="pill pill-green">營養素單列＋上限大字＋百分比置中</span>
-            </div>
-
-            <div class="mt-3 grid md:grid-cols-2 gap-3">
-              <div class="card2 p-4 minw0">
-                <div class="font-black text-slate-950">底板圖片 URL（必填）</div>
-                <div class="hint mt-1">底板需可公開存取並允許跨域（CORS），不然下載會失敗。</div>
-                <input id="inBgUrl" class="in mono mt-2" placeholder="https://.../report_bg.png" />
-
-                <div class="mt-3">
-                  <div class="font-black text-slate-950">引流圖來源（可選）</div>
-                  <div class="hint mt-1">
-                    ✅ 你現在的引流圖編輯器是「畫框/上傳R2」版。<br/>
-                    你可以在「引流圖」分頁選好圖片後，按<b>「套用到預覽/產圖」</b>，它會把圖片 URL 填到這裡。
-                  </div>
-                  <input id="inCtaSource" class="in mono mt-2" placeholder="可貼：https://... 或 data:image/png;base64,..." />
-                  <div class="grid grid-cols-2 gap-2 mt-2">
-                    <button id="btnUseCtaFromEditor" class="btn btn-soft w-full">用編輯器的引流圖</button>
-                    <button id="btnClearCtaSource" class="btn btn-soft w-full">清除引流圖</button>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 mt-4">
-                  <button id="btnRenderImg" class="btn btn-dark w-full">產生圖片</button>
-                  <button id="btnDownloadImg" class="btn btn-soft w-full">下載PNG</button>
-                </div>
+        <div class="mt-3 grid gap-3">
+          <div class="card-soft rounded-3xl p-4">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-sm font-black text-slate-950">11 題（照圖不改字）</div>
+                <div class="text-[11px] text-slate-500 mt-1">是/不是、性別、年齡</div>
               </div>
+              <span class="pill pill-indigo">模擬</span>
+            </div>
+            <div id="simWrap" class="mt-3 space-y-2 max-h-[360px] overflow-auto thinbar pr-1"></div>
+          </div>
 
-              <div class="card2 p-4 minw0">
-                <div class="flex items-center gap-3">
-                  <div class="relative">
-                    <div class="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-400/50 to-emerald-400/50 blur"></div>
-                    <img id="previewAvatar" src="https://i.pravatar.cc/150?img=12"
-                         class="relative w-14 h-14 rounded-full border border-white/60 shadow" alt="avatar"/>
-                  </div>
-                  <div class="minw0">
-                    <div id="previewName" class="font-black text-slate-950 truncate">LINE使用者名稱</div>
-                    <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
-                    <div id="previewMeta" class="text-xs text-slate-500 mt-1">性別：男　年齡：19 歲以上</div>
-                  </div>
-                </div>
+          <div class="card-soft rounded-3xl p-4">
+            <div class="flex items-end justify-between gap-2">
+              <div>
+                <div class="text-sm font-black text-slate-950">預覽頭像</div>
+                <div class="text-[11px] text-slate-500 mt-1">正式 LINE 會帶入；這裡只做預覽與產圖測試。</div>
+              </div>
+              <span class="pill">預設</span>
+            </div>
 
-                <div class="mt-3">
-                  <canvas id="cvReport" class="w-full rounded-2xl border border-slate-200 bg-white"></canvas>
-                  <div class="hint mt-2">※ 若下載失敗，多半是底板跨域（CORS）沒開。</div>
-                </div>
+            <div class="mt-3 flex items-center gap-3">
+              <div class="relative">
+                <div class="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-400/50 to-emerald-400/50 blur"></div>
+                <img id="previewAvatar" src="https://i.pravatar.cc/150?img=12"
+                     class="relative w-14 h-14 rounded-full border border-white/60 shadow" alt="avatar"/>
+              </div>
+              <div class="min-w-0">
+                <div id="previewName" class="font-black text-slate-950 truncate">LINE使用者名稱</div>
+                <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="text-[11px] font-extrabold text-slate-600">預覽頭像 URL（測試用）</label>
+              <input id="inPreviewAvatarUrl" class="in mono mt-1" value="https://i.pravatar.cc/150?img=12" />
+              <div class="mt-2 flex gap-2">
+                <button id="btnApplyPreviewAvatar" class="btn btn-soft w-full">套用到預覽</button>
+                <button id="btnRandPreviewAvatar" class="btn btn-soft w-full">換一張隨機頭像</button>
               </div>
             </div>
           </div>
-        </section>
 
-        <!-- TAB: CTA / Imagemap Editor -->
-        <section id="tab-cta" class="hidden space-y-3">
-          <div class="card p-4">
-            <div class="section-title">
-              <span>引流圖編輯器（R2 上傳＋畫框＋縮放）</span>
-              <span class="pill pill-indigo">跟你提供的 R2 尺寸模式版一致</span>
+          <!-- ✅ 底板上傳 -->
+          <div class="card-soft rounded-3xl p-4">
+            <div class="flex items-end justify-between gap-2">
+              <div>
+                <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
+                <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 設為底板。</div>
+              </div>
+              <span class="pill pill-indigo">upload</span>
             </div>
 
-            <div class="hint mt-1">
-              使用流程：① 新增圖片 → ② 上傳到 R2（壓縮）→ ③ 在圖片上拖曳畫框 → ④ 右側填「發文字/開網址」→ ⑤ 儲存/讀取。<br/>
-              另外：你要把這張引流圖放進報告圖片底部 → 用「套用到預覽/產圖」，它會把「目前圖片 URL」填回去。
-            </div>
-
-            <!-- Top controls -->
-            <div class="mt-3 grid grid-cols-1 xl:grid-cols-3 gap-3">
-              <div class="card2 p-3">
-                <div class="text-xs font-extrabold text-slate-600 mb-2">雲端設定（Worker /save /load）</div>
-                <div class="grid gap-2">
-                  <input type="text" id="imapWorkerUrl" placeholder="https://xxxx.workers.dev"
-                         class="in mono bg-yellow-50" />
-                  <input type="text" id="imapKeyword" placeholder="本圖關鍵字（可不填：存本機草稿）"
-                         class="in font-black border-indigo-300" />
-                  <div class="grid grid-cols-3 gap-2">
-                    <button id="btnIMapLoad" class="btn btn-soft w-full">讀取</button>
-                    <button id="btnIMapSave" class="btn btn-emerald w-full">儲存</button>
-                    <button id="btnIMapSaveAs" class="btn btn-indigo w-full">另存新檔</button>
-                  </div>
-                  <div class="hint">不填關鍵字：存到本機草稿；有填關鍵字：存到 Worker（/save）。</div>
-                </div>
+            <div class="mt-3 grid gap-2">
+              <div>
+                <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
+                <input id="upFile" type="file" accept="image/*"
+                       class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
+                <input id="upKey" class="hidden" />
               </div>
 
-              <div class="card2 p-3">
-                <div class="flex items-center justify-between">
-                  <div class="text-xs font-extrabold text-slate-600">🔎 圖片縮放</div>
-                  <div class="text-[11px] text-slate-500">滾輪 + Ctrl/Alt/Shift</div>
-                </div>
-                <div class="mt-2 flex items-center gap-2">
-                  <input id="imapZoomRange" type="range" min="0.5" max="3" step="0.01" value="1" class="w-full">
-                  <div class="text-xs font-black w-14 text-right" id="imapZoomLabel">100%</div>
-                </div>
-                <div class="mt-2 flex gap-2">
-                  <button class="btn btn-dark text-xs !py-2 !px-3" id="imapZoom100">100%</button>
-                  <button class="btn btn-soft text-xs !py-2 !px-3" id="imapZoom75">75%</button>
-                  <button class="btn btn-soft text-xs !py-2 !px-3" id="imapZoom150">150%</button>
-                </div>
-              </div>
-
-              <div class="card2 p-3">
-                <div class="text-xs font-extrabold text-slate-600 mb-2">圖片尺寸/壓縮（上傳時生效）</div>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                  <label class="flex flex-col gap-1 col-span-2">
-                    <span class="text-slate-500">尺寸模式</span>
-                    <select id="imapSizeMode" class="border rounded-2xl px-3 py-2 bg-white/90">
-                      <option value="line">LINE 建議（長邊 1280）</option>
-                      <option value="hd">清晰（長邊 1600）</option>
-                      <option value="small">省空間（長邊 960）</option>
-                      <option value="custom">自選尺寸（寬/高上限）</option>
-                    </select>
-                  </label>
-
-                  <label id="imapCustomWWrap" class="flex flex-col gap-1 hidden">
-                    <span class="text-slate-500">最大寬(px)</span>
-                    <input id="imapCustomW" type="number" value="1280" min="320" max="4096" class="border rounded-2xl px-3 py-2 bg-white/90">
-                  </label>
-                  <label id="imapCustomHWrap" class="flex flex-col gap-1 hidden">
-                    <span class="text-slate-500">最大高(px)</span>
-                    <input id="imapCustomH" type="number" value="1280" min="320" max="4096" class="border rounded-2xl px-3 py-2 bg-white/90">
-                  </label>
-
-                  <label class="flex flex-col gap-1">
-                    <span class="text-slate-500">格式</span>
-                    <select id="imapOutFormat" class="border rounded-2xl px-3 py-2 bg-white/90">
-                      <option value="image/webp" selected>WebP（推薦）</option>
-                      <option value="image/jpeg">JPEG</option>
-                      <option value="image/png">PNG（不建議）</option>
-                    </select>
-                  </label>
-
-                  <label class="flex flex-col gap-1">
-                    <span class="text-slate-500">品質</span>
-                    <input id="imapQuality" type="range" min="0.55" max="0.95" step="0.01" value="0.82">
-                    <div class="text-right text-[11px] text-slate-500">目前：<span id="imapQVal">0.82</span></div>
-                  </label>
-
-                  <label class="flex items-center gap-2 col-span-2 mt-1">
-                    <input id="imapCropSquare" type="checkbox" class="scale-110">
-                    <span class="text-slate-600">裁切成正方形（imagemap 常用）</span>
-                  </label>
-
-                  <div class="col-span-2 text-[11px] text-slate-500">
-                    * 上傳時會再自動限制：長寬不超過你目前螢幕可視大小
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Main editor -->
-            <div class="mt-3 grid grid-cols-1 xl:grid-cols-[300px_1fr] gap-3">
-              <!-- Left list -->
-              <div class="card2 p-3">
-                <button id="imapAddImage"
-                        class="w-full py-3 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-2xl font-black hover:bg-indigo-50">
-                  + 新增圖片
-                </button>
-                <div id="imapImageList" class="space-y-3 mt-3"></div>
-
-                <div class="mt-3 grid grid-cols-1 gap-2">
-                  <button id="btnApplyToPreview" class="btn btn-dark w-full">套用到預覽/產圖</button>
-                  <button id="btnCopyImagemapJson" class="btn btn-soft w-full">複製 imagemap JSON</button>
-                </div>
-
-                <div class="hint mt-2">
-                  • 「套用到預覽/產圖」只會把目前圖片 URL 帶回去（用來放在報告底部）。<br/>
-                  • 「複製 imagemap JSON」是給 LINE imagemap 用（含框座標）。
-                </div>
-              </div>
-
-              <!-- Right: area list + canvas -->
-              <div class="card2 p-3">
-                <div class="grid grid-cols-1 2xl:grid-cols-[360px_1fr] gap-3">
-                  <!-- Area settings -->
-                  <div class="bg-white/80 border border-slate-200 rounded-2xl p-3 h-fit">
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="font-black text-slate-700">框框設定</div>
-                      <button id="imapClearAreas" class="text-xs text-rose-600 underline font-black">清空本圖全部框</button>
-                    </div>
-                    <div id="imapAreaList" class="space-y-2"></div>
-                  </div>
-
-                  <!-- Canvas zone -->
-                  <div class="bg-white/80 border border-slate-200 rounded-2xl overflow-hidden">
-                    <div class="p-2 bg-slate-50 border-b flex items-center justify-between">
-                      <div class="text-xs text-slate-600 font-black">
-                        ✅ 拖曳畫框，點紅框刪除。縮放不影響座標。
-                      </div>
-                      <button id="imapUploadBtn"
-                        class="bg-black/70 text-white text-xs px-3 py-2 rounded-xl font-black hover:bg-black">
-                        📷 上傳到 R2（壓縮）
-                      </button>
-                    </div>
-
-                    <div class="relative overflow-auto bg-gray-100" style="height: min(72vh, 720px);">
-                      <div id="imapStage" class="inline-block">
-                        <img id="imapPreviewImage" class="block pointer-events-none select-none" style="max-width:none; display:block;">
-                        <div id="imapDrawLayer"></div>
-                      </div>
-                    </div>
-
-                    <div id="imapEmptyState" class="text-slate-400 p-6 hidden">
-                      <div class="text-center">
-                        <div class="text-4xl mb-2">👈</div>
-                        <div class="font-black">請先從左側新增圖片</div>
-                        <div class="text-xs mt-1">上傳到 R2 後才能畫框</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <input type="file" id="imapFileInput" accept="image/*" class="hidden">
-          </div>
-        </section>
-
-        <!-- TAB: Targets -->
-        <section id="tab-targets" class="hidden space-y-3">
-          <div class="card p-4">
-            <div class="section-title">
-              <span>③ 年齡層參考值（上限值來源）</span>
               <div class="flex gap-2">
-                <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
-                <button id="btnCopyTargetsJson" class="btn btn-soft">複製JSON</button>
+                <button id="btnUploadR2" class="btn btn-indigo w-full">上傳底板到 R2</button>
+                <button id="btnUseAsBg" class="btn btn-soft w-full">設為底板URL</button>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
+                <div class="text-[11px] font-extrabold text-slate-600">上傳結果 URL</div>
+                <input id="upResultUrl" class="in mono mt-1" placeholder="上傳成功後會出現在這裡" />
+                <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：圖片需可公開存取並允許跨域（CORS）。</div>
+              </div>
+
+              <div class="text-[11px] text-slate-500">
+                存放路徑（key）自動：<span class="mono font-bold" id="txtAutoKey">assets/life11/report_bg_YYYYMMDD_HHMMSS.png</span>
               </div>
             </div>
-            <div class="hint mt-1">產圖時顯示「數字＋單位」（不顯示“上限”字樣）。</div>
+          </div>
 
-            <div class="mt-3 overflow-auto thinbar">
-              <table class="w-full min-w-[980px] border-collapse">
-                <thead>
-                  <tr class="text-xs text-slate-600">
-                    <th class="text-left p-2 border-b border-slate-200">項目</th>
-                    <th class="text-left p-2 border-b border-slate-200">單位</th>
-                    <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
-                    <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
-                    <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
-                    <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
-                  </tr>
-                </thead>
-                <tbody id="targetsTbody" class="text-sm"></tbody>
-              </table>
+          <!-- ✅ 引流圖上傳（你上傳後，產圖會把引流圖放到底部） -->
+          <div class="card-soft rounded-3xl p-4">
+            <div class="flex items-end justify-between gap-2">
+              <div>
+                <div class="text-sm font-black text-slate-950">引流圖（可上傳）</div>
+                <div class="text-[11px] text-slate-500 mt-1">選檔 → 上傳 → 設為引流圖 URL（產圖時會放在最下面）。</div>
+              </div>
+              <span class="pill pill-indigo">CTA</span>
             </div>
 
-            <div class="hint mt-2">
-              ※ 組合顯示：<span class="mono font-bold">維生素B群（B1/B2/B6）</span>、<span class="mono font-bold">鈣/鎂</span>、<span class="mono font-bold">微量元素（碘/硒）</span>。
+            <div class="mt-3 grid gap-2">
+              <div>
+                <label class="text-[11px] font-extrabold text-slate-600">選擇引流圖檔案</label>
+                <input id="ctaFile" type="file" accept="image/*"
+                       class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
+                <input id="ctaKey" class="hidden" />
+              </div>
+
+              <div class="flex gap-2">
+                <button id="btnUploadCTA" class="btn btn-indigo w-full">上傳引流圖到 R2</button>
+                <button id="btnUseCTAUrl" class="btn btn-soft w-full">設為引流圖URL</button>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
+                <div class="text-[11px] font-extrabold text-slate-600">引流圖 URL</div>
+                <input id="ctaUrl" class="in mono mt-1" placeholder="https://.../assets/life11/cta_xxx.png" />
+                <div class="text-[11px] text-slate-500 mt-2">提示：這張圖就是你要的引流圖本體（你自己做圖、自己上傳）。</div>
+              </div>
+
+              <div class="text-[11px] text-slate-500">
+                存放路徑（key）自動：<span class="mono font-bold" id="txtCtaAutoKey">assets/life11/cta_YYYYMMDD_HHMMSS.png</span>
+              </div>
             </div>
           </div>
-        </section>
 
-      </main>
+          <!-- ✅ 產圖 -->
+          <div class="card-soft rounded-3xl p-4">
+            <div class="flex items-end justify-between gap-2">
+              <div>
+                <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
+                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（百分比在長條圖中間；上限字更大）。</div>
+              </div>
+              <div class="flex gap-2">
+                <button id="btnRenderImg" class="btn btn-dark">產生圖片</button>
+                <button id="btnDownloadImg" class="btn btn-soft">下載PNG</button>
+              </div>
+            </div>
+
+            <div class="mt-2 grid gap-2">
+              <label class="text-[11px] font-extrabold text-slate-600">底板圖片URL（R2 公開網址）</label>
+              <input id="inBgUrl" class="in mono" placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
+            </div>
+
+            <div class="mt-3">
+              <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
+              <div class="text-[11px] text-slate-500 mt-2">
+                ※ 若下載 PNG 失敗，多半是底板圖跨域（CORS）沒開。
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ 引流圖熱區編輯器（畫框 → 下載 JSON） -->
+          <div class="card-soft rounded-3xl p-4">
+            <div class="flex items-end justify-between gap-2">
+              <div>
+                <div class="text-sm font-black text-slate-950">引流圖熱區編輯器（可畫）</div>
+                <div class="text-[11px] text-slate-500 mt-1">把你上傳的引流圖 URL 貼上 → 在圖上拖曳畫框 → 下載/複製 JSON。</div>
+              </div>
+              <span class="pill pill-rose">畫熱區</span>
+            </div>
+
+            <div class="mt-3 grid gap-2">
+              <div>
+                <label class="text-[11px] font-extrabold text-slate-600">編輯用引流圖 URL（通常就用上面的引流圖 URL）</label>
+                <input id="ctaEditorUrl" class="in mono mt-1" placeholder="https://.../assets/life11/cta_xxx.png" />
+              </div>
+
+              <div class="flex gap-2">
+                <button id="btnLoadCtaEditor" class="btn btn-dark w-full">載入引流圖</button>
+                <button id="btnClearAreas" class="btn btn-soft w-full">清空熱區</button>
+              </div>
+
+              <div class="rounded-3xl border border-slate-200 bg-white/85 p-3">
+                <div class="text-[11px] text-slate-600 font-extrabold mb-2">拖曳畫框（紅色方塊），點方塊可刪除</div>
+
+                <div id="ctaStage" class="relative w-full overflow-auto thinbar rounded-2xl border border-slate-200 bg-slate-50"
+                     style="height:360px;">
+                  <div id="ctaCanvasWrap" class="relative" style="width:820px; height:520px; margin:12px auto;">
+                    <img id="ctaEditorImg" alt="cta" class="absolute inset-0 w-full h-full object-contain rounded-2xl"
+                         style="background:#fff; border:1px solid rgba(15,23,42,.08);" />
+                    <div id="ctaAreasLayer" class="absolute inset-0 rounded-2xl"></div>
+                    <div id="ctaDrawRect" class="draw-rect hidden"></div>
+                  </div>
+                </div>
+
+                <div class="mt-3 grid md:grid-cols-2 gap-2 items-end">
+                  <div>
+                    <label class="text-[11px] font-extrabold text-slate-600">點擊連結（可選）：畫框後可填一個 URL</label>
+                    <input id="inAreaLink" class="in mono mt-1" placeholder="https://..." />
+                    <div class="text-[11px] text-slate-500 mt-1">提示：JSON 會把 link 一起存進去。</div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button id="btnCopyAreas" class="btn btn-soft w-full">複製熱區JSON</button>
+                    <button id="btnDownloadAreas" class="btn btn-indigo w-full">下載熱區JSON</button>
+                  </div>
+                </div>
+
+                <div class="mt-2 text-[11px] text-slate-500">
+                  JSON 內座標為「百分比」（0~1），可供你之後做引流圖點擊區（例如 LINE imagemap / 網頁熱區）。
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
+                <div class="text-[11px] font-extrabold text-slate-600">目前熱區（預覽）</div>
+                <textarea id="taAreas" class="in mono mt-1" rows="6" placeholder="載入圖後在上面拖曳畫框，這裡會出現JSON"></textarea>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </div>
 
-    <div id="toastWrap"></div>
+    <section class="card rounded-3xl p-4 md:p-5 mt-3">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+        <div>
+          <h2 class="text-lg font-black text-slate-950">③ 年齡層參考值</h2>
+          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（上限值會用這裡的數字）。</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
+          <button id="btnCopyTargetsJson" class="btn btn-soft">複製 JSON</button>
+        </div>
+      </div>
+
+      <div class="mt-3 overflow-auto thinbar">
+        <table class="w-full min-w-[980px] border-collapse">
+          <thead>
+            <tr class="text-xs text-slate-600">
+              <th class="text-left p-2 border-b border-slate-200">項目</th>
+              <th class="text-left p-2 border-b border-slate-200">單位</th>
+              <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
+              <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
+              <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
+              <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
+            </tr>
+          </thead>
+          <tbody id="targetsTbody" class="text-sm"></tbody>
+        </table>
+      </div>
+
+      <div class="mt-2 text-[11px] text-slate-500 leading-5">
+        ※ 數值會組合成：<span class="mono font-bold">vitB(B1/B2/B6)</span>、<span class="mono font-bold">ca_mg(鈣/鎂)</span>、<span class="mono font-bold">trace(碘/硒)</span>。
+      </div>
+    </section>
+
+    <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
   </div>
 
 <script>
 (() => {
-  // ====== KV keys ======
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ====== Defaults ======
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
+
+  function pad2(n){ return String(n).padStart(2,"0"); }
+  function autoKeyForUpload(file, kind="report_bg"){
+    const d = new Date();
+    const stamp = `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+    const ext = (file?.name || "").split(".").pop()?.toLowerCase();
+    const safeExt = (ext && ext.length <= 6) ? ext : "png";
+    return `assets/life11/${kind}_${stamp}.${safeExt}`;
+  }
 
   const AGE_CHILD = "0~10 歲 (兒童)";
   const AGE_TEEN  = "11~18 歲 (青少年)";
@@ -613,18 +504,12 @@
     { id:"q9",  type:"yn",  text:"我常節食以減輕體重" },
     { id:"q10", type:"sex", text:"我的性別" },
     { id:"q11", type:"age", text:"我的年齡範圍" },
+    { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
   ];
 
   const LABEL = {
-    vitA:"維生素A",
-    vitB:"維生素B群（B1/B2/B6）",
-    vitC:"維生素C",
-    vitD:"維生素D",
-    vitE:"維生素E",
-    ca_mg:"鈣/鎂",
-    iron:"鐵",
-    fiber:"膳食纖維",
-    trace:"微量元素（碘/硒）",
+    vitA:"維生素A", vitB:"維生素B群（B1/B2/B6）", vitC:"維生素C", vitD:"維生素D", vitE:"維生素E",
+    ca_mg:"鈣/鎂", iron:"鐵", fiber:"膳食纖維", trace:"微量元素（碘/硒）",
   };
   const PCT_ORDER = ["vitA","vitB","vitC","vitD","vitE","ca_mg","iron","fiber","trace"];
 
@@ -658,23 +543,22 @@
 
   const $ = (id)=>document.getElementById(id);
 
+  function toast(msg, type="ok"){
+    const wrap = $("toastWrap");
+    const div = document.createElement("div");
+    div.className = `card rounded-2xl px-4 py-3 border ${
+      type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
+    }`;
+    div.innerHTML = `<div class="text-sm text-slate-950 font-black">${escapeHtml(msg)}</div>`;
+    wrap.appendChild(div);
+    setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
+    setTimeout(()=>{ div.remove(); }, 2600);
+  }
   function escapeHtml(s){
     return (s ?? "").toString()
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
       .replaceAll(">","&gt;").replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
-  }
-  function toast(msg, type="ok"){
-    const wrap = $("toastWrap");
-    const div = document.createElement("div");
-    div.className = `card px-4 py-3 border ${
-      type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
-    }`;
-    div.style.borderRadius = "18px";
-    div.innerHTML = `<div class="text-sm text-slate-950 font-black">${escapeHtml(msg)}</div>`;
-    wrap.appendChild(div);
-    setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
-    setTimeout(()=>{ div.remove(); }, 2600);
   }
   function showErr(e){
     $("errBanner").classList.remove("hidden");
@@ -685,24 +569,19 @@
     $("errText").textContent = "";
   }
 
-  // ====== Tabs ======
-  function setTab(tabId){
-    document.querySelectorAll(".tab").forEach(b=>{
-      b.classList.toggle("active", b.getAttribute("data-tab")===tabId);
-    });
-    ["tab-preview","tab-cta","tab-targets"].forEach(id=>{
-      const el = $(id);
-      if(el) el.classList.toggle("hidden", id!==tabId);
-    });
+  function initPreviewLine(){
+    $("previewName").textContent = DEFAULT_LINE_NAME;
+    $("previewId").textContent = DEFAULT_LINE_ID;
+    const u = ($("inPreviewAvatarUrl")?.value || DEFAULT_LINE_AVATAR_URL).trim();
+    $("previewAvatar").src = u || DEFAULT_LINE_AVATAR_URL;
   }
-  document.querySelectorAll(".tab").forEach(b=>{
-    b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
-  });
 
-  // ====== API ======
-  function apiBase(){ return ($("inApiBase").value || "").trim().replace(/\/$/,""); }
-  function adminKey(){ return ($("inAdminKey").value || "").trim(); }
-
+  function apiBase(){
+    return ($("inApiBase").value || "").trim().replace(/\/$/,"");
+  }
+  function adminKey(){
+    return ($("inAdminKey").value || "").trim();
+  }
   async function apiJson(path, bodyObj){
     const base = apiBase();
     if(!base) throw new Error("API Base 不可空白");
@@ -720,6 +599,20 @@
     if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
     return data;
   }
+  async function apiForm(path, formData){
+    const base = apiBase();
+    if(!base) throw new Error("API Base 不可空白");
+    const headers = {};
+    const k = adminKey();
+    if(k) headers["X-Admin-Key"] = k;
+
+    const res = await fetch(base + path, { method:"POST", headers, body: formData });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok) throw new Error((data && (data.error||data.detail)) || (res.status + " " + res.statusText));
+    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
+    return data;
+  }
+
   async function kvGet(key){
     const r = await apiJson("/loadAny", { namespace:"DB", keyword:key });
     return r?.payload ?? r;
@@ -729,118 +622,26 @@
   }
 
   let CONNECTED = false;
-  function setConn(ok){
+  function setPill(ok){
+    const el = document.getElementById("pillConn");
+    if(!el) return;
+    el.textContent = ok ? "已連線" : "未連線";
+    el.className = "pill " + (ok ? "pill-green" : "pill-rose");
+  }
+  function setStatus(ok){
     CONNECTED = !!ok;
+    setPill(CONNECTED);
     $("txtLast").textContent = new Date().toLocaleString();
-    const p1 = $("pillConn");
-    const p2 = $("pillConn2");
-    const cls = ok ? "pill pill-green" : "pill pill-rose";
-    if(p1){ p1.className = cls; p1.textContent = ok ? "已連線" : "未連線"; }
-    if(p2){ p2.className = cls; p2.textContent = ok ? "已連線" : "未連線"; }
   }
   async function connect(){
     clearErr();
     await apiJson("/listAll", {});
-    setConn(true);
+    setStatus(true);
     toast("連線成功 ✅");
   }
 
-  // ====== Survey payload ======
+  // Targets table
   let targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
-
-  function getAgeOpts(){ return [AGE_CHILD, AGE_TEEN, AGE_ADULT]; }
-  function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
-
-  function getTargetsObject(){
-    const byId = {};
-    targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
-    const pick = (rid, ageKey, sexKey) => {
-      const r = byId[rid]; if(!r) return null;
-      if(ageKey==="child") return r.child;
-      if(ageKey==="teen") return r.teen;
-      return (sexKey==="female") ? r.adultF : r.adultM;
-    };
-    const pack = (ageKey, sexKey) => {
-      const vitB = `B1:${pick("b1",ageKey,sexKey)}mg, B2:${pick("b2",ageKey,sexKey)}mg, B6:${pick("b6",ageKey,sexKey)}mg`;
-      const ca_mg = `鈣:${pick("ca",ageKey,sexKey)}mg, 鎂:${pick("mg",ageKey,sexKey)}mg`;
-      const trace = `碘:${pick("iodine",ageKey,sexKey)}µg, 硒:${pick("selen",ageKey,sexKey)}µg`;
-      return {
-        vitA: `${pick("vitA",ageKey,sexKey)}µg`,
-        vitB,
-        vitC: `${pick("vitC",ageKey,sexKey)}mg`,
-        vitD: `${pick("vitD",ageKey,sexKey)}µg`,
-        vitE: `${pick("vitE",ageKey,sexKey)}mg`,
-        ca_mg,
-        iron: `${pick("iron",ageKey,sexKey)}mg`,
-        fiber: `${pick("fiber",ageKey,sexKey)}g`,
-        trace,
-      };
-    };
-    return {
-      rows: structuredClone(targetsRows),
-      combined: {
-        child: pack("child","female"),
-        teen: pack("teen","female"),
-        adultFemale: pack("adult","female"),
-        adultMale: pack("adult","male"),
-      }
-    };
-  }
-
-  function buildSurveyPayload(){
-    const kw = ($("inKeyword").value || "").trim();
-    if(!kw) throw new Error("請填『啟動關鍵字』");
-
-    const ageOpts = getAgeOpts();
-    const nodes = {};
-    for(let i=0;i<QUESTIONS.length;i++){
-      const q = QUESTIONS[i];
-      const nextId = (QUESTIONS[i+1]) ? QUESTIONS[i+1].id : "";
-      if(q.type === "yn"){
-        nodes[q.id] = { q: q.text, type:"yn", options:[ {t:"是",value:"是",next:nextId}, {t:"不是",value:"不是",next:nextId} ] };
-      } else if(q.type === "sex"){
-        nodes[q.id] = { q: q.text, type:"sex", options:[ {t:"男",value:"男",next:nextId}, {t:"女",value:"女",next:nextId} ] };
-      } else if(q.type === "age"){
-        nodes[q.id] = { q: q.text, type:"age", options:[
-          {t:ageOpts[0],value:ageOpts[0],next:nextId},
-          {t:ageOpts[1],value:ageOpts[1],next:nextId},
-          {t:ageOpts[2],value:ageOpts[2],next:nextId}
-        ] };
-      }
-    }
-
-    return {
-      version: "life11-vUI-redesign-imagemap-editor",
-      name: "life11",
-      title: "生活型態營養問卷（11題）",
-      keyword: kw,
-      start: "q1",
-      rules: buildRules(),
-      targetsExcel: getTargetsObject(),
-      nodes,
-      order: QUESTIONS.map(x=>x.id),
-      nutrients: LABEL,
-      ui: { ageOptions: { child: ageOpts[0], teen: ageOpts[1], adult: ageOpts[2] } }
-    };
-  }
-
-  async function writeKV(){
-    if(!CONNECTED) throw new Error("未連線，不能寫入（先按『連線』）");
-    const payload = buildSurveyPayload();
-    await kvPut(Q_KEY, payload);
-
-    const kw = payload.keyword.trim();
-    let map = {};
-    try{
-      const raw = await kvGet(KW_MAP_KEY);
-      if(raw && typeof raw === "object") map = raw;
-    }catch{ map = {}; }
-    map[kw] = "life11";
-    await kvPut(KW_MAP_KEY, map);
-    toast("已寫入 KV ✅（問卷 + KW_MAP + 規則 + 攝取量）");
-  }
-
-  // ====== Targets table ======
   function numOrText(v){
     if(v === "" || v === null || v === undefined) return "";
     const n = Number(v);
@@ -878,16 +679,110 @@
     toast("已恢復預設");
   }
 
-  // ====== Simulation UI ======
+  function getTargetsObject(){
+    const byId = {};
+    targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
+
+    const pack = (ageKey, sexKey) => {
+      const pick = (rid) => {
+        const r = byId[rid];
+        if(!r) return null;
+        if(ageKey==="child") return r.child;
+        if(ageKey==="teen") return r.teen;
+        return (sexKey==="female") ? r.adultF : r.adultM;
+      };
+      const vitB = `B1:${pick("b1")}mg, B2:${pick("b2")}mg, B6:${pick("b6")}mg`;
+      const ca_mg = `鈣:${pick("ca")}mg, 鎂:${pick("mg")}mg`;
+      const trace = `碘:${pick("iodine")}µg, 硒:${pick("selen")}µg`;
+      return {
+        vitA: `${pick("vitA")}µg`,
+        vitB,
+        vitC: `${pick("vitC")}mg`,
+        vitD: `${pick("vitD")}µg`,
+        vitE: `${pick("vitE")}mg`,
+        ca_mg,
+        iron: `${pick("iron")}mg`,
+        fiber: `${pick("fiber")}g`,
+        trace,
+      };
+    };
+
+    const combined = {
+      child: pack("child"),
+      teen: pack("teen"),
+      adultFemale: pack("adult","female"),
+      adultMale: pack("adult","male"),
+    };
+    return { rows: structuredClone(targetsRows), combined };
+  }
+
+  function getAgeOpts(){ return [AGE_CHILD, AGE_TEEN, AGE_ADULT]; }
+  function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
+
+  function buildSurveyPayload(){
+    const kw = ($("inKeyword").value || "").trim();
+    if(!kw) throw new Error("請填『啟動關鍵字』");
+
+    const ageOpts = getAgeOpts();
+    const nodes = {};
+    for(let i=0;i<QUESTIONS.length;i++){
+      const q = QUESTIONS[i];
+      if(q.type === "done") continue;
+      const nextId = (QUESTIONS[i+1] && QUESTIONS[i+1].id !== "done") ? QUESTIONS[i+1].id : "";
+      if(q.type === "yn"){
+        nodes[q.id] = { q: q.text, type:"yn", options:[ {t:"是",value:"是",next:nextId}, {t:"不是",value:"不是",next:nextId} ] };
+      } else if(q.type === "sex"){
+        nodes[q.id] = { q: q.text, type:"sex", options:[ {t:"男",value:"男",next:nextId}, {t:"女",value:"女",next:nextId} ] };
+      } else if(q.type === "age"){
+        nodes[q.id] = { q: q.text, type:"age", options:[
+          {t:ageOpts[0],value:ageOpts[0],next:nextId},
+          {t:ageOpts[1],value:ageOpts[1],next:nextId},
+          {t:ageOpts[2],value:ageOpts[2],next:nextId}
+        ] };
+      }
+    }
+
+    return {
+      version: "life11-v14-cta-upload-hotspot",
+      name: "life11",
+      title: "生活型態營養問卷（11題）",
+      keyword: kw,
+      start: "q1",
+      rules: buildRules(),
+      targetsExcel: getTargetsObject(),
+      nodes,
+      order: QUESTIONS.filter(x=>x.type!=="done").map(x=>x.id),
+      nutrients: LABEL,
+      ui: { ageOptions: { child: ageOpts[0], teen: ageOpts[1], adult: ageOpts[2] } }
+    };
+  }
+
+  async function writeKV(){
+    if(!CONNECTED) throw new Error("未連線，不能寫入（先按『連線檢查』）");
+    const payload = buildSurveyPayload();
+    await kvPut(Q_KEY, payload);
+
+    const kw = payload.keyword.trim();
+    let map = {};
+    try{
+      const raw = await kvGet(KW_MAP_KEY);
+      if(raw && typeof raw === "object") map = raw;
+    }catch{ map = {}; }
+    map[kw] = "life11";
+    await kvPut(KW_MAP_KEY, map);
+    toast("已寫入 KV ✅（問卷 + KW_MAP + 規則 + 攝取量）");
+  }
+
+  // Simulation
   const simState = {};
   function renderSim(){
     const [ageChild, ageTeen, ageAdult] = getAgeOpts();
     const wrap = $("simWrap");
     wrap.innerHTML = "";
 
-    QUESTIONS.forEach((q, i)=>{
+    QUESTIONS.filter(x=>x.type!=="done").forEach((q, i)=>{
       const box = document.createElement("div");
-      box.className = "card2 p-3";
+      box.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
 
       let optsHtml = "";
       if(q.type==="yn"){
@@ -927,29 +822,21 @@
         btn.addEventListener("click", ()=>{
           simState[q.id] = btn.getAttribute("data-v");
           renderSim();
-          updatePreviewMeta();
         });
       });
       wrap.appendChild(box);
     });
-    updatePreviewMeta();
   }
 
-  function updatePreviewMeta(){
-    const sex = simState.q10 ?? "男";
-    const age = simState.q11 ?? AGE_ADULT;
-    $("previewMeta").textContent = `性別：${sex}　年齡：${age}`;
-  }
-
-  // ====== Calculate remain ======
   function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
   function getRemainFromSim(){
+    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
     const rules = buildRules();
     const ans = {};
-    QUESTIONS.forEach(q=>{
+    QUESTIONS.filter(x=>x.type!=="done").forEach(q=>{
       if(q.type==="yn")  ans[q.id] = simState[q.id] ?? "不是";
       if(q.type==="sex") ans[q.id] = simState[q.id] ?? "男";
-      if(q.type==="age") ans[q.id] = simState[q.id] ?? AGE_ADULT;
+      if(q.type==="age") ans[q.id] = simState[q.id] ?? ageAdult;
     });
 
     const deduct = {};
@@ -969,49 +856,71 @@
     return { ans, remain };
   }
 
-  // ====== Caps (numbers + unit only) ======
-  function capPick(row, ans){
-    const age = ans?.q11 || AGE_ADULT;
-    const sex = ans?.q10 || "男";
-    const ageKey = age.includes("0~10") ? "child" : age.includes("11~18") ? "teen" : "adult";
-    if(ageKey==="child") return row.child;
-    if(ageKey==="teen") return row.teen;
-    return (sex==="女") ? row.adultF : row.adultM;
+  // Upload (bg)
+  async function uploadBgToR2(){
+    if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
+    const f = $("upFile").files?.[0];
+    if(!f) throw new Error("請先選擇底板檔案");
+
+    const key = autoKeyForUpload(f, "report_bg");
+    $("upKey").value = key;
+    $("txtAutoKey").textContent = key;
+
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("key", key);
+    fd.append("contentType", f.type || "application/octet-stream");
+
+    const r = await apiForm("/upload", fd);
+    const url = r?.url || r?.publicUrl || r?.result?.url || r?.result?.publicUrl || r?.payload?.url || "";
+    if(!url) throw new Error("上傳成功但沒拿到 URL（請確認 Worker /upload 回傳 {url} 或 {publicUrl}）");
+
+    $("upResultUrl").value = url;
+    toast("底板上傳成功 ✅");
+    return url;
   }
-  function capNumUnitForKey(key, ans){
-    const byId = {};
-    targetsRows.forEach(r=>byId[r.id]=r);
-    const fmt = (v, unit) => (v === "" || v === null || v === undefined) ? "-" : `${v}${unit||""}`;
-
-    if(key==="vitA"){ const r=byId.vitA; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitC"){ const r=byId.vitC; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitD"){ const r=byId.vitD; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitE"){ const r=byId.vitE; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="iron"){ const r=byId.iron; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="fiber"){ const r=byId.fiber; return r?fmt(capPick(r,ans), r.unit):"-"; }
-
-    if(key==="vitB"){
-      const b1=byId.b1, b2=byId.b2, b6=byId.b6;
-      if(!b1 || !b2 || !b6) return "-";
-      const u = b1.unit || "mg";
-      return `${capPick(b1,ans)}/${capPick(b2,ans)}/${capPick(b6,ans)}${u}`;
-    }
-    if(key==="ca_mg"){
-      const ca=byId.ca, mg=byId.mg;
-      if(!ca || !mg) return "-";
-      const u = ca.unit || "mg";
-      return `${capPick(ca,ans)}/${capPick(mg,ans)}${u}`;
-    }
-    if(key==="trace"){
-      const io=byId.iodine, se=byId.selen;
-      if(!io || !se) return "-";
-      const u = io.unit || "µg";
-      return `${capPick(io,ans)}/${capPick(se,ans)}${u}`;
-    }
-    return "-";
+  function onPickBgFile(){
+    const f = $("upFile").files?.[0];
+    if(!f) return;
+    const key = autoKeyForUpload(f, "report_bg");
+    $("upKey").value = key;
+    $("txtAutoKey").textContent = key;
   }
 
-  // ====== Report render ======
+  // Upload (CTA)
+  async function uploadCtaToR2(){
+    if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
+    const f = $("ctaFile").files?.[0];
+    if(!f) throw new Error("請先選擇引流圖檔案");
+
+    const key = autoKeyForUpload(f, "cta");
+    $("ctaKey").value = key;
+    $("txtCtaAutoKey").textContent = key;
+
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("key", key);
+    fd.append("contentType", f.type || "application/octet-stream");
+
+    const r = await apiForm("/upload", fd);
+    const url = r?.url || r?.publicUrl || r?.result?.url || r?.result?.publicUrl || r?.payload?.url || "";
+    if(!url) throw new Error("上傳成功但沒拿到 URL（請確認 Worker /upload 回傳 {url} 或 {publicUrl}）");
+
+    $("ctaUrl").value = url;
+    $("ctaEditorUrl").value = url;
+    toast("引流圖上傳成功 ✅");
+    return url;
+  }
+  function onPickCtaFile(){
+    const f = $("ctaFile").files?.[0];
+    if(!f) return;
+    const key = autoKeyForUpload(f, "cta");
+    $("ctaKey").value = key;
+    $("txtCtaAutoKey").textContent = key;
+  }
+
+  // Canvas image helpers
+  let lastPngDataUrl = "";
   function pctColor(p){
     if(p < 35) return "#ff4d4f";
     if(p < 70) return "#fbbf24";
@@ -1056,13 +965,55 @@
     ctx.drawImage(img, sx, sy, sw, sh);
   }
 
-  let lastPngDataUrl = "";
+  // cap (數字+單位)
+  function capPick(row, ans){
+    const age = ans?.q11 || AGE_ADULT;
+    const sex = ans?.q10 || "男";
+    const ageKey = age.includes("0~10") ? "child" : age.includes("11~18") ? "teen" : "adult";
+    if(ageKey==="child") return row.child;
+    if(ageKey==="teen") return row.teen;
+    return (sex==="女") ? row.adultF : row.adultM;
+  }
+  function capNumUnitForKey(key, ans){
+    const byId = {};
+    targetsRows.forEach(r=>byId[r.id]=r);
+
+    const fmt = (v, unit) => {
+      if(v === "" || v === null || v === undefined) return "-";
+      return `${v}${unit||""}`;
+    };
+
+    if(key==="vitA"){ const r=byId.vitA; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="vitC"){ const r=byId.vitC; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="vitD"){ const r=byId.vitD; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="vitE"){ const r=byId.vitE; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="iron"){ const r=byId.iron; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="fiber"){ const r=byId.fiber; return r?fmt(capPick(r,ans), r.unit):"-"; }
+
+    if(key==="vitB"){
+      const b1=byId.b1, b2=byId.b2, b6=byId.b6;
+      if(!b1 || !b2 || !b6) return "-";
+      const u = b1.unit || "mg";
+      return `${capPick(b1,ans)}/${capPick(b2,ans)}/${capPick(b6,ans)}${u}`;
+    }
+    if(key==="ca_mg"){
+      const ca=byId.ca, mg=byId.mg;
+      if(!ca || !mg) return "-";
+      const u = ca.unit || "mg";
+      return `${capPick(ca,ans)}/${capPick(mg,ans)}${u}`;
+    }
+    if(key==="trace"){
+      const io=byId.iodine, se=byId.selen;
+      if(!io || !se) return "-";
+      const u = io.unit || "µg";
+      return `${capPick(io,ans)}/${capPick(se,ans)}${u}`;
+    }
+    return "-";
+  }
 
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
-    if(!bgUrl) throw new Error("請先填『底板圖片 URL』");
-
-    const ctaSrc = ($("inCtaSource").value||"").trim(); // can be url or dataURL
+    if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
 
     const W = 900, H = 1600;
     const cv = $("cvReport");
@@ -1078,7 +1029,7 @@
     const lineId = DEFAULT_LINE_ID;
     const avatarUrl = (($("inPreviewAvatarUrl")?.value || DEFAULT_LINE_AVATAR_URL) + "").trim() || DEFAULT_LINE_AVATAR_URL;
 
-    // header (personal)
+    // 個資
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
@@ -1118,7 +1069,7 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
 
-    // nutrients (single row each)
+    // 營養素：單列（百分比置中於長條中）
     const listX = 56;
     const listY = 270;
     const listW = W - listX*2;
@@ -1150,16 +1101,16 @@
       roundRect(ctx, listX, y, listW, rowH, 20);
       ctx.stroke();
 
-      // name full
+      // 名稱
       ctx.textAlign = "left";
       ctx.fillStyle = "rgba(255,255,255,.95)";
       ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
       ctx.fillText(LABEL[k] || k, listX+16, y+26);
 
-      // cap big
+      // ✅ 上限值：字放大（右上）
       ctx.textAlign = "right";
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
       ctx.fillText(cap, listX+listW-16, y+28);
 
       // bar
@@ -1175,22 +1126,24 @@
       roundRect(ctx, barX, barY, fillW, barH, 9);
       ctx.fill();
 
-      // pct in center of bar
+      // ✅ 百分比：放在長條圖中間
       ctx.textAlign = "center";
       ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
       ctx.fillStyle = "rgba(255,255,255,.96)";
+      // 先描邊讓字更清楚
       ctx.lineWidth = 4;
       ctx.strokeStyle = "rgba(0,0,0,.35)";
       ctx.strokeText(`${pct}%`, barX + barW/2, barY + 14);
       ctx.fillText(`${pct}%`, barX + barW/2, barY + 14);
     }
 
-    // CTA at bottom
+    // ✅ 引流圖區：不幫你畫（你上傳什麼，就放什麼）
     const ctaX = 56;
     const ctaY = 950;
     const ctaW = W - ctaX*2;
     const ctaH = 600;
 
+    // 區域底（保持一致視覺）
     ctx.save();
     ctx.globalAlpha = 0.14;
     ctx.fillStyle = "#0b122b";
@@ -1198,17 +1151,30 @@
     ctx.fill();
     ctx.restore();
 
-    if(ctaSrc){
+    // 如果有引流圖 URL，就把引流圖「cover」貼上去；沒有就維持留白框
+    const ctaUrl = ($("ctaUrl").value || "").trim();
+    if(ctaUrl){
       try{
-        const ctaImg = await loadImg(ctaSrc);
+        const ctaImg = await loadImg(ctaUrl);
         ctx.save();
         roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 40);
         ctx.clip();
         drawCover(ctx, ctaImg, ctaX, ctaY, ctaW, ctaH);
         ctx.restore();
-      }catch{}
+
+        // 淡淡亮面
+        ctx.save();
+        ctx.globalAlpha = 0.16;
+        ctx.fillStyle = "#ffffff";
+        roundRect(ctx, ctaX+22, ctaY+22, ctaW-44, 92, 30);
+        ctx.fill();
+        ctx.restore();
+      }catch{
+        // 失敗就維持留白
+      }
     }
 
+    // 留白提示框（不影響你圖）
     ctx.strokeStyle = "rgba(255,255,255,.45)";
     ctx.setLineDash([10,8]);
     ctx.lineWidth = 3;
@@ -1219,7 +1185,7 @@
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(255,255,255,.92)";
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-    ctx.fillText("引流圖區（可從引流圖分頁套用）", ctaX + ctaW/2, ctaY + 60);
+    ctx.fillText("引流圖區（你上傳什麼就顯示什麼）", ctaX + ctaW/2, ctaY + 60);
 
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
@@ -1233,618 +1199,126 @@
     a.click();
   }
 
-  // ====== Preview header ======
-  function initPreviewLine(){
-    $("previewName").textContent = DEFAULT_LINE_NAME;
-    $("previewId").textContent = DEFAULT_LINE_ID;
-    $("previewAvatar").src = ($("inPreviewAvatarUrl").value || DEFAULT_LINE_AVATAR_URL).trim() || DEFAULT_LINE_AVATAR_URL;
-    updatePreviewMeta();
+  // ===== 引流圖熱區編輯器（畫框 → JSON）=====
+  let ctaAreas = []; // {id,x,y,w,h,link} x/y/w/h 0~1
+  let ctaImgLoaded = false;
+
+  function syncAreasTextarea(){
+    $("taAreas").value = JSON.stringify({ image: $("ctaEditorUrl").value || "", areas: ctaAreas }, null, 2);
   }
 
-  // =========================================================
-  // ✅ 引流圖（imagemap）編輯器：整套搬進來
-  // =========================================================
-  const imap = {
-    images: [], // {url:'', areas:[{x,y,w,h,type,text}]} 皆 0~1
-    current: -1,
-    ZOOM: 1,
-    isDrawing: false,
-    sx: 0, sy: 0,
-    previewRect: null,
-    activePointerId: null
-  };
-
-  const elStage = $("imapStage");
-  const elLayer = $("imapDrawLayer");
-  const elImg = $("imapPreviewImage");
-  const elList = $("imapImageList");
-  const elAreaList = $("imapAreaList");
-  const elEmpty = $("imapEmptyState");
-
-  function normalizeWorkerUrl(raw){
-    if(!raw) return '';
-    let s = raw.trim();
-    if(!/^https?:\/\//i.test(s)) s = 'https://' + s;
-    return s.replace(/\/+$/,'');
-  }
-  async function postJSON(url, data){
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(data)
-    });
-    if(!res.ok){
-      const txt = await res.text().catch(()=> '');
-      throw new Error(`HTTP ${res.status} ${res.statusText}\n${txt}`);
-    }
-    const ct = res.headers.get('content-type') || '';
-    if(ct.includes('application/json')) return await res.json();
-    return await res.text();
-  }
-  async function uploadToR2(workerBaseUrl, fileBlob, filename){
-    const form = new FormData();
-    form.append('file', fileBlob, filename || 'image.webp');
-    const res = await fetch(workerBaseUrl + '/upload', { method:'POST', body: form });
-    if(!res.ok){
-      const t = await res.text().catch(()=> '');
-      throw new Error(`HTTP ${res.status}\n${t}`);
-    }
-    const j = await res.json();
-    if(!j.ok || !j.url) throw new Error('上傳回傳格式不對');
-    return j.url;
-  }
-
-  function imapSizeModeSync(){
-    const show = ($("imapSizeMode").value === 'custom');
-    $("imapCustomWWrap").classList.toggle('hidden', !show);
-    $("imapCustomHWrap").classList.toggle('hidden', !show);
-  }
-  $("imapSizeMode").addEventListener('change', imapSizeModeSync);
-
-  $("imapQuality").addEventListener('input', ()=> $("imapQVal").textContent = $("imapQuality").value);
-
-  function setZoom(v){
-    imap.ZOOM = Math.max(0.5, Math.min(3, Number(v) || 1));
-    elStage.style.transform = `scale(${imap.ZOOM})`;
-    $("imapZoomRange").value = String(imap.ZOOM);
-    $("imapZoomLabel").textContent = Math.round(imap.ZOOM * 100) + '%';
-    refreshLayerSize();
-  }
-  $("imapZoomRange").addEventListener('input', ()=> setZoom($("imapZoomRange").value));
-  $("imapZoom100").addEventListener('click', ()=> setZoom(1));
-  $("imapZoom75").addEventListener('click', ()=> setZoom(0.75));
-  $("imapZoom150").addEventListener('click', ()=> setZoom(1.5));
-
-  elStage.parentElement?.addEventListener('wheel', (e) => {
-    if(!(e.ctrlKey || e.altKey || e.shiftKey)) return;
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.08 : 0.08;
-    setZoom((imap.ZOOM + delta).toFixed(2));
-  }, { passive:false });
-
-  function getTargetMaxWH(){
-    const mode = $("imapSizeMode").value;
-    let maxW = 1280, maxH = 1280;
-
-    if(mode === 'line'){ maxW = 1280; maxH = 1280; }
-    if(mode === 'hd'){ maxW = 1600; maxH = 1600; }
-    if(mode === 'small'){ maxW = 960; maxH = 960; }
-    if(mode === 'custom'){
-      maxW = parseInt($("imapCustomW").value || '1280', 10);
-      maxH = parseInt($("imapCustomH").value || '1280', 10);
-    }
-
-    const dpr = window.devicePixelRatio || 1;
-    const vw = Math.max(320, Math.floor((elImg.clientWidth || 1280) * dpr));
-    const vh = Math.max(320, Math.floor((elImg.clientHeight || 1280) * dpr));
-    maxW = Math.min(maxW, vw);
-    maxH = Math.min(maxH, vh);
-
-    return { maxW, maxH };
-  }
-
-  async function compressImage(file, {maxW, maxH, mime, quality, cropSquare}){
-    const img = await createImageBitmap(file);
-
-    let sx = 0, sy = 0, sw = img.width, sh = img.height;
-    if(cropSquare){
-      const side = Math.min(img.width, img.height);
-      sx = Math.floor((img.width - side) / 2);
-      sy = Math.floor((img.height - side) / 2);
-      sw = side; sh = side;
-    }
-
-    const scale = Math.min(1, maxW / sw, maxH / sh);
-    const w = Math.max(1, Math.round(sw * scale));
-    const h = Math.max(1, Math.round(sh * scale));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d', { alpha: true });
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
-
-    const outBlob = await new Promise((resolve) => {
-      if(mime === 'image/png') canvas.toBlob(resolve, mime);
-      else canvas.toBlob(resolve, mime, quality);
-    });
-    if(!outBlob) throw new Error('壓縮失敗（toBlob 空）');
-
-    const ext = (mime === 'image/webp') ? 'webp' : (mime === 'image/jpeg') ? 'jpg' : 'png';
-    const safeName = (file.name || 'image').replace(/\.[^/.]+$/, '');
-    return { blob: outBlob, filename: `${safeName}.${ext}`, w, h };
-  }
-
-  function renderImageList(){
-    elList.innerHTML = '';
-    imap.images.forEach((img, idx) => {
-      const div = document.createElement('div');
-      div.className = `p-2 border rounded-2xl ${idx === imap.current ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'} cursor-pointer`;
-      div.innerHTML = `
-        <div class="flex justify-between mb-2">
-          <span class="font-black text-xs">圖片 ${idx+1}</span>
-          <button class="text-rose-600 text-xs font-black" data-del="${idx}">✕</button>
-        </div>
-        ${img.url ? `<img src="${img.url}" class="w-full h-24 object-cover rounded-xl mb-2 border">`
-                 : `<div class="w-full h-24 bg-gray-100 flex items-center justify-center text-xs text-gray-400 rounded-xl mb-2 border">無圖片</div>`}
-        <button class="w-full bg-indigo-600 text-white text-xs py-2 rounded-xl hover:bg-indigo-700 font-black" data-up="${idx}">
-          上傳到 R2（壓縮）
-        </button>
-        <div class="mt-1 text-[10px] text-gray-500 text-right">熱區: ${img.areas.length}</div>
-      `;
-      div.addEventListener('click', ()=> selectImage(idx));
-      div.querySelector('[data-del]')?.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        removeImage(idx);
+  function renderAreasLayer(){
+    const layer = $("ctaAreasLayer");
+    layer.innerHTML = "";
+    ctaAreas.forEach((a, idx)=>{
+      const div = document.createElement("div");
+      div.className = "area-box";
+      div.style.left = (a.x*100) + "%";
+      div.style.top  = (a.y*100) + "%";
+      div.style.width  = (a.w*100) + "%";
+      div.style.height = (a.h*100) + "%";
+      div.title = (a.link || "");
+      div.textContent = `#${idx+1}`;
+      div.addEventListener("click", ()=>{
+        // 點一下就刪除（最直覺）
+        ctaAreas = ctaAreas.filter(x=>x.id !== a.id);
+        renderAreasLayer();
+        syncAreasTextarea();
+        toast("已刪除熱區");
       });
-      div.querySelector('[data-up]')?.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        triggerUpload(idx, e.currentTarget);
-      });
-      elList.appendChild(div);
+      layer.appendChild(div);
     });
+    syncAreasTextarea();
   }
 
-  function addImageBlock(){
-    imap.images.push({ url:'', areas:[] });
-    renderImageList();
-    selectImage(imap.images.length - 1);
+  function downloadJson(filename, obj){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
-  function removeImage(idx){
-    imap.images.splice(idx, 1);
-    renderImageList();
-    selectImage(imap.images.length ? Math.min(idx, imap.images.length-1) : -1);
-  }
-
-  function selectImage(idx){
-    imap.current = idx;
-
-    if(idx === -1 || !imap.images[idx]){
-      elImg.src = '';
-      elEmpty.classList.remove('hidden');
-      elAreaList.innerHTML = `<div class="text-xs text-slate-400">請從左側新增圖片。</div>`;
-      return;
-    }
-
-    elEmpty.classList.add('hidden');
-
-    elImg.src = imap.images[idx].url || '';
-    elImg.onload = () => {
-      refreshLayerSize();
-      renderAreas();
-      renderAreaList();
-    };
-
-    renderImageList();
-    renderAreas();
-    renderAreaList();
-  }
-
-  function clearAreas(){
-    if(imap.current < 0) return;
-    if(confirm('確定清空本圖全部框？')){
-      imap.images[imap.current].areas = [];
-      renderAreas(); renderAreaList(); renderImageList();
-    }
-  }
-
-  function refreshLayerSize(){
-    const w = elImg.naturalWidth || elImg.clientWidth || 0;
-    const h = elImg.naturalHeight || elImg.clientHeight || 0;
-    if(w && h){
-      elImg.style.width = w + 'px';
-      elImg.style.height = h + 'px';
-      elLayer.style.width = w + 'px';
-      elLayer.style.height = h + 'px';
-    }
-  }
-
-  async function triggerUpload(idx, btnEl){
-    const raw = $("imapWorkerUrl").value;
-    const base = normalizeWorkerUrl(raw);
-    if(!base) return alert('請先填 WorkerUrl（右上）');
-    localStorage.setItem('line_worker_url', base);
-
-    const input = $("imapFileInput");
-    input.value = '';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if(!file) return;
-
-      const oldText = btnEl.innerText;
-      btnEl.innerText = "⏳ 壓縮+上傳中...";
-      btnEl.disabled = true;
-
-      try{
-        const mime = $("imapOutFormat").value;
-        const quality = parseFloat($("imapQuality").value);
-        const cropSquare = $("imapCropSquare").checked;
-        const { maxW, maxH } = getTargetMaxWH();
-
-        const { blob, filename } = await compressImage(file, { maxW, maxH, mime, quality, cropSquare });
-        const url = await uploadToR2(base, blob, filename);
-
-        imap.images[idx].url = url;
-        imap.images[idx].areas = [];
-        renderImageList();
-        selectImage(idx);
-        setZoom(1);
-        toast("上傳成功 ✅");
-      }catch(err){
-        alert('上傳失敗：\n' + err.message);
-      }
-
-      btnEl.innerText = oldText;
-      btnEl.disabled = false;
-    };
-    input.click();
-  }
-
-  function getLayerPointFromClient(clientX, clientY){
-    const rect = elLayer.getBoundingClientRect();
-    const x = (clientX - rect.left) / imap.ZOOM;
-    const y = (clientY - rect.top) / imap.ZOOM;
-    return { x, y };
-  }
-
-  function startDrawAt(clientX, clientY){
-    const p = getLayerPointFromClient(clientX, clientY);
-    imap.sx = p.x; imap.sy = p.y;
-
-    imap.previewRect = document.createElement('div');
-    imap.previewRect.className = 'draw-rect';
-    imap.previewRect.style.left = imap.sx + 'px';
-    imap.previewRect.style.top = imap.sy + 'px';
-    imap.previewRect.style.width = '0px';
-    imap.previewRect.style.height = '0px';
-    elLayer.appendChild(imap.previewRect);
-  }
-  function moveDrawTo(clientX, clientY){
-    if(!imap.isDrawing || !imap.previewRect) return;
-    const p = getLayerPointFromClient(clientX, clientY);
-    const cx = p.x, cy = p.y;
-
-    const x = Math.min(imap.sx, cx);
-    const y = Math.min(imap.sy, cy);
-    const w = Math.abs(cx - imap.sx);
-    const h = Math.abs(cy - imap.sy);
-
-    imap.previewRect.style.left = x + 'px';
-    imap.previewRect.style.top = y + 'px';
-    imap.previewRect.style.width = w + 'px';
-    imap.previewRect.style.height = h + 'px';
-  }
-  function endDrawAt(clientX, clientY){
-    if(!imap.isDrawing) return;
-    imap.isDrawing = false;
-
-    const p = getLayerPointFromClient(clientX, clientY);
-    const ex = p.x, ey = p.y;
-
-    const x = Math.min(imap.sx, ex);
-    const y = Math.min(imap.sy, ey);
-    const w = Math.abs(ex - imap.sx);
-    const h = Math.abs(ey - imap.sy);
-
-    if(imap.previewRect){ imap.previewRect.remove(); imap.previewRect = null; }
-    imap.activePointerId = null;
-
-    if(w < 14 || h < 14) return;
-
-    const baseW = elLayer.clientWidth;
-    const baseH = elLayer.clientHeight;
-
-    imap.images[imap.current].areas.push({
-      x: x / baseW, y: y / baseH,
-      w: w / baseW, h: h / baseH,
-      type: 'message', text: ''
+  async function loadCtaEditor(){
+    const url = ($("ctaEditorUrl").value || "").trim();
+    if(!url) throw new Error("請先填『編輯用引流圖 URL』");
+    $("ctaEditorImg").crossOrigin = "anonymous";
+    $("ctaEditorImg").src = url;
+    await new Promise((resolve,reject)=>{
+      $("ctaEditorImg").onload = ()=>resolve();
+      $("ctaEditorImg").onerror = ()=>reject(new Error("引流圖載入失敗（可能是 URL 或 CORS）"));
     });
-
-    renderAreas();
-    renderAreaList();
-    renderImageList();
+    ctaImgLoaded = true;
+    toast("已載入引流圖 ✅");
   }
 
-  elLayer.addEventListener('pointerdown', (e) => {
-    if(imap.current < 0) return;
-    if(!imap.images[imap.current].url) return alert('請先上傳圖片（R2）再畫框');
-    if(e.button !== 0) return;
+  // 畫框事件（在 wrap 上）
+  let drawing = false;
+  let sx=0, sy=0;
+  function relPos(e){
+    const wrap = $("ctaCanvasWrap");
+    const r = wrap.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    return { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)), w: r.width, h: r.height };
+  }
+  function setDrawRect(x,y,w,h){
+    const rect = $("ctaDrawRect");
+    rect.classList.remove("hidden");
+    rect.style.left = (x*100)+"%";
+    rect.style.top  = (y*100)+"%";
+    rect.style.width = (w*100)+"%";
+    rect.style.height= (h*100)+"%";
+  }
+  function hideDrawRect(){ $("ctaDrawRect").classList.add("hidden"); }
 
-    imap.isDrawing = true;
-    imap.activePointerId = e.pointerId;
-    elLayer.setPointerCapture(imap.activePointerId);
+  function onDown(e){
+    if(!ctaImgLoaded) return toast("請先載入引流圖", "warn");
+    // 避免點到紅框
+    if(e.target.classList.contains("area-box")) return;
+    drawing = true;
+    const p = relPos(e);
+    sx = p.x; sy = p.y;
+    setDrawRect(sx, sy, 0, 0);
+  }
+  function onMove(e){
+    if(!drawing) return;
+    const p = relPos(e);
+    const x1 = Math.min(sx, p.x);
+    const y1 = Math.min(sy, p.y);
+    const w  = Math.abs(p.x - sx);
+    const h  = Math.abs(p.y - sy);
+    setDrawRect(x1, y1, w, h);
+  }
+  function onUp(e){
+    if(!drawing) return;
+    drawing = false;
+    const p = relPos(e);
+    const x1 = Math.min(sx, p.x);
+    const y1 = Math.min(sy, p.y);
+    const w  = Math.abs(p.x - sx);
+    const h  = Math.abs(p.y - sy);
+    hideDrawRect();
 
-    startDrawAt(e.clientX, e.clientY);
-    e.preventDefault();
-  });
-  elLayer.addEventListener('pointermove', (e) => {
-    if(!imap.isDrawing) return;
-    if(imap.activePointerId !== null && e.pointerId !== imap.activePointerId) return;
-    moveDrawTo(e.clientX, e.clientY);
-    e.preventDefault();
-  });
-  elLayer.addEventListener('pointerup', (e) => {
-    if(imap.activePointerId !== null && e.pointerId !== imap.activePointerId) return;
-    endDrawAt(e.clientX, e.clientY);
-    e.preventDefault();
-  });
-  elLayer.addEventListener('pointercancel', () => {
-    if(imap.previewRect){ imap.previewRect.remove(); imap.previewRect = null; }
-    imap.isDrawing = false;
-    imap.activePointerId = null;
-  });
-  window.addEventListener('blur', () => {
-    if(imap.previewRect){ imap.previewRect.remove(); imap.previewRect = null; }
-    imap.isDrawing = false;
-    imap.activePointerId = null;
-  });
-
-  function renderAreas(){
-    elLayer.querySelectorAll('.area-box').forEach(el => el.remove());
-    if(imap.current < 0) return;
-
-    imap.images[imap.current].areas.forEach((a, i) => {
-      const d = document.createElement('div');
-      d.className = 'area-box';
-      d.style.left = (a.x*100)+'%';
-      d.style.top  = (a.y*100)+'%';
-      d.style.width  = (a.w*100)+'%';
-      d.style.height = (a.h*100)+'%';
-      d.innerText = i+1;
-
-      d.onclick = (e) => {
-        e.stopPropagation();
-        if(confirm(`刪除區域 ${i+1}?`)){
-          imap.images[imap.current].areas.splice(i, 1);
-          renderAreas(); renderAreaList(); renderImageList();
-        }
-      };
-
-      elLayer.appendChild(d);
+    if(w < 0.02 || h < 0.02){
+      return; // 太小就忽略
+    }
+    const link = ($("inAreaLink").value || "").trim();
+    ctaAreas.push({
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+      x: x1, y: y1, w, h,
+      link
     });
+    renderAreasLayer();
+    toast("已新增熱區 ✅（點紅框可刪除）");
   }
 
-  function renderAreaList(){
-    elAreaList.innerHTML = '';
-    if(imap.current < 0) {
-      elAreaList.innerHTML = `<div class="text-xs text-slate-400">請先新增圖片。</div>`;
-      return;
-    }
-
-    const areas = imap.images[imap.current].areas;
-    if(areas.length === 0){
-      elAreaList.innerHTML = `<div class="text-xs text-slate-400">目前沒有框，去圖片上拖曳畫框。</div>`;
-      return;
-    }
-
-    areas.forEach((a, i) => {
-      const row = document.createElement('div');
-      row.className = 'border rounded-2xl p-3 bg-white';
-      row.innerHTML = `
-        <div class="flex items-center justify-between mb-2">
-          <div class="font-black text-sm">框 ${i+1}</div>
-          <button class="text-xs text-rose-600 underline font-black" data-del>刪除</button>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 text-xs">
-          <label class="col-span-1 flex flex-col gap-1">
-            <span class="text-slate-500 font-black">動作</span>
-            <select class="border rounded-xl px-2 py-2 bg-white">
-              <option value="message" ${a.type==='message'?'selected':''}>發文字</option>
-              <option value="uri" ${a.type==='uri'?'selected':''}>開網頁</option>
-            </select>
-          </label>
-
-          <label class="col-span-2 flex flex-col gap-1">
-            <span class="text-slate-500 font-black">內容</span>
-            <input class="border rounded-xl px-3 py-2" value="${escapeHtml(a.text||'')}"
-              placeholder="${a.type==='uri'?'貼網址 https://...':'填入關鍵字（訊息）'}">
-          </label>
-        </div>
-      `;
-
-      const delBtn = row.querySelector('[data-del]');
-      const sel = row.querySelector('select');
-      const input = row.querySelector('input');
-
-      delBtn.onclick = () => {
-        if(confirm(`刪除框 ${i+1}？`)){
-          imap.images[imap.current].areas.splice(i, 1);
-          renderAreas(); renderAreaList(); renderImageList();
-        }
-      };
-      sel.onchange = () => {
-        a.type = sel.value;
-        input.placeholder = a.type === 'uri' ? '貼網址 https://...' : '填入關鍵字（訊息）';
-      };
-      input.oninput = () => a.text = input.value;
-
-      elAreaList.appendChild(row);
-    });
-  }
-
-  function assertAreasFilled(){
-    if(imap.images.length === 0) return "至少新增一張圖片";
-    if(imap.images.some(i => !i.url)) return "有圖片尚未上傳到 R2";
-    if(imap.images.some(img => img.areas.some(a => !String(a.text||'').trim()))) return "有框沒有填內容（關鍵字或網址）";
-    return "";
-  }
-
-  function buildImagemapMessages(){
-    return Promise.all(imap.images.map(img => new Promise((resolve) => {
-      const im = new Image();
-      im.onload = () => {
-        const baseW = 1040;
-        const ratio = im.naturalHeight / im.naturalWidth;
-        const baseH = Math.round(baseW * ratio);
-
-        const actions = img.areas.map(a => ({
-          type: a.type,
-          text: a.type === 'message' ? a.text : undefined,
-          linkUri: a.type === 'uri' ? a.text : undefined,
-          area: {
-            x: Math.round(a.x * baseW),
-            y: Math.round(a.y * baseH),
-            width: Math.round(a.w * baseW),
-            height: Math.round(a.h * baseH)
-          }
-        }));
-
-        resolve({
-          type: "imagemap",
-          baseUrl: img.url,
-          altText: "選單",
-          baseSize: { width: baseW, height: baseH },
-          actions
-        });
-      };
-      im.onerror = () => resolve({
-        type: "imagemap",
-        baseUrl: img.url,
-        altText: "選單",
-        baseSize: { width: 1040, height: 1040 },
-        actions: []
-      });
-      im.src = img.url;
-    })));
-  }
-
-  function getDraftKey(){ return "imagemap_draft_v1"; }
-
-  async function saveSettingsUI(forceNew){
-    const err = assertAreasFilled();
-    if(err) return alert(err);
-
-    const raw = $("imapWorkerUrl").value;
-    const base = normalizeWorkerUrl(raw);
-    let keyword = $("imapKeyword").value.trim();
-
-    // 沒填 keyword：存本機草稿
-    if(!keyword){
-      const messages = await buildImagemapMessages();
-      localStorage.setItem(getDraftKey(), JSON.stringify({ messages, savedAt: Date.now() }));
-      return alert('已儲存到本機草稿（未填關鍵字）。');
-    }
-
-    // 有填 keyword：走 Worker /save
-    if(!base) return alert('你有填關鍵字，所以 WorkerUrl 也必須填，才能存到雲端。');
-    localStorage.setItem('line_worker_url', base);
-
-    // 另存新檔：避免覆蓋
-    if(forceNew){
-      const suffix = new Date().toISOString().slice(0,10).replaceAll('-','') + '_' + Math.random().toString(36).slice(2,6);
-      keyword = `${keyword}_${suffix}`;
-      $("imapKeyword").value = keyword;
-    }
-
-    try{
-      const messages = await buildImagemapMessages();
-      await postJSON(base + '/save', {
-        keyword,
-        payload:{ mode:'imagemap', messages }
-      });
-      alert('儲存成功！（雲端）');
-    }catch(e){
-      alert('儲存失敗：\n' + e.message);
-    }
-  }
-
-  async function loadSettingsUI(){
-    const raw = $("imapWorkerUrl").value;
-    const base = normalizeWorkerUrl(raw);
-    const keyword = $("imapKeyword").value.trim();
-
-    // 沒填 keyword：讀本機草稿
-    if(!keyword){
-      const rawDraft = localStorage.getItem(getDraftKey());
-      if(!rawDraft) return alert('本機沒有草稿（請先按「儲存」且不填關鍵字）。');
-      let obj;
-      try{ obj = JSON.parse(rawDraft); }catch{ obj = null; }
-      if(!obj?.messages || !Array.isArray(obj.messages)) return alert('本機草稿格式損壞。');
-
-      imap.images = obj.messages.map(m => {
-        const bw = m.baseSize?.width || 1040;
-        const bh = m.baseSize?.height || 1040;
-        return {
-          url: m.baseUrl,
-          areas: (m.actions || []).map(a => ({
-            type: a.type,
-            text: a.type === 'message' ? (a.text || '') : (a.linkUri || ''),
-            x: (a.area.x || 0) / bw,
-            y: (a.area.y || 0) / bh,
-            w: (a.area.width || 0) / bw,
-            h: (a.area.height || 0) / bh
-          }))
-        };
-      });
-
-      renderImageList();
-      selectImage(imap.images.length ? 0 : -1);
-      setZoom(1);
-      return alert('已讀取本機草稿。');
-    }
-
-    // 有 keyword：走 Worker /load
-    if(!base) return alert('請先填 WorkerUrl');
-    localStorage.setItem('line_worker_url', base);
-
-    try{
-      const data = await postJSON(base + '/load', { keyword });
-      const obj = (typeof data === 'string') ? JSON.parse(data) : data;
-
-      if(!obj.messages || !Array.isArray(obj.messages)){
-        return alert('讀到資料但格式不對（沒有 messages）');
-      }
-
-      imap.images = obj.messages.map(m => {
-        const bw = m.baseSize?.width || 1040;
-        const bh = m.baseSize?.height || 1040;
-        return {
-          url: m.baseUrl,
-          areas: (m.actions || []).map(a => ({
-            type: a.type,
-            text: a.type === 'message' ? (a.text || '') : (a.linkUri || ''),
-            x: (a.area.x || 0) / bw,
-            y: (a.area.y || 0) / bh,
-            w: (a.area.width || 0) / bw,
-            h: (a.area.height || 0) / bh
-          }))
-        };
-      });
-
-      renderImageList();
-      selectImage(imap.images.length ? 0 : -1);
-      setZoom(1);
-      alert('讀取成功！（雲端）');
-    }catch(e){
-      alert('讀取失敗：\n' + e.message);
-    }
-  }
-
-  // ====== Hook main UI events ======
+  // ===== events =====
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
-    catch(e){ setConn(false); showErr(e); toast("連線失敗","err"); }
+    catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
   });
 
   $("btnWrite").addEventListener("click", async ()=>{
@@ -1852,12 +1326,49 @@
     catch(e){ showErr(e); toast(e.message || "寫入失敗","err"); }
   });
 
+  $("upFile").addEventListener("change", onPickBgFile);
+  $("ctaFile").addEventListener("change", onPickCtaFile);
+
+  $("btnUploadR2").addEventListener("click", async ()=>{
+    try{ clearErr(); await uploadBgToR2(); }
+    catch(e){ showErr(e); toast(e.message || "上傳失敗","err"); }
+  });
+
+  $("btnUseAsBg").addEventListener("click", ()=>{
+    const u = ($("upResultUrl").value||"").trim();
+    if(!u) return toast("沒有可用的上傳URL","warn");
+    $("inBgUrl").value = u;
+    toast("已填入底板URL ✅");
+  });
+
+  $("btnUploadCTA").addEventListener("click", async ()=>{
+    try{ clearErr(); await uploadCtaToR2(); }
+    catch(e){ showErr(e); toast(e.message || "上傳失敗","err"); }
+  });
+
+  $("btnUseCTAUrl").addEventListener("click", ()=>{
+    const u = ($("ctaUrl").value||"").trim();
+    if(!u) return toast("沒有可用的引流圖URL","warn");
+    $("ctaEditorUrl").value = u;
+    toast("已套用引流圖URL ✅");
+  });
+
+  $("btnRenderImg").addEventListener("click", async ()=>{
+    try{ clearErr(); await renderReportImage(); toast("已產生圖片 ✅"); }
+    catch(e){ showErr(e); toast(e.message || "產生圖片失敗","err"); }
+  });
+
+  $("btnDownloadImg").addEventListener("click", ()=>{
+    try{ downloadPng(); toast("已下載 PNG ✅"); }
+    catch(e){ toast(e.message || "下載失敗","warn"); }
+  });
+
   $("btnSimAllGood").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
     simState.q10="男";
     simState.q11=AGE_ADULT;
     renderSim();
-    toast("已填入『都很健康』");
+    toast("已填入『都很健康』測試答案");
   });
 
   $("btnSimAllYes").addEventListener("click", ()=>{
@@ -1865,37 +1376,7 @@
     simState.q10="男";
     simState.q11=AGE_ADULT;
     renderSim();
-    toast("已填入『全部選是』");
-  });
-
-  $("btnApplyPreviewAvatar").addEventListener("click", ()=>{
-    const u = ($("inPreviewAvatarUrl").value||"").trim() || DEFAULT_LINE_AVATAR_URL;
-    $("previewAvatar").src = u;
-    toast("已套用預覽頭像 ✅");
-  });
-
-  $("btnRandPreviewAvatar").addEventListener("click", ()=>{
-    const n = Math.floor(Math.random()*70)+1;
-    const u = `https://i.pravatar.cc/150?img=${n}`;
-    $("inPreviewAvatarUrl").value = u;
-    $("previewAvatar").src = u;
-    toast("已更換隨機頭像 ✅");
-  });
-
-  $("btnRenderImg").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      await renderReportImage();
-      toast("已產生圖片 ✅");
-    }catch(e){
-      showErr(e);
-      toast(e.message || "產生圖片失敗","err");
-    }
-  });
-
-  $("btnDownloadImg").addEventListener("click", ()=>{
-    try{ downloadPng(); toast("已下載 PNG ✅"); }
-    catch(e){ toast(e.message || "下載失敗","warn"); }
+    toast("已填入『全部都選是』測試答案");
   });
 
   $("btnResetTargets").addEventListener("click", resetTargets);
@@ -1910,77 +1391,67 @@
     }
   });
 
-  // ====== Imagemap editor hooks ======
-  $("imapAddImage").addEventListener('click', addImageBlock);
-  $("imapClearAreas").addEventListener('click', clearAreas);
-  $("imapUploadBtn").addEventListener('click', ()=>{
-    if(imap.current < 0) return alert("請先新增圖片");
-    triggerUpload(imap.current, $("imapUploadBtn"));
+  // 預覽頭像
+  $("btnApplyPreviewAvatar")?.addEventListener("click", ()=>{
+    const u = ($("inPreviewAvatarUrl").value||"").trim();
+    $("previewAvatar").src = u || DEFAULT_LINE_AVATAR_URL;
+    toast("已套用預覽頭像 ✅");
+  });
+  $("btnRandPreviewAvatar")?.addEventListener("click", ()=>{
+    const n = Math.floor(Math.random()*70)+1;
+    const u = `https://i.pravatar.cc/150?img=${n}`;
+    $("inPreviewAvatarUrl").value = u;
+    $("previewAvatar").src = u;
+    toast("已更換隨機頭像 ✅");
   });
 
-  $("btnIMapLoad").addEventListener('click', loadSettingsUI);
-  $("btnIMapSave").addEventListener('click', ()=>saveSettingsUI(false));
-  $("btnIMapSaveAs").addEventListener('click', ()=>saveSettingsUI(true));
-
-  $("btnApplyToPreview").addEventListener('click', ()=>{
-    if(imap.current < 0 || !imap.images[imap.current]?.url){
-      return toast("沒有可套用的圖片（先上傳到 R2）", "warn");
-    }
-    $("inCtaSource").value = imap.images[imap.current].url;
-    toast("已套用到『預覽/產圖』 ✅");
-    setTab("tab-preview");
-  });
-
-  $("btnCopyImagemapJson").addEventListener('click', async ()=>{
+  // 引流熱區編輯器
+  $("btnLoadCtaEditor").addEventListener("click", async ()=>{
     try{
-      const err = assertAreasFilled();
-      if(err) return toast(err, "warn");
-      const messages = await buildImagemapMessages();
-      await navigator.clipboard.writeText(JSON.stringify({ mode:"imagemap", messages }, null, 2));
-      toast("已複製 imagemap JSON ✅");
+      clearErr();
+      await loadCtaEditor();
+      // 初次載入：同步 textarea
+      renderAreasLayer();
+      syncAreasTextarea();
     }catch(e){
-      toast(e.message || "複製失敗", "warn");
+      showErr(e);
+      toast(e.message || "載入失敗", "err");
     }
   });
-
-  // Preview tab: use editor image url
-  $("btnUseCtaFromEditor").addEventListener("click", ()=>{
-    if(imap.current < 0 || !imap.images[imap.current]?.url){
-      return toast("編輯器目前沒有圖片 URL（先上傳到 R2）", "warn");
+  $("btnClearAreas").addEventListener("click", ()=>{
+    ctaAreas = [];
+    renderAreasLayer();
+    toast("已清空熱區");
+  });
+  $("btnCopyAreas").addEventListener("click", async ()=>{
+    try{
+      const obj = { image: ($("ctaEditorUrl").value||"").trim(), areas: ctaAreas };
+      await navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
+      toast("已複製熱區 JSON ✅");
+    }catch{
+      toast("複製失敗（瀏覽器限制）", "warn");
     }
-    $("inCtaSource").value = imap.images[imap.current].url;
-    toast("已套用編輯器的引流圖 ✅");
-    setTab("tab-preview");
+  });
+  $("btnDownloadAreas").addEventListener("click", ()=>{
+    const obj = { image: ($("ctaEditorUrl").value||"").trim(), areas: ctaAreas };
+    downloadJson("cta_areas.json", obj);
+    toast("已下載熱區 JSON ✅");
   });
 
-  $("btnClearCtaSource").addEventListener("click", ()=>{
-    $("inCtaSource").value = "";
-    toast("已清除引流圖", "warn");
-  });
+  // 綁定畫框
+  const layer = $("ctaAreasLayer");
+  layer.addEventListener("mousedown", onDown);
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onUp);
 
-  // ===== init =====
-  function safeDefaultSim(){
-    ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
-    simState.q10="男";
-    simState.q11=AGE_ADULT;
-  }
-
-  // restore workerUrl for imap editor
-  const savedUrl = localStorage.getItem('line_worker_url');
-  if(savedUrl) $("imapWorkerUrl").value = savedUrl;
-
-  safeDefaultSim();
-  initPreviewLine();
-  renderSim();
+  // init
   renderTargetsTable();
-  setConn(false);
-
-  // init imap editor
-  imapSizeModeSync();
-  $("imapQVal").textContent = $("imapQuality").value;
-  setZoom(1);
-  renderImageList();
-  selectImage(-1);
+  renderSim();
+  $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
+  $("txtCtaAutoKey").textContent = "assets/life11/cta_YYYYMMDD_HHMMSS.png";
+  $("inPreviewAvatarUrl").value = DEFAULT_LINE_AVATAR_URL;
+  initPreviewLine();
+  syncAreasTextarea();
 })();
 </script>
 </body>
