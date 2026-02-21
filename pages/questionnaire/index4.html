@@ -54,6 +54,12 @@
       user-select:none;
     }
     .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn-primary{
+      color:#fff;
+      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
+      box-shadow: 0 14px 28px rgba(99,102,241,.20);
+    }
+    .btn-primary:hover{ filter: brightness(1.04); }
     .btn-dark{
       color:#fff;
       background: linear-gradient(135deg, #0b1220, #111827);
@@ -115,28 +121,6 @@
     .pill-green{ border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.10); color: rgba(5,150,105,1); }
     .pill-indigo{ border-color: rgba(99,102,241,.25); background: rgba(99,102,241,.10); color: rgba(79,70,229,1); }
     .pill-rose{ border-color: rgba(244,63,94,.25); background: rgba(244,63,94,.10); color: rgba(190,18,60,1); }
-
-    /* 引流圖熱區編輯器 */
-    .area-box{
-      position:absolute;
-      border:2px solid rgba(255,0,0,.85);
-      background:rgba(255,0,0,.22);
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:white;
-      font-weight:900;
-      font-size:12px;
-      text-shadow:0 1px 2px rgba(0,0,0,.9);
-      user-select:none;
-    }
-    .draw-rect{
-      position:absolute;
-      border:2px dashed rgba(0,0,0,.6);
-      background:rgba(0,0,0,.10);
-      pointer-events:none;
-    }
   </style>
 </head>
 
@@ -149,10 +133,10 @@
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
             <span class="pill pill-indigo">UI 明亮</span>
-            <span class="pill pill-green">營養素單列 + 上限值 + 引流圖</span>
+            <span class="pill pill-green">功能保留</span>
           </div>
           <p class="text-sm text-slate-600 mt-1 leading-6">
-            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生「圖片版營養素比例報告」PNG（含引流圖區，可上傳/可畫熱區）。
+            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生「圖片版營養素比例報告」PNG（固定預設顯示樣式）。
           </p>
         </div>
 
@@ -216,7 +200,7 @@
           <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
             <div class="font-extrabold">規則說明</div>
             <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-            <div>• 報告：個資 → 9 個營養素（單列） → 引流圖（可上傳 + 可畫熱區）。</div>
+            <div>• 圖片報告：個人資料下方顯示 9 個營養素（單排），下方留白可放引流圖。</div>
           </div>
         </div>
       </section>
@@ -225,7 +209,7 @@
         <div class="flex items-end justify-between gap-2">
           <div>
             <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">產圖用：底板 +（可選）引流圖 + 熱區資料（你自己畫）。</p>
+            <p class="text-sm text-slate-600 mt-1">只做圖片報告 PNG（固定預設顯示樣式）。</p>
           </div>
           <div class="flex gap-2">
             <button id="btnSimAllGood" class="btn btn-soft">都很健康</button>
@@ -248,8 +232,8 @@
           <div class="card-soft rounded-3xl p-4">
             <div class="flex items-end justify-between gap-2">
               <div>
-                <div class="text-sm font-black text-slate-950">預覽頭像</div>
-                <div class="text-[11px] text-slate-500 mt-1">正式 LINE 會帶入；這裡只做預覽與產圖測試。</div>
+                <div class="text-sm font-black text-slate-950">報告預設顯示樣式</div>
+                <div class="text-[11px] text-slate-500 mt-1">僅預覽；正式由 LINE 自動帶入（不在此匯入）。</div>
               </div>
               <span class="pill">預設</span>
             </div>
@@ -265,93 +249,49 @@
                 <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
               </div>
             </div>
-
-            <div class="mt-3">
-              <label class="text-[11px] font-extrabold text-slate-600">預覽頭像 URL（測試用）</label>
-              <input id="inPreviewAvatarUrl" class="in mono mt-1" value="https://i.pravatar.cc/150?img=12" />
-              <div class="mt-2 flex gap-2">
-                <button id="btnApplyPreviewAvatar" class="btn btn-soft w-full">套用到預覽</button>
-                <button id="btnRandPreviewAvatar" class="btn btn-soft w-full">換一張隨機頭像</button>
-              </div>
-            </div>
           </div>
 
-          <!-- ✅ 底板上傳 -->
           <div class="card-soft rounded-3xl p-4">
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
-                <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 設為底板。</div>
+                <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板。</div>
               </div>
               <span class="pill pill-indigo">upload</span>
             </div>
 
             <div class="mt-3 grid gap-2">
-              <div>
-                <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
-                <input id="upFile" type="file" accept="image/*"
-                       class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
+              <div class="grid md:grid-cols-3 gap-2 items-end">
+                <div class="md:col-span-3">
+                  <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
+                  <input id="upFile" type="file" accept="image/*"
+                         class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
+                </div>
                 <input id="upKey" class="hidden" />
               </div>
 
               <div class="flex gap-2">
-                <button id="btnUploadR2" class="btn btn-indigo w-full">上傳底板到 R2</button>
+                <button id="btnUploadR2" class="btn btn-indigo w-full">上傳到 R2</button>
                 <button id="btnUseAsBg" class="btn btn-soft w-full">設為底板URL</button>
               </div>
 
               <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
                 <div class="text-[11px] font-extrabold text-slate-600">上傳結果 URL</div>
                 <input id="upResultUrl" class="in mono mt-1" placeholder="上傳成功後會出現在這裡" />
-                <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：圖片需可公開存取並允許跨域（CORS）。</div>
+                <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：底板圖需可公開存取並允許跨域（CORS）。</div>
               </div>
 
               <div class="text-[11px] text-slate-500">
-                存放路徑（key）自動：<span class="mono font-bold" id="txtAutoKey">assets/life11/report_bg_YYYYMMDD_HHMMSS.png</span>
+                存放路徑（key）已自動設定：<span class="mono font-bold" id="txtAutoKey">assets/life11/report_bg.png</span>
               </div>
             </div>
           </div>
 
-          <!-- ✅ 引流圖上傳（你上傳後，產圖會把引流圖放到底部） -->
-          <div class="card-soft rounded-3xl p-4">
-            <div class="flex items-end justify-between gap-2">
-              <div>
-                <div class="text-sm font-black text-slate-950">引流圖（可上傳）</div>
-                <div class="text-[11px] text-slate-500 mt-1">選檔 → 上傳 → 設為引流圖 URL（產圖時會放在最下面）。</div>
-              </div>
-              <span class="pill pill-indigo">CTA</span>
-            </div>
-
-            <div class="mt-3 grid gap-2">
-              <div>
-                <label class="text-[11px] font-extrabold text-slate-600">選擇引流圖檔案</label>
-                <input id="ctaFile" type="file" accept="image/*"
-                       class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
-                <input id="ctaKey" class="hidden" />
-              </div>
-
-              <div class="flex gap-2">
-                <button id="btnUploadCTA" class="btn btn-indigo w-full">上傳引流圖到 R2</button>
-                <button id="btnUseCTAUrl" class="btn btn-soft w-full">設為引流圖URL</button>
-              </div>
-
-              <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
-                <div class="text-[11px] font-extrabold text-slate-600">引流圖 URL</div>
-                <input id="ctaUrl" class="in mono mt-1" placeholder="https://.../assets/life11/cta_xxx.png" />
-                <div class="text-[11px] text-slate-500 mt-2">提示：這張圖就是你要的引流圖本體（你自己做圖、自己上傳）。</div>
-              </div>
-
-              <div class="text-[11px] text-slate-500">
-                存放路徑（key）自動：<span class="mono font-bold" id="txtCtaAutoKey">assets/life11/cta_YYYYMMDD_HHMMSS.png</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- ✅ 產圖 -->
           <div class="card-soft rounded-3xl p-4">
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
-                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（百分比在長條圖中間；上限字更大）。</div>
+                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（上方：個資+單排9營養素；下方：留白放引流圖）。</div>
               </div>
               <div class="flex gap-2">
                 <button id="btnRenderImg" class="btn btn-dark">產生圖片</button>
@@ -368,64 +308,6 @@
               <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
               <div class="text-[11px] text-slate-500 mt-2">
                 ※ 若下載 PNG 失敗，多半是底板圖跨域（CORS）沒開。
-              </div>
-            </div>
-          </div>
-
-          <!-- ✅ 引流圖熱區編輯器（畫框 → 下載 JSON） -->
-          <div class="card-soft rounded-3xl p-4">
-            <div class="flex items-end justify-between gap-2">
-              <div>
-                <div class="text-sm font-black text-slate-950">引流圖熱區編輯器（可畫）</div>
-                <div class="text-[11px] text-slate-500 mt-1">把你上傳的引流圖 URL 貼上 → 在圖上拖曳畫框 → 下載/複製 JSON。</div>
-              </div>
-              <span class="pill pill-rose">畫熱區</span>
-            </div>
-
-            <div class="mt-3 grid gap-2">
-              <div>
-                <label class="text-[11px] font-extrabold text-slate-600">編輯用引流圖 URL（通常就用上面的引流圖 URL）</label>
-                <input id="ctaEditorUrl" class="in mono mt-1" placeholder="https://.../assets/life11/cta_xxx.png" />
-              </div>
-
-              <div class="flex gap-2">
-                <button id="btnLoadCtaEditor" class="btn btn-dark w-full">載入引流圖</button>
-                <button id="btnClearAreas" class="btn btn-soft w-full">清空熱區</button>
-              </div>
-
-              <div class="rounded-3xl border border-slate-200 bg-white/85 p-3">
-                <div class="text-[11px] text-slate-600 font-extrabold mb-2">拖曳畫框（紅色方塊），點方塊可刪除</div>
-
-                <div id="ctaStage" class="relative w-full overflow-auto thinbar rounded-2xl border border-slate-200 bg-slate-50"
-                     style="height:360px;">
-                  <div id="ctaCanvasWrap" class="relative" style="width:820px; height:520px; margin:12px auto;">
-                    <img id="ctaEditorImg" alt="cta" class="absolute inset-0 w-full h-full object-contain rounded-2xl"
-                         style="background:#fff; border:1px solid rgba(15,23,42,.08);" />
-                    <div id="ctaAreasLayer" class="absolute inset-0 rounded-2xl"></div>
-                    <div id="ctaDrawRect" class="draw-rect hidden"></div>
-                  </div>
-                </div>
-
-                <div class="mt-3 grid md:grid-cols-2 gap-2 items-end">
-                  <div>
-                    <label class="text-[11px] font-extrabold text-slate-600">點擊連結（可選）：畫框後可填一個 URL</label>
-                    <input id="inAreaLink" class="in mono mt-1" placeholder="https://..." />
-                    <div class="text-[11px] text-slate-500 mt-1">提示：JSON 會把 link 一起存進去。</div>
-                  </div>
-                  <div class="flex gap-2">
-                    <button id="btnCopyAreas" class="btn btn-soft w-full">複製熱區JSON</button>
-                    <button id="btnDownloadAreas" class="btn btn-indigo w-full">下載熱區JSON</button>
-                  </div>
-                </div>
-
-                <div class="mt-2 text-[11px] text-slate-500">
-                  JSON 內座標為「百分比」（0~1），可供你之後做引流圖點擊區（例如 LINE imagemap / 網頁熱區）。
-                </div>
-              </div>
-
-              <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
-                <div class="text-[11px] font-extrabold text-slate-600">目前熱區（預覽）</div>
-                <textarea id="taAreas" class="in mono mt-1" rows="6" placeholder="載入圖後在上面拖曳畫框，這裡會出現JSON"></textarea>
               </div>
             </div>
           </div>
@@ -475,17 +357,18 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
+  // ✅ 預設顯示樣式（要改字改這裡）
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
 
   function pad2(n){ return String(n).padStart(2,"0"); }
-  function autoKeyForUpload(file, kind="report_bg"){
+  function autoKeyForUpload(file){
     const d = new Date();
     const stamp = `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
     const ext = (file?.name || "").split(".").pop()?.toLowerCase();
     const safeExt = (ext && ext.length <= 6) ? ext : "png";
-    return `assets/life11/${kind}_${stamp}.${safeExt}`;
+    return `assets/life11/report_bg_${stamp}.${safeExt}`;
   }
 
   const AGE_CHILD = "0~10 歲 (兒童)";
@@ -508,8 +391,8 @@
   ];
 
   const LABEL = {
-    vitA:"維生素A", vitB:"維生素B群（B1/B2/B6）", vitC:"維生素C", vitD:"維生素D", vitE:"維生素E",
-    ca_mg:"鈣/鎂", iron:"鐵", fiber:"膳食纖維", trace:"微量元素（碘/硒）",
+    vitA:"維生素A", vitB:"維生素B", vitC:"維生素C", vitD:"維生素D", vitE:"維生素E",
+    ca_mg:"鈣鎂", iron:"鐵", fiber:"膳食纖維", trace:"微量元素",
   };
   const PCT_ORDER = ["vitA","vitB","vitC","vitD","vitE","ca_mg","iron","fiber","trace"];
 
@@ -572,8 +455,7 @@
   function initPreviewLine(){
     $("previewName").textContent = DEFAULT_LINE_NAME;
     $("previewId").textContent = DEFAULT_LINE_ID;
-    const u = ($("inPreviewAvatarUrl")?.value || DEFAULT_LINE_AVATAR_URL).trim();
-    $("previewAvatar").src = u || DEFAULT_LINE_AVATAR_URL;
+    $("previewAvatar").src = DEFAULT_LINE_AVATAR_URL || "https://i.pravatar.cc/150?img=12";
   }
 
   function apiBase(){
@@ -743,7 +625,7 @@
     }
 
     return {
-      version: "life11-v14-cta-upload-hotspot",
+      version: "life11-v12-maxcap-single-row",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -856,13 +738,12 @@
     return { ans, remain };
   }
 
-  // Upload (bg)
-  async function uploadBgToR2(){
+  async function uploadToR2(){
     if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
     const f = $("upFile").files?.[0];
-    if(!f) throw new Error("請先選擇底板檔案");
+    if(!f) throw new Error("請先選擇檔案");
 
-    const key = autoKeyForUpload(f, "report_bg");
+    const key = autoKeyForUpload(f);
     $("upKey").value = key;
     $("txtAutoKey").textContent = key;
 
@@ -876,51 +757,20 @@
     if(!url) throw new Error("上傳成功但沒拿到 URL（請確認 Worker /upload 回傳 {url} 或 {publicUrl}）");
 
     $("upResultUrl").value = url;
-    toast("底板上傳成功 ✅");
+    toast("上傳成功 ✅");
     return url;
   }
-  function onPickBgFile(){
+
+  function onPickFile(){
     const f = $("upFile").files?.[0];
     if(!f) return;
-    const key = autoKeyForUpload(f, "report_bg");
+    const key = autoKeyForUpload(f);
     $("upKey").value = key;
     $("txtAutoKey").textContent = key;
   }
 
-  // Upload (CTA)
-  async function uploadCtaToR2(){
-    if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
-    const f = $("ctaFile").files?.[0];
-    if(!f) throw new Error("請先選擇引流圖檔案");
-
-    const key = autoKeyForUpload(f, "cta");
-    $("ctaKey").value = key;
-    $("txtCtaAutoKey").textContent = key;
-
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("key", key);
-    fd.append("contentType", f.type || "application/octet-stream");
-
-    const r = await apiForm("/upload", fd);
-    const url = r?.url || r?.publicUrl || r?.result?.url || r?.result?.publicUrl || r?.payload?.url || "";
-    if(!url) throw new Error("上傳成功但沒拿到 URL（請確認 Worker /upload 回傳 {url} 或 {publicUrl}）");
-
-    $("ctaUrl").value = url;
-    $("ctaEditorUrl").value = url;
-    toast("引流圖上傳成功 ✅");
-    return url;
-  }
-  function onPickCtaFile(){
-    const f = $("ctaFile").files?.[0];
-    if(!f) return;
-    const key = autoKeyForUpload(f, "cta");
-    $("ctaKey").value = key;
-    $("txtCtaAutoKey").textContent = key;
-  }
-
-  // Canvas image helpers
   let lastPngDataUrl = "";
+
   function pctColor(p){
     if(p < 35) return "#ff4d4f";
     if(p < 70) return "#fbbf24";
@@ -954,18 +804,8 @@
     ctx.drawImage(img, cx - r, cy - r, r*2, r*2);
     ctx.restore();
   }
-  function drawCover(ctx, img, x, y, w, h){
-    const iw = img.naturalWidth || img.width;
-    const ih = img.naturalHeight || img.height;
-    const s = Math.max(w/iw, h/ih);
-    const sw = iw * s;
-    const sh = ih * s;
-    const sx = x + (w - sw)/2;
-    const sy = y + (h - sh)/2;
-    ctx.drawImage(img, sx, sy, sw, sh);
-  }
 
-  // cap (數字+單位)
+  // ✅ 依「年齡/性別」抓上限值（來源：③ targetsRows）
   function capPick(row, ans){
     const age = ans?.q11 || AGE_ADULT;
     const sex = ans?.q10 || "男";
@@ -974,7 +814,7 @@
     if(ageKey==="teen") return row.teen;
     return (sex==="女") ? row.adultF : row.adultM;
   }
-  function capNumUnitForKey(key, ans){
+  function capTextForKey(key, ans){
     const byId = {};
     targetsRows.forEach(r=>byId[r.id]=r);
 
@@ -983,13 +823,26 @@
       return `${v}${unit||""}`;
     };
 
-    if(key==="vitA"){ const r=byId.vitA; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitC"){ const r=byId.vitC; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitD"){ const r=byId.vitD; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitE"){ const r=byId.vitE; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="iron"){ const r=byId.iron; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="fiber"){ const r=byId.fiber; return r?fmt(capPick(r,ans), r.unit):"-"; }
+    if(key==="vitA"){
+      const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="vitC"){
+      const r = byId.vitC; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="vitD"){
+      const r = byId.vitD; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="vitE"){
+      const r = byId.vitE; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="iron"){
+      const r = byId.iron; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="fiber"){
+      const r = byId.fiber; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
 
+    // 組合型：用「同單位」做簡短表示（單排才不會爆字）
     if(key==="vitB"){
       const b1=byId.b1, b2=byId.b2, b6=byId.b6;
       if(!b1 || !b2 || !b6) return "-";
@@ -1027,9 +880,9 @@
 
     const lineName = DEFAULT_LINE_NAME;
     const lineId = DEFAULT_LINE_ID;
-    const avatarUrl = (($("inPreviewAvatarUrl")?.value || DEFAULT_LINE_AVATAR_URL) + "").trim() || DEFAULT_LINE_AVATAR_URL;
+    const avatarUrl = DEFAULT_LINE_AVATAR_URL;
 
-    // 個資
+    // ===== 上方個人資料區 =====
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
@@ -1037,17 +890,19 @@
     ctx.fill();
     ctx.restore();
 
-    try{
-      const av = await loadImg(avatarUrl);
-      drawCircleAvatar(ctx, av, 140, 140, 58);
-      ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,.85)";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.arc(140, 140, 60, 0, Math.PI*2);
-      ctx.stroke();
-      ctx.restore();
-    }catch{
+    if(avatarUrl){
+      try{
+        const av = await loadImg(avatarUrl);
+        drawCircleAvatar(ctx, av, 140, 140, 58);
+        ctx.save();
+        ctx.strokeStyle = "rgba(255,255,255,.85)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(140, 140, 60, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }catch{}
+    }else{
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.20)";
       ctx.beginPath();
@@ -1069,123 +924,94 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
 
-    // 營養素：單列（百分比置中於長條中）
-    const listX = 56;
-    const listY = 270;
-    const listW = W - listX*2;
-    const rowH = 68;
-    const rowsGap = 10;
+    // ===== ✅ 營養素：單排（在個資下方一點點） =====
+    const rowY = 260;          // <== 你要的位置：個資下方一點點
+    const rowX = 50;
+    const rowW = W - rowX*2;
+    const gap = 8;
+    const cardW = (rowW - gap*(PCT_ORDER.length-1)) / PCT_ORDER.length;
+    const cardH = 150;
 
+    const shortLabel = {
+      vitA:"A", vitB:"B群", vitC:"C", vitD:"D", vitE:"E",
+      ca_mg:"鈣鎂", iron:"鐵", fiber:"纖維", trace:"微量"
+    };
+
+    // 背後淡淡底（讓單排更清楚）
     ctx.save();
-    ctx.globalAlpha = 0.14;
+    ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#0b122b";
-    roundRect(ctx, 44, listY-14, W-88, (rowH+rowsGap)*PCT_ORDER.length - rowsGap + 28, 36);
+    roundRect(ctx, 42, rowY-14, W-84, cardH+28, 36);
     ctx.fill();
     ctx.restore();
 
     for(let i=0;i<PCT_ORDER.length;i++){
       const k = PCT_ORDER[i];
-      const y = listY + i*(rowH+rowsGap);
+      const x = rowX + i*(cardW+gap);
+      const y = rowY;
       const pct = remain[k];
-      const cap = capNumUnitForKey(k, ans);
+      const capText = capTextForKey(k, ans); // ✅ 上限值（依③表）
 
+      // 卡片
       ctx.save();
       ctx.globalAlpha = 0.16;
       ctx.fillStyle = "#ffffff";
-      roundRect(ctx, listX, y, listW, rowH, 20);
+      roundRect(ctx, x, y, cardW, cardH, 22);
       ctx.fill();
       ctx.restore();
 
-      ctx.strokeStyle = "rgba(255,255,255,.38)";
+      ctx.strokeStyle = "rgba(255,255,255,.40)";
       ctx.lineWidth = 2;
-      roundRect(ctx, listX, y, listW, rowH, 20);
+      roundRect(ctx, x, y, cardW, cardH, 22);
       ctx.stroke();
 
-      // 名稱
+      // 標題（短字）
       ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,.95)";
-      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-      ctx.fillText(LABEL[k] || k, listX+16, y+26);
-
-      // ✅ 上限值：字放大（右上）
-      ctx.textAlign = "right";
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-      ctx.fillText(cap, listX+listW-16, y+28);
+      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
+      ctx.fillText(shortLabel[k] || LABEL[k] || k, x+12, y+26);
 
-      // bar
-      const barX = listX+16, barY = y+38, barW = listW-32, barH = 18;
-
+      // 百分比（同一格內：百分比 + 上限值）
       ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(255,255,255,.96)";
+      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`${pct}%`, x+12, y+58);
+
+      ctx.fillStyle = "rgba(255,255,255,.82)";
+      ctx.font = "bold 11px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`上限 ${capText}`, x+12, y+78);
+
+      // 長條
+      const barX = x+12, barY = y+92, barW = cardW-24, barH = 12;
       ctx.fillStyle = "rgba(255,255,255,.22)";
-      roundRect(ctx, barX, barY, barW, barH, 9);
+      roundRect(ctx, barX, barY, barW, barH, 8);
       ctx.fill();
 
       const fillW = Math.max(0, Math.min(barW, barW*(pct/100)));
       ctx.fillStyle = pctColor(pct);
-      roundRect(ctx, barX, barY, fillW, barH, 9);
+      roundRect(ctx, barX, barY, fillW, barH, 8);
       ctx.fill();
 
-      // ✅ 百分比：放在長條圖中間
-      ctx.textAlign = "center";
-      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,.96)";
-      // 先描邊讓字更清楚
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = "rgba(0,0,0,.35)";
-      ctx.strokeText(`${pct}%`, barX + barW/2, barY + 14);
-      ctx.fillText(`${pct}%`, barX + barW/2, barY + 14);
+      // 小字：完整名稱（避免卡片太小）
+      ctx.fillStyle = "rgba(255,255,255,.80)";
+      ctx.font = "bold 10px Microsoft JhengHei, sans-serif";
+      ctx.fillText(LABEL[k] || k, x+12, y+132);
     }
 
-    // ✅ 引流圖區：不幫你畫（你上傳什麼，就放什麼）
-    const ctaX = 56;
-    const ctaY = 950;
-    const ctaW = W - ctaX*2;
-    const ctaH = 600;
+    // ===== ✅ 留白區（讓你放引流圖 / 可點擊區用）=====
+    // 不畫任何面板，不加字，保留底板原圖的空白
+    // 你之後做引流圖：直接用這張 PNG 當底，去你的引流圖編輯器畫點擊區即可
 
-    // 區域底（保持一致視覺）
+    // （可選）如果你想要「顯示一個淡淡框」提醒區域，把下面註解拿掉
+    /*
     ctx.save();
-    ctx.globalAlpha = 0.14;
-    ctx.fillStyle = "#0b122b";
-    roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 40);
-    ctx.fill();
-    ctx.restore();
-
-    // 如果有引流圖 URL，就把引流圖「cover」貼上去；沒有就維持留白框
-    const ctaUrl = ($("ctaUrl").value || "").trim();
-    if(ctaUrl){
-      try{
-        const ctaImg = await loadImg(ctaUrl);
-        ctx.save();
-        roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 40);
-        ctx.clip();
-        drawCover(ctx, ctaImg, ctaX, ctaY, ctaW, ctaH);
-        ctx.restore();
-
-        // 淡淡亮面
-        ctx.save();
-        ctx.globalAlpha = 0.16;
-        ctx.fillStyle = "#ffffff";
-        roundRect(ctx, ctaX+22, ctaY+22, ctaW-44, 92, 30);
-        ctx.fill();
-        ctx.restore();
-      }catch{
-        // 失敗就維持留白
-      }
-    }
-
-    // 留白提示框（不影響你圖）
-    ctx.strokeStyle = "rgba(255,255,255,.45)";
     ctx.setLineDash([10,8]);
+    ctx.strokeStyle = "rgba(255,255,255,.35)";
     ctx.lineWidth = 3;
-    roundRect(ctx, ctaX+22, ctaY+22, ctaW-44, ctaH-44, 34);
+    roundRect(ctx, 48, 450, W-96, 1080, 36);
     ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-    ctx.fillText("引流圖區（你上傳什麼就顯示什麼）", ctaX + ctaW/2, ctaY + 60);
+    ctx.restore();
+    */
 
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
@@ -1199,123 +1025,7 @@
     a.click();
   }
 
-  // ===== 引流圖熱區編輯器（畫框 → JSON）=====
-  let ctaAreas = []; // {id,x,y,w,h,link} x/y/w/h 0~1
-  let ctaImgLoaded = false;
-
-  function syncAreasTextarea(){
-    $("taAreas").value = JSON.stringify({ image: $("ctaEditorUrl").value || "", areas: ctaAreas }, null, 2);
-  }
-
-  function renderAreasLayer(){
-    const layer = $("ctaAreasLayer");
-    layer.innerHTML = "";
-    ctaAreas.forEach((a, idx)=>{
-      const div = document.createElement("div");
-      div.className = "area-box";
-      div.style.left = (a.x*100) + "%";
-      div.style.top  = (a.y*100) + "%";
-      div.style.width  = (a.w*100) + "%";
-      div.style.height = (a.h*100) + "%";
-      div.title = (a.link || "");
-      div.textContent = `#${idx+1}`;
-      div.addEventListener("click", ()=>{
-        // 點一下就刪除（最直覺）
-        ctaAreas = ctaAreas.filter(x=>x.id !== a.id);
-        renderAreasLayer();
-        syncAreasTextarea();
-        toast("已刪除熱區");
-      });
-      layer.appendChild(div);
-    });
-    syncAreasTextarea();
-  }
-
-  function downloadJson(filename, obj){
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type:"application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function loadCtaEditor(){
-    const url = ($("ctaEditorUrl").value || "").trim();
-    if(!url) throw new Error("請先填『編輯用引流圖 URL』");
-    $("ctaEditorImg").crossOrigin = "anonymous";
-    $("ctaEditorImg").src = url;
-    await new Promise((resolve,reject)=>{
-      $("ctaEditorImg").onload = ()=>resolve();
-      $("ctaEditorImg").onerror = ()=>reject(new Error("引流圖載入失敗（可能是 URL 或 CORS）"));
-    });
-    ctaImgLoaded = true;
-    toast("已載入引流圖 ✅");
-  }
-
-  // 畫框事件（在 wrap 上）
-  let drawing = false;
-  let sx=0, sy=0;
-  function relPos(e){
-    const wrap = $("ctaCanvasWrap");
-    const r = wrap.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
-    return { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)), w: r.width, h: r.height };
-  }
-  function setDrawRect(x,y,w,h){
-    const rect = $("ctaDrawRect");
-    rect.classList.remove("hidden");
-    rect.style.left = (x*100)+"%";
-    rect.style.top  = (y*100)+"%";
-    rect.style.width = (w*100)+"%";
-    rect.style.height= (h*100)+"%";
-  }
-  function hideDrawRect(){ $("ctaDrawRect").classList.add("hidden"); }
-
-  function onDown(e){
-    if(!ctaImgLoaded) return toast("請先載入引流圖", "warn");
-    // 避免點到紅框
-    if(e.target.classList.contains("area-box")) return;
-    drawing = true;
-    const p = relPos(e);
-    sx = p.x; sy = p.y;
-    setDrawRect(sx, sy, 0, 0);
-  }
-  function onMove(e){
-    if(!drawing) return;
-    const p = relPos(e);
-    const x1 = Math.min(sx, p.x);
-    const y1 = Math.min(sy, p.y);
-    const w  = Math.abs(p.x - sx);
-    const h  = Math.abs(p.y - sy);
-    setDrawRect(x1, y1, w, h);
-  }
-  function onUp(e){
-    if(!drawing) return;
-    drawing = false;
-    const p = relPos(e);
-    const x1 = Math.min(sx, p.x);
-    const y1 = Math.min(sy, p.y);
-    const w  = Math.abs(p.x - sx);
-    const h  = Math.abs(p.y - sy);
-    hideDrawRect();
-
-    if(w < 0.02 || h < 0.02){
-      return; // 太小就忽略
-    }
-    const link = ($("inAreaLink").value || "").trim();
-    ctaAreas.push({
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
-      x: x1, y: y1, w, h,
-      link
-    });
-    renderAreasLayer();
-    toast("已新增熱區 ✅（點紅框可刪除）");
-  }
-
-  // ===== events =====
+  // events
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
     catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
@@ -1326,11 +1036,10 @@
     catch(e){ showErr(e); toast(e.message || "寫入失敗","err"); }
   });
 
-  $("upFile").addEventListener("change", onPickBgFile);
-  $("ctaFile").addEventListener("change", onPickCtaFile);
+  $("upFile").addEventListener("change", onPickFile);
 
   $("btnUploadR2").addEventListener("click", async ()=>{
-    try{ clearErr(); await uploadBgToR2(); }
+    try{ clearErr(); await uploadToR2(); }
     catch(e){ showErr(e); toast(e.message || "上傳失敗","err"); }
   });
 
@@ -1339,18 +1048,6 @@
     if(!u) return toast("沒有可用的上傳URL","warn");
     $("inBgUrl").value = u;
     toast("已填入底板URL ✅");
-  });
-
-  $("btnUploadCTA").addEventListener("click", async ()=>{
-    try{ clearErr(); await uploadCtaToR2(); }
-    catch(e){ showErr(e); toast(e.message || "上傳失敗","err"); }
-  });
-
-  $("btnUseCTAUrl").addEventListener("click", ()=>{
-    const u = ($("ctaUrl").value||"").trim();
-    if(!u) return toast("沒有可用的引流圖URL","warn");
-    $("ctaEditorUrl").value = u;
-    toast("已套用引流圖URL ✅");
   });
 
   $("btnRenderImg").addEventListener("click", async ()=>{
@@ -1391,67 +1088,12 @@
     }
   });
 
-  // 預覽頭像
-  $("btnApplyPreviewAvatar")?.addEventListener("click", ()=>{
-    const u = ($("inPreviewAvatarUrl").value||"").trim();
-    $("previewAvatar").src = u || DEFAULT_LINE_AVATAR_URL;
-    toast("已套用預覽頭像 ✅");
-  });
-  $("btnRandPreviewAvatar")?.addEventListener("click", ()=>{
-    const n = Math.floor(Math.random()*70)+1;
-    const u = `https://i.pravatar.cc/150?img=${n}`;
-    $("inPreviewAvatarUrl").value = u;
-    $("previewAvatar").src = u;
-    toast("已更換隨機頭像 ✅");
-  });
-
-  // 引流熱區編輯器
-  $("btnLoadCtaEditor").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      await loadCtaEditor();
-      // 初次載入：同步 textarea
-      renderAreasLayer();
-      syncAreasTextarea();
-    }catch(e){
-      showErr(e);
-      toast(e.message || "載入失敗", "err");
-    }
-  });
-  $("btnClearAreas").addEventListener("click", ()=>{
-    ctaAreas = [];
-    renderAreasLayer();
-    toast("已清空熱區");
-  });
-  $("btnCopyAreas").addEventListener("click", async ()=>{
-    try{
-      const obj = { image: ($("ctaEditorUrl").value||"").trim(), areas: ctaAreas };
-      await navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
-      toast("已複製熱區 JSON ✅");
-    }catch{
-      toast("複製失敗（瀏覽器限制）", "warn");
-    }
-  });
-  $("btnDownloadAreas").addEventListener("click", ()=>{
-    const obj = { image: ($("ctaEditorUrl").value||"").trim(), areas: ctaAreas };
-    downloadJson("cta_areas.json", obj);
-    toast("已下載熱區 JSON ✅");
-  });
-
-  // 綁定畫框
-  const layer = $("ctaAreasLayer");
-  layer.addEventListener("mousedown", onDown);
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onUp);
-
   // init
+  initPreviewLine();
   renderTargetsTable();
   renderSim();
+
   $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
-  $("txtCtaAutoKey").textContent = "assets/life11/cta_YYYYMMDD_HHMMSS.png";
-  $("inPreviewAvatarUrl").value = DEFAULT_LINE_AVATAR_URL;
-  initPreviewLine();
-  syncAreasTextarea();
 })();
 </script>
 </body>
