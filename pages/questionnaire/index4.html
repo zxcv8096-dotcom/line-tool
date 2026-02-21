@@ -200,7 +200,7 @@
           <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
             <div class="font-extrabold">規則說明</div>
             <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-            <div>• 圖片報告固定輸出 10 格：9 個營養素 + 1 個 CTA 區。</div>
+            <div>• 圖片報告：個人資料下方顯示 9 個營養素（單排），下方留白可放引流圖。</div>
           </div>
         </div>
       </section>
@@ -267,7 +267,6 @@
                   <input id="upFile" type="file" accept="image/*"
                          class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
                 </div>
-                <!-- ✅ 這裡已改：不再讓你填 key，系統自動設定 -->
                 <input id="upKey" class="hidden" />
               </div>
 
@@ -292,7 +291,7 @@
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
-                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（9 長條 + 第10格 CTA）。</div>
+                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（上方：個資+單排9營養素；下方：留白放引流圖）。</div>
               </div>
               <div class="flex gap-2">
                 <button id="btnRenderImg" class="btn btn-dark">產生圖片</button>
@@ -321,7 +320,7 @@
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
         <div>
           <h2 class="text-lg font-black text-slate-950">③ 年齡層參考值</h2>
-          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（可供 Worker 端產圖使用）。</p>
+          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（上限值會用這裡的數字）。</p>
         </div>
         <div class="flex gap-2">
           <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
@@ -363,8 +362,6 @@
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
 
-  // ✅ R2 存放路徑（key）自動設定（你不用填）
-  // 規則：assets/life11/report_bg_YYYYMMDD_HHMMSS.png
   function pad2(n){ return String(n).padStart(2,"0"); }
   function autoKeyForUpload(file){
     const d = new Date();
@@ -563,6 +560,7 @@
     renderTargetsTable();
     toast("已恢復預設");
   }
+
   function getTargetsObject(){
     const byId = {};
     targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
@@ -600,7 +598,7 @@
     return { rows: structuredClone(targetsRows), combined };
   }
 
-  function getAgeOpts(){ return ["0~10 歲 (兒童)","11~18 歲 (青少年)","19 歲以上"]; }
+  function getAgeOpts(){ return [AGE_CHILD, AGE_TEEN, AGE_ADULT]; }
   function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
 
   function buildSurveyPayload(){
@@ -627,7 +625,7 @@
     }
 
     return {
-      version: "life11-v11-bright-art-ui-autokey",
+      version: "life11-v12-maxcap-single-row",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -745,7 +743,6 @@
     const f = $("upFile").files?.[0];
     if(!f) throw new Error("請先選擇檔案");
 
-    // ✅ 自動設定 key
     const key = autoKeyForUpload(f);
     $("upKey").value = key;
     $("txtAutoKey").textContent = key;
@@ -764,7 +761,6 @@
     return url;
   }
 
-  // 讓使用者一選檔就先算出 key（更直覺）
   function onPickFile(){
     const f = $("upFile").files?.[0];
     if(!f) return;
@@ -809,6 +805,65 @@
     ctx.restore();
   }
 
+  // ✅ 依「年齡/性別」抓上限值（來源：③ targetsRows）
+  function capPick(row, ans){
+    const age = ans?.q11 || AGE_ADULT;
+    const sex = ans?.q10 || "男";
+    const ageKey = age.includes("0~10") ? "child" : age.includes("11~18") ? "teen" : "adult";
+    if(ageKey==="child") return row.child;
+    if(ageKey==="teen") return row.teen;
+    return (sex==="女") ? row.adultF : row.adultM;
+  }
+  function capTextForKey(key, ans){
+    const byId = {};
+    targetsRows.forEach(r=>byId[r.id]=r);
+
+    const fmt = (v, unit) => {
+      if(v === "" || v === null || v === undefined) return "-";
+      return `${v}${unit||""}`;
+    };
+
+    if(key==="vitA"){
+      const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="vitC"){
+      const r = byId.vitC; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="vitD"){
+      const r = byId.vitD; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="vitE"){
+      const r = byId.vitE; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="iron"){
+      const r = byId.iron; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+    if(key==="fiber"){
+      const r = byId.fiber; return r ? fmt(capPick(r,ans), r.unit) : "-";
+    }
+
+    // 組合型：用「同單位」做簡短表示（單排才不會爆字）
+    if(key==="vitB"){
+      const b1=byId.b1, b2=byId.b2, b6=byId.b6;
+      if(!b1 || !b2 || !b6) return "-";
+      const u = b1.unit || "mg";
+      return `${capPick(b1,ans)}/${capPick(b2,ans)}/${capPick(b6,ans)}${u}`;
+    }
+    if(key==="ca_mg"){
+      const ca=byId.ca, mg=byId.mg;
+      if(!ca || !mg) return "-";
+      const u = ca.unit || "mg";
+      return `${capPick(ca,ans)}/${capPick(mg,ans)}${u}`;
+    }
+    if(key==="trace"){
+      const io=byId.iodine, se=byId.selen;
+      if(!io || !se) return "-";
+      const u = io.unit || "µg";
+      return `${capPick(io,ans)}/${capPick(se,ans)}${u}`;
+    }
+    return "-";
+  }
+
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
     if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
@@ -827,22 +882,23 @@
     const lineId = DEFAULT_LINE_ID;
     const avatarUrl = DEFAULT_LINE_AVATAR_URL;
 
+    // ===== 上方個人資料區 =====
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
-    roundRect(ctx, 48, 48, W-96, 170, 46);
+    roundRect(ctx, 48, 48, W-96, 190, 46);
     ctx.fill();
     ctx.restore();
 
     if(avatarUrl){
       try{
         const av = await loadImg(avatarUrl);
-        drawCircleAvatar(ctx, av, 140, 132, 58);
+        drawCircleAvatar(ctx, av, 140, 140, 58);
         ctx.save();
         ctx.strokeStyle = "rgba(255,255,255,.85)";
         ctx.lineWidth = 6;
         ctx.beginPath();
-        ctx.arc(140, 132, 60, 0, Math.PI*2);
+        ctx.arc(140, 140, 60, 0, Math.PI*2);
         ctx.stroke();
         ctx.restore();
       }catch{}
@@ -850,7 +906,7 @@
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.20)";
       ctx.beginPath();
-      ctx.arc(140, 132, 58, 0, Math.PI*2);
+      ctx.arc(140, 140, 58, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
@@ -858,89 +914,104 @@
     ctx.fillStyle = "rgba(255,255,255,.96)";
     ctx.textAlign = "left";
     ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
-    ctx.fillText(lineName, 230, 124);
+    ctx.fillText(lineName, 230, 128);
 
     ctx.fillStyle = "rgba(255,255,255,.90)";
     ctx.font = "bold 26px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\",\"Courier New\", monospace";
-    ctx.fillText(lineId, 230, 168);
+    ctx.fillText(lineId, 230, 172);
 
-    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.fillStyle = "rgba(255,255,255,.86)";
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-    ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 205);
+    ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
 
-    const panelX = 60, panelY = 860, panelW = W-120, panelH = 680;
+    // ===== ✅ 營養素：單排（在個資下方一點點） =====
+    const rowY = 260;          // <== 你要的位置：個資下方一點點
+    const rowX = 50;
+    const rowW = W - rowX*2;
+    const gap = 8;
+    const cardW = (rowW - gap*(PCT_ORDER.length-1)) / PCT_ORDER.length;
+    const cardH = 150;
+
+    const shortLabel = {
+      vitA:"A", vitB:"B群", vitC:"C", vitD:"D", vitE:"E",
+      ca_mg:"鈣鎂", iron:"鐵", fiber:"纖維", trace:"微量"
+    };
+
+    // 背後淡淡底（讓單排更清楚）
     ctx.save();
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = "#ffffff";
-    roundRect(ctx, panelX, panelY, panelW, panelH, 46);
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = "#0b122b";
+    roundRect(ctx, 42, rowY-14, W-84, cardH+28, 36);
     ctx.fill();
     ctx.restore();
 
-    ctx.fillStyle = "rgba(255,255,255,.95)";
-    ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText("營養素比例報告", panelX+34, panelY+70);
+    for(let i=0;i<PCT_ORDER.length;i++){
+      const k = PCT_ORDER[i];
+      const x = rowX + i*(cardW+gap);
+      const y = rowY;
+      const pct = remain[k];
+      const capText = capTextForKey(k, ans); // ✅ 上限值（依③表）
 
-    ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,.85)";
-    ctx.fillText("（依問卷選項自動計算）", panelX+34, panelY+108);
-
-    const cols=2, rows=5, gap=18;
-    const boxX=panelX+26, boxY=panelY+140;
-    const boxW=(panelW-26*2-gap)/cols;
-    const boxH=(panelH-140-26-gap*(rows-1))/rows;
-
-    const items = PCT_ORDER.map(k=>({ key:k, label: LABEL[k], pct: remain[k] }));
-    items.push({ key:"cta", label:"點擊查看建議產品", pct:null });
-
-    for(let i=0;i<10;i++){
-      const rr = Math.floor(i/cols);
-      const cc = i%cols;
-      const x = boxX + cc*(boxW+gap);
-      const y = boxY + rr*(boxH+gap);
-
+      // 卡片
       ctx.save();
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = "#0b122b";
-      roundRect(ctx, x, y, boxW, boxH, 28);
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = "#ffffff";
+      roundRect(ctx, x, y, cardW, cardH, 22);
       ctx.fill();
       ctx.restore();
 
-      ctx.strokeStyle = "rgba(255,255,255,.45)";
+      ctx.strokeStyle = "rgba(255,255,255,.40)";
       ctx.lineWidth = 2;
-      roundRect(ctx, x, y, boxW, boxH, 28);
+      roundRect(ctx, x, y, cardW, cardH, 22);
       ctx.stroke();
 
-      ctx.fillStyle = "rgba(255,255,255,.95)";
-      ctx.font = "bold 28px Microsoft JhengHei, sans-serif";
+      // 標題（短字）
       ctx.textAlign = "left";
-      ctx.fillText(items[i].label, x+20, y+44);
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
+      ctx.fillText(shortLabel[k] || LABEL[k] || k, x+12, y+26);
 
-      if(items[i].key === "cta"){
-        ctx.fillStyle = "rgba(255,255,255,.90)";
-        ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-        ctx.fillText("（此格可做可點擊區）", x+20, y+86);
-        continue;
-      }
+      // 百分比（同一格內：百分比 + 上限值）
+      ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(255,255,255,.96)";
+      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`${pct}%`, x+12, y+58);
 
-      const pct = items[i].pct;
-      const barX = x+20, barY = y+72, barW = boxW-40, barH = 16;
+      ctx.fillStyle = "rgba(255,255,255,.82)";
+      ctx.font = "bold 11px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`上限 ${capText}`, x+12, y+78);
 
+      // 長條
+      const barX = x+12, barY = y+92, barW = cardW-24, barH = 12;
       ctx.fillStyle = "rgba(255,255,255,.22)";
-      roundRect(ctx, barX, barY, barW, barH, 10);
+      roundRect(ctx, barX, barY, barW, barH, 8);
       ctx.fill();
 
-      const fillW = Math.max(0, Math.min(barW, barW * (pct/100)));
+      const fillW = Math.max(0, Math.min(barW, barW*(pct/100)));
       ctx.fillStyle = pctColor(pct);
-      roundRect(ctx, barX, barY, fillW, barH, 10);
+      roundRect(ctx, barX, barY, fillW, barH, 8);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(255,255,255,.95)";
-      ctx.font = "bold 30px Microsoft JhengHei, sans-serif";
-      ctx.textAlign = "right";
-      ctx.fillText(`${pct}%`, x+boxW-20, y+122);
-      ctx.textAlign = "left";
+      // 小字：完整名稱（避免卡片太小）
+      ctx.fillStyle = "rgba(255,255,255,.80)";
+      ctx.font = "bold 10px Microsoft JhengHei, sans-serif";
+      ctx.fillText(LABEL[k] || k, x+12, y+132);
     }
+
+    // ===== ✅ 留白區（讓你放引流圖 / 可點擊區用）=====
+    // 不畫任何面板，不加字，保留底板原圖的空白
+    // 你之後做引流圖：直接用這張 PNG 當底，去你的引流圖編輯器畫點擊區即可
+
+    // （可選）如果你想要「顯示一個淡淡框」提醒區域，把下面註解拿掉
+    /*
+    ctx.save();
+    ctx.setLineDash([10,8]);
+    ctx.strokeStyle = "rgba(255,255,255,.35)";
+    ctx.lineWidth = 3;
+    roundRect(ctx, 48, 450, W-96, 1080, 36);
+    ctx.stroke();
+    ctx.restore();
+    */
 
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
@@ -1022,7 +1093,6 @@
   renderTargetsTable();
   renderSim();
 
-  // init auto key label
   $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
 })();
 </script>
