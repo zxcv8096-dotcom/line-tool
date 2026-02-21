@@ -52,14 +52,9 @@
       font-weight:900; font-size:13px;
       transition: transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
       user-select:none;
+      white-space:nowrap;
     }
     .btn:active{ transform: translateY(1px) scale(.99); }
-    .btn-primary{
-      color:#fff;
-      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
-      box-shadow: 0 14px 28px rgba(99,102,241,.20);
-    }
-    .btn-primary:hover{ filter: brightness(1.04); }
     .btn-dark{
       color:#fff;
       background: linear-gradient(135deg, #0b1220, #111827);
@@ -85,6 +80,16 @@
       box-shadow: 0 14px 28px rgba(99,102,241,.18);
     }
     .btn-indigo:hover{ filter: brightness(1.03); }
+    .btn-mini{
+      border-radius: 14px;
+      padding: .55rem .8rem;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .btn-disabled{
+      opacity:.45;
+      pointer-events:none;
+    }
 
     .in{
       width:100%;
@@ -99,6 +104,10 @@
       border-color: rgba(99,102,241,.35);
       box-shadow: var(--ring);
       background: rgba(255,255,255,.96);
+    }
+    .in-mini{
+      border-radius: 14px;
+      padding: .62rem .9rem;
     }
 
     .hero{
@@ -121,6 +130,15 @@
     .pill-green{ border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.10); color: rgba(5,150,105,1); }
     .pill-indigo{ border-color: rgba(99,102,241,.25); background: rgba(99,102,241,.10); color: rgba(79,70,229,1); }
     .pill-rose{ border-color: rgba(244,63,94,.25); background: rgba(244,63,94,.10); color: rgba(190,18,60,1); }
+
+    /* 小螢幕優化：兩欄時避免留白 */
+    @media (min-width: 1024px){
+      .sticky-left{
+        position: sticky;
+        top: 14px;
+        align-self: start;
+      }
+    }
   </style>
 </head>
 
@@ -133,10 +151,10 @@
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
             <span class="pill pill-indigo">UI 明亮</span>
-            <span class="pill pill-green">功能保留</span>
+            <span class="pill pill-green">操作更順</span>
           </div>
           <p class="text-sm text-slate-600 mt-1 leading-6">
-            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生「圖片版營養素比例報告」PNG（固定預設顯示樣式）。
+            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生圖片版營養報告 PNG。下方可設定「購買頁面連結」按鈕。
           </p>
         </div>
 
@@ -181,173 +199,224 @@
       </div>
     </section>
 
-    <div class="grid lg:grid-cols-2 gap-3">
-      <section class="card rounded-3xl p-4 md:p-5">
-        <div class="flex items-center justify-between gap-2">
-          <h2 class="text-lg font-black text-slate-950">① 問卷設定</h2>
-          <span class="pill">扣分模型：固定</span>
-        </div>
-
-        <div class="mt-3 grid gap-3">
-          <div class="card-soft rounded-3xl p-4">
-            <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
-            <input id="inKeyword" class="in mt-1" placeholder="例如：生活營養" />
-            <div class="text-[11px] text-slate-500 mt-2 leading-5">
-              寫入 <span class="mono font-bold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
-            </div>
+    <!-- ✅ 版面重排：左側固定工具/設定 + 右側主要操作，避免左下角大片留白 -->
+    <div class="grid lg:grid-cols-3 gap-3">
+      <!-- LEFT -->
+      <div class="space-y-3 sticky-left">
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-lg font-black text-slate-950">① 問卷設定</h2>
+            <span class="pill">扣分模型：固定</span>
           </div>
 
-          <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">規則說明</div>
-            <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-            <div>• 圖片報告：個人資料下方顯示 9 個營養素（改為「欄狀列表」），下方留白可放引流圖。</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card rounded-3xl p-4 md:p-5">
-        <div class="flex items-end justify-between gap-2">
-          <div>
-            <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
-            <p class="text-sm text-slate-600 mt-1">只做圖片報告 PNG（固定預設顯示樣式）。</p>
-          </div>
-          <div class="flex gap-2">
-            <button id="btnSimAllGood" class="btn btn-soft">都很健康</button>
-            <button id="btnSimAllYes" class="btn btn-soft">全部選是</button>
-          </div>
-        </div>
-
-        <div class="mt-3 grid gap-3">
-          <div class="card-soft rounded-3xl p-4">
-            <div class="flex items-center justify-between gap-2">
-              <div>
-                <div class="text-sm font-black text-slate-950">11 題（照圖不改字）</div>
-                <div class="text-[11px] text-slate-500 mt-1">是/不是、性別、年齡</div>
-              </div>
-              <span class="pill pill-indigo">模擬</span>
-            </div>
-            <div id="simWrap" class="mt-3 space-y-2 max-h-[360px] overflow-auto thinbar pr-1"></div>
-          </div>
-
-          <div class="card-soft rounded-3xl p-4">
-            <div class="flex items-end justify-between gap-2">
-              <div>
-                <div class="text-sm font-black text-slate-950">報告預設顯示樣式</div>
-                <div class="text-[11px] text-slate-500 mt-1">僅預覽；正式由 LINE 自動帶入（不在此匯入）。</div>
-              </div>
-              <span class="pill">預設</span>
-            </div>
-
-            <div class="mt-3 flex items-center gap-3">
-              <div class="relative">
-                <div class="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-400/50 to-emerald-400/50 blur"></div>
-                <img id="previewAvatar" src="https://i.pravatar.cc/150?img=12"
-                     class="relative w-14 h-14 rounded-full border border-white/60 shadow" alt="avatar"/>
-              </div>
-              <div class="min-w-0">
-                <div id="previewName" class="font-black text-slate-950 truncate">LINE使用者名稱</div>
-                <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
+          <div class="mt-3 grid gap-3">
+            <div class="card-soft rounded-3xl p-4">
+              <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
+              <input id="inKeyword" class="in mt-1" placeholder="例如：生活營養" />
+              <div class="text-[11px] text-slate-500 mt-2 leading-5">
+                寫入 <span class="mono font-bold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
               </div>
             </div>
-          </div>
 
-          <div class="card-soft rounded-3xl p-4">
-            <div class="flex items-end justify-between gap-2">
-              <div>
-                <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
-                <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板。</div>
-              </div>
-              <span class="pill pill-indigo">upload</span>
+            <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
+              <div class="font-extrabold">規則說明</div>
+              <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
+              <div>• 圖片報告：個人資料下方顯示 9 個營養素（欄狀），下方留白可放引流圖。</div>
             </div>
 
-            <div class="mt-3 grid gap-2">
-              <div class="grid md:grid-cols-3 gap-2 items-end">
-                <div class="md:col-span-3">
-                  <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
-                  <input id="upFile" type="file" accept="image/*"
-                         class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
+            <div class="card-soft rounded-3xl p-4">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <div class="text-sm font-black text-slate-950">快速操作</div>
+                  <div class="text-[11px] text-slate-500 mt-1">常用按鈕集中，左側不再留白。</div>
                 </div>
-                <input id="upKey" class="hidden" />
+                <span class="pill pill-indigo">快捷</span>
               </div>
-
-              <div class="flex gap-2">
-                <button id="btnUploadR2" class="btn btn-indigo w-full">上傳到 R2</button>
-                <button id="btnUseAsBg" class="btn btn-soft w-full">設為底板URL</button>
-              </div>
-
-              <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
-                <div class="text-[11px] font-extrabold text-slate-600">上傳結果 URL</div>
-                <input id="upResultUrl" class="in mono mt-1" placeholder="上傳成功後會出現在這裡" />
-                <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：底板圖需可公開存取並允許跨域（CORS）。</div>
-              </div>
-
-              <div class="text-[11px] text-slate-500">
-                存放路徑（key）已自動設定：<span class="mono font-bold" id="txtAutoKey">assets/life11/report_bg.png</span>
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <button id="btnSimAllGood" class="btn btn-soft w-full">都很健康</button>
+                <button id="btnSimAllYes" class="btn btn-soft w-full">全部選是</button>
+                <button id="btnRenderImg" class="btn btn-dark w-full">產生圖片</button>
+                <button id="btnDownloadImg" class="btn btn-soft w-full">下載PNG</button>
               </div>
             </div>
           </div>
+        </section>
 
-          <div class="card-soft rounded-3xl p-4">
-            <div class="flex items-end justify-between gap-2">
-              <div>
-                <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
-                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（上方：個資+「欄狀9營養素」；下方：留白放引流圖）。</div>
-              </div>
-              <div class="flex gap-2">
-                <button id="btnRenderImg" class="btn btn-dark">產生圖片</button>
-                <button id="btnDownloadImg" class="btn btn-soft">下載PNG</button>
-              </div>
+        <!-- ✅ 新增：購買頁面按鈕連結設定（也可立即點擊測試） -->
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex items-end justify-between gap-2">
+            <div>
+              <h2 class="text-lg font-black text-slate-950">購買頁面連結設定</h2>
+              <p class="text-sm text-slate-600 mt-1">你填好連結後，下方按鈕可直接點擊開啟。</p>
             </div>
-
-            <div class="mt-2 grid gap-2">
-              <label class="text-[11px] font-extrabold text-slate-600">底板圖片URL（R2 公開網址）</label>
-              <input id="inBgUrl" class="in mono" placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
-            </div>
-
-            <div class="mt-3">
-              <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
-              <div class="text-[11px] text-slate-500 mt-2">
-                ※ 若下載 PNG 失敗，多半是底板圖跨域（CORS）沒開。
-              </div>
+            <div class="flex gap-2">
+              <button id="btnSaveLinks" class="btn btn-emerald btn-mini">儲存</button>
+              <button id="btnClearLinks" class="btn btn-soft btn-mini">清空</button>
             </div>
           </div>
 
-        </div>
-      </section>
+          <div class="mt-3 space-y-2" id="linksEditor"></div>
+
+          <div class="mt-3 text-[11px] text-slate-500 leading-5">
+            ※ 這裡只做「可填連結＋可點擊測試」。你之後若要做成引流圖點擊區，也可用這些連結當素材。
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="lg:col-span-2 space-y-3">
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex items-end justify-between gap-2">
+            <div>
+              <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
+              <p class="text-sm text-slate-600 mt-1">只做圖片報告 PNG（固定預設顯示樣式）。</p>
+            </div>
+            <span class="pill pill-indigo">模擬</span>
+          </div>
+
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            <div class="card-soft rounded-3xl p-4">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <div class="text-sm font-black text-slate-950">11 題（照圖不改字）</div>
+                  <div class="text-[11px] text-slate-500 mt-1">是/不是、性別、年齡</div>
+                </div>
+                <span class="pill">選擇</span>
+              </div>
+              <div id="simWrap" class="mt-3 space-y-2 max-h-[420px] overflow-auto thinbar pr-1"></div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="card-soft rounded-3xl p-4">
+                <div class="flex items-end justify-between gap-2">
+                  <div>
+                    <div class="text-sm font-black text-slate-950">報告預設顯示樣式</div>
+                    <div class="text-[11px] text-slate-500 mt-1">僅預覽；正式由 LINE 自動帶入（不在此匯入）。</div>
+                  </div>
+                  <span class="pill">預設</span>
+                </div>
+
+                <div class="mt-3 flex items-center gap-3">
+                  <div class="relative">
+                    <div class="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-400/50 to-emerald-400/50 blur"></div>
+                    <img id="previewAvatar" src="https://i.pravatar.cc/150?img=12"
+                         class="relative w-14 h-14 rounded-full border border-white/60 shadow" alt="avatar"/>
+                  </div>
+                  <div class="min-w-0">
+                    <div id="previewName" class="font-black text-slate-950 truncate">LINE使用者名稱</div>
+                    <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-soft rounded-3xl p-4">
+                <div class="flex items-end justify-between gap-2">
+                  <div>
+                    <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
+                    <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板。</div>
+                  </div>
+                  <span class="pill pill-indigo">upload</span>
+                </div>
+
+                <div class="mt-3 grid gap-2">
+                  <div>
+                    <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
+                    <input id="upFile" type="file" accept="image/*"
+                           class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
+                  </div>
+
+                  <div class="flex gap-2">
+                    <button id="btnUploadR2" class="btn btn-indigo w-full">上傳到 R2</button>
+                    <button id="btnUseAsBg" class="btn btn-soft w-full">設為底板URL</button>
+                  </div>
+
+                  <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
+                    <div class="text-[11px] font-extrabold text-slate-600">上傳結果 URL</div>
+                    <input id="upResultUrl" class="in in-mini mono mt-1" placeholder="上傳成功後會出現在這裡" />
+                    <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：底板圖需可公開存取並允許跨域（CORS）。</div>
+                  </div>
+
+                  <div class="text-[11px] text-slate-500">
+                    存放路徑（key）已自動設定：<span class="mono font-bold" id="txtAutoKey">assets/life11/report_bg.png</span>
+                  </div>
+
+                  <input id="upKey" class="hidden" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex items-end justify-between gap-2">
+            <div>
+              <h2 class="text-lg font-black text-slate-950">圖片版營養素比例報告</h2>
+              <p class="text-sm text-slate-600 mt-1">固定 900×1600 PNG（上方：個資＋欄狀 9 營養素；下方：留白放引流圖）。</p>
+            </div>
+            <span class="pill">PNG</span>
+          </div>
+
+          <div class="mt-3 grid gap-2">
+            <label class="text-[11px] font-extrabold text-slate-600">底板圖片URL（R2 公開網址）</label>
+            <input id="inBgUrl" class="in mono" placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
+          </div>
+
+          <div class="mt-3">
+            <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
+            <div class="text-[11px] text-slate-500 mt-2">
+              ※ 若下載 PNG 失敗，多半是底板圖跨域（CORS）沒開。
+            </div>
+          </div>
+
+          <!-- ✅ 你要的文字 + 按鈕（可填連結、可點擊） -->
+          <div class="mt-4 card-soft rounded-3xl p-4">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-sm font-black text-slate-950">
+                您的每日攝取尚需<span class="text-slate-500 font-bold">（點擊了解）：</span>
+              </div>
+              <button id="btnHowTo" class="btn btn-soft btn-mini">點我說明</button>
+            </div>
+            <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2" id="quickBuyBtns"></div>
+            <div class="mt-3 text-[11px] text-slate-500 leading-5">
+              ※ 這些按鈕會用「左側：購買頁面連結設定」的網址。沒填網址的按鈕會自動停用。
+            </div>
+          </div>
+        </section>
+
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+            <div>
+              <h2 class="text-lg font-black text-slate-950">③ 年齡層參考值</h2>
+              <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（上限值會用這裡的數字）。</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
+              <button id="btnCopyTargetsJson" class="btn btn-soft">複製 JSON</button>
+            </div>
+          </div>
+
+          <div class="mt-3 overflow-auto thinbar">
+            <table class="w-full min-w-[980px] border-collapse">
+              <thead>
+                <tr class="text-xs text-slate-600">
+                  <th class="text-left p-2 border-b border-slate-200">項目</th>
+                  <th class="text-left p-2 border-b border-slate-200">單位</th>
+                  <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
+                  <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
+                  <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
+                  <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
+                </tr>
+              </thead>
+              <tbody id="targetsTbody" class="text-sm"></tbody>
+            </table>
+          </div>
+
+          <div class="mt-2 text-[11px] text-slate-500 leading-5">
+            ※ 數值會組合成：<span class="mono font-bold">vitB(B1/B2/B6)</span>、<span class="mono font-bold">ca_mg(鈣/鎂)</span>、<span class="mono font-bold">trace(碘/硒)</span>。
+          </div>
+        </section>
+      </div>
     </div>
-
-    <section class="card rounded-3xl p-4 md:p-5 mt-3">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
-        <div>
-          <h2 class="text-lg font-black text-slate-950">③ 年齡層參考值</h2>
-          <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（上限值會用這裡的數字）。</p>
-        </div>
-        <div class="flex gap-2">
-          <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
-          <button id="btnCopyTargetsJson" class="btn btn-soft">複製 JSON</button>
-        </div>
-      </div>
-
-      <div class="mt-3 overflow-auto thinbar">
-        <table class="w-full min-w-[980px] border-collapse">
-          <thead>
-            <tr class="text-xs text-slate-600">
-              <th class="text-left p-2 border-b border-slate-200">項目</th>
-              <th class="text-left p-2 border-b border-slate-200">單位</th>
-              <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
-              <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
-              <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
-              <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
-            </tr>
-          </thead>
-          <tbody id="targetsTbody" class="text-sm"></tbody>
-        </table>
-      </div>
-
-      <div class="mt-2 text-[11px] text-slate-500 leading-5">
-        ※ 數值會組合成：<span class="mono font-bold">vitB(B1/B2/B6)</span>、<span class="mono font-bold">ca_mg(鈣/鎂)</span>、<span class="mono font-bold">trace(碘/硒)</span>。
-      </div>
-    </section>
 
     <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
   </div>
@@ -361,6 +430,21 @@
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
+
+  // ✅ 你要的購買按鈕（可填連結）
+  const BUY_ITEMS = [
+    { key:"vitA",   label:"維生素A" },
+    { key:"vitB",   label:"維生素B" },
+    { key:"vitC",   label:"維生素C" },
+    { key:"vitD",   label:"維生素D" },
+    { key:"vitE",   label:"維生素E" },
+    { key:"ca_mg",  label:"鈣鎂" },
+    { key:"iron",   label:"鐵" },
+    { key:"fiber",  label:"膳食纖維" },
+    { key:"trace",  label:"微量元素" },
+    { key:"protein",label:"蛋白質" },
+  ];
+  const LS_LINKS_KEY = "life11_buy_links_v1";
 
   function pad2(n){ return String(n).padStart(2,"0"); }
   function autoKeyForUpload(file){
@@ -440,7 +524,7 @@
   function escapeHtml(s){
     return (s ?? "").toString()
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"quot;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
   function showErr(e){
@@ -458,12 +542,9 @@
     $("previewAvatar").src = DEFAULT_LINE_AVATAR_URL || "https://i.pravatar.cc/150?img=12";
   }
 
-  function apiBase(){
-    return ($("inApiBase").value || "").trim().replace(/\/$/,"");
-  }
-  function adminKey(){
-    return ($("inAdminKey").value || "").trim();
-  }
+  function apiBase(){ return ($("inApiBase").value || "").trim().replace(/\/$/,""); }
+  function adminKey(){ return ($("inAdminKey").value || "").trim(); }
+
   async function apiJson(path, bodyObj){
     const base = apiBase();
     if(!base) throw new Error("API Base 不可空白");
@@ -625,7 +706,7 @@
     }
 
     return {
-      version: "life11-v12-maxcap-column-list",
+      version: "life11-v13-layout-links",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -924,19 +1005,13 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
 
-    // =========================================================
-    // ✅ 營養素改成「欄狀列表」（一列一個）
-    // - 名稱：顯示全名
-    // - 上限：只顯示「數字+單位」，字放大（不顯示「上限」字樣）
-    // - 百分比：放在長條圖中間
-    // =========================================================
+    // ===== ✅ 營養素：欄狀列表（1列1個） =====
     const listX = 56;
     const listY = 270;
     const listW = W - listX*2;
     const rowH  = 86;
     const gapY  = 10;
 
-    // 背後淡淡底（讓列表更清楚）
     ctx.save();
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#0b122b";
@@ -951,7 +1026,6 @@
       const pct = remain[k];
       const capText = capTextForKey(k, ans);
 
-      // row card
       ctx.save();
       ctx.globalAlpha = 0.16;
       ctx.fillStyle = "#ffffff";
@@ -964,18 +1038,18 @@
       roundRect(ctx, x, y, listW, rowH, 22);
       ctx.stroke();
 
-      // left: name (full)
+      // 名稱（全名）
       ctx.textAlign = "left";
       ctx.fillStyle = "rgba(255,255,255,.95)";
       ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
       ctx.fillText(LABEL[k] || k, x+18, y+34);
 
-      // left-bottom: cap number (bigger)
+      // 上限（只顯示數字+單位，字放大）
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
       ctx.fillText(capText, x+18, y+66);
 
-      // bar (right)
+      // 長條（右側）
       const barX = x + 270;
       const barY = y + 30;
       const barW = listW - 270 - 18;
@@ -990,15 +1064,12 @@
       roundRect(ctx, barX, barY, fillW, barH, 13);
       ctx.fill();
 
-      // pct text centered INSIDE bar
+      // 百分比：長條中間
       ctx.textAlign = "center";
       ctx.fillStyle = "rgba(255,255,255,.98)";
       ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
       ctx.fillText(`${pct}%`, barX + barW/2, barY + 19);
     }
-
-    // ===== 留白區（讓你放引流圖 / 可點擊區用）=====
-    // 你之後做引流圖：直接用這張 PNG 當底，去你的引流圖編輯器畫點擊區即可
 
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
@@ -1010,6 +1081,95 @@
     a.href = lastPngDataUrl;
     a.download = "nutrition_report.png";
     a.click();
+  }
+
+  // ===== ✅ 購買連結：編輯器 + 快速按鈕 =====
+  function loadLinks(){
+    try{
+      const raw = localStorage.getItem(LS_LINKS_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      return (obj && typeof obj === "object") ? obj : {};
+    }catch{
+      return {};
+    }
+  }
+  function saveLinks(obj){
+    localStorage.setItem(LS_LINKS_KEY, JSON.stringify(obj || {}));
+  }
+
+  let buyLinks = loadLinks();
+
+  function normalizeUrl(u){
+    const s = (u || "").trim();
+    if(!s) return "";
+    // 允許 https:// 或 http://，若使用者貼 www 開頭就補 https
+    if(/^https?:\/\//i.test(s)) return s;
+    if(/^www\./i.test(s)) return "https://" + s;
+    return s; // 其他就原樣（讓你可貼自家 scheme）
+  }
+
+  function renderLinksEditor(){
+    const wrap = $("linksEditor");
+    wrap.innerHTML = "";
+
+    BUY_ITEMS.forEach(item=>{
+      const row = document.createElement("div");
+      row.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
+      const v = buyLinks[item.key] || "";
+      row.innerHTML = `
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-black text-slate-950">${escapeHtml(item.label)}</div>
+            <div class="mono text-[11px] text-slate-500">${escapeHtml(item.key)}</div>
+          </div>
+          <div class="flex gap-2">
+            <input class="in in-mini mono" data-link-key="${escapeHtml(item.key)}" placeholder="貼上購買頁面連結（可空白）" value="${escapeHtml(v)}"/>
+            <button class="btn btn-dark btn-mini ${v? "" : "btn-disabled"}" data-open-key="${escapeHtml(item.key)}">開啟</button>
+          </div>
+        </div>
+      `;
+      wrap.appendChild(row);
+    });
+
+    wrap.querySelectorAll("input[data-link-key]").forEach(inp=>{
+      inp.addEventListener("input", ()=>{
+        const k = inp.getAttribute("data-link-key");
+        buyLinks[k] = normalizeUrl(inp.value);
+        // 同步更新旁邊按鈕狀態
+        const btn = wrap.querySelector(`button[data-open-key="${CSS.escape(k)}"]`);
+        if(btn){
+          if(buyLinks[k]) btn.classList.remove("btn-disabled");
+          else btn.classList.add("btn-disabled");
+        }
+        renderQuickBuyButtons(); // 右側按鈕同步
+      });
+    });
+
+    wrap.querySelectorAll("button[data-open-key]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const k = btn.getAttribute("data-open-key");
+        const url = normalizeUrl(buyLinks[k]);
+        if(!url) return toast("此項目尚未填連結", "warn");
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+    });
+  }
+
+  function renderQuickBuyButtons(){
+    const wrap = $("quickBuyBtns");
+    wrap.innerHTML = "";
+    BUY_ITEMS.forEach(item=>{
+      const url = normalizeUrl(buyLinks[item.key]);
+      const b = document.createElement("button");
+      b.className = `btn btn-soft w-full ${url ? "" : "btn-disabled"}`;
+      b.textContent = item.label;
+      b.title = url ? url : "尚未設定連結";
+      b.addEventListener("click", ()=>{
+        if(!url) return;
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+      wrap.appendChild(b);
+    });
   }
 
   // events
@@ -1075,10 +1235,31 @@
     }
   });
 
+  $("btnSaveLinks").addEventListener("click", ()=>{
+    saveLinks(buyLinks);
+    toast("已儲存購買連結 ✅");
+  });
+
+  $("btnClearLinks").addEventListener("click", ()=>{
+    buyLinks = {};
+    saveLinks(buyLinks);
+    renderLinksEditor();
+    renderQuickBuyButtons();
+    toast("已清空 ✅", "warn");
+  });
+
+  $("btnHowTo").addEventListener("click", ()=>{
+    toast("提示：這些按鈕會帶你到各營養項目的購買頁面（連結可自行填寫）。");
+  });
+
   // init
   initPreviewLine();
   renderTargetsTable();
   renderSim();
+
+  // links init
+  renderLinksEditor();
+  renderQuickBuyButtons();
 
   $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
 })();
