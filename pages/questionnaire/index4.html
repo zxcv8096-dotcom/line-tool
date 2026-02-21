@@ -200,7 +200,7 @@
           <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
             <div class="font-extrabold">規則說明</div>
             <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-            <div>• 圖片報告：個人資料下方顯示 9 個營養素（單排），下方留白可放引流圖。</div>
+            <div>• 圖片報告：個人資料下方顯示 9 個營養素（改為「欄狀列表」），下方留白可放引流圖。</div>
           </div>
         </div>
       </section>
@@ -291,7 +291,7 @@
             <div class="flex items-end justify-between gap-2">
               <div>
                 <div class="text-sm font-black text-slate-950">圖片版營養素比例報告</div>
-                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（上方：個資+單排9營養素；下方：留白放引流圖）。</div>
+                <div class="text-[11px] text-slate-500 mt-1">固定 900×1600 PNG（上方：個資+「欄狀9營養素」；下方：留白放引流圖）。</div>
               </div>
               <div class="flex gap-2">
                 <button id="btnRenderImg" class="btn btn-dark">產生圖片</button>
@@ -440,7 +440,7 @@
   function escapeHtml(s){
     return (s ?? "").toString()
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll(">","&gt;").replaceAll('"',"quot;")
       .replaceAll("'","&#039;");
   }
   function showErr(e){
@@ -625,7 +625,7 @@
     }
 
     return {
-      version: "life11-v12-maxcap-single-row",
+      version: "life11-v12-maxcap-column-list",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -820,7 +820,7 @@
 
     const fmt = (v, unit) => {
       if(v === "" || v === null || v === undefined) return "-";
-      return `${v}${unit||""}`;
+      return `${v}${unit||""}`; // ✅ 只顯示「數字+單位」
     };
 
     if(key==="vitA"){
@@ -842,7 +842,7 @@
       const r = byId.fiber; return r ? fmt(capPick(r,ans), r.unit) : "-";
     }
 
-    // 組合型：用「同單位」做簡短表示（單排才不會爆字）
+    // 組合型：單位一致時用簡短表示
     if(key==="vitB"){
       const b1=byId.b1, b2=byId.b2, b6=byId.b6;
       if(!b1 || !b2 || !b6) return "-";
@@ -924,94 +924,81 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
 
-    // ===== ✅ 營養素：單排（在個資下方一點點） =====
-    const rowY = 260;          // <== 你要的位置：個資下方一點點
-    const rowX = 50;
-    const rowW = W - rowX*2;
-    const gap = 8;
-    const cardW = (rowW - gap*(PCT_ORDER.length-1)) / PCT_ORDER.length;
-    const cardH = 150;
+    // =========================================================
+    // ✅ 營養素改成「欄狀列表」（一列一個）
+    // - 名稱：顯示全名
+    // - 上限：只顯示「數字+單位」，字放大（不顯示「上限」字樣）
+    // - 百分比：放在長條圖中間
+    // =========================================================
+    const listX = 56;
+    const listY = 270;
+    const listW = W - listX*2;
+    const rowH  = 86;
+    const gapY  = 10;
 
-    const shortLabel = {
-      vitA:"A", vitB:"B群", vitC:"C", vitD:"D", vitE:"E",
-      ca_mg:"鈣鎂", iron:"鐵", fiber:"纖維", trace:"微量"
-    };
-
-    // 背後淡淡底（讓單排更清楚）
+    // 背後淡淡底（讓列表更清楚）
     ctx.save();
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#0b122b";
-    roundRect(ctx, 42, rowY-14, W-84, cardH+28, 36);
+    roundRect(ctx, 42, listY-16, W-84, (rowH+gapY)*PCT_ORDER.length - gapY + 32, 36);
     ctx.fill();
     ctx.restore();
 
     for(let i=0;i<PCT_ORDER.length;i++){
       const k = PCT_ORDER[i];
-      const x = rowX + i*(cardW+gap);
-      const y = rowY;
+      const x = listX;
+      const y = listY + i*(rowH + gapY);
       const pct = remain[k];
-      const capText = capTextForKey(k, ans); // ✅ 上限值（依③表）
+      const capText = capTextForKey(k, ans);
 
-      // 卡片
+      // row card
       ctx.save();
       ctx.globalAlpha = 0.16;
       ctx.fillStyle = "#ffffff";
-      roundRect(ctx, x, y, cardW, cardH, 22);
+      roundRect(ctx, x, y, listW, rowH, 22);
       ctx.fill();
       ctx.restore();
 
       ctx.strokeStyle = "rgba(255,255,255,.40)";
       ctx.lineWidth = 2;
-      roundRect(ctx, x, y, cardW, cardH, 22);
+      roundRect(ctx, x, y, listW, rowH, 22);
       ctx.stroke();
 
-      // 標題（短字）
+      // left: name (full)
       ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(255,255,255,.95)";
+      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.fillText(LABEL[k] || k, x+18, y+34);
+
+      // left-bottom: cap number (bigger)
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
-      ctx.fillText(shortLabel[k] || LABEL[k] || k, x+12, y+26);
+      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.fillText(capText, x+18, y+66);
 
-      // 百分比（同一格內：百分比 + 上限值）
-      ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,.96)";
-      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
-      ctx.fillText(`${pct}%`, x+12, y+58);
+      // bar (right)
+      const barX = x + 270;
+      const barY = y + 30;
+      const barW = listW - 270 - 18;
+      const barH = 26;
 
-      ctx.fillStyle = "rgba(255,255,255,.82)";
-      ctx.font = "bold 11px Microsoft JhengHei, sans-serif";
-      ctx.fillText(`上限 ${capText}`, x+12, y+78);
-
-      // 長條
-      const barX = x+12, barY = y+92, barW = cardW-24, barH = 12;
       ctx.fillStyle = "rgba(255,255,255,.22)";
-      roundRect(ctx, barX, barY, barW, barH, 8);
+      roundRect(ctx, barX, barY, barW, barH, 13);
       ctx.fill();
 
       const fillW = Math.max(0, Math.min(barW, barW*(pct/100)));
       ctx.fillStyle = pctColor(pct);
-      roundRect(ctx, barX, barY, fillW, barH, 8);
+      roundRect(ctx, barX, barY, fillW, barH, 13);
       ctx.fill();
 
-      // 小字：完整名稱（避免卡片太小）
-      ctx.fillStyle = "rgba(255,255,255,.80)";
-      ctx.font = "bold 10px Microsoft JhengHei, sans-serif";
-      ctx.fillText(LABEL[k] || k, x+12, y+132);
+      // pct text centered INSIDE bar
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,.98)";
+      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`${pct}%`, barX + barW/2, barY + 19);
     }
 
-    // ===== ✅ 留白區（讓你放引流圖 / 可點擊區用）=====
-    // 不畫任何面板，不加字，保留底板原圖的空白
+    // ===== 留白區（讓你放引流圖 / 可點擊區用）=====
     // 你之後做引流圖：直接用這張 PNG 當底，去你的引流圖編輯器畫點擊區即可
-
-    // （可選）如果你想要「顯示一個淡淡框」提醒區域，把下面註解拿掉
-    /*
-    ctx.save();
-    ctx.setLineDash([10,8]);
-    ctx.strokeStyle = "rgba(255,255,255,.35)";
-    ctx.lineWidth = 3;
-    roundRect(ctx, 48, 450, W-96, 1080, 36);
-    ctx.stroke();
-    ctx.restore();
-    */
 
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
