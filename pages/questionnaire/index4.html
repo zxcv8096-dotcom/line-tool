@@ -55,6 +55,12 @@
       white-space:nowrap;
     }
     .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn-primary{
+      color:#fff;
+      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
+      box-shadow: 0 14px 28px rgba(99,102,241,.20);
+    }
+    .btn-primary:hover{ filter: brightness(1.04); }
     .btn-dark{
       color:#fff;
       background: linear-gradient(135deg, #0b1220, #111827);
@@ -80,16 +86,8 @@
       box-shadow: 0 14px 28px rgba(99,102,241,.18);
     }
     .btn-indigo:hover{ filter: brightness(1.03); }
-    .btn-mini{
-      border-radius: 14px;
-      padding: .55rem .8rem;
-      font-size: 12px;
-      font-weight: 900;
-    }
-    .btn-disabled{
-      opacity:.45;
-      pointer-events:none;
-    }
+    .btn-mini{ border-radius: 14px; padding: .55rem .8rem; font-size: 12px; font-weight: 900; }
+    .btn-disabled{ opacity:.45; pointer-events:none; }
 
     .in{
       width:100%;
@@ -105,10 +103,7 @@
       box-shadow: var(--ring);
       background: rgba(255,255,255,.96);
     }
-    .in-mini{
-      border-radius: 14px;
-      padding: .62rem .9rem;
-    }
+    .in-mini{ border-radius: 14px; padding: .62rem .9rem; }
 
     .hero{
       background: linear-gradient(135deg, rgba(255,255,255,.70), rgba(255,255,255,.52));
@@ -131,13 +126,8 @@
     .pill-indigo{ border-color: rgba(99,102,241,.25); background: rgba(99,102,241,.10); color: rgba(79,70,229,1); }
     .pill-rose{ border-color: rgba(244,63,94,.25); background: rgba(244,63,94,.10); color: rgba(190,18,60,1); }
 
-    /* 小螢幕優化：兩欄時避免留白 */
     @media (min-width: 1024px){
-      .sticky-left{
-        position: sticky;
-        top: 14px;
-        align-self: start;
-      }
+      .sticky-left{ position: sticky; top: 14px; align-self: start; }
     }
   </style>
 </head>
@@ -150,11 +140,11 @@
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
-            <span class="pill pill-indigo">UI 明亮</span>
-            <span class="pill pill-green">操作更順</span>
+            <span class="pill pill-indigo">報告內含按鈕</span>
+            <span class="pill pill-green">可匯出點擊區JSON</span>
           </div>
           <p class="text-sm text-slate-600 mt-1 leading-6">
-            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生圖片版營養報告 PNG。下方可設定「購買頁面連結」按鈕。
+            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生圖片版營養報告 PNG（長條下方直接畫「購買按鈕」）。
           </p>
         </div>
 
@@ -199,7 +189,6 @@
       </div>
     </section>
 
-    <!-- ✅ 版面重排：左側固定工具/設定 + 右側主要操作，避免左下角大片留白 -->
     <div class="grid lg:grid-cols-3 gap-3">
       <!-- LEFT -->
       <div class="space-y-3 sticky-left">
@@ -221,14 +210,14 @@
             <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
               <div class="font-extrabold">規則說明</div>
               <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-              <div>• 圖片報告：個人資料下方顯示 9 個營養素（欄狀），下方留白可放引流圖。</div>
+              <div>• 圖片報告：長條圖下方會直接畫「購買按鈕」，再匯出點擊區給你做 imagemap。</div>
             </div>
 
             <div class="card-soft rounded-3xl p-4">
               <div class="flex items-center justify-between gap-2">
                 <div>
                   <div class="text-sm font-black text-slate-950">快速操作</div>
-                  <div class="text-[11px] text-slate-500 mt-1">常用按鈕集中，左側不再留白。</div>
+                  <div class="text-[11px] text-slate-500 mt-1">常用按鈕集中</div>
                 </div>
                 <span class="pill pill-indigo">快捷</span>
               </div>
@@ -238,16 +227,21 @@
                 <button id="btnRenderImg" class="btn btn-dark w-full">產生圖片</button>
                 <button id="btnDownloadImg" class="btn btn-soft w-full">下載PNG</button>
               </div>
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button id="btnExportAreas" class="btn btn-indigo w-full">匯出點擊區JSON</button>
+                <button id="btnCopyAreas" class="btn btn-soft w-full">複製JSON</button>
+              </div>
+              <textarea id="outAreas" class="in mono mt-2 h-28 text-[12px]" placeholder="匯出後會出現在這裡（含按鈕座標 + 連結）"></textarea>
             </div>
           </div>
         </section>
 
-        <!-- ✅ 新增：購買頁面按鈕連結設定（也可立即點擊測試） -->
+        <!-- Links editor -->
         <section class="card rounded-3xl p-4 md:p-5">
           <div class="flex items-end justify-between gap-2">
             <div>
               <h2 class="text-lg font-black text-slate-950">購買頁面連結設定</h2>
-              <p class="text-sm text-slate-600 mt-1">你填好連結後，下方按鈕可直接點擊開啟。</p>
+              <p class="text-sm text-slate-600 mt-1">這些連結會綁定到「報告圖片內」的按鈕。</p>
             </div>
             <div class="flex gap-2">
               <button id="btnSaveLinks" class="btn btn-emerald btn-mini">儲存</button>
@@ -256,9 +250,8 @@
           </div>
 
           <div class="mt-3 space-y-2" id="linksEditor"></div>
-
           <div class="mt-3 text-[11px] text-slate-500 leading-5">
-            ※ 這裡只做「可填連結＋可點擊測試」。你之後若要做成引流圖點擊區，也可用這些連結當素材。
+            ※ PNG 內只是畫出按鈕外觀；要能點擊請用「匯出點擊區JSON」去做引流圖/LINE imagemap 點擊區。
           </div>
         </section>
       </div>
@@ -350,8 +343,8 @@
         <section class="card rounded-3xl p-4 md:p-5">
           <div class="flex items-end justify-between gap-2">
             <div>
-              <h2 class="text-lg font-black text-slate-950">圖片版營養素比例報告</h2>
-              <p class="text-sm text-slate-600 mt-1">固定 900×1600 PNG（上方：個資＋欄狀 9 營養素；下方：留白放引流圖）。</p>
+              <h2 class="text-lg font-black text-slate-950">圖片版營養素比例報告（含按鈕）</h2>
+              <p class="text-sm text-slate-600 mt-1">固定 900×1600 PNG（長條下方：直接畫「您的每日攝取尚需」＋按鈕）。</p>
             </div>
             <span class="pill">PNG</span>
           </div>
@@ -365,20 +358,6 @@
             <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
             <div class="text-[11px] text-slate-500 mt-2">
               ※ 若下載 PNG 失敗，多半是底板圖跨域（CORS）沒開。
-            </div>
-          </div>
-
-          <!-- ✅ 你要的文字 + 按鈕（可填連結、可點擊） -->
-          <div class="mt-4 card-soft rounded-3xl p-4">
-            <div class="flex items-center justify-between gap-2">
-              <div class="text-sm font-black text-slate-950">
-                您的每日攝取尚需<span class="text-slate-500 font-bold">（點擊了解）：</span>
-              </div>
-              <button id="btnHowTo" class="btn btn-soft btn-mini">點我說明</button>
-            </div>
-            <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2" id="quickBuyBtns"></div>
-            <div class="mt-3 text-[11px] text-slate-500 leading-5">
-              ※ 這些按鈕會用「左側：購買頁面連結設定」的網址。沒填網址的按鈕會自動停用。
             </div>
           </div>
         </section>
@@ -426,23 +405,22 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ✅ 預設顯示樣式（要改字改這裡）
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
 
-  // ✅ 你要的購買按鈕（可填連結）
+  // ✅ 10個按鈕（會畫進 PNG 裡）
   const BUY_ITEMS = [
-    { key:"vitA",   label:"維生素A" },
-    { key:"vitB",   label:"維生素B" },
-    { key:"vitC",   label:"維生素C" },
-    { key:"vitD",   label:"維生素D" },
-    { key:"vitE",   label:"維生素E" },
-    { key:"ca_mg",  label:"鈣鎂" },
-    { key:"iron",   label:"鐵" },
-    { key:"fiber",  label:"膳食纖維" },
-    { key:"trace",  label:"微量元素" },
-    { key:"protein",label:"蛋白質" },
+    { key:"vitA",    label:"維生素A" },
+    { key:"vitB",    label:"維生素B" },
+    { key:"vitC",    label:"維生素C" },
+    { key:"vitD",    label:"維生素D" },
+    { key:"vitE",    label:"維生素E" },
+    { key:"ca_mg",   label:"鈣鎂" },
+    { key:"iron",    label:"鐵" },
+    { key:"fiber",   label:"膳食纖維" },
+    { key:"trace",   label:"微量元素" },
+    { key:"protein", label:"蛋白質" },
   ];
   const LS_LINKS_KEY = "life11_buy_links_v1";
 
@@ -706,7 +684,7 @@
     }
 
     return {
-      version: "life11-v13-layout-links",
+      version: "life11-v14-inimage-buttons",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -851,6 +829,7 @@
   }
 
   let lastPngDataUrl = "";
+  let lastClickAreas = []; // ✅ 匯出用：按鈕點擊區座標 + url
 
   function pctColor(p){
     if(p < 35) return "#ff4d4f";
@@ -904,26 +883,13 @@
       return `${v}${unit||""}`; // ✅ 只顯示「數字+單位」
     };
 
-    if(key==="vitA"){
-      const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="vitC"){
-      const r = byId.vitC; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="vitD"){
-      const r = byId.vitD; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="vitE"){
-      const r = byId.vitE; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="iron"){
-      const r = byId.iron; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
-    if(key==="fiber"){
-      const r = byId.fiber; return r ? fmt(capPick(r,ans), r.unit) : "-";
-    }
+    if(key==="vitA"){ const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="vitC"){ const r = byId.vitC; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="vitD"){ const r = byId.vitD; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="vitE"){ const r = byId.vitE; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="iron"){ const r = byId.iron; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="fiber"){ const r = byId.fiber; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
 
-    // 組合型：單位一致時用簡短表示
     if(key==="vitB"){
       const b1=byId.b1, b2=byId.b2, b6=byId.b6;
       if(!b1 || !b2 || !b6) return "-";
@@ -945,6 +911,56 @@
     return "-";
   }
 
+  // ===== ✅ 購買連結（用於匯出點擊區） =====
+  function normalizeUrl(u){
+    const s = (u || "").trim();
+    if(!s) return "";
+    if(/^https?:\/\//i.test(s)) return s;
+    if(/^www\./i.test(s)) return "https://" + s;
+    return s;
+  }
+  function loadLinks(){
+    try{
+      const raw = localStorage.getItem(LS_LINKS_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      return (obj && typeof obj === "object") ? obj : {};
+    }catch{
+      return {};
+    }
+  }
+  function saveLinks(obj){
+    localStorage.setItem(LS_LINKS_KEY, JSON.stringify(obj || {}));
+  }
+  let buyLinks = loadLinks();
+
+  function renderLinksEditor(){
+    const wrap = $("linksEditor");
+    wrap.innerHTML = "";
+    BUY_ITEMS.forEach(item=>{
+      const row = document.createElement("div");
+      row.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
+      const v = buyLinks[item.key] || "";
+      row.innerHTML = `
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-black text-slate-950">${escapeHtml(item.label)}</div>
+            <div class="mono text-[11px] text-slate-500">${escapeHtml(item.key)}</div>
+          </div>
+          <input class="in in-mini mono" data-link-key="${escapeHtml(item.key)}" placeholder="貼上購買頁面連結（可空白）" value="${escapeHtml(v)}"/>
+        </div>
+      `;
+      wrap.appendChild(row);
+    });
+
+    wrap.querySelectorAll("input[data-link-key]").forEach(inp=>{
+      inp.addEventListener("input", ()=>{
+        const k = inp.getAttribute("data-link-key");
+        buyLinks[k] = normalizeUrl(inp.value);
+      });
+    });
+  }
+
+  // ===== ✅ 核心：畫報告（長條＋文字＋按鈕都在 PNG 裡） =====
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
     if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
@@ -953,6 +969,8 @@
     const cv = $("cvReport");
     cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d");
+
+    lastClickAreas = [];
 
     const bg = await loadImg(bgUrl);
     ctx.drawImage(bg, 0, 0, W, H);
@@ -983,13 +1001,6 @@
         ctx.stroke();
         ctx.restore();
       }catch{}
-    }else{
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,.20)";
-      ctx.beginPath();
-      ctx.arc(140, 140, 58, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
     }
 
     ctx.fillStyle = "rgba(255,255,255,.96)";
@@ -1003,19 +1014,21 @@
 
     ctx.fillStyle = "rgba(255,255,255,.86)";
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-    ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
+    ctx.fillText(`年齡:${ans.q11} · 性別:${ans.q10}`, 230, 208);
 
-    // ===== ✅ 營養素：欄狀列表（1列1個） =====
+    // ===== 營養素長條（欄狀一列一個） =====
     const listX = 56;
     const listY = 270;
     const listW = W - listX*2;
-    const rowH  = 86;
+    const rowH  = 82;
     const gapY  = 10;
+
+    const panelH = (rowH+gapY)*PCT_ORDER.length - gapY + 28;
 
     ctx.save();
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#0b122b";
-    roundRect(ctx, 42, listY-16, W-84, (rowH+gapY)*PCT_ORDER.length - gapY + 32, 36);
+    roundRect(ctx, 42, listY-14, W-84, panelH, 36);
     ctx.fill();
     ctx.restore();
 
@@ -1042,16 +1055,16 @@
       ctx.textAlign = "left";
       ctx.fillStyle = "rgba(255,255,255,.95)";
       ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-      ctx.fillText(LABEL[k] || k, x+18, y+34);
+      ctx.fillText(LABEL[k] || k, x+18, y+32);
 
-      // 上限（只顯示數字+單位，字放大）
+      // 上限（放大）
       ctx.fillStyle = "rgba(255,255,255,.92)";
       ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-      ctx.fillText(capText, x+18, y+66);
+      ctx.fillText(capText, x+18, y+62);
 
       // 長條（右側）
       const barX = x + 270;
-      const barY = y + 30;
+      const barY = y + 28;
       const barW = listW - 270 - 18;
       const barH = 26;
 
@@ -1071,6 +1084,73 @@
       ctx.fillText(`${pct}%`, barX + barW/2, barY + 19);
     }
 
+    // ===== ✅ 你的文字 + 按鈕（畫在長條下方，跟你提供的圖一樣） =====
+    const afterBarsY = (listY - 14) + panelH + 22;
+    const titleX = 56;
+
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = "#000";
+    roundRect(ctx, 42, afterBarsY-10, W-84, 270, 36);
+    ctx.fill();
+    ctx.restore();
+
+    // 「您的每日攝取尚需(點擊了解)：」
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255,255,255,.96)";
+    ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
+    ctx.fillText("您的每日攝取尚需(點擊了解)：", titleX, afterBarsY+26);
+
+    // 按鈕格線：4欄（900寬看起來像你圖的排列）
+    const btnCols = 4;
+    const btnGapX = 14;
+    const btnGapY = 14;
+    const btnW = Math.floor((W - 84 - btnGapX*(btnCols-1)) / btnCols); // 左右各42
+    const btnH = 54;
+    const btnStartX = 42;
+    const btnStartY = afterBarsY + 44;
+
+    // 取連結（用於匯出點擊區）
+    const links = loadLinks();
+
+    for(let i=0;i<BUY_ITEMS.length;i++){
+      const item = BUY_ITEMS[i];
+      const col = i % btnCols;
+      const row = Math.floor(i / btnCols);
+      const x = btnStartX + col*(btnW + btnGapX);
+      const y = btnStartY + row*(btnH + btnGapY);
+
+      // 按鈕底
+      ctx.save();
+      ctx.globalAlpha = 0.20;
+      ctx.fillStyle = "#ffffff";
+      roundRect(ctx, x, y, btnW, btnH, 22);
+      ctx.fill();
+      ctx.restore();
+
+      // 邊框
+      ctx.strokeStyle = "rgba(255,255,255,.45)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, btnW, btnH, 22);
+      ctx.stroke();
+
+      // 文字
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,.96)";
+      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
+      ctx.fillText(item.label, x + btnW/2, y + 34);
+
+      // 記錄點擊區（給你引流圖/LINE imagemap 用）
+      const url = normalizeUrl(links[item.key] || "");
+      lastClickAreas.push({
+        key: item.key,
+        label: item.label,
+        x: Math.round(x), y: Math.round(y),
+        w: Math.round(btnW), h: Math.round(btnH),
+        url
+      });
+    }
+
     lastPngDataUrl = cv.toDataURL("image/png");
     return lastPngDataUrl;
   }
@@ -1083,113 +1163,33 @@
     a.click();
   }
 
-  // ===== ✅ 購買連結：編輯器 + 快速按鈕 =====
-  function loadLinks(){
-    try{
-      const raw = localStorage.getItem(LS_LINKS_KEY);
-      const obj = raw ? JSON.parse(raw) : {};
-      return (obj && typeof obj === "object") ? obj : {};
-    }catch{
-      return {};
-    }
-  }
-  function saveLinks(obj){
-    localStorage.setItem(LS_LINKS_KEY, JSON.stringify(obj || {}));
+  function exportAreasJson(){
+    if(!lastClickAreas?.length) throw new Error("請先『產生圖片』，才能匯出點擊區");
+    const payload = {
+      canvas: { width: 900, height: 1600 },
+      areas: lastClickAreas.filter(a => !!a.url) // 只匯出有填URL的
+    };
+    const txt = JSON.stringify(payload, null, 2);
+    $("outAreas").value = txt;
+    return txt;
   }
 
-  let buyLinks = loadLinks();
-
-  function normalizeUrl(u){
-    const s = (u || "").trim();
-    if(!s) return "";
-    // 允許 https:// 或 http://，若使用者貼 www 開頭就補 https
-    if(/^https?:\/\//i.test(s)) return s;
-    if(/^www\./i.test(s)) return "https://" + s;
-    return s; // 其他就原樣（讓你可貼自家 scheme）
-  }
-
-  function renderLinksEditor(){
-    const wrap = $("linksEditor");
-    wrap.innerHTML = "";
-
-    BUY_ITEMS.forEach(item=>{
-      const row = document.createElement("div");
-      row.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
-      const v = buyLinks[item.key] || "";
-      row.innerHTML = `
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="font-black text-slate-950">${escapeHtml(item.label)}</div>
-            <div class="mono text-[11px] text-slate-500">${escapeHtml(item.key)}</div>
-          </div>
-          <div class="flex gap-2">
-            <input class="in in-mini mono" data-link-key="${escapeHtml(item.key)}" placeholder="貼上購買頁面連結（可空白）" value="${escapeHtml(v)}"/>
-            <button class="btn btn-dark btn-mini ${v? "" : "btn-disabled"}" data-open-key="${escapeHtml(item.key)}">開啟</button>
-          </div>
-        </div>
-      `;
-      wrap.appendChild(row);
-    });
-
-    wrap.querySelectorAll("input[data-link-key]").forEach(inp=>{
-      inp.addEventListener("input", ()=>{
-        const k = inp.getAttribute("data-link-key");
-        buyLinks[k] = normalizeUrl(inp.value);
-        // 同步更新旁邊按鈕狀態
-        const btn = wrap.querySelector(`button[data-open-key="${CSS.escape(k)}"]`);
-        if(btn){
-          if(buyLinks[k]) btn.classList.remove("btn-disabled");
-          else btn.classList.add("btn-disabled");
-        }
-        renderQuickBuyButtons(); // 右側按鈕同步
-      });
-    });
-
-    wrap.querySelectorAll("button[data-open-key]").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const k = btn.getAttribute("data-open-key");
-        const url = normalizeUrl(buyLinks[k]);
-        if(!url) return toast("此項目尚未填連結", "warn");
-        window.open(url, "_blank", "noopener,noreferrer");
-      });
-    });
-  }
-
-  function renderQuickBuyButtons(){
-    const wrap = $("quickBuyBtns");
-    wrap.innerHTML = "";
-    BUY_ITEMS.forEach(item=>{
-      const url = normalizeUrl(buyLinks[item.key]);
-      const b = document.createElement("button");
-      b.className = `btn btn-soft w-full ${url ? "" : "btn-disabled"}`;
-      b.textContent = item.label;
-      b.title = url ? url : "尚未設定連結";
-      b.addEventListener("click", ()=>{
-        if(!url) return;
-        window.open(url, "_blank", "noopener,noreferrer");
-      });
-      wrap.appendChild(b);
-    });
-  }
-
-  // events
+  // ====== connect / write ======
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
     catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
   });
-
   $("btnWrite").addEventListener("click", async ()=>{
     try{ clearErr(); await writeKV(); }
     catch(e){ showErr(e); toast(e.message || "寫入失敗","err"); }
   });
 
+  // ====== upload ======
   $("upFile").addEventListener("change", onPickFile);
-
   $("btnUploadR2").addEventListener("click", async ()=>{
     try{ clearErr(); await uploadToR2(); }
     catch(e){ showErr(e); toast(e.message || "上傳失敗","err"); }
   });
-
   $("btnUseAsBg").addEventListener("click", ()=>{
     const u = ($("upResultUrl").value||"").trim();
     if(!u) return toast("沒有可用的上傳URL","warn");
@@ -1197,24 +1197,43 @@
     toast("已填入底板URL ✅");
   });
 
+  // ====== render / download ======
   $("btnRenderImg").addEventListener("click", async ()=>{
     try{ clearErr(); await renderReportImage(); toast("已產生圖片 ✅"); }
     catch(e){ showErr(e); toast(e.message || "產生圖片失敗","err"); }
   });
-
   $("btnDownloadImg").addEventListener("click", ()=>{
     try{ downloadPng(); toast("已下載 PNG ✅"); }
     catch(e){ toast(e.message || "下載失敗","warn"); }
   });
 
+  // ====== export areas ======
+  $("btnExportAreas").addEventListener("click", ()=>{
+    try{
+      const txt = exportAreasJson();
+      toast("已匯出點擊區 JSON ✅（只含有填URL的按鈕）");
+    }catch(e){
+      toast(e.message || "匯出失敗", "warn");
+    }
+  });
+  $("btnCopyAreas").addEventListener("click", async ()=>{
+    try{
+      const txt = exportAreasJson();
+      await navigator.clipboard.writeText(txt);
+      toast("已複製 JSON ✅");
+    }catch(e){
+      toast("複製失敗（或尚未產生圖片）", "warn");
+    }
+  });
+
+  // ====== simulate ======
   $("btnSimAllGood").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
-    simState.q10="男";
-    simState.q11=AGE_ADULT;
+    simState.q10="女";
+    simState.q11=AGE_CHILD;
     renderSim();
     toast("已填入『都很健康』測試答案");
   });
-
   $("btnSimAllYes").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="是");
     simState.q10="男";
@@ -1223,8 +1242,8 @@
     toast("已填入『全部都選是』測試答案");
   });
 
+  // ====== targets table ======
   $("btnResetTargets").addEventListener("click", resetTargets);
-
   $("btnCopyTargetsJson").addEventListener("click", async ()=>{
     try{
       const obj = getTargetsObject();
@@ -1235,32 +1254,23 @@
     }
   });
 
+  // ====== save links ======
   $("btnSaveLinks").addEventListener("click", ()=>{
     saveLinks(buyLinks);
     toast("已儲存購買連結 ✅");
   });
-
   $("btnClearLinks").addEventListener("click", ()=>{
     buyLinks = {};
     saveLinks(buyLinks);
     renderLinksEditor();
-    renderQuickBuyButtons();
     toast("已清空 ✅", "warn");
-  });
-
-  $("btnHowTo").addEventListener("click", ()=>{
-    toast("提示：這些按鈕會帶你到各營養項目的購買頁面（連結可自行填寫）。");
   });
 
   // init
   initPreviewLine();
   renderTargetsTable();
   renderSim();
-
-  // links init
   renderLinksEditor();
-  renderQuickBuyButtons();
-
   $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
 })();
 </script>
