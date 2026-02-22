@@ -452,9 +452,17 @@
     { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
   ];
 
+  // ✅ 顯示名稱（含支項）
   const LABEL = {
-    vitA:"維生素A", vitB:"維生素B", vitC:"維生素C", vitD:"維生素D", vitE:"維生素E",
-    ca_mg:"鈣鎂", iron:"鐵", fiber:"膳食纖維", trace:"微量元素",
+    vitA:"維生素A",
+    vitB:"維生素B（B1/B2/B6）",
+    vitC:"維生素C",
+    vitD:"維生素D",
+    vitE:"維生素E",
+    ca_mg:"鈣鎂（鈣/鎂）",
+    iron:"鐵",
+    fiber:"膳食纖維",
+    trace:"微量元素（碘/硒）",
   };
   const PCT_ORDER = ["vitA","vitB","vitC","vitD","vitE","ca_mg","iron","fiber","trace"];
 
@@ -684,7 +692,7 @@
     }
 
     return {
-      version: "life11-v14-inimage-buttons",
+      version: "life11-v15-bigger-text-roomy-buttons-branch-labels",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -829,7 +837,7 @@
   }
 
   let lastPngDataUrl = "";
-  let lastClickAreas = []; // ✅ 匯出用：按鈕點擊區座標 + url
+  let lastClickAreas = [];
 
   function pctColor(p){
     if(p < 35) return "#ff4d4f";
@@ -1016,12 +1024,14 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`年齡:${ans.q11} · 性別:${ans.q10}`, 230, 208);
 
-    // ===== 營養素長條（欄狀一列一個） =====
+    // ===== 營養素長條（字變大） =====
     const listX = 56;
     const listY = 270;
     const listW = W - listX*2;
-    const rowH  = 82;
-    const gapY  = 10;
+
+    // ✅ 調大每列高度，讓文字更舒服
+    const rowH  = 94;
+    const gapY  = 12;
 
     const panelH = (rowH+gapY)*PCT_ORDER.length - gapY + 28;
 
@@ -1051,64 +1061,67 @@
       roundRect(ctx, x, y, listW, rowH, 22);
       ctx.stroke();
 
-      // 名稱（全名）
+      // ✅ 名稱（全名＋支項同一行顯示）
       ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,.95)";
-      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-      ctx.fillText(LABEL[k] || k, x+18, y+32);
+      ctx.fillStyle = "rgba(255,255,255,.98)";
+      ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
+      ctx.fillText(LABEL[k] || k, x+18, y+38);
 
-      // 上限（放大）
-      ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-      ctx.fillText(capText, x+18, y+62);
+      // ✅ 上限（放更大、更清楚）
+      ctx.fillStyle = "rgba(255,255,255,.94)";
+      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
+      ctx.fillText(capText, x+18, y+72);
 
       // 長條（右側）
-      const barX = x + 270;
-      const barY = y + 28;
-      const barW = listW - 270 - 18;
-      const barH = 26;
+      const barX = x + 330;                 // ✅ 因為左側字變大，讓長條往右一點
+      const barY = y + 34;
+      const barW = listW - 330 - 18;
+      const barH = 30;                      // ✅ 長條加高
 
       ctx.fillStyle = "rgba(255,255,255,.22)";
-      roundRect(ctx, barX, barY, barW, barH, 13);
+      roundRect(ctx, barX, barY, barW, barH, 15);
       ctx.fill();
 
       const fillW = Math.max(0, Math.min(barW, barW*(pct/100)));
       ctx.fillStyle = pctColor(pct);
-      roundRect(ctx, barX, barY, fillW, barH, 13);
+      roundRect(ctx, barX, barY, fillW, barH, 15);
       ctx.fill();
 
-      // 百分比：長條中間
+      // ✅ 百分比：字更大、仍置中
       ctx.textAlign = "center";
       ctx.fillStyle = "rgba(255,255,255,.98)";
-      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
-      ctx.fillText(`${pct}%`, barX + barW/2, barY + 19);
+      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`${pct}%`, barX + barW/2, barY + 22);
     }
 
-    // ===== ✅ 你的文字 + 按鈕（畫在長條下方，跟你提供的圖一樣） =====
-    const afterBarsY = (listY - 14) + panelH + 22;
+    // ===== ✅ 點擊了解區：按鈕不要擠（改3欄＋更高＋更大間距） =====
+    const afterBarsY = (listY - 14) + panelH + 24;
     const titleX = 56;
+
+    const btnCols = 3;      // ✅ 原本4欄太擠 → 改3欄更寬
+    const btnGapX = 16;
+    const btnGapY = 16;
+    const btnH = 62;        // ✅ 按鈕更高
+    const btnW = Math.floor((W - 84 - btnGapX*(btnCols-1)) / btnCols);
+    const btnStartX = 42;
+    const btnStartY = afterBarsY + 52;
+
+    const btnRows = Math.ceil(BUY_ITEMS.length / btnCols);
+    const boxPadBottom = 28;
+    const boxH = 52 + (btnRows * btnH) + ((btnRows-1) * btnGapY) + boxPadBottom;
 
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000";
-    roundRect(ctx, 42, afterBarsY-10, W-84, 270, 36);
+    roundRect(ctx, 42, afterBarsY-12, W-84, boxH, 36);
     ctx.fill();
     ctx.restore();
 
-    // 「您的每日攝取尚需(點擊了解)：」
+    // 標題
     ctx.textAlign = "left";
-    ctx.fillStyle = "rgba(255,255,255,.96)";
-    ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
-    ctx.fillText("您的每日攝取尚需(點擊了解)：", titleX, afterBarsY+26);
-
-    // 按鈕格線：4欄（900寬看起來像你圖的排列）
-    const btnCols = 4;
-    const btnGapX = 14;
-    const btnGapY = 14;
-    const btnW = Math.floor((W - 84 - btnGapX*(btnCols-1)) / btnCols); // 左右各42
-    const btnH = 54;
-    const btnStartX = 42;
-    const btnStartY = afterBarsY + 44;
+    ctx.fillStyle = "rgba(255,255,255,.98)";
+    ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
+    ctx.fillText("您的每日攝取尚需(點擊了解)：", titleX, afterBarsY+30);
 
     // 取連結（用於匯出點擊區）
     const links = loadLinks();
@@ -1124,23 +1137,23 @@
       ctx.save();
       ctx.globalAlpha = 0.20;
       ctx.fillStyle = "#ffffff";
-      roundRect(ctx, x, y, btnW, btnH, 22);
+      roundRect(ctx, x, y, btnW, btnH, 24);
       ctx.fill();
       ctx.restore();
 
       // 邊框
       ctx.strokeStyle = "rgba(255,255,255,.45)";
       ctx.lineWidth = 2;
-      roundRect(ctx, x, y, btnW, btnH, 22);
+      roundRect(ctx, x, y, btnW, btnH, 24);
       ctx.stroke();
 
-      // 文字
+      // 文字（更大）
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,.96)";
-      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-      ctx.fillText(item.label, x + btnW/2, y + 34);
+      ctx.fillStyle = "rgba(255,255,255,.98)";
+      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.fillText(item.label, x + btnW/2, y + 40);
 
-      // 記錄點擊區（給你引流圖/LINE imagemap 用）
+      // 點擊區
       const url = normalizeUrl(links[item.key] || "");
       lastClickAreas.push({
         key: item.key,
@@ -1167,7 +1180,7 @@
     if(!lastClickAreas?.length) throw new Error("請先『產生圖片』，才能匯出點擊區");
     const payload = {
       canvas: { width: 900, height: 1600 },
-      areas: lastClickAreas.filter(a => !!a.url) // 只匯出有填URL的
+      areas: lastClickAreas.filter(a => !!a.url)
     };
     const txt = JSON.stringify(payload, null, 2);
     $("outAreas").value = txt;
@@ -1210,7 +1223,7 @@
   // ====== export areas ======
   $("btnExportAreas").addEventListener("click", ()=>{
     try{
-      const txt = exportAreasJson();
+      exportAreasJson();
       toast("已匯出點擊區 JSON ✅（只含有填URL的按鈕）");
     }catch(e){
       toast(e.message || "匯出失敗", "warn");
