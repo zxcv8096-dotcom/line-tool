@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>生活型態營養問卷｜中控台</title>
+  <title>生活型態營養問卷｜中控台（全操作版：不用貼JSON）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
@@ -140,11 +140,11 @@
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
-            <span class="pill pill-indigo">報告內含按鈕</span>
-            <span class="pill pill-green">可匯出點擊區JSON</span>
+            <span class="pill pill-indigo">不用貼 JSON</span>
+            <span class="pill pill-green">全程用介面操作</span>
           </div>
           <p class="text-sm text-slate-600 mt-1 leading-6">
-            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生圖片版營養報告 PNG（長條下方直接畫「購買按鈕」）。
+            連線 Worker → 一鍵初始化 → 直接改表格/連結/底板 → 產 PNG + 匯出點擊區。
           </p>
         </div>
 
@@ -157,10 +157,10 @@
       <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2 text-xs">
           <span class="pill pill-rose" id="pillConn">未連線</span>
-          <span class="pill">最後測試：<span id="txtLast" class="mono ml-1">-</span></span>
+          <span class="pill">最後：<span id="txtLast" class="mono ml-1">-</span></span>
         </div>
         <div class="text-[11px] text-slate-500">
-          KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜<span class="mono font-bold">AI_SURVEY:KW_MAP</span>
+          問卷Key：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜KW_MAP：<span class="mono font-bold">AI_SURVEY:KW_MAP</span>｜產品入口：<span class="mono font-bold">AI_SURVEY:ASSET:DEFAULT</span>
         </div>
       </div>
     </header>
@@ -177,9 +177,16 @@
           <input id="inAdminKey" class="in mono mt-1" placeholder="若 Worker 有驗證才需要填" />
         </div>
 
-        <div class="md:col-span-3 flex gap-2">
+        <div class="md:col-span-3 grid md:grid-cols-3 gap-2">
           <button id="btnConnect" class="btn btn-dark w-full">連線檢查</button>
-          <button id="btnWrite" class="btn btn-emerald w-full">一鍵寫入KV</button>
+          <button id="btnLoadCloud" class="btn btn-soft w-full">讀取雲端設定</button>
+          <button id="btnInitCloud" class="btn btn-emerald w-full">一鍵初始化（不用貼JSON）</button>
+        </div>
+
+        <div class="md:col-span-3 grid md:grid-cols-3 gap-2">
+          <button id="btnSaveSurvey" class="btn btn-indigo w-full">保存問卷/規則/攝取量到KV</button>
+          <button id="btnSaveLinksToKV" class="btn btn-soft w-full">保存「購買連結」到KV</button>
+          <button id="btnSaveDefaultAsset" class="btn btn-soft w-full">保存「產品入口(統一引流圖)」到KV</button>
         </div>
       </div>
 
@@ -200,17 +207,18 @@
 
           <div class="mt-3 grid gap-3">
             <div class="card-soft rounded-3xl p-4">
-              <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
+              <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE使用者輸入這個開始）</label>
               <input id="inKeyword" class="in mt-1" placeholder="例如：生活營養" />
               <div class="text-[11px] text-slate-500 mt-2 leading-5">
-                寫入 <span class="mono font-bold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
+                會自動更新 <span class="mono font-bold">AI_SURVEY:KW_MAP</span>，不用你自己貼。
               </div>
             </div>
 
             <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
-              <div class="font-extrabold">規則說明</div>
-              <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-              <div>• 圖片報告：長條圖下方會直接畫「購買按鈕」，再匯出點擊區給你做 imagemap。</div>
+              <div class="font-extrabold">你要的「圖片報告」</div>
+              <div>• 不出文字報告，只出 PNG（第二張那種）。</div>
+              <div>• 長條下方直接畫「您的每日攝取尚需(點擊了解)：」＋按鈕。</div>
+              <div>• 可匯出點擊區 JSON 做 LINE imagemap。</div>
             </div>
 
             <div class="card-soft rounded-3xl p-4">
@@ -240,18 +248,47 @@
         <section class="card rounded-3xl p-4 md:p-5">
           <div class="flex items-end justify-between gap-2">
             <div>
-              <h2 class="text-lg font-black text-slate-950">購買頁面連結設定</h2>
-              <p class="text-sm text-slate-600 mt-1">這些連結會綁定到「報告圖片內」的按鈕。</p>
+              <h2 class="text-lg font-black text-slate-950">② 購買頁面連結設定</h2>
+              <p class="text-sm text-slate-600 mt-1">只要填網址 → 按「儲存」→ 可選擇寫到KV。</p>
             </div>
             <div class="flex gap-2">
-              <button id="btnSaveLinks" class="btn btn-emerald btn-mini">儲存</button>
+              <button id="btnSaveLinks" class="btn btn-emerald btn-mini">儲存到本機</button>
               <button id="btnClearLinks" class="btn btn-soft btn-mini">清空</button>
             </div>
           </div>
 
           <div class="mt-3 space-y-2" id="linksEditor"></div>
           <div class="mt-3 text-[11px] text-slate-500 leading-5">
-            ※ PNG 內只是畫出按鈕外觀；要能點擊請用「匯出點擊區JSON」去做引流圖/LINE imagemap 點擊區。
+            ※ PNG 內只是畫出按鈕外觀；要能點擊請用「匯出點擊區JSON」去做 LINE imagemap 點擊區。
+          </div>
+        </section>
+
+        <!-- Default asset -->
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex items-end justify-between gap-2">
+            <div>
+              <h2 class="text-lg font-black text-slate-950">③ 產品入口（統一引流圖）</h2>
+              <p class="text-sm text-slate-600 mt-1">這是你 Worker 裡用的 <span class="mono">AI_SURVEY:ASSET:DEFAULT</span></p>
+            </div>
+            <span class="pill pill-indigo">KV</span>
+          </div>
+
+          <div class="mt-3 grid gap-2">
+            <div>
+              <label class="text-[11px] font-extrabold text-slate-600">按鈕標題（ctaTitle）</label>
+              <input id="inAssetTitle" class="in in-mini mt-1" placeholder="例如：點這裡看看產品（統一引流圖）" />
+            </div>
+            <div>
+              <label class="text-[11px] font-extrabold text-slate-600">圖片URL（imageUrl）</label>
+              <input id="inAssetImage" class="in in-mini mono mt-1" placeholder="https://...png" />
+            </div>
+            <div>
+              <label class="text-[11px] font-extrabold text-slate-600">連結URL（linkUrl）</label>
+              <input id="inAssetLink" class="in in-mini mono mt-1" placeholder="https://..." />
+            </div>
+            <div class="text-[11px] text-slate-500 leading-5">
+              你可以先填好，按上面「保存『產品入口』到KV」即可。
+            </div>
           </div>
         </section>
       </div>
@@ -261,7 +298,7 @@
         <section class="card rounded-3xl p-4 md:p-5">
           <div class="flex items-end justify-between gap-2">
             <div>
-              <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
+              <h2 class="text-lg font-black text-slate-950">④ 預覽與模擬</h2>
               <p class="text-sm text-slate-600 mt-1">只做圖片報告 PNG（固定預設顯示樣式）。</p>
             </div>
             <span class="pill pill-indigo">模擬</span>
@@ -306,7 +343,7 @@
                 <div class="flex items-end justify-between gap-2">
                   <div>
                     <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
-                    <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板。</div>
+                    <div class="text-[11px] text-slate-500 mt-1">選檔 → 上傳 → 回傳 URL → 一鍵填入底板。</div>
                   </div>
                   <span class="pill pill-indigo">upload</span>
                 </div>
@@ -343,7 +380,7 @@
         <section class="card rounded-3xl p-4 md:p-5">
           <div class="flex items-end justify-between gap-2">
             <div>
-              <h2 class="text-lg font-black text-slate-950">圖片版營養素比例報告（含按鈕）</h2>
+              <h2 class="text-lg font-black text-slate-950">⑤ 圖片版營養素比例報告（含按鈕）</h2>
               <p class="text-sm text-slate-600 mt-1">固定 900×1600 PNG（長條下方：直接畫「您的每日攝取尚需」＋按鈕）。</p>
             </div>
             <span class="pill">PNG</span>
@@ -365,12 +402,12 @@
         <section class="card rounded-3xl p-4 md:p-5">
           <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
             <div>
-              <h2 class="text-lg font-black text-slate-950">③ 年齡層參考值</h2>
-              <p class="text-sm text-slate-600 mt-1">你改這裡，就會寫進 KV（上限值會用這裡的數字）。</p>
+              <h2 class="text-lg font-black text-slate-950">⑥ 年齡層參考值</h2>
+              <p class="text-sm text-slate-600 mt-1">你改這裡，就會用在 PNG 的「上限值」顯示；也可一鍵保存到 KV。</p>
             </div>
             <div class="flex gap-2">
               <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
-              <button id="btnCopyTargetsJson" class="btn btn-soft">複製 JSON</button>
+              <button id="btnCopyTargetsJson" class="btn btn-soft">複製 JSON（備份）</button>
             </div>
           </div>
 
@@ -402,14 +439,17 @@
 
 <script>
 (() => {
+  // ============ KV keys ============
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
+  const ASSET_DEFAULT_KEY = "AI_SURVEY:ASSET:DEFAULT";
+  const LINKS_KEY = "AI_SURVEY:LINKS:life11"; // ✅ 你不用貼 JSON：連結也可存雲端這個 key
 
+  // ============ Local defaults ============
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
 
-  // ✅ 10個按鈕（會畫進 PNG 裡）
   const BUY_ITEMS = [
     { key:"vitA",    label:"維生素A" },
     { key:"vitB",    label:"維生素B" },
@@ -452,7 +492,6 @@
     { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
   ];
 
-  // ✅ 顯示名稱（含支項）
   const LABEL = {
     vitA:"維生素A",
     vitB:"維生素B（B1/B2/B6）",
@@ -522,12 +561,6 @@
     $("errText").textContent = "";
   }
 
-  function initPreviewLine(){
-    $("previewName").textContent = DEFAULT_LINE_NAME;
-    $("previewId").textContent = DEFAULT_LINE_ID;
-    $("previewAvatar").src = DEFAULT_LINE_AVATAR_URL || "https://i.pravatar.cc/150?img=12";
-  }
-
   function apiBase(){ return ($("inApiBase").value || "").trim().replace(/\/$/,""); }
   function adminKey(){ return ($("inAdminKey").value || "").trim(); }
 
@@ -589,6 +622,11 @@
     toast("連線成功 ✅");
   }
 
+  // ============================
+  // ✅ 不用貼 JSON：雲端讀取/初始化
+  // ============================
+  function safeObj(v){ return (v && typeof v==="object") ? v : null; }
+
   // Targets table
   let targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
   function numOrText(v){
@@ -621,11 +659,6 @@
         row[col] = numOrText(inp.value);
       });
     });
-  }
-  function resetTargets(){
-    targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
-    renderTargetsTable();
-    toast("已恢復預設");
   }
 
   function getTargetsObject(){
@@ -692,7 +725,7 @@
     }
 
     return {
-      version: "life11-v15-bigger-text-roomy-buttons-branch-labels",
+      version: "life11-ui-only-no-json",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -706,11 +739,12 @@
     };
   }
 
-  async function writeKV(){
-    if(!CONNECTED) throw new Error("未連線，不能寫入（先按『連線檢查』）");
+  async function saveSurveyToKV(){
+    if(!CONNECTED) throw new Error("未連線");
     const payload = buildSurveyPayload();
     await kvPut(Q_KEY, payload);
 
+    // ✅ 自動更新 KW_MAP（不用你貼）
     const kw = payload.keyword.trim();
     let map = {};
     try{
@@ -719,10 +753,131 @@
     }catch{ map = {}; }
     map[kw] = "life11";
     await kvPut(KW_MAP_KEY, map);
-    toast("已寫入 KV ✅（問卷 + KW_MAP + 規則 + 攝取量）");
+
+    toast("已保存問卷/規則/攝取量到 KV ✅");
   }
 
-  // Simulation
+  // ✅ 讀取雲端設定 → 自動填入 UI（不用貼）
+  async function loadCloud(){
+    if(!CONNECTED) throw new Error("未連線");
+    // Q
+    const q = await kvGet(Q_KEY).catch(()=>null);
+    if(q && typeof q === "object"){
+      if(q.keyword) $("inKeyword").value = q.keyword;
+      const rows = q?.targetsExcel?.rows;
+      if(Array.isArray(rows) && rows.length){
+        targetsRows = rows;
+        renderTargetsTable();
+      }
+      toast("已讀取 life11 問卷設定 ✅");
+    }else{
+      toast("雲端尚未有 life11（可按一鍵初始化）", "warn");
+    }
+
+    // LINKS
+    const links = await kvGet(LINKS_KEY).catch(()=>null);
+    if(links && typeof links === "object"){
+      buyLinks = links;
+      saveLinks(buyLinks);
+      renderLinksEditor();
+      toast("已讀取雲端購買連結 ✅");
+    }
+
+    // ASSET DEFAULT
+    const asset = await kvGet(ASSET_DEFAULT_KEY).catch(()=>null);
+    if(asset && typeof asset === "object"){
+      $("inAssetTitle").value = asset.ctaTitle || "";
+      $("inAssetImage").value = asset.imageUrl || "";
+      $("inAssetLink").value  = asset.linkUrl  || "";
+      toast("已讀取產品入口（統一引流圖）✅");
+    }
+  }
+
+  // ✅ 一鍵初始化：如果雲端沒有，就直接寫預設（不用貼）
+  async function initCloud(){
+    if(!CONNECTED) throw new Error("未連線");
+    // 先檢查 Q_KEY 是否存在
+    const exist = await kvGet(Q_KEY).catch(()=>null);
+    if(exist && typeof exist === "object" && exist.name==="life11"){
+      toast("雲端已存在 life11，不重建（可按『保存』覆蓋）", "warn");
+      return;
+    }
+    // 用目前 UI 的值初始化（若空，先塞預設）
+    if(!($("inKeyword").value||"").trim()) $("inKeyword").value = "生活營養";
+    targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
+    renderTargetsTable();
+    await saveSurveyToKV();
+    toast("已完成一鍵初始化 ✅（完全不用貼JSON）");
+  }
+
+  // ====== Links (local) ======
+  function normalizeUrl(u){
+    const s = (u || "").trim();
+    if(!s) return "";
+    if(/^https?:\/\//i.test(s)) return s;
+    if(/^www\./i.test(s)) return "https://" + s;
+    return s;
+  }
+  function loadLinks(){
+    try{
+      const raw = localStorage.getItem(LS_LINKS_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      return (obj && typeof obj === "object") ? obj : {};
+    }catch{
+      return {};
+    }
+  }
+  function saveLinks(obj){
+    localStorage.setItem(LS_LINKS_KEY, JSON.stringify(obj || {}));
+  }
+  let buyLinks = loadLinks();
+
+  function renderLinksEditor(){
+    const wrap = $("linksEditor");
+    wrap.innerHTML = "";
+    BUY_ITEMS.forEach(item=>{
+      const row = document.createElement("div");
+      row.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
+      const v = buyLinks[item.key] || "";
+      row.innerHTML = `
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-black text-slate-950">${escapeHtml(item.label)}</div>
+            <div class="mono text-[11px] text-slate-500">${escapeHtml(item.key)}</div>
+          </div>
+          <input class="in in-mini mono" data-link-key="${escapeHtml(item.key)}" placeholder="貼上購買頁面連結（可空白）" value="${escapeHtml(v)}"/>
+        </div>
+      `;
+      wrap.appendChild(row);
+    });
+
+    wrap.querySelectorAll("input[data-link-key]").forEach(inp=>{
+      inp.addEventListener("input", ()=>{
+        const k = inp.getAttribute("data-link-key");
+        buyLinks[k] = normalizeUrl(inp.value);
+      });
+    });
+  }
+
+  async function saveLinksToKV(){
+    if(!CONNECTED) throw new Error("未連線");
+    // 只存物件：{vitA:"https://...", ...}
+    await kvPut(LINKS_KEY, buyLinks);
+    toast("已保存購買連結到 KV ✅");
+  }
+
+  async function saveDefaultAssetToKV(){
+    if(!CONNECTED) throw new Error("未連線");
+    const payload = {
+      ctaTitle: ($("inAssetTitle").value||"").trim(),
+      imageUrl: ($("inAssetImage").value||"").trim(),
+      linkUrl:  ($("inAssetLink").value||"").trim(),
+    };
+    await kvPut(ASSET_DEFAULT_KEY, payload);
+    toast("已保存『產品入口（統一引流圖）』到 KV ✅");
+  }
+
+  // ====== Simulation ======
   const simState = {};
   function renderSim(){
     const [ageChild, ageTeen, ageAdult] = getAgeOpts();
@@ -805,8 +960,9 @@
     return { ans, remain };
   }
 
+  // ====== Upload R2 ======
   async function uploadToR2(){
-    if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
+    if(!CONNECTED) throw new Error("未連線");
     const f = $("upFile").files?.[0];
     if(!f) throw new Error("請先選擇檔案");
 
@@ -828,14 +984,7 @@
     return url;
   }
 
-  function onPickFile(){
-    const f = $("upFile").files?.[0];
-    if(!f) return;
-    const key = autoKeyForUpload(f);
-    $("upKey").value = key;
-    $("txtAutoKey").textContent = key;
-  }
-
+  // ====== Canvas render ======
   let lastPngDataUrl = "";
   let lastClickAreas = [];
 
@@ -873,7 +1022,6 @@
     ctx.restore();
   }
 
-  // ✅ 依「年齡/性別」抓上限值（來源：③ targetsRows）
   function capPick(row, ans){
     const age = ans?.q11 || AGE_ADULT;
     const sex = ans?.q10 || "男";
@@ -888,7 +1036,7 @@
 
     const fmt = (v, unit) => {
       if(v === "" || v === null || v === undefined) return "-";
-      return `${v}${unit||""}`; // ✅ 只顯示「數字+單位」
+      return `${v}${unit||""}`;
     };
 
     if(key==="vitA"){ const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
@@ -919,56 +1067,6 @@
     return "-";
   }
 
-  // ===== ✅ 購買連結（用於匯出點擊區） =====
-  function normalizeUrl(u){
-    const s = (u || "").trim();
-    if(!s) return "";
-    if(/^https?:\/\//i.test(s)) return s;
-    if(/^www\./i.test(s)) return "https://" + s;
-    return s;
-  }
-  function loadLinks(){
-    try{
-      const raw = localStorage.getItem(LS_LINKS_KEY);
-      const obj = raw ? JSON.parse(raw) : {};
-      return (obj && typeof obj === "object") ? obj : {};
-    }catch{
-      return {};
-    }
-  }
-  function saveLinks(obj){
-    localStorage.setItem(LS_LINKS_KEY, JSON.stringify(obj || {}));
-  }
-  let buyLinks = loadLinks();
-
-  function renderLinksEditor(){
-    const wrap = $("linksEditor");
-    wrap.innerHTML = "";
-    BUY_ITEMS.forEach(item=>{
-      const row = document.createElement("div");
-      row.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
-      const v = buyLinks[item.key] || "";
-      row.innerHTML = `
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="font-black text-slate-950">${escapeHtml(item.label)}</div>
-            <div class="mono text-[11px] text-slate-500">${escapeHtml(item.key)}</div>
-          </div>
-          <input class="in in-mini mono" data-link-key="${escapeHtml(item.key)}" placeholder="貼上購買頁面連結（可空白）" value="${escapeHtml(v)}"/>
-        </div>
-      `;
-      wrap.appendChild(row);
-    });
-
-    wrap.querySelectorAll("input[data-link-key]").forEach(inp=>{
-      inp.addEventListener("input", ()=>{
-        const k = inp.getAttribute("data-link-key");
-        buyLinks[k] = normalizeUrl(inp.value);
-      });
-    });
-  }
-
-  // ===== ✅ 核心：畫報告（長條＋文字＋按鈕都在 PNG 裡） =====
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
     if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
@@ -989,7 +1087,6 @@
     const lineId = DEFAULT_LINE_ID;
     const avatarUrl = DEFAULT_LINE_AVATAR_URL;
 
-    // ===== 上方個人資料區 =====
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
@@ -1024,15 +1121,12 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`年齡:${ans.q11} · 性別:${ans.q10}`, 230, 208);
 
-    // ===== 營養素長條（字變大） =====
     const listX = 56;
     const listY = 270;
     const listW = W - listX*2;
 
-    // ✅ 調大每列高度，讓文字更舒服
     const rowH  = 94;
     const gapY  = 12;
-
     const panelH = (rowH+gapY)*PCT_ORDER.length - gapY + 28;
 
     ctx.save();
@@ -1061,22 +1155,19 @@
       roundRect(ctx, x, y, listW, rowH, 22);
       ctx.stroke();
 
-      // ✅ 名稱（全名＋支項同一行顯示）
       ctx.textAlign = "left";
       ctx.fillStyle = "rgba(255,255,255,.98)";
       ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
       ctx.fillText(LABEL[k] || k, x+18, y+38);
 
-      // ✅ 上限（放更大、更清楚）
       ctx.fillStyle = "rgba(255,255,255,.94)";
       ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
       ctx.fillText(capText, x+18, y+72);
 
-      // 長條（右側）
-      const barX = x + 330;                 // ✅ 因為左側字變大，讓長條往右一點
+      const barX = x + 330;
       const barY = y + 34;
       const barW = listW - 330 - 18;
-      const barH = 30;                      // ✅ 長條加高
+      const barH = 30;
 
       ctx.fillStyle = "rgba(255,255,255,.22)";
       roundRect(ctx, barX, barY, barW, barH, 15);
@@ -1087,21 +1178,19 @@
       roundRect(ctx, barX, barY, fillW, barH, 15);
       ctx.fill();
 
-      // ✅ 百分比：字更大、仍置中
       ctx.textAlign = "center";
       ctx.fillStyle = "rgba(255,255,255,.98)";
       ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
       ctx.fillText(`${pct}%`, barX + barW/2, barY + 22);
     }
 
-    // ===== ✅ 點擊了解區：按鈕不要擠（改3欄＋更高＋更大間距） =====
     const afterBarsY = (listY - 14) + panelH + 24;
     const titleX = 56;
 
-    const btnCols = 3;      // ✅ 原本4欄太擠 → 改3欄更寬
+    const btnCols = 3;
     const btnGapX = 16;
     const btnGapY = 16;
-    const btnH = 62;        // ✅ 按鈕更高
+    const btnH = 62;
     const btnW = Math.floor((W - 84 - btnGapX*(btnCols-1)) / btnCols);
     const btnStartX = 42;
     const btnStartY = afterBarsY + 52;
@@ -1117,14 +1206,10 @@
     ctx.fill();
     ctx.restore();
 
-    // 標題
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(255,255,255,.98)";
     ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
     ctx.fillText("您的每日攝取尚需(點擊了解)：", titleX, afterBarsY+30);
-
-    // 取連結（用於匯出點擊區）
-    const links = loadLinks();
 
     for(let i=0;i<BUY_ITEMS.length;i++){
       const item = BUY_ITEMS[i];
@@ -1133,7 +1218,6 @@
       const x = btnStartX + col*(btnW + btnGapX);
       const y = btnStartY + row*(btnH + btnGapY);
 
-      // 按鈕底
       ctx.save();
       ctx.globalAlpha = 0.20;
       ctx.fillStyle = "#ffffff";
@@ -1141,20 +1225,17 @@
       ctx.fill();
       ctx.restore();
 
-      // 邊框
       ctx.strokeStyle = "rgba(255,255,255,.45)";
       ctx.lineWidth = 2;
       roundRect(ctx, x, y, btnW, btnH, 24);
       ctx.stroke();
 
-      // 文字（更大）
       ctx.textAlign = "center";
       ctx.fillStyle = "rgba(255,255,255,.98)";
       ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
       ctx.fillText(item.label, x + btnW/2, y + 40);
 
-      // 點擊區
-      const url = normalizeUrl(links[item.key] || "");
+      const url = normalizeUrl(buyLinks[item.key] || "");
       lastClickAreas.push({
         key: item.key,
         label: item.label,
@@ -1187,22 +1268,42 @@
     return txt;
   }
 
-  // ====== connect / write ======
+  // ============ events ============
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
     catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
   });
-  $("btnWrite").addEventListener("click", async ()=>{
-    try{ clearErr(); await writeKV(); }
-    catch(e){ showErr(e); toast(e.message || "寫入失敗","err"); }
+
+  $("btnLoadCloud").addEventListener("click", async ()=>{
+    try{ clearErr(); await loadCloud(); }
+    catch(e){ showErr(e); toast(e.message || "讀取失敗","err"); }
   });
 
-  // ====== upload ======
-  $("upFile").addEventListener("change", onPickFile);
+  $("btnInitCloud").addEventListener("click", async ()=>{
+    try{ clearErr(); await initCloud(); }
+    catch(e){ showErr(e); toast(e.message || "初始化失敗","err"); }
+  });
+
+  $("btnSaveSurvey").addEventListener("click", async ()=>{
+    try{ clearErr(); await saveSurveyToKV(); }
+    catch(e){ showErr(e); toast(e.message || "保存失敗","err"); }
+  });
+
+  $("btnSaveLinksToKV").addEventListener("click", async ()=>{
+    try{ clearErr(); await saveLinksToKV(); }
+    catch(e){ showErr(e); toast(e.message || "保存連結失敗","err"); }
+  });
+
+  $("btnSaveDefaultAsset").addEventListener("click", async ()=>{
+    try{ clearErr(); await saveDefaultAssetToKV(); }
+    catch(e){ showErr(e); toast(e.message || "保存產品入口失敗","err"); }
+  });
+
   $("btnUploadR2").addEventListener("click", async ()=>{
     try{ clearErr(); await uploadToR2(); }
     catch(e){ showErr(e); toast(e.message || "上傳失敗","err"); }
   });
+
   $("btnUseAsBg").addEventListener("click", ()=>{
     const u = ($("upResultUrl").value||"").trim();
     if(!u) return toast("沒有可用的上傳URL","warn");
@@ -1210,17 +1311,16 @@
     toast("已填入底板URL ✅");
   });
 
-  // ====== render / download ======
   $("btnRenderImg").addEventListener("click", async ()=>{
     try{ clearErr(); await renderReportImage(); toast("已產生圖片 ✅"); }
     catch(e){ showErr(e); toast(e.message || "產生圖片失敗","err"); }
   });
+
   $("btnDownloadImg").addEventListener("click", ()=>{
     try{ downloadPng(); toast("已下載 PNG ✅"); }
     catch(e){ toast(e.message || "下載失敗","warn"); }
   });
 
-  // ====== export areas ======
   $("btnExportAreas").addEventListener("click", ()=>{
     try{
       exportAreasJson();
@@ -1239,7 +1339,6 @@
     }
   });
 
-  // ====== simulate ======
   $("btnSimAllGood").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
     simState.q10="女";
@@ -1255,23 +1354,26 @@
     toast("已填入『全部都選是』測試答案");
   });
 
-  // ====== targets table ======
-  $("btnResetTargets").addEventListener("click", resetTargets);
+  $("btnResetTargets").addEventListener("click", ()=>{
+    targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
+    renderTargetsTable();
+    toast("已恢復預設");
+  });
+
   $("btnCopyTargetsJson").addEventListener("click", async ()=>{
     try{
-      const obj = getTargetsObject();
-      await navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
+      await navigator.clipboard.writeText(JSON.stringify(getTargetsObject(), null, 2));
       toast("已複製 Targets JSON ✅");
     }catch{
       toast("複製失敗（瀏覽器限制）", "warn");
     }
   });
 
-  // ====== save links ======
   $("btnSaveLinks").addEventListener("click", ()=>{
     saveLinks(buyLinks);
-    toast("已儲存購買連結 ✅");
+    toast("已儲存購買連結（本機）✅");
   });
+
   $("btnClearLinks").addEventListener("click", ()=>{
     buyLinks = {};
     saveLinks(buyLinks);
@@ -1279,12 +1381,18 @@
     toast("已清空 ✅", "warn");
   });
 
-  // init
+  // init UI
+  function initPreviewLine(){
+    $("previewName").textContent = DEFAULT_LINE_NAME;
+    $("previewId").textContent = DEFAULT_LINE_ID;
+    $("previewAvatar").src = DEFAULT_LINE_AVATAR_URL;
+  }
+
   initPreviewLine();
   renderTargetsTable();
   renderSim();
   renderLinksEditor();
-  $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
+  $("txtLast").textContent = "-";
 })();
 </script>
 </body>
