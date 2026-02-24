@@ -129,6 +129,9 @@
     @media (min-width: 1024px){
       .sticky-left{ position: sticky; top: 14px; align-self: start; }
     }
+
+    /* ✅ 隱藏用（你說圖片功能不要看到） */
+    .hidden-ui{ display:none !important; }
   </style>
 </head>
 
@@ -141,16 +144,16 @@
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
             <span class="pill pill-indigo">報告內含按鈕</span>
-            <span class="pill pill-green">可匯出點擊區JSON</span>
+            <span class="pill pill-green">自動匯出點擊區JSON</span>
           </div>
           <p class="text-sm text-slate-600 mt-1 leading-6">
-            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生圖片版營養報告 PNG（長條下方直接畫按鈕）。
+            一鍵寫入 KV（問卷/規則/攝取量）＋ 自動產生 PNG（不顯示圖片介面）＋ 自動匯出點擊區 JSON（並嘗試自動複製）。
           </p>
         </div>
 
         <div class="text-xs text-slate-600 leading-6">
           <div class="font-extrabold">需要 Worker API：</div>
-          <div class="mono">POST /listAll /putAny /loadAny /upload</div>
+          <div class="mono">POST /listAll /putAny /loadAny</div>
         </div>
       </div>
 
@@ -211,10 +214,11 @@
             <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
               <div class="font-extrabold">規則說明</div>
               <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-              <div>• 圖片報告：長條圖下方會直接畫「按鈕」，再匯出點擊區 JSON。</div>
+              <div>• 報告圖片：長條圖下方會直接畫「按鈕」，並匯出點擊區 JSON。</div>
               <div class="mt-2 font-extrabold">🚀 一鍵發佈會做：</div>
               <div>① 寫入問卷/規則/參考值 → KV</div>
-              <div>② 立刻產生 PNG + 自動匯出點擊區 JSON</div>
+              <div>② 自動產生 PNG（背景用固定 URL，不顯示圖片工具介面）</div>
+              <div>③ 自動匯出點擊區 JSON（並嘗試自動複製）</div>
             </div>
 
             <div class="card-soft rounded-3xl p-4">
@@ -228,14 +232,14 @@
               <div class="mt-3 grid grid-cols-2 gap-2">
                 <button id="btnSimAllGood" class="btn btn-soft w-full">都很健康</button>
                 <button id="btnSimAllYes" class="btn btn-soft w-full">全部選是</button>
-                <button id="btnRenderImg" class="btn btn-dark w-full">產生圖片</button>
-                <button id="btnDownloadImg" class="btn btn-soft w-full">下載PNG</button>
-              </div>
-              <div class="mt-2 grid grid-cols-2 gap-2">
                 <button id="btnExportAreas" class="btn btn-indigo w-full">匯出點擊區JSON</button>
                 <button id="btnCopyAreas" class="btn btn-soft w-full">複製JSON</button>
               </div>
               <textarea id="outAreas" class="in mono mt-2 h-28 text-[12px]" placeholder="匯出後會出現在這裡（含按鈕座標）"></textarea>
+
+              <!-- ✅ 圖片功能仍在程式裡（自動化要用），但 UI 不顯示 -->
+              <button id="btnRenderImg" class="hidden-ui" aria-hidden="true">產生圖片</button>
+              <button id="btnDownloadImg" class="hidden-ui" aria-hidden="true">下載PNG</button>
             </div>
           </div>
         </section>
@@ -247,7 +251,7 @@
           <div class="flex items-end justify-between gap-2">
             <div>
               <h2 class="text-lg font-black text-slate-950">② 預覽與模擬</h2>
-              <p class="text-sm text-slate-600 mt-1">只做圖片報告 PNG（固定預設顯示樣式）。</p>
+              <p class="text-sm text-slate-600 mt-1">只做報告 PNG（程式自動產生，不顯示圖片工具介面）。</p>
             </div>
             <span class="pill pill-indigo">模擬</span>
           </div>
@@ -261,7 +265,7 @@
                 </div>
                 <span class="pill">選擇</span>
               </div>
-              <div id="simWrap" class="mt-3 space-y-2 max-h-[420px] overflow-auto thinbar pr-1"></div>
+              <div id="simWrap" class="mt-3 space-y-2 max-h-[520px] overflow-auto thinbar pr-1"></div>
             </div>
 
             <div class="space-y-3">
@@ -285,64 +289,25 @@
                     <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
                   </div>
                 </div>
-              </div>
 
-              <div class="card-soft rounded-3xl p-4">
-                <div class="flex items-end justify-between gap-2">
-                  <div>
-                    <div class="text-sm font-black text-slate-950">R2 上傳（底板）</div>
-                    <div class="text-[11px] text-slate-500 mt-1">選檔 → <span class="mono">POST /upload</span> → 回傳 URL → 自動填入底板。</div>
-                  </div>
-                  <span class="pill pill-indigo">upload</span>
-                </div>
-
-                <div class="mt-3 grid gap-2">
-                  <div>
-                    <label class="text-[11px] font-extrabold text-slate-600">選擇檔案</label>
-                    <input id="upFile" type="file" accept="image/*"
-                           class="mt-1 w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
-                  </div>
-
-                  <div class="flex gap-2">
-                    <button id="btnUploadR2" class="btn btn-indigo w-full">上傳到 R2</button>
-                    <button id="btnUseAsBg" class="btn btn-soft w-full">設為底板URL</button>
-                  </div>
-
-                  <div class="rounded-2xl border border-slate-200 bg-white/80 p-3">
-                    <div class="text-[11px] font-extrabold text-slate-600">上傳結果 URL</div>
-                    <input id="upResultUrl" class="in in-mini mono mt-1" placeholder="上傳成功後會出現在這裡" />
-                    <div class="text-[11px] text-slate-500 mt-2">要能匯出 PNG：底板圖需可公開存取並允許跨域（CORS）。</div>
-                  </div>
-
-                  <div class="text-[11px] text-slate-500">
-                    存放路徑（key）已自動設定：<span class="mono font-bold" id="txtAutoKey">assets/life11/report_bg.png</span>
-                  </div>
-
-                  <input id="upKey" class="hidden" />
+                <div class="mt-3 rounded-2xl border border-slate-200 bg-white/80 p-3 text-[11px] text-slate-600 leading-5">
+                  <div class="font-extrabold text-slate-800">背景圖（自動化）</div>
+                  <div>不顯示上傳/預覽/畫布；發佈時直接用程式內設定的固定背景 URL 產生 PNG。</div>
+                  <div class="mt-1">要換底板：改 <span class="mono font-bold">DEFAULT_BG_URL</span>。</div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
 
-        <section class="card rounded-3xl p-4 md:p-5">
-          <div class="flex items-end justify-between gap-2">
-            <div>
-              <h2 class="text-lg font-black text-slate-950">圖片版營養素比例報告（含按鈕）</h2>
-              <p class="text-sm text-slate-600 mt-1">固定 900×1600 PNG（長條下方：直接畫「您的每日攝取尚需」＋按鈕）。</p>
-            </div>
-            <span class="pill">PNG</span>
-          </div>
-
-          <div class="mt-3 grid gap-2">
-            <label class="text-[11px] font-extrabold text-slate-600">底板圖片URL（R2 公開網址）</label>
-            <input id="inBgUrl" class="in mono" placeholder="https://<your-public-r2-url>/assets/report_bg.png" />
-          </div>
-
-          <div class="mt-3">
-            <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
-            <div class="text-[11px] text-slate-500 mt-2">
-              ※ 若下載 PNG 失敗，多半是底板圖跨域（CORS）沒開。
+              <!-- ✅ Canvas/圖片工具 UI：整段隱藏 -->
+              <div class="hidden-ui" aria-hidden="true">
+                <input id="inBgUrl" class="in mono" />
+                <canvas id="cvReport" class="w-full rounded-3xl border border-slate-200 bg-white"></canvas>
+                <input id="upKey" class="hidden" />
+                <input id="upResultUrl" class="hidden" />
+                <input id="upFile" type="file" />
+                <button id="btnUploadR2">上傳到 R2</button>
+                <button id="btnUseAsBg">設為底板URL</button>
+                <div id="txtAutoKey"></div>
+              </div>
             </div>
           </div>
         </section>
@@ -390,6 +355,14 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
+  // =========================
+  // ✅ 圖片自動化設定（你只要改這裡）
+  // =========================
+  const DEFAULT_BG_URL = "https://YOUR_PUBLIC_BG_URL_HERE/assets/life11/report_bg.png";
+  const AUTO_EXPORT_JSON_ON_PUBLISH = true;     // 發佈後自動匯出 JSON 到文字框
+  const AUTO_COPY_JSON_ON_PUBLISH   = true;     // 發佈後嘗試自動複製 JSON（瀏覽器允許才會成功）
+  const AUTO_DOWNLOAD_PNG_ON_PUBLISH= false;    // 要不要發佈後自動下載 PNG（你不想看到圖片功能，預設關閉）
+
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
@@ -407,15 +380,6 @@
     { key:"trace",   label:"微量元素" },
     { key:"protein", label:"蛋白質" },
   ];
-
-  function pad2(n){ return String(n).padStart(2,"0"); }
-  function autoKeyForUpload(file){
-    const d = new Date();
-    const stamp = `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
-    const ext = (file?.name || "").split(".").pop()?.toLowerCase();
-    const safeExt = (ext && ext.length <= 6) ? ext : "png";
-    return `assets/life11/report_bg_${stamp}.${safeExt}`;
-  }
 
   const AGE_CHILD = "0~10 歲 (兒童)";
   const AGE_TEEN  = "11~18 歲 (青少年)";
@@ -533,19 +497,6 @@
     if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
     return data;
   }
-  async function apiForm(path, formData){
-    const base = apiBase();
-    if(!base) throw new Error("API Base 不可空白");
-    const headers = {};
-    const k = adminKey();
-    if(k) headers["X-Admin-Key"] = k;
-
-    const res = await fetch(base + path, { method:"POST", headers, body: formData });
-    const data = await res.json().catch(()=>null);
-    if(!res.ok) throw new Error((data && (data.error||data.detail)) || (res.status + " " + res.statusText));
-    if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
-    return data;
-  }
 
   async function kvGet(key){
     const r = await apiJson("/loadAny", { namespace:"DB", keyword:key });
@@ -613,6 +564,9 @@
     toast("已恢復預設");
   }
 
+  function getAgeOpts(){ return [AGE_CHILD, AGE_TEEN, AGE_ADULT]; }
+  function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
+
   function getTargetsObject(){
     const byId = {};
     targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
@@ -650,9 +604,6 @@
     return { rows: structuredClone(targetsRows), combined };
   }
 
-  function getAgeOpts(){ return [AGE_CHILD, AGE_TEEN, AGE_ADULT]; }
-  function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
-
   function buildSurveyPayload(){
     const kw = ($("inKeyword").value || "").trim();
     if(!kw) throw new Error("請填『啟動關鍵字』");
@@ -677,7 +628,7 @@
     }
 
     return {
-      version: "life11-v15-remove-buy-links",
+      version: "life11-v16-hide-image-ui-auto",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -791,37 +742,7 @@
     return { ans, remain };
   }
 
-  async function uploadToR2(){
-    if(!CONNECTED) throw new Error("未連線，不能上傳（先按『連線檢查』）");
-    const f = $("upFile").files?.[0];
-    if(!f) throw new Error("請先選擇檔案");
-
-    const key = autoKeyForUpload(f);
-    $("upKey").value = key;
-    $("txtAutoKey").textContent = key;
-
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("key", key);
-    fd.append("contentType", f.type || "application/octet-stream");
-
-    const r = await apiForm("/upload", fd);
-    const url = r?.url || r?.publicUrl || r?.result?.url || r?.result?.publicUrl || r?.payload?.url || "";
-    if(!url) throw new Error("上傳成功但沒拿到 URL（請確認 Worker /upload 回傳 {url} 或 {publicUrl}）");
-
-    $("upResultUrl").value = url;
-    toast("上傳成功 ✅");
-    return url;
-  }
-
-  function onPickFile(){
-    const f = $("upFile").files?.[0];
-    if(!f) return;
-    const key = autoKeyForUpload(f);
-    $("upKey").value = key;
-    $("txtAutoKey").textContent = key;
-  }
-
+  // ===== 圖片產生（仍保留，供自動化使用；UI 已隱藏） =====
   let lastPngDataUrl = "";
   let lastClickAreas = [];
 
@@ -874,7 +795,7 @@
 
     const fmt = (v, unit) => {
       if(v === "" || v === null || v === undefined) return "-";
-      return `${v}${unit||""}`; // ✅ 只顯示「數字+單位」
+      return `${v}${unit||""}`;
     };
 
     if(key==="vitA"){ const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
@@ -905,13 +826,16 @@
     return "-";
   }
 
-  // ===== ✅ 核心：畫報告（長條＋文字＋按鈕都在 PNG 裡；不含購買連結） =====
   async function renderReportImage(){
-    const bgUrl = ($("inBgUrl").value||"").trim();
-    if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
+    const bgUrl = (DEFAULT_BG_URL || "").trim();
+    if(!bgUrl || bgUrl.includes("YOUR_PUBLIC_BG_URL_HERE")){
+      throw new Error("請先把程式最上方的 DEFAULT_BG_URL 換成你的『底板圖片公開網址』");
+    }
 
     const W = 900, H = 1600;
-    const cv = $("cvReport");
+
+    // ✅ 不顯示畫布，但仍用離線 canvas 產 PNG
+    const cv = document.createElement("canvas");
     cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d");
 
@@ -1091,7 +1015,7 @@
   }
 
   function downloadPng(){
-    if(!lastPngDataUrl) throw new Error("請先按『產生圖片』");
+    if(!lastPngDataUrl) throw new Error("尚未產生 PNG");
     const a = document.createElement("a");
     a.href = lastPngDataUrl;
     a.download = "nutrition_report.png";
@@ -1099,7 +1023,7 @@
   }
 
   function exportAreasJson(){
-    if(!lastClickAreas?.length) throw new Error("請先『產生圖片』，才能匯出點擊區");
+    if(!lastClickAreas?.length) throw new Error("請先產生圖片（發佈會自動做）");
     const payload = {
       canvas: { width: 900, height: 1600 },
       areas: lastClickAreas
@@ -1109,21 +1033,38 @@
     return txt;
   }
 
-  // ✅ 一鍵發佈（已移除購買連結相關流程）
+  // ✅ 一鍵發佈（不顯示圖片功能，但仍會自動產 PNG + JSON）
   async function publishAll(){
     clearErr();
 
-    // 1) 確保連線
     if(!CONNECTED) await connect();
-
-    // 2) 寫入問卷/規則/參考值/KW_MAP
     await writeKV();
 
-    // 3) 產生圖片（需要底板URL）
+    // 產 PNG（自動）
     await renderReportImage();
 
-    // 4) 自動匯出點擊區 JSON
-    exportAreasJson();
+    // 匯出 JSON（自動）
+    let txt = "";
+    if(AUTO_EXPORT_JSON_ON_PUBLISH){
+      txt = exportAreasJson();
+      toast("已自動匯出點擊區 JSON ✅");
+    }
+
+    // 嘗試自動複製 JSON（可失敗，瀏覽器限制）
+    if(AUTO_COPY_JSON_ON_PUBLISH && txt){
+      try{
+        await navigator.clipboard.writeText(txt);
+        toast("已自動複製 JSON ✅");
+      }catch{
+        toast("自動複製失敗（瀏覽器限制）", "warn");
+      }
+    }
+
+    // 可選：自動下載 PNG（預設關閉）
+    if(AUTO_DOWNLOAD_PNG_ON_PUBLISH){
+      try{ downloadPng(); toast("已自動下載 PNG ✅"); }
+      catch{ toast("自動下載 PNG 失敗", "warn"); }
+    }
 
     toast("🚀 發佈完成 ✅（KV + PNG + JSON）");
   }
@@ -1140,38 +1081,11 @@
   });
 
   $("btnPublish").addEventListener("click", async ()=>{
-    try{
-      await publishAll();
-    }catch(e){
-      showErr(e);
-      toast(e.message || "一鍵發佈失敗","err");
-    }
+    try{ await publishAll(); }
+    catch(e){ showErr(e); toast(e.message || "一鍵發佈失敗","err"); }
   });
 
-  // ====== upload ======
-  $("upFile").addEventListener("change", onPickFile);
-  $("btnUploadR2").addEventListener("click", async ()=>{
-    try{ clearErr(); await uploadToR2(); }
-    catch(e){ showErr(e); toast(e.message || "上傳失敗","err"); }
-  });
-  $("btnUseAsBg").addEventListener("click", ()=>{
-    const u = ($("upResultUrl").value||"").trim();
-    if(!u) return toast("沒有可用的上傳URL","warn");
-    $("inBgUrl").value = u;
-    toast("已填入底板URL ✅");
-  });
-
-  // ====== render / download ======
-  $("btnRenderImg").addEventListener("click", async ()=>{
-    try{ clearErr(); await renderReportImage(); toast("已產生圖片 ✅"); }
-    catch(e){ showErr(e); toast(e.message || "產生圖片失敗","err"); }
-  });
-  $("btnDownloadImg").addEventListener("click", ()=>{
-    try{ downloadPng(); toast("已下載 PNG ✅"); }
-    catch(e){ toast(e.message || "下載失敗","warn"); }
-  });
-
-  // ====== export areas ======
+  // ====== export areas (手動) ======
   $("btnExportAreas").addEventListener("click", ()=>{
     try{
       exportAreasJson();
@@ -1186,7 +1100,7 @@
       await navigator.clipboard.writeText(txt);
       toast("已複製 JSON ✅");
     }catch(e){
-      toast("複製失敗（或尚未產生圖片）", "warn");
+      toast("複製失敗（或尚未產生 PNG/JSON）", "warn");
     }
   });
 
@@ -1222,7 +1136,6 @@
   initPreviewLine();
   renderTargetsTable();
   renderSim();
-  $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
 })();
 </script>
 </body>
