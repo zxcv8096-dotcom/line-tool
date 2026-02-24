@@ -160,7 +160,7 @@
           <span class="pill">最後測試：<span id="txtLast" class="mono ml-1">-</span></span>
         </div>
         <div class="text-[11px] text-slate-500">
-          KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜<span class="mono font-bold">AI_SURVEY:KW_MAP</span>｜<span class="mono font-bold">AI_SURVEY:LINKS:life11</span>
+          KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜<span class="mono font-bold">AI_SURVEY:KW_MAP</span>
         </div>
       </div>
     </header>
@@ -180,15 +180,6 @@
         <div class="md:col-span-3 flex gap-2">
           <button id="btnConnect" class="btn btn-dark w-full">連線檢查</button>
           <button id="btnWrite" class="btn btn-emerald w-full">一鍵寫入KV</button>
-          <!-- ✅ 新增：一鍵發佈（保留你原本所有按鈕不砍） -->
-          <button id="btnPublish" class="btn btn-primary w-full">🚀 一鍵發佈</button>
-        </div>
-
-        <div class="md:col-span-3 flex flex-wrap gap-2 pt-1">
-          <!-- ✅ 新增：連結同步 KV 的載入/儲存，不影響你原本 localStorage -->
-          <button id="btnLoadLinksKV" class="btn btn-soft btn-mini">從 KV 讀取購買連結</button>
-          <button id="btnSaveLinksKV" class="btn btn-soft btn-mini">把購買連結存到 KV</button>
-          <span class="pill">購買連結：localStorage + KV（可同步）</span>
         </div>
       </div>
 
@@ -220,10 +211,6 @@
               <div class="font-extrabold">規則說明</div>
               <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
               <div>• 圖片報告：長條圖下方會直接畫「購買按鈕」，再匯出點擊區給你做 imagemap。</div>
-              <div class="mt-2 font-extrabold">🚀 一鍵發佈會做：</div>
-              <div>① 寫入問卷/規則/參考值 → KV</div>
-              <div>② 同步購買連結 → KV</div>
-              <div>③ 立刻產生 PNG + 自動匯出點擊區 JSON</div>
             </div>
 
             <div class="card-soft rounded-3xl p-4">
@@ -264,8 +251,7 @@
 
           <div class="mt-3 space-y-2" id="linksEditor"></div>
           <div class="mt-3 text-[11px] text-slate-500 leading-5">
-            ※ PNG 內只是畫出按鈕外觀；要能點擊請用「匯出點擊區JSON」去做引流圖/LINE imagemap 點擊區。<br/>
-            ※ 這裡預設存 localStorage；你也可以用上方按鈕同步到 KV（推薦）。
+            ※ PNG 內只是畫出按鈕外觀；要能點擊請用「匯出點擊區JSON」去做引流圖/LINE imagemap 點擊區。
           </div>
         </section>
       </div>
@@ -419,9 +405,6 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ✅ 新增：購買連結同步到 KV（不砍你的 localStorage）
-  const LINKS_KV_KEY = "AI_SURVEY:LINKS:life11";
-
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
@@ -469,17 +452,9 @@
     { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
   ];
 
-  // ✅ 顯示名稱（含支項）
   const LABEL = {
-    vitA:"維生素A",
-    vitB:"維生素B（B1/B2/B6）",
-    vitC:"維生素C",
-    vitD:"維生素D",
-    vitE:"維生素E",
-    ca_mg:"鈣鎂（鈣/鎂）",
-    iron:"鐵",
-    fiber:"膳食纖維",
-    trace:"微量元素（碘/硒）",
+    vitA:"維生素A", vitB:"維生素B", vitC:"維生素C", vitD:"維生素D", vitE:"維生素E",
+    ca_mg:"鈣鎂", iron:"鐵", fiber:"膳食纖維", trace:"微量元素",
   };
   const PCT_ORDER = ["vitA","vitB","vitC","vitD","vitE","ca_mg","iron","fiber","trace"];
 
@@ -527,8 +502,7 @@
   function escapeHtml(s){
     return (s ?? "").toString()
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
   function showErr(e){
@@ -710,7 +684,7 @@
     }
 
     return {
-      version: "life11-v15-bigger-text-roomy-buttons-branch-labels",
+      version: "life11-v14-inimage-buttons",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -737,7 +711,6 @@
     }catch{ map = {}; }
     map[kw] = "life11";
     await kvPut(KW_MAP_KEY, map);
-
     toast("已寫入 KV ✅（問卷 + KW_MAP + 規則 + 攝取量）");
   }
 
@@ -856,7 +829,7 @@
   }
 
   let lastPngDataUrl = "";
-  let lastClickAreas = [];
+  let lastClickAreas = []; // ✅ 匯出用：按鈕點擊區座標 + url
 
   function pctColor(p){
     if(p < 35) return "#ff4d4f";
@@ -938,7 +911,7 @@
     return "-";
   }
 
-  // ====== ✅ 購買連結（localStorage + KV） ======
+  // ===== ✅ 購買連結（用於匯出點擊區） =====
   function normalizeUrl(u){
     const s = (u || "").trim();
     if(!s) return "";
@@ -946,7 +919,7 @@
     if(/^www\./i.test(s)) return "https://" + s;
     return s;
   }
-  function loadLinksLocal(){
+  function loadLinks(){
     try{
       const raw = localStorage.getItem(LS_LINKS_KEY);
       const obj = raw ? JSON.parse(raw) : {};
@@ -955,29 +928,10 @@
       return {};
     }
   }
-  function saveLinksLocal(obj){
+  function saveLinks(obj){
     localStorage.setItem(LS_LINKS_KEY, JSON.stringify(obj || {}));
   }
-  async function loadLinksKV(){
-    if(!CONNECTED) throw new Error("未連線，不能讀取 KV（先按『連線檢查』）");
-    const obj = await kvGet(LINKS_KV_KEY).catch(()=> ({}));
-    return (obj && typeof obj==="object") ? obj : {};
-  }
-  async function saveLinksKV(obj){
-    if(!CONNECTED) throw new Error("未連線，不能寫入 KV（先按『連線檢查』）");
-    await kvPut(LINKS_KV_KEY, obj || {});
-  }
-  function mergeLinksPreferLocal(localObj, kvObj){
-    const out = {};
-    BUY_ITEMS.forEach(it=>{
-      const a = normalizeUrl(localObj?.[it.key] || "");
-      const b = normalizeUrl(kvObj?.[it.key] || "");
-      out[it.key] = a || b || "";
-    });
-    return out;
-  }
-
-  let buyLinks = loadLinksLocal();
+  let buyLinks = loadLinks();
 
   function renderLinksEditor(){
     const wrap = $("linksEditor");
@@ -1062,13 +1016,12 @@
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
     ctx.fillText(`年齡:${ans.q11} · 性別:${ans.q10}`, 230, 208);
 
-    // ===== 營養素長條 =====
+    // ===== 營養素長條（欄狀一列一個） =====
     const listX = 56;
     const listY = 270;
     const listW = W - listX*2;
-
-    const rowH  = 94;
-    const gapY  = 12;
+    const rowH  = 82;
+    const gapY  = 10;
 
     const panelH = (rowH+gapY)*PCT_ORDER.length - gapY + 28;
 
@@ -1098,88 +1051,97 @@
       roundRect(ctx, x, y, listW, rowH, 22);
       ctx.stroke();
 
+      // 名稱（全名）
       ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,.98)";
-      ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
-      ctx.fillText(LABEL[k] || k, x+18, y+38);
+      ctx.fillStyle = "rgba(255,255,255,.95)";
+      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.fillText(LABEL[k] || k, x+18, y+32);
 
-      ctx.fillStyle = "rgba(255,255,255,.94)";
-      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
-      ctx.fillText(capText, x+18, y+72);
+      // 上限（放大）
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.fillText(capText, x+18, y+62);
 
-      const barX = x + 330;
-      const barY = y + 34;
-      const barW = listW - 330 - 18;
-      const barH = 30;
+      // 長條（右側）
+      const barX = x + 270;
+      const barY = y + 28;
+      const barW = listW - 270 - 18;
+      const barH = 26;
 
       ctx.fillStyle = "rgba(255,255,255,.22)";
-      roundRect(ctx, barX, barY, barW, barH, 15);
+      roundRect(ctx, barX, barY, barW, barH, 13);
       ctx.fill();
 
       const fillW = Math.max(0, Math.min(barW, barW*(pct/100)));
       ctx.fillStyle = pctColor(pct);
-      roundRect(ctx, barX, barY, fillW, barH, 15);
+      roundRect(ctx, barX, barY, fillW, barH, 13);
       ctx.fill();
 
+      // 百分比：長條中間
       ctx.textAlign = "center";
       ctx.fillStyle = "rgba(255,255,255,.98)";
-      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-      ctx.fillText(`${pct}%`, barX + barW/2, barY + 22);
+      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`${pct}%`, barX + barW/2, barY + 19);
     }
 
-    // ===== 點擊了解區：3欄按鈕 =====
-    const afterBarsY = (listY - 14) + panelH + 24;
+    // ===== ✅ 你的文字 + 按鈕（畫在長條下方，跟你提供的圖一樣） =====
+    const afterBarsY = (listY - 14) + panelH + 22;
     const titleX = 56;
-
-    const btnCols = 3;
-    const btnGapX = 16;
-    const btnGapY2 = 16;
-    const btnH = 62;
-    const btnW = Math.floor((W - 84 - btnGapX*(btnCols-1)) / btnCols);
-    const btnStartX = 42;
-    const btnStartY = afterBarsY + 52;
-
-    const btnRows = Math.ceil(BUY_ITEMS.length / btnCols);
-    const boxPadBottom = 28;
-    const boxH = 52 + (btnRows * btnH) + ((btnRows-1) * btnGapY2) + boxPadBottom;
 
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000";
-    roundRect(ctx, 42, afterBarsY-12, W-84, boxH, 36);
+    roundRect(ctx, 42, afterBarsY-10, W-84, 270, 36);
     ctx.fill();
     ctx.restore();
 
+    // 「您的每日攝取尚需(點擊了解)：」
     ctx.textAlign = "left";
-    ctx.fillStyle = "rgba(255,255,255,.98)";
-    ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
-    ctx.fillText("您的每日攝取尚需(點擊了解)：", titleX, afterBarsY+30);
+    ctx.fillStyle = "rgba(255,255,255,.96)";
+    ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
+    ctx.fillText("您的每日攝取尚需(點擊了解)：", titleX, afterBarsY+26);
+
+    // 按鈕格線：4欄（900寬看起來像你圖的排列）
+    const btnCols = 4;
+    const btnGapX = 14;
+    const btnGapY = 14;
+    const btnW = Math.floor((W - 84 - btnGapX*(btnCols-1)) / btnCols); // 左右各42
+    const btnH = 54;
+    const btnStartX = 42;
+    const btnStartY = afterBarsY + 44;
+
+    // 取連結（用於匯出點擊區）
+    const links = loadLinks();
 
     for(let i=0;i<BUY_ITEMS.length;i++){
       const item = BUY_ITEMS[i];
       const col = i % btnCols;
       const row = Math.floor(i / btnCols);
       const x = btnStartX + col*(btnW + btnGapX);
-      const y = btnStartY + row*(btnH + btnGapY2);
+      const y = btnStartY + row*(btnH + btnGapY);
 
+      // 按鈕底
       ctx.save();
       ctx.globalAlpha = 0.20;
       ctx.fillStyle = "#ffffff";
-      roundRect(ctx, x, y, btnW, btnH, 24);
+      roundRect(ctx, x, y, btnW, btnH, 22);
       ctx.fill();
       ctx.restore();
 
+      // 邊框
       ctx.strokeStyle = "rgba(255,255,255,.45)";
       ctx.lineWidth = 2;
-      roundRect(ctx, x, y, btnW, btnH, 24);
+      roundRect(ctx, x, y, btnW, btnH, 22);
       ctx.stroke();
 
+      // 文字
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,.98)";
-      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-      ctx.fillText(item.label, x + btnW/2, y + 40);
+      ctx.fillStyle = "rgba(255,255,255,.96)";
+      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
+      ctx.fillText(item.label, x + btnW/2, y + 34);
 
-      const url = normalizeUrl(buyLinks[item.key] || "");
+      // 記錄點擊區（給你引流圖/LINE imagemap 用）
+      const url = normalizeUrl(links[item.key] || "");
       lastClickAreas.push({
         key: item.key,
         label: item.label,
@@ -1205,56 +1167,21 @@
     if(!lastClickAreas?.length) throw new Error("請先『產生圖片』，才能匯出點擊區");
     const payload = {
       canvas: { width: 900, height: 1600 },
-      areas: lastClickAreas.filter(a => !!a.url)
+      areas: lastClickAreas.filter(a => !!a.url) // 只匯出有填URL的
     };
     const txt = JSON.stringify(payload, null, 2);
     $("outAreas").value = txt;
     return txt;
   }
 
-  // ✅ 新增：一鍵發佈（你要的：全設定完按一下就好）
-  async function publishAll(){
-    clearErr();
-
-    // 1) 確保連線
-    if(!CONNECTED) await connect();
-
-    // 2) 先把購買連結存 local（避免意外）
-    saveLinksLocal(buyLinks);
-
-    // 3) 寫入問卷/規則/參考值/KW_MAP
-    await writeKV();
-
-    // 4) 同步購買連結到 KV（這就是你之前覺得我砍掉的「主要功能」之一）
-    await saveLinksKV(buyLinks);
-
-    // 5) 產生圖片（需要底板URL）
-    await renderReportImage();
-
-    // 6) 自動匯出點擊區 JSON
-    exportAreasJson();
-
-    toast("🚀 發佈完成 ✅（KV + 連結KV + PNG + JSON）");
-  }
-
-  // ====== connect / write / publish ======
+  // ====== connect / write ======
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
     catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
   });
-
   $("btnWrite").addEventListener("click", async ()=>{
     try{ clearErr(); await writeKV(); }
     catch(e){ showErr(e); toast(e.message || "寫入失敗","err"); }
-  });
-
-  $("btnPublish").addEventListener("click", async ()=>{
-    try{
-      await publishAll();
-    }catch(e){
-      showErr(e);
-      toast(e.message || "一鍵發佈失敗","err");
-    }
   });
 
   // ====== upload ======
@@ -1283,7 +1210,7 @@
   // ====== export areas ======
   $("btnExportAreas").addEventListener("click", ()=>{
     try{
-      exportAreasJson();
+      const txt = exportAreasJson();
       toast("已匯出點擊區 JSON ✅（只含有填URL的按鈕）");
     }catch(e){
       toast(e.message || "匯出失敗", "warn");
@@ -1327,45 +1254,16 @@
     }
   });
 
-  // ====== save links (local) ======
+  // ====== save links ======
   $("btnSaveLinks").addEventListener("click", ()=>{
-    saveLinksLocal(buyLinks);
-    toast("已儲存購買連結 ✅（localStorage）");
+    saveLinks(buyLinks);
+    toast("已儲存購買連結 ✅");
   });
   $("btnClearLinks").addEventListener("click", ()=>{
     buyLinks = {};
-    saveLinksLocal(buyLinks);
+    saveLinks(buyLinks);
     renderLinksEditor();
     toast("已清空 ✅", "warn");
-  });
-
-  // ====== links KV sync (新增，不砍原功能) ======
-  $("btnLoadLinksKV").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      if(!CONNECTED) await connect();
-      const kvObj = await loadLinksKV();
-      const localObj = loadLinksLocal();
-      buyLinks = mergeLinksPreferLocal(localObj, kvObj);
-      saveLinksLocal(buyLinks);
-      renderLinksEditor();
-      toast("已從 KV 讀取（並與 local 合併）✅");
-    }catch(e){
-      showErr(e);
-      toast(e.message || "讀取 KV 連結失敗", "err");
-    }
-  });
-  $("btnSaveLinksKV").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      if(!CONNECTED) await connect();
-      saveLinksLocal(buyLinks);
-      await saveLinksKV(buyLinks);
-      toast("已把購買連結存到 KV ✅");
-    }catch(e){
-      showErr(e);
-      toast(e.message || "寫入 KV 連結失敗", "err");
-    }
   });
 
   // init
