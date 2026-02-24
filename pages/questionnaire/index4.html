@@ -144,7 +144,7 @@
             <span class="pill pill-green">可匯出點擊區JSON</span>
           </div>
           <p class="text-sm text-slate-600 mt-1 leading-6">
-            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生圖片版營養報告 PNG（長條下方直接畫「購買按鈕」）。
+            一鍵寫入 KV（問卷/規則/攝取量）＋ 產生圖片版營養報告 PNG（長條下方直接畫按鈕）。
           </p>
         </div>
 
@@ -160,7 +160,7 @@
           <span class="pill">最後測試：<span id="txtLast" class="mono ml-1">-</span></span>
         </div>
         <div class="text-[11px] text-slate-500">
-          KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜<span class="mono font-bold">AI_SURVEY:KW_MAP</span>｜<span class="mono font-bold">AI_SURVEY:LINKS:life11</span>
+          KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜<span class="mono font-bold">AI_SURVEY:KW_MAP</span>
         </div>
       </div>
     </header>
@@ -180,15 +180,7 @@
         <div class="md:col-span-3 flex gap-2">
           <button id="btnConnect" class="btn btn-dark w-full">連線檢查</button>
           <button id="btnWrite" class="btn btn-emerald w-full">一鍵寫入KV</button>
-          <!-- ✅ 新增：一鍵發佈（保留你原本所有按鈕不砍） -->
           <button id="btnPublish" class="btn btn-primary w-full">🚀 一鍵發佈</button>
-        </div>
-
-        <div class="md:col-span-3 flex flex-wrap gap-2 pt-1">
-          <!-- ✅ 新增：連結同步 KV 的載入/儲存，不影響你原本 localStorage -->
-          <button id="btnLoadLinksKV" class="btn btn-soft btn-mini">從 KV 讀取購買連結</button>
-          <button id="btnSaveLinksKV" class="btn btn-soft btn-mini">把購買連結存到 KV</button>
-          <span class="pill">購買連結：localStorage + KV（可同步）</span>
         </div>
       </div>
 
@@ -219,11 +211,10 @@
             <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
               <div class="font-extrabold">規則說明</div>
               <div>• 從 100% 開始，答「是」就扣分；自動夾到 0～100%。</div>
-              <div>• 圖片報告：長條圖下方會直接畫「購買按鈕」，再匯出點擊區給你做 imagemap。</div>
+              <div>• 圖片報告：長條圖下方會直接畫「按鈕」，再匯出點擊區 JSON。</div>
               <div class="mt-2 font-extrabold">🚀 一鍵發佈會做：</div>
               <div>① 寫入問卷/規則/參考值 → KV</div>
-              <div>② 同步購買連結 → KV</div>
-              <div>③ 立刻產生 PNG + 自動匯出點擊區 JSON</div>
+              <div>② 立刻產生 PNG + 自動匯出點擊區 JSON</div>
             </div>
 
             <div class="card-soft rounded-3xl p-4">
@@ -244,28 +235,8 @@
                 <button id="btnExportAreas" class="btn btn-indigo w-full">匯出點擊區JSON</button>
                 <button id="btnCopyAreas" class="btn btn-soft w-full">複製JSON</button>
               </div>
-              <textarea id="outAreas" class="in mono mt-2 h-28 text-[12px]" placeholder="匯出後會出現在這裡（含按鈕座標 + 連結）"></textarea>
+              <textarea id="outAreas" class="in mono mt-2 h-28 text-[12px]" placeholder="匯出後會出現在這裡（含按鈕座標）"></textarea>
             </div>
-          </div>
-        </section>
-
-        <!-- Links editor -->
-        <section class="card rounded-3xl p-4 md:p-5">
-          <div class="flex items-end justify-between gap-2">
-            <div>
-              <h2 class="text-lg font-black text-slate-950">購買頁面連結設定</h2>
-              <p class="text-sm text-slate-600 mt-1">這些連結會綁定到「報告圖片內」的按鈕。</p>
-            </div>
-            <div class="flex gap-2">
-              <button id="btnSaveLinks" class="btn btn-emerald btn-mini">儲存</button>
-              <button id="btnClearLinks" class="btn btn-soft btn-mini">清空</button>
-            </div>
-          </div>
-
-          <div class="mt-3 space-y-2" id="linksEditor"></div>
-          <div class="mt-3 text-[11px] text-slate-500 leading-5">
-            ※ PNG 內只是畫出按鈕外觀；要能點擊請用「匯出點擊區JSON」去做引流圖/LINE imagemap 點擊區。<br/>
-            ※ 這裡預設存 localStorage；你也可以用上方按鈕同步到 KV（推薦）。
           </div>
         </section>
       </div>
@@ -419,14 +390,11 @@
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ✅ 新增：購買連結同步到 KV（不砍你的 localStorage）
-  const LINKS_KV_KEY = "AI_SURVEY:LINKS:life11";
-
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
 
-  // ✅ 10個按鈕（會畫進 PNG 裡）
+  // ✅ 10個按鈕（只畫進 PNG 裡；不綁購買連結）
   const BUY_ITEMS = [
     { key:"vitA",    label:"維生素A" },
     { key:"vitB",    label:"維生素B" },
@@ -439,7 +407,6 @@
     { key:"trace",   label:"微量元素" },
     { key:"protein", label:"蛋白質" },
   ];
-  const LS_LINKS_KEY = "life11_buy_links_v1";
 
   function pad2(n){ return String(n).padStart(2,"0"); }
   function autoKeyForUpload(file){
@@ -710,7 +677,7 @@
     }
 
     return {
-      version: "life11-v15-bigger-text-roomy-buttons-branch-labels",
+      version: "life11-v15-remove-buy-links",
       name: "life11",
       title: "生活型態營養問卷（11題）",
       keyword: kw,
@@ -938,75 +905,7 @@
     return "-";
   }
 
-  // ====== ✅ 購買連結（localStorage + KV） ======
-  function normalizeUrl(u){
-    const s = (u || "").trim();
-    if(!s) return "";
-    if(/^https?:\/\//i.test(s)) return s;
-    if(/^www\./i.test(s)) return "https://" + s;
-    return s;
-  }
-  function loadLinksLocal(){
-    try{
-      const raw = localStorage.getItem(LS_LINKS_KEY);
-      const obj = raw ? JSON.parse(raw) : {};
-      return (obj && typeof obj === "object") ? obj : {};
-    }catch{
-      return {};
-    }
-  }
-  function saveLinksLocal(obj){
-    localStorage.setItem(LS_LINKS_KEY, JSON.stringify(obj || {}));
-  }
-  async function loadLinksKV(){
-    if(!CONNECTED) throw new Error("未連線，不能讀取 KV（先按『連線檢查』）");
-    const obj = await kvGet(LINKS_KV_KEY).catch(()=> ({}));
-    return (obj && typeof obj==="object") ? obj : {};
-  }
-  async function saveLinksKV(obj){
-    if(!CONNECTED) throw new Error("未連線，不能寫入 KV（先按『連線檢查』）");
-    await kvPut(LINKS_KV_KEY, obj || {});
-  }
-  function mergeLinksPreferLocal(localObj, kvObj){
-    const out = {};
-    BUY_ITEMS.forEach(it=>{
-      const a = normalizeUrl(localObj?.[it.key] || "");
-      const b = normalizeUrl(kvObj?.[it.key] || "");
-      out[it.key] = a || b || "";
-    });
-    return out;
-  }
-
-  let buyLinks = loadLinksLocal();
-
-  function renderLinksEditor(){
-    const wrap = $("linksEditor");
-    wrap.innerHTML = "";
-    BUY_ITEMS.forEach(item=>{
-      const row = document.createElement("div");
-      row.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
-      const v = buyLinks[item.key] || "";
-      row.innerHTML = `
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="font-black text-slate-950">${escapeHtml(item.label)}</div>
-            <div class="mono text-[11px] text-slate-500">${escapeHtml(item.key)}</div>
-          </div>
-          <input class="in in-mini mono" data-link-key="${escapeHtml(item.key)}" placeholder="貼上購買頁面連結（可空白）" value="${escapeHtml(v)}"/>
-        </div>
-      `;
-      wrap.appendChild(row);
-    });
-
-    wrap.querySelectorAll("input[data-link-key]").forEach(inp=>{
-      inp.addEventListener("input", ()=>{
-        const k = inp.getAttribute("data-link-key");
-        buyLinks[k] = normalizeUrl(inp.value);
-      });
-    });
-  }
-
-  // ===== ✅ 核心：畫報告（長條＋文字＋按鈕都在 PNG 裡） =====
+  // ===== ✅ 核心：畫報告（長條＋文字＋按鈕都在 PNG 裡；不含購買連結） =====
   async function renderReportImage(){
     const bgUrl = ($("inBgUrl").value||"").trim();
     if(!bgUrl) throw new Error("請先填『底板圖片URL（R2 公開網址）』");
@@ -1127,7 +1026,7 @@
       ctx.fillText(`${pct}%`, barX + barW/2, barY + 22);
     }
 
-    // ===== 點擊了解區：3欄按鈕 =====
+    // ===== 點擊了解區：3欄按鈕（只輸出座標，不含連結） =====
     const afterBarsY = (listY - 14) + panelH + 24;
     const titleX = 56;
 
@@ -1179,13 +1078,11 @@
       ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
       ctx.fillText(item.label, x + btnW/2, y + 40);
 
-      const url = normalizeUrl(buyLinks[item.key] || "");
       lastClickAreas.push({
         key: item.key,
         label: item.label,
         x: Math.round(x), y: Math.round(y),
         w: Math.round(btnW), h: Math.round(btnH),
-        url
       });
     }
 
@@ -1205,36 +1102,30 @@
     if(!lastClickAreas?.length) throw new Error("請先『產生圖片』，才能匯出點擊區");
     const payload = {
       canvas: { width: 900, height: 1600 },
-      areas: lastClickAreas.filter(a => !!a.url)
+      areas: lastClickAreas
     };
     const txt = JSON.stringify(payload, null, 2);
     $("outAreas").value = txt;
     return txt;
   }
 
-  // ✅ 新增：一鍵發佈（你要的：全設定完按一下就好）
+  // ✅ 一鍵發佈（已移除購買連結相關流程）
   async function publishAll(){
     clearErr();
 
     // 1) 確保連線
     if(!CONNECTED) await connect();
 
-    // 2) 先把購買連結存 local（避免意外）
-    saveLinksLocal(buyLinks);
-
-    // 3) 寫入問卷/規則/參考值/KW_MAP
+    // 2) 寫入問卷/規則/參考值/KW_MAP
     await writeKV();
 
-    // 4) 同步購買連結到 KV（這就是你之前覺得我砍掉的「主要功能」之一）
-    await saveLinksKV(buyLinks);
-
-    // 5) 產生圖片（需要底板URL）
+    // 3) 產生圖片（需要底板URL）
     await renderReportImage();
 
-    // 6) 自動匯出點擊區 JSON
+    // 4) 自動匯出點擊區 JSON
     exportAreasJson();
 
-    toast("🚀 發佈完成 ✅（KV + 連結KV + PNG + JSON）");
+    toast("🚀 發佈完成 ✅（KV + PNG + JSON）");
   }
 
   // ====== connect / write / publish ======
@@ -1284,7 +1175,7 @@
   $("btnExportAreas").addEventListener("click", ()=>{
     try{
       exportAreasJson();
-      toast("已匯出點擊區 JSON ✅（只含有填URL的按鈕）");
+      toast("已匯出點擊區 JSON ✅");
     }catch(e){
       toast(e.message || "匯出失敗", "warn");
     }
@@ -1327,52 +1218,10 @@
     }
   });
 
-  // ====== save links (local) ======
-  $("btnSaveLinks").addEventListener("click", ()=>{
-    saveLinksLocal(buyLinks);
-    toast("已儲存購買連結 ✅（localStorage）");
-  });
-  $("btnClearLinks").addEventListener("click", ()=>{
-    buyLinks = {};
-    saveLinksLocal(buyLinks);
-    renderLinksEditor();
-    toast("已清空 ✅", "warn");
-  });
-
-  // ====== links KV sync (新增，不砍原功能) ======
-  $("btnLoadLinksKV").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      if(!CONNECTED) await connect();
-      const kvObj = await loadLinksKV();
-      const localObj = loadLinksLocal();
-      buyLinks = mergeLinksPreferLocal(localObj, kvObj);
-      saveLinksLocal(buyLinks);
-      renderLinksEditor();
-      toast("已從 KV 讀取（並與 local 合併）✅");
-    }catch(e){
-      showErr(e);
-      toast(e.message || "讀取 KV 連結失敗", "err");
-    }
-  });
-  $("btnSaveLinksKV").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      if(!CONNECTED) await connect();
-      saveLinksLocal(buyLinks);
-      await saveLinksKV(buyLinks);
-      toast("已把購買連結存到 KV ✅");
-    }catch(e){
-      showErr(e);
-      toast(e.message || "寫入 KV 連結失敗", "err");
-    }
-  });
-
   // init
   initPreviewLine();
   renderTargetsTable();
   renderSim();
-  renderLinksEditor();
   $("txtAutoKey").textContent = "assets/life11/report_bg_YYYYMMDD_HHMMSS.png";
 })();
 </script>
