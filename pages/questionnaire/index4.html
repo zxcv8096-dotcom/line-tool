@@ -3,19 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>生活型態營養問卷｜中控台（新版介面＋引流圖可直接改圖）</title>
+  <title>生活型態營養問卷｜中控台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
       --ink:#0b1220;
       --muted:#5b6b87;
       --bd:rgba(15,23,42,.10);
-      --glass: rgba(255,255,255,.86);
-      --glass2: rgba(255,255,255,.72);
+      --glass: rgba(255,255,255,.82);
+      --glass2: rgba(255,255,255,.70);
       --shadow: 0 18px 55px rgba(15,23,42,.10);
-      --shadow2: 0 10px 26px rgba(2,6,23,.08);
+      --shadow2: 0 8px 22px rgba(2,6,23,.08);
       --ring: 0 0 0 5px rgba(99,102,241,.14);
-      --radius: 22px;
     }
     body{
       color:var(--ink);
@@ -27,32 +26,41 @@
       font-family: "Microsoft JhengHei", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
-    .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
-    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.20); border-radius: 999px; }
     .card{
       background: var(--glass);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(15,23,42,.08);
       box-shadow: var(--shadow);
-      border-radius: var(--radius);
+      border: 1px solid rgba(15,23,42,.08);
     }
-    .card2{
+    .card-soft{
       background: var(--glass2);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(15,23,42,.08);
       box-shadow: var(--shadow2);
-      border-radius: var(--radius);
+      border: 1px solid rgba(15,23,42,.08);
     }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .thinbar::-webkit-scrollbar{ height:10px; width:10px; }
+    .thinbar::-webkit-scrollbar-thumb{ background: rgba(15,23,42,.20); border-radius: 999px; }
+    table th, table td { vertical-align: middle; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center;
       gap:.5rem; border-radius: 16px; padding:.72rem 1rem;
       font-weight:900; font-size:13px;
-      transition: transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease, filter .18s ease;
+      transition: transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
       user-select:none;
-      white-space: nowrap;
+      white-space:nowrap;
     }
     .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn-primary{
+      color:#fff;
+      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
+      box-shadow: 0 14px 28px rgba(99,102,241,.20);
+    }
+    .btn-primary:hover{ filter: brightness(1.04); }
     .btn-dark{
       color:#fff;
       background: linear-gradient(135deg, #0b1220, #111827);
@@ -60,29 +68,32 @@
     }
     .btn-dark:hover{ filter: brightness(1.03); }
     .btn-soft{
-      background: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.85);
       border: 1px solid rgba(15,23,42,.12);
       color: #0b1220;
       box-shadow: 0 10px 20px rgba(2,6,23,.06);
     }
-    .btn-soft:hover{ background: rgba(255,255,255,.98); border-color: rgba(99,102,241,.25); }
-    .btn-indigo{
-      color:#fff;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      box-shadow: 0 14px 28px rgba(99,102,241,.18);
-    }
-    .btn-indigo:hover{ filter: brightness(1.03); }
+    .btn-soft:hover{ background: rgba(255,255,255,.98); border-color: rgba(99,102,241,.25); box-shadow: 0 14px 26px rgba(2,6,23,.08); }
     .btn-emerald{
       color:#fff;
       background: linear-gradient(135deg, #10b981, #22c55e);
       box-shadow: 0 14px 28px rgba(16,185,129,.18);
     }
     .btn-emerald:hover{ filter: brightness(1.03); }
+    .btn-indigo{
+      color:#fff;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 14px 28px rgba(99,102,241,.18);
+    }
+    .btn-indigo:hover{ filter: brightness(1.03); }
+    .btn-mini{ border-radius: 14px; padding: .55rem .8rem; font-size: 12px; font-weight: 900; }
+    .btn-disabled{ opacity:.45; pointer-events:none; }
+
     .in{
       width:100%;
       border-radius: 16px;
       border: 1px solid rgba(15,23,42,.12);
-      background: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.82);
       padding: .78rem 1rem;
       outline: none;
       transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
@@ -90,13 +101,22 @@
     .in:focus{
       border-color: rgba(99,102,241,.35);
       box-shadow: var(--ring);
-      background: rgba(255,255,255,.98);
+      background: rgba(255,255,255,.96);
     }
+    .in-mini{ border-radius: 14px; padding: .62rem .9rem; }
+
+    .hero{
+      background: linear-gradient(135deg, rgba(255,255,255,.70), rgba(255,255,255,.52));
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 14px 40px rgba(2,6,23,.08);
+      backdrop-filter: blur(14px);
+    }
+
     .pill{
       display:inline-flex; align-items:center; gap:.35rem;
       padding:.25rem .55rem;
       border-radius:999px;
-      font-weight:900;
+      font-weight:800;
       font-size:11px;
       border:1px solid rgba(15,23,42,.10);
       background: rgba(255,255,255,.70);
@@ -105,471 +125,190 @@
     .pill-green{ border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.10); color: rgba(5,150,105,1); }
     .pill-indigo{ border-color: rgba(99,102,241,.25); background: rgba(99,102,241,.10); color: rgba(79,70,229,1); }
     .pill-rose{ border-color: rgba(244,63,94,.25); background: rgba(244,63,94,.10); color: rgba(190,18,60,1); }
-    .minw0{ min-width:0; }
 
-    /* ===== 新版：版面更緊湊、好用、沒有大空白 ===== */
-    .wrap{
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: clamp(12px, 2.2vw, 22px);
-    }
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(15,23,42,.08);
-      box-shadow: 0 10px 30px rgba(2,6,23,.06);
-      border-radius: 22px;
-      background: rgba(255,255,255,.70);
-    }
-    .tab{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:.62rem .9rem;
-      border-radius: 14px;
-      border: 1px solid rgba(15,23,42,.10);
-      background: rgba(255,255,255,.75);
-      font-weight:900;
-      font-size:12px;
-      color: rgba(2,6,23,.86);
-      user-select:none;
-      transition: all .16s ease;
-    }
-    .tab:hover{ background: rgba(255,255,255,.95); border-color: rgba(99,102,241,.28); }
-    .tab.active{
-      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(16,185,129,1));
-      color:#fff;
-      border-color: transparent;
-      box-shadow: 0 10px 22px rgba(99,102,241,.18);
+    @media (min-width: 1024px){
+      .sticky-left{ position: sticky; top: 14px; align-self: start; }
     }
 
-    .grid-main{
-      display:grid;
-      grid-template-columns: 360px 1fr;
-      gap: 14px;
-      align-items:start;
-      margin-top: 14px;
-    }
-    @media (max-width: 1100px){
-      .grid-main{ grid-template-columns: 1fr; }
-    }
-
-    .sidebar-sticky{
-      position: sticky;
-      top: 92px;
-    }
-    @media (max-width: 1100px){
-      .sidebar-sticky{ position: static; top:auto; }
-    }
-
-    .section-title{
-      font-weight: 900;
-      font-size: 14px;
-      color: rgba(2,6,23,.92);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .hint{ font-size: 11px; color: rgba(2,6,23,.55); line-height: 1.5; }
-
-    /* ===== 產圖 Canvas ===== */
-    canvas{ display:block; max-width:100%; height:auto; }
-
-    /* ===== CTA 圖片編輯器（直接在圖片上修改） ===== */
-    .editor-shell{
-      border: 1px solid rgba(15,23,42,.10);
-      border-radius: 22px;
-      background: rgba(255,255,255,.78);
-      overflow: hidden;
-    }
-    .editor-toolbar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      padding:10px;
-      border-bottom: 1px solid rgba(15,23,42,.10);
-      background: rgba(255,255,255,.80);
-    }
-    .toolbtn{
-      padding:.55rem .78rem;
-      border-radius: 14px;
-      border: 1px solid rgba(15,23,42,.12);
-      background: rgba(255,255,255,.86);
-      font-weight:900;
-      font-size:12px;
-      user-select:none;
-      transition: all .16s ease;
-    }
-    .toolbtn:hover{ background: rgba(255,255,255,.98); border-color: rgba(99,102,241,.28); }
-    .toolbtn.active{
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-color: transparent;
-      color:#fff;
-      box-shadow: 0 10px 20px rgba(99,102,241,.18);
-    }
-    .toolrow{
-      display:flex; align-items:center; gap:8px;
-      padding: 0 10px 10px;
-      border-bottom: 1px solid rgba(15,23,42,.08);
-      background: rgba(255,255,255,.72);
-    }
-    .slider{
-      width: 140px;
-    }
-    .color{
-      width: 38px;
-      height: 38px;
-      padding:0;
-      border-radius: 12px;
-      border: 1px solid rgba(15,23,42,.12);
-      background: rgba(255,255,255,.9);
-      overflow:hidden;
-    }
-    .editor-stage{
-      display:grid;
-      grid-template-columns: 1fr 330px;
-      gap: 0;
-    }
-    @media (max-width: 1100px){
-      .editor-stage{ grid-template-columns: 1fr; }
-    }
-    .canvas-wrap{
-      background: radial-gradient(900px 420px at 30% 20%, rgba(99,102,241,.12), transparent 55%),
-                  radial-gradient(900px 420px at 70% 70%, rgba(16,185,129,.10), transparent 55%),
-                  #f8fafc;
-      padding: 12px;
-    }
-    .canvas-frame{
-      border-radius: 20px;
-      border: 1px solid rgba(15,23,42,.12);
-      background: #fff;
-      overflow: hidden;
-    }
-    #ctaEditCanvas{
-      width: 100%;
-      height: auto;
-      display:block;
-      touch-action: none;
-    }
-    .sidepanel{
-      padding: 12px;
-      border-left: 1px solid rgba(15,23,42,.10);
-      background: rgba(255,255,255,.78);
-    }
-    @media (max-width: 1100px){
-      .sidepanel{ border-left: none; border-top: 1px solid rgba(15,23,42,.10); }
-    }
-    .krow{ display:grid; grid-template-columns: 1fr; gap:8px; }
-    .kbd{
-      font-size:11px;
-      color: rgba(2,6,23,.58);
-      line-height:1.5;
-    }
-
-    /* ===== Toast ===== */
-    #toastWrap{
-      position: fixed;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(92vw, 560px);
-      z-index: 9999;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
+    /* ✅ UI 精簡：把「圖片/JSON 手動操作」整塊隱藏 */
+    .hidden-ui{ display:none !important; }
   </style>
 </head>
 
 <body class="min-h-screen">
-  <div class="wrap">
+  <div class="max-w-6xl mx-auto p-3 md:p-6">
 
-    <!-- Top bar -->
-    <div class="topbar p-3 md:p-4">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div class="minw0">
+    <header class="hero rounded-3xl p-4 md:p-5 mb-3">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
           <div class="flex items-center gap-2 flex-wrap">
-            <div class="text-lg md:text-xl font-black text-slate-950">生活型態營養問卷｜中控台</div>
-            <span class="pill pill-indigo">新版介面</span>
-            <span class="pill pill-green" id="pillConn">未連線</span>
-            <span class="pill">最後：<span id="txtLast" class="mono ml-1">-</span></span>
+            <h1 class="text-2xl md:text-3xl font-black text-slate-950 tracking-tight">生活型態營養問卷｜中控台</h1>
+            <span class="pill pill-indigo">一鍵完成</span>
+            <span class="pill pill-green">自動存KV：點擊區JSON</span>
           </div>
-          <div class="hint mt-1">
-            重點：<b>引流圖不是上傳</b>，而是「直接在圖片上修改」→ 右側 <b>引流圖編輯器</b> 可直接畫/打字/貼形狀/匯出。
-          </div>
+          <p class="text-sm text-slate-600 mt-1 leading-6">
+            按一次 🚀 一鍵發佈：寫入KV（問卷/規則/參考值/KW_MAP）→ 產PNG（不顯示介面）→ 產點擊區 → 自動存KV（不需複製貼上）。
+          </p>
         </div>
 
-        <div class="minw0 flex flex-wrap gap-2 justify-start md:justify-end">
-          <button class="tab active" data-tab="tab-preview">預覽 / 產圖</button>
-          <button class="tab" data-tab="tab-cta">引流圖編輯器</button>
-          <button class="tab" data-tab="tab-targets">年齡層參考值</button>
+        <div class="text-xs text-slate-600 leading-6">
+          <div class="font-extrabold">需要 Worker API：</div>
+          <div class="mono">POST /listAll /putAny /loadAny</div>
         </div>
       </div>
-    </div>
 
-    <div class="grid-main">
+      <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 text-xs">
+          <span class="pill pill-rose" id="pillConn">未連線</span>
+          <span class="pill">最後測試：<span id="txtLast" class="mono ml-1">-</span></span>
+        </div>
+        <div class="text-[11px] text-slate-500">
+          問卷KV：<span class="mono font-bold">AI_SURVEY:Q:life11</span>｜
+          KW_MAP：<span class="mono font-bold">AI_SURVEY:KW_MAP</span>｜
+          點擊區KV：<span class="mono font-bold">AI_SURVEY:ASSET:life11:areas</span>
+        </div>
+      </div>
+    </header>
 
-      <!-- Sidebar -->
-      <aside class="sidebar-sticky space-y-3">
-        <div class="card p-4">
-          <div class="section-title">
-            <span>連線設定</span>
-            <span class="pill pill-rose" id="pillConn2">未連線</span>
-          </div>
-          <div class="mt-3 grid gap-2">
-            <label class="text-xs font-extrabold text-slate-600">Worker API</label>
-            <input id="inApiBase" class="in mono" value="https://api.zxcv8096.workers.dev/" />
-            <label class="text-xs font-extrabold text-slate-600 mt-1">Admin Key（可空白）</label>
-            <input id="inAdminKey" class="in mono" placeholder="若 Worker 有驗證才需要填" />
-            <div class="grid grid-cols-2 gap-2 mt-2">
-              <button id="btnConnect" class="btn btn-dark w-full">連線</button>
-              <button id="btnWrite" class="btn btn-emerald w-full">寫入KV</button>
-            </div>
-            <div class="hint mt-2">
-              需要 API：<span class="mono">POST /listAll /putAny /loadAny</span><br/>
-              圖片上傳若你有做也可用：<span class="mono">POST /upload</span>
-            </div>
-          </div>
+    <section class="card rounded-3xl p-4 md:p-5 mb-3">
+      <div class="grid md:grid-cols-3 gap-3 items-end">
+        <div class="md:col-span-2">
+          <label class="text-xs font-extrabold text-slate-600">Worker API（固定）</label>
+          <input id="inApiBase" class="in mono mt-1" value="https://api.zxcv8096.workers.dev/" />
+        </div>
 
-          <div id="errBanner" class="hidden mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-            <div class="font-extrabold">錯誤</div>
-            <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
+        <div>
+          <label class="text-xs font-extrabold text-slate-600">Admin Key（可空白）</label>
+          <input id="inAdminKey" class="in mono mt-1" placeholder="若 Worker 有驗證才需要填" />
+        </div>
+
+        <div class="md:col-span-3 flex gap-2">
+          <button id="btnConnect" class="btn btn-dark w-full">連線檢查</button>
+          <button id="btnPublish" class="btn btn-primary w-full">🚀 一鍵發佈（全部自動）</button>
+        </div>
+      </div>
+
+      <div class="mt-3 grid md:grid-cols-2 gap-3">
+        <div class="card-soft rounded-3xl p-4">
+          <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
+          <input id="inKeyword" class="in mt-1" placeholder="例如：生活營養" />
+          <div class="text-[11px] text-slate-500 mt-2 leading-5">
+            會自動寫入 <span class="mono font-bold">AI_SURVEY:KW_MAP</span>：<span class="mono">{"關鍵字":"life11"}</span>
           </div>
         </div>
 
-        <div class="card p-4">
-          <div class="section-title"><span>問卷設定</span><span class="pill">life11</span></div>
-          <div class="mt-3 grid gap-2">
-            <label class="text-xs font-extrabold text-slate-600">啟動關鍵字（LINE 使用者輸入這個開始）</label>
-            <input id="inKeyword" class="in" placeholder="例如：生活營養" />
-            <div class="hint">
-              會寫入：<span class="mono">AI_SURVEY:KW_MAP</span> 例如 <span class="mono">{"生活營養":"life11"}</span>
-            </div>
-          </div>
-          <div class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 leading-6">
-            <div class="font-extrabold">規則</div>
-            <div>• 從 100% 開始，答「是」就扣分（夾到 0～100%）。</div>
-            <div>• 產圖：個資 → 9 個營養素（單列）→ 最下面引流圖。</div>
-          </div>
+        <div class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 leading-6">
+          <div class="font-extrabold">一鍵發佈會做</div>
+          <div>① 寫入：問卷/規則/參考值 → KV</div>
+          <div>② 自動產生：PNG（不顯示）</div>
+          <div>③ 自動產生：點擊區 JSON</div>
+          <div>④ 自動存入 KV：<span class="mono font-bold">AI_SURVEY:ASSET:life11:areas</span></div>
         </div>
+      </div>
 
-        <div class="card p-4">
-          <div class="section-title"><span>快速測試</span><span class="pill pill-indigo">模擬</span></div>
-          <div class="grid grid-cols-2 gap-2 mt-3">
+      <div id="errBanner" class="hidden mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+        <div class="font-extrabold">錯誤</div>
+        <div id="errText" class="mt-1 mono text-[12px] whitespace-pre-wrap"></div>
+      </div>
+    </section>
+
+    <div class="grid lg:grid-cols-3 gap-3">
+      <!-- LEFT -->
+      <div class="space-y-3 sticky-left">
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-lg font-black text-slate-950">模擬（用來算報告）</h2>
+            <span class="pill pill-indigo">不影響上線</span>
+          </div>
+
+          <div class="mt-3 grid grid-cols-2 gap-2">
             <button id="btnSimAllGood" class="btn btn-soft w-full">都很健康</button>
             <button id="btnSimAllYes" class="btn btn-soft w-full">全部選是</button>
           </div>
 
-          <div class="mt-3">
-            <label class="text-xs font-extrabold text-slate-600">預覽頭像 URL（測試用）</label>
-            <input id="inPreviewAvatarUrl" class="in mono mt-1" value="https://i.pravatar.cc/150?img=12" />
-            <div class="grid grid-cols-2 gap-2 mt-2">
-              <button id="btnApplyPreviewAvatar" class="btn btn-soft w-full">套用</button>
-              <button id="btnRandPreviewAvatar" class="btn btn-soft w-full">隨機</button>
+          <div id="simWrap" class="mt-3 space-y-2 max-h-[520px] overflow-auto thinbar pr-1"></div>
+
+          <!-- ✅ 隱藏：手動 JSON / PNG 操作區 -->
+          <textarea id="outAreas" class="hidden-ui"></textarea>
+          <button id="btnExportAreas" class="hidden-ui"></button>
+          <button id="btnCopyAreas" class="hidden-ui"></button>
+        </section>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="lg:col-span-2 space-y-3">
+        <section class="card rounded-3xl p-4 md:p-5">
+          <div class="flex items-end justify-between gap-2">
+            <div>
+              <h2 class="text-lg font-black text-slate-950">年齡層參考值</h2>
+              <p class="text-sm text-slate-600 mt-1">你改這裡，一鍵發佈時就會寫進 KV（上限值會用這裡的數字）。</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
+              <button id="btnCopyTargetsJson" class="btn btn-soft">複製 JSON</button>
             </div>
           </div>
+
+          <div class="mt-3 overflow-auto thinbar">
+            <table class="w-full min-w-[980px] border-collapse">
+              <thead>
+                <tr class="text-xs text-slate-600">
+                  <th class="text-left p-2 border-b border-slate-200">項目</th>
+                  <th class="text-left p-2 border-b border-slate-200">單位</th>
+                  <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
+                  <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
+                  <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
+                  <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
+                </tr>
+              </thead>
+              <tbody id="targetsTbody" class="text-sm"></tbody>
+            </table>
+          </div>
+
+          <div class="mt-2 text-[11px] text-slate-500 leading-5">
+            ※ 數值會組合成：<span class="mono font-bold">vitB(B1/B2/B6)</span>、<span class="mono font-bold">ca_mg(鈣/鎂)</span>、<span class="mono font-bold">trace(碘/硒)</span>。
+          </div>
+        </section>
+
+        <!-- ✅ 隱藏：圖片功能 UI（完全不顯示） -->
+        <div class="hidden-ui" aria-hidden="true">
+          <input id="inBgUrl" />
+          <canvas id="cvReport"></canvas>
         </div>
-      </aside>
-
-      <!-- Main -->
-      <main class="space-y-3 minw0">
-
-        <!-- TAB: Preview / Render -->
-        <section id="tab-preview" class="space-y-3">
-          <div class="card p-4">
-            <div class="section-title">
-              <span>問卷模擬（11題）</span>
-              <span class="pill">No.1～11</span>
-            </div>
-            <div class="hint mt-1">這裡只做測試；正式 LINE 由 Worker 控制。</div>
-            <div id="simWrap" class="mt-3 grid gap-2"></div>
-          </div>
-
-          <div class="card p-4">
-            <div class="section-title">
-              <span>產生圖片（900×1600 PNG）</span>
-              <span class="pill pill-green">營養素單列＋上限大字＋百分比置中</span>
-            </div>
-
-            <div class="mt-3 grid md:grid-cols-2 gap-3">
-              <div class="card2 p-4 minw0">
-                <div class="font-black text-slate-950">底板圖片 URL（必填）</div>
-                <div class="hint mt-1">底板需可公開存取並允許跨域（CORS），不然下載會失敗。</div>
-                <input id="inBgUrl" class="in mono mt-2" placeholder="https://.../report_bg.png" />
-                <div class="mt-3">
-                  <div class="font-black text-slate-950">引流圖來源（可選）</div>
-                  <div class="hint mt-1">你要「直接改圖」→ 去右側「引流圖編輯器」修改後，會產生一個 DataURL；這裡可直接用。</div>
-                  <input id="inCtaSource" class="in mono mt-2" placeholder="可貼：https://... 或 data:image/png;base64,..." />
-                  <div class="grid grid-cols-2 gap-2 mt-2">
-                    <button id="btnUseCtaFromEditor" class="btn btn-soft w-full">用編輯器的引流圖</button>
-                    <button id="btnClearCtaSource" class="btn btn-soft w-full">清除引流圖</button>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 mt-4">
-                  <button id="btnRenderImg" class="btn btn-dark w-full">產生圖片</button>
-                  <button id="btnDownloadImg" class="btn btn-soft w-full">下載PNG</button>
-                </div>
-              </div>
-
-              <div class="card2 p-4 minw0">
-                <div class="flex items-center gap-3">
-                  <div class="relative">
-                    <div class="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-400/50 to-emerald-400/50 blur"></div>
-                    <img id="previewAvatar" src="https://i.pravatar.cc/150?img=12"
-                         class="relative w-14 h-14 rounded-full border border-white/60 shadow" alt="avatar"/>
-                  </div>
-                  <div class="minw0">
-                    <div id="previewName" class="font-black text-slate-950 truncate">LINE使用者名稱</div>
-                    <div id="previewId" class="text-sm text-slate-500 mono truncate">@line_id</div>
-                    <div id="previewMeta" class="text-xs text-slate-500 mt-1">性別：男　年齡：19 歲以上</div>
-                  </div>
-                </div>
-
-                <div class="mt-3">
-                  <canvas id="cvReport" class="w-full rounded-2xl border border-slate-200 bg-white"></canvas>
-                  <div class="hint mt-2">※ 若下載失敗，多半是底板跨域（CORS）沒開。</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- TAB: CTA Editor -->
-        <section id="tab-cta" class="hidden space-y-3">
-          <div class="card p-4">
-            <div class="section-title">
-              <span>引流圖編輯器（直接在圖片上修改）</span>
-              <span class="pill pill-indigo">畫筆 / 文字 / 方塊 / 橢圓 / 取消復原</span>
-            </div>
-            <div class="hint mt-1">
-              這裡的引流圖<b>不用上傳</b>：你直接改圖 → 右側可「匯出成圖片」→ 再回到「預覽/產圖」套用。
-            </div>
-
-            <div class="editor-shell mt-3">
-              <div class="editor-toolbar">
-                <button class="toolbtn active" data-tool="move">移動</button>
-                <button class="toolbtn" data-tool="pen">畫筆</button>
-                <button class="toolbtn" data-tool="rect">方塊</button>
-                <button class="toolbtn" data-tool="ellipse">橢圓</button>
-                <button class="toolbtn" data-tool="text">文字</button>
-                <span class="pill ml-auto">支援：滑鼠/觸控</span>
-              </div>
-
-              <div class="toolrow">
-                <div class="text-xs font-extrabold text-slate-600">粗細</div>
-                <input id="strokeSize" class="slider" type="range" min="2" max="48" value="10" />
-                <div class="text-xs font-extrabold text-slate-600 ml-2">顏色</div>
-                <input id="strokeColor" class="color" type="color" value="#111827" />
-                <div class="text-xs font-extrabold text-slate-600 ml-2">透明</div>
-                <input id="strokeAlpha" class="slider" type="range" min="0.1" max="1" step="0.05" value="1" />
-                <span class="pill">Ctrl+Z：復原</span>
-              </div>
-
-              <div class="editor-stage">
-                <div class="canvas-wrap">
-                  <div class="canvas-frame">
-                    <canvas id="ctaEditCanvas"></canvas>
-                  </div>
-                </div>
-                <div class="sidepanel">
-                  <div class="krow">
-                    <div>
-                      <div class="text-xs font-extrabold text-slate-600">載入圖片（任選其一）</div>
-                      <div class="mt-2 grid gap-2">
-                        <input id="ctaLoadUrl" class="in mono" placeholder="貼圖片 URL（https://...）" />
-                        <div class="grid grid-cols-2 gap-2">
-                          <button id="btnLoadCtaUrl" class="btn btn-dark w-full">用URL載入</button>
-                          <button id="btnClearCta" class="btn btn-soft w-full">清空</button>
-                        </div>
-                        <label class="text-xs font-extrabold text-slate-600 mt-2">或選檔（本機）</label>
-                        <input id="ctaLoadFile" type="file" accept="image/*"
-                               class="w-full px-3 py-2 rounded-2xl border border-slate-200 bg-white/85" />
-                      </div>
-                    </div>
-
-                    <div class="card2 p-3">
-                      <div class="text-xs font-extrabold text-slate-600">文字工具</div>
-                      <input id="textValue" class="in mt-2" placeholder="輸入文字（點畫布放置）" />
-                      <div class="hint mt-2">提示：文字放上去後可以用「移動」拖曳。</div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <button id="btnUndo" class="btn btn-soft w-full">復原</button>
-                      <button id="btnRedo" class="btn btn-soft w-full">重做</button>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-2">
-                      <button id="btnExportCtaPng" class="btn btn-indigo w-full">匯出引流圖（PNG）</button>
-                      <button id="btnCopyCtaDataUrl" class="btn btn-soft w-full">複製引流圖 DataURL</button>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-extrabold text-slate-600">匯出結果（給「預覽/產圖」使用）</div>
-                      <textarea id="ctaExportOut" class="in mono mt-2" rows="6" placeholder="匯出後會出現在這裡（data:image/png;base64,...）"></textarea>
-                      <div class="kbd mt-2">
-                        • 你可以把這串 DataURL 貼到「預覽/產圖」的引流圖欄位<br/>
-                        • 或者先「下載 PNG」再丟到你自己的引流系統用
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- TAB: Targets -->
-        <section id="tab-targets" class="hidden space-y-3">
-          <div class="card p-4">
-            <div class="section-title">
-              <span>③ 年齡層參考值（上限值來源）</span>
-              <div class="flex gap-2">
-                <button id="btnResetTargets" class="btn btn-soft">恢復預設</button>
-                <button id="btnCopyTargetsJson" class="btn btn-soft">複製JSON</button>
-              </div>
-            </div>
-            <div class="hint mt-1">產圖時顯示「數字＋單位」（不顯示“上限”字樣）。</div>
-
-            <div class="mt-3 overflow-auto thinbar">
-              <table class="w-full min-w-[980px] border-collapse">
-                <thead>
-                  <tr class="text-xs text-slate-600">
-                    <th class="text-left p-2 border-b border-slate-200">項目</th>
-                    <th class="text-left p-2 border-b border-slate-200">單位</th>
-                    <th class="text-left p-2 border-b border-slate-200">0~10 歲</th>
-                    <th class="text-left p-2 border-b border-slate-200">11~18 歲</th>
-                    <th class="text-left p-2 border-b border-slate-200">19+（女）</th>
-                    <th class="text-left p-2 border-b border-slate-200">19+（男）</th>
-                  </tr>
-                </thead>
-                <tbody id="targetsTbody" class="text-sm"></tbody>
-              </table>
-            </div>
-
-            <div class="hint mt-2">
-              ※ 組合顯示：<span class="mono font-bold">維生素B群（B1/B2/B6）</span>、<span class="mono font-bold">鈣/鎂</span>、<span class="mono font-bold">微量元素（碘/硒）</span>。
-            </div>
-          </div>
-        </section>
-
-      </main>
+      </div>
     </div>
 
-    <div id="toastWrap"></div>
+    <div id="toastWrap" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(92vw,560px)] space-y-2 z-50"></div>
   </div>
 
 <script>
 (() => {
-  // ====== KV keys ======
   const Q_KEY = "AI_SURVEY:Q:life11";
   const KW_MAP_KEY = "AI_SURVEY:KW_MAP";
 
-  // ====== Defaults ======
+  // ✅ 點擊區 JSON 會自動存到這個 KV key（不需要你複製貼上）
+  const AREAS_KV_KEY = "AI_SURVEY:ASSET:life11:areas";
+
+  // ✅ 背景圖（自動化用，不顯示UI）
+  const DEFAULT_BG_URL = "https://YOUR_PUBLIC_BG_URL_HERE/assets/life11/report_bg.png";
+
   const DEFAULT_LINE_NAME = "LINE使用者名稱";
   const DEFAULT_LINE_ID   = "@line_id";
   const DEFAULT_LINE_AVATAR_URL = "https://i.pravatar.cc/150?img=12";
+
+  // ✅ 10個按鈕（只畫進 PNG 裡；不綁購買連結）
+  const BUY_ITEMS = [
+    { key:"vitA",    label:"維生素A" },
+    { key:"vitB",    label:"維生素B" },
+    { key:"vitC",    label:"維生素C" },
+    { key:"vitD",    label:"維生素D" },
+    { key:"vitE",    label:"維生素E" },
+    { key:"ca_mg",   label:"鈣鎂" },
+    { key:"iron",    label:"鐵" },
+    { key:"fiber",   label:"膳食纖維" },
+    { key:"trace",   label:"微量元素" },
+    { key:"protein", label:"蛋白質" },
+  ];
 
   const AGE_CHILD = "0~10 歲 (兒童)";
   const AGE_TEEN  = "11~18 歲 (青少年)";
@@ -587,15 +326,17 @@
     { id:"q9",  type:"yn",  text:"我常節食以減輕體重" },
     { id:"q10", type:"sex", text:"我的性別" },
     { id:"q11", type:"age", text:"我的年齡範圍" },
+    { id:"done", type:"done", text:"生活型態營養問卷評估完畢！" }
   ];
 
+  // ✅ 顯示名稱（含支項）
   const LABEL = {
     vitA:"維生素A",
-    vitB:"維生素B群（B1/B2/B6）",
+    vitB:"維生素B（B1/B2/B6）",
     vitC:"維生素C",
     vitD:"維生素D",
     vitE:"維生素E",
-    ca_mg:"鈣/鎂",
+    ca_mg:"鈣鎂（鈣/鎂）",
     iron:"鐵",
     fiber:"膳食纖維",
     trace:"微量元素（碘/硒）",
@@ -632,23 +373,23 @@
 
   const $ = (id)=>document.getElementById(id);
 
-  function escapeHtml(s){
-    return (s ?? "").toString()
-      .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
   function toast(msg, type="ok"){
     const wrap = $("toastWrap");
     const div = document.createElement("div");
-    div.className = `card px-4 py-3 border ${
+    div.className = `card rounded-2xl px-4 py-3 border ${
       type==="ok" ? "border-emerald-200" : type==="warn" ? "border-amber-200" : "border-rose-200"
     }`;
-    div.style.borderRadius = "18px";
     div.innerHTML = `<div class="text-sm text-slate-950 font-black">${escapeHtml(msg)}</div>`;
     wrap.appendChild(div);
     setTimeout(()=>{ div.style.opacity="0"; div.style.transition="opacity .25s"; }, 2200);
     setTimeout(()=>{ div.remove(); }, 2600);
+  }
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
   function showErr(e){
     $("errBanner").classList.remove("hidden");
@@ -659,21 +400,6 @@
     $("errText").textContent = "";
   }
 
-  // ====== Tabs ======
-  function setTab(tabId){
-    document.querySelectorAll(".tab").forEach(b=>{
-      b.classList.toggle("active", b.getAttribute("data-tab")===tabId);
-    });
-    ["tab-preview","tab-cta","tab-targets"].forEach(id=>{
-      const el = $(id);
-      if(el) el.classList.toggle("hidden", id!==tabId);
-    });
-  }
-  document.querySelectorAll(".tab").forEach(b=>{
-    b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
-  });
-
-  // ====== API ======
   function apiBase(){ return ($("inApiBase").value || "").trim().replace(/\/$/,""); }
   function adminKey(){ return ($("inAdminKey").value || "").trim(); }
 
@@ -694,6 +420,7 @@
     if(data && data.ok === false) throw new Error(data.error || data.detail || "API error");
     return data;
   }
+
   async function kvGet(key){
     const r = await apiJson("/loadAny", { namespace:"DB", keyword:key });
     return r?.payload ?? r;
@@ -701,120 +428,31 @@
   async function kvPut(key, payload){
     await apiJson("/putAny", { namespace:"DB", keyword:key, payload });
   }
+  async function kvPutAreas(payload){
+    await kvPut(AREAS_KV_KEY, payload);
+  }
 
   let CONNECTED = false;
-  function setConn(ok){
+  function setPill(ok){
+    const el = document.getElementById("pillConn");
+    if(!el) return;
+    el.textContent = ok ? "已連線" : "未連線";
+    el.className = "pill " + (ok ? "pill-green" : "pill-rose");
+  }
+  function setStatus(ok){
     CONNECTED = !!ok;
+    setPill(CONNECTED);
     $("txtLast").textContent = new Date().toLocaleString();
-    const p1 = $("pillConn");
-    const p2 = $("pillConn2");
-    const cls = ok ? "pill pill-green" : "pill pill-rose";
-    if(p1){ p1.className = cls; p1.textContent = ok ? "已連線" : "未連線"; }
-    if(p2){ p2.className = cls; p2.textContent = ok ? "已連線" : "未連線"; }
   }
   async function connect(){
     clearErr();
     await apiJson("/listAll", {});
-    setConn(true);
+    setStatus(true);
     toast("連線成功 ✅");
   }
 
-  // ====== Survey payload ======
+  // Targets table
   let targetsRows = structuredClone(TARGETS_EXCEL_DEFAULT);
-
-  function getAgeOpts(){ return [AGE_CHILD, AGE_TEEN, AGE_ADULT]; }
-  function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
-
-  function getTargetsObject(){
-    const byId = {};
-    targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
-    const pick = (rid, ageKey, sexKey) => {
-      const r = byId[rid]; if(!r) return null;
-      if(ageKey==="child") return r.child;
-      if(ageKey==="teen") return r.teen;
-      return (sexKey==="female") ? r.adultF : r.adultM;
-    };
-    const pack = (ageKey, sexKey) => {
-      const vitB = `B1:${pick("b1",ageKey,sexKey)}mg, B2:${pick("b2",ageKey,sexKey)}mg, B6:${pick("b6",ageKey,sexKey)}mg`;
-      const ca_mg = `鈣:${pick("ca",ageKey,sexKey)}mg, 鎂:${pick("mg",ageKey,sexKey)}mg`;
-      const trace = `碘:${pick("iodine",ageKey,sexKey)}µg, 硒:${pick("selen",ageKey,sexKey)}µg`;
-      return {
-        vitA: `${pick("vitA",ageKey,sexKey)}µg`,
-        vitB,
-        vitC: `${pick("vitC",ageKey,sexKey)}mg`,
-        vitD: `${pick("vitD",ageKey,sexKey)}µg`,
-        vitE: `${pick("vitE",ageKey,sexKey)}mg`,
-        ca_mg,
-        iron: `${pick("iron",ageKey,sexKey)}mg`,
-        fiber: `${pick("fiber",ageKey,sexKey)}g`,
-        trace,
-      };
-    };
-    return {
-      rows: structuredClone(targetsRows),
-      combined: {
-        child: pack("child","female"),
-        teen: pack("teen","female"),
-        adultFemale: pack("adult","female"),
-        adultMale: pack("adult","male"),
-      }
-    };
-  }
-
-  function buildSurveyPayload(){
-    const kw = ($("inKeyword").value || "").trim();
-    if(!kw) throw new Error("請填『啟動關鍵字』");
-
-    const ageOpts = getAgeOpts();
-    const nodes = {};
-    for(let i=0;i<QUESTIONS.length;i++){
-      const q = QUESTIONS[i];
-      const nextId = (QUESTIONS[i+1]) ? QUESTIONS[i+1].id : "";
-      if(q.type === "yn"){
-        nodes[q.id] = { q: q.text, type:"yn", options:[ {t:"是",value:"是",next:nextId}, {t:"不是",value:"不是",next:nextId} ] };
-      } else if(q.type === "sex"){
-        nodes[q.id] = { q: q.text, type:"sex", options:[ {t:"男",value:"男",next:nextId}, {t:"女",value:"女",next:nextId} ] };
-      } else if(q.type === "age"){
-        nodes[q.id] = { q: q.text, type:"age", options:[
-          {t:ageOpts[0],value:ageOpts[0],next:nextId},
-          {t:ageOpts[1],value:ageOpts[1],next:nextId},
-          {t:ageOpts[2],value:ageOpts[2],next:nextId}
-        ] };
-      }
-    }
-
-    return {
-      version: "life11-vUI-redesign-cta-edit",
-      name: "life11",
-      title: "生活型態營養問卷（11題）",
-      keyword: kw,
-      start: "q1",
-      rules: buildRules(),
-      targetsExcel: getTargetsObject(),
-      nodes,
-      order: QUESTIONS.map(x=>x.id),
-      nutrients: LABEL,
-      ui: { ageOptions: { child: ageOpts[0], teen: ageOpts[1], adult: ageOpts[2] } }
-    };
-  }
-
-  async function writeKV(){
-    if(!CONNECTED) throw new Error("未連線，不能寫入（先按『連線』）");
-    const payload = buildSurveyPayload();
-    await kvPut(Q_KEY, payload);
-
-    const kw = payload.keyword.trim();
-    let map = {};
-    try{
-      const raw = await kvGet(KW_MAP_KEY);
-      if(raw && typeof raw === "object") map = raw;
-    }catch{ map = {}; }
-    map[kw] = "life11";
-    await kvPut(KW_MAP_KEY, map);
-    toast("已寫入 KV ✅（問卷 + KW_MAP + 規則 + 攝取量）");
-  }
-
-  // ====== Targets table ======
   function numOrText(v){
     if(v === "" || v === null || v === undefined) return "";
     const n = Number(v);
@@ -852,16 +490,109 @@
     toast("已恢復預設");
   }
 
-  // ====== Simulation UI ======
+  function getTargetsObject(){
+    const byId = {};
+    targetsRows.forEach(r=>byId[r.id]=structuredClone(r));
+
+    const pack = (ageKey, sexKey) => {
+      const pick = (rid) => {
+        const r = byId[rid];
+        if(!r) return null;
+        if(ageKey==="child") return r.child;
+        if(ageKey==="teen") return r.teen;
+        return (sexKey==="female") ? r.adultF : r.adultM;
+      };
+      const vitB = `B1:${pick("b1")}mg, B2:${pick("b2")}mg, B6:${pick("b6")}mg`;
+      const ca_mg = `鈣:${pick("ca")}mg, 鎂:${pick("mg")}mg`;
+      const trace = `碘:${pick("iodine")}µg, 硒:${pick("selen")}µg`;
+      return {
+        vitA: `${pick("vitA")}µg`,
+        vitB,
+        vitC: `${pick("vitC")}mg`,
+        vitD: `${pick("vitD")}µg`,
+        vitE: `${pick("vitE")}mg`,
+        ca_mg,
+        iron: `${pick("iron")}mg`,
+        fiber: `${pick("fiber")}g`,
+        trace,
+      };
+    };
+
+    const combined = {
+      child: pack("child"),
+      teen: pack("teen"),
+      adultFemale: pack("adult","female"),
+      adultMale: pack("adult","male"),
+    };
+    return { rows: structuredClone(targetsRows), combined };
+  }
+
+  function getAgeOpts(){ return [AGE_CHILD, AGE_TEEN, AGE_ADULT]; }
+  function buildRules(){ return { yn_yes: structuredClone(DEDUCT_EXCEL_DEFAULT), sex: { "男": {}, "女": {} }, age: {} }; }
+
+  function buildSurveyPayload(){
+    const kw = ($("inKeyword").value || "").trim();
+    if(!kw) throw new Error("請填『啟動關鍵字』");
+
+    const ageOpts = getAgeOpts();
+    const nodes = {};
+    for(let i=0;i<QUESTIONS.length;i++){
+      const q = QUESTIONS[i];
+      if(q.type === "done") continue;
+      const nextId = (QUESTIONS[i+1] && QUESTIONS[i+1].id !== "done") ? QUESTIONS[i+1].id : "";
+      if(q.type === "yn"){
+        nodes[q.id] = { q: q.text, type:"yn", options:[ {t:"是",value:"是",next:nextId}, {t:"不是",value:"不是",next:nextId} ] };
+      } else if(q.type === "sex"){
+        nodes[q.id] = { q: q.text, type:"sex", options:[ {t:"男",value:"男",next:nextId}, {t:"女",value:"女",next:nextId} ] };
+      } else if(q.type === "age"){
+        nodes[q.id] = { q: q.text, type:"age", options:[
+          {t:ageOpts[0],value:ageOpts[0],next:nextId},
+          {t:ageOpts[1],value:ageOpts[1],next:nextId},
+          {t:ageOpts[2],value:ageOpts[2],next:nextId}
+        ] };
+      }
+    }
+
+    return {
+      version: "life11-v17-oneclick-save-areas-kv",
+      name: "life11",
+      title: "生活型態營養問卷（11題）",
+      keyword: kw,
+      start: "q1",
+      rules: buildRules(),
+      targetsExcel: getTargetsObject(),
+      nodes,
+      order: QUESTIONS.filter(x=>x.type!=="done").map(x=>x.id),
+      nutrients: LABEL,
+      ui: { ageOptions: { child: ageOpts[0], teen: ageOpts[1], adult: ageOpts[2] } }
+    };
+  }
+
+  async function writeKV(){
+    if(!CONNECTED) throw new Error("未連線，不能寫入（先按『連線檢查』）");
+    const payload = buildSurveyPayload();
+    await kvPut(Q_KEY, payload);
+
+    const kw = payload.keyword.trim();
+    let map = {};
+    try{
+      const raw = await kvGet(KW_MAP_KEY);
+      if(raw && typeof raw === "object") map = raw;
+    }catch{ map = {}; }
+    map[kw] = "life11";
+    await kvPut(KW_MAP_KEY, map);
+  }
+
+  // Simulation
   const simState = {};
   function renderSim(){
     const [ageChild, ageTeen, ageAdult] = getAgeOpts();
     const wrap = $("simWrap");
     wrap.innerHTML = "";
 
-    QUESTIONS.forEach((q, i)=>{
+    QUESTIONS.filter(x=>x.type!=="done").forEach((q, i)=>{
       const box = document.createElement("div");
-      box.className = "card2 p-3";
+      box.className = "rounded-3xl border border-slate-200 bg-white/85 p-3";
 
       let optsHtml = "";
       if(q.type==="yn"){
@@ -901,29 +632,21 @@
         btn.addEventListener("click", ()=>{
           simState[q.id] = btn.getAttribute("data-v");
           renderSim();
-          updatePreviewMeta();
         });
       });
       wrap.appendChild(box);
     });
-    updatePreviewMeta();
   }
 
-  function updatePreviewMeta(){
-    const sex = simState.q10 ?? "男";
-    const age = simState.q11 ?? AGE_ADULT;
-    $("previewMeta").textContent = `性別：${sex}　年齡：${age}`;
-  }
-
-  // ====== Calculate remain ======
   function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
   function getRemainFromSim(){
+    const [ageChild, ageTeen, ageAdult] = getAgeOpts();
     const rules = buildRules();
     const ans = {};
-    QUESTIONS.forEach(q=>{
+    QUESTIONS.filter(x=>x.type!=="done").forEach(q=>{
       if(q.type==="yn")  ans[q.id] = simState[q.id] ?? "不是";
       if(q.type==="sex") ans[q.id] = simState[q.id] ?? "男";
-      if(q.type==="age") ans[q.id] = simState[q.id] ?? AGE_ADULT;
+      if(q.type==="age") ans[q.id] = simState[q.id] ?? ageAdult;
     });
 
     const deduct = {};
@@ -943,49 +666,9 @@
     return { ans, remain };
   }
 
-  // ====== Caps (numbers + unit only) ======
-  function capPick(row, ans){
-    const age = ans?.q11 || AGE_ADULT;
-    const sex = ans?.q10 || "男";
-    const ageKey = age.includes("0~10") ? "child" : age.includes("11~18") ? "teen" : "adult";
-    if(ageKey==="child") return row.child;
-    if(ageKey==="teen") return row.teen;
-    return (sex==="女") ? row.adultF : row.adultM;
-  }
-  function capNumUnitForKey(key, ans){
-    const byId = {};
-    targetsRows.forEach(r=>byId[r.id]=r);
-    const fmt = (v, unit) => (v === "" || v === null || v === undefined) ? "-" : `${v}${unit||""}`;
+  // ===== PNG 產生（完全自動，不顯示 UI） =====
+  let lastClickAreas = [];
 
-    if(key==="vitA"){ const r=byId.vitA; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitC"){ const r=byId.vitC; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitD"){ const r=byId.vitD; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="vitE"){ const r=byId.vitE; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="iron"){ const r=byId.iron; return r?fmt(capPick(r,ans), r.unit):"-"; }
-    if(key==="fiber"){ const r=byId.fiber; return r?fmt(capPick(r,ans), r.unit):"-"; }
-
-    if(key==="vitB"){
-      const b1=byId.b1, b2=byId.b2, b6=byId.b6;
-      if(!b1 || !b2 || !b6) return "-";
-      const u = b1.unit || "mg";
-      return `${capPick(b1,ans)}/${capPick(b2,ans)}/${capPick(b6,ans)}${u}`;
-    }
-    if(key==="ca_mg"){
-      const ca=byId.ca, mg=byId.mg;
-      if(!ca || !mg) return "-";
-      const u = ca.unit || "mg";
-      return `${capPick(ca,ans)}/${capPick(mg,ans)}${u}`;
-    }
-    if(key==="trace"){
-      const io=byId.iodine, se=byId.selen;
-      if(!io || !se) return "-";
-      const u = io.unit || "µg";
-      return `${capPick(io,ans)}/${capPick(se,ans)}${u}`;
-    }
-    return "-";
-  }
-
-  // ====== Report render ======
   function pctColor(p){
     if(p < 35) return "#ff4d4f";
     if(p < 70) return "#fbbf24";
@@ -1019,40 +702,71 @@
     ctx.drawImage(img, cx - r, cy - r, r*2, r*2);
     ctx.restore();
   }
-  function drawCover(ctx, img, x, y, w, h){
-    const iw = img.naturalWidth || img.width;
-    const ih = img.naturalHeight || img.height;
-    const s = Math.max(w/iw, h/ih);
-    const sw = iw * s;
-    const sh = ih * s;
-    const sx = x + (w - sw)/2;
-    const sy = y + (h - sh)/2;
-    ctx.drawImage(img, sx, sy, sw, sh);
+
+  function capPick(row, ans){
+    const age = ans?.q11 || AGE_ADULT;
+    const sex = ans?.q10 || "男";
+    const ageKey = age.includes("0~10") ? "child" : age.includes("11~18") ? "teen" : "adult";
+    if(ageKey==="child") return row.child;
+    if(ageKey==="teen") return row.teen;
+    return (sex==="女") ? row.adultF : row.adultM;
+  }
+  function capTextForKey(key, ans){
+    const byId = {};
+    targetsRows.forEach(r=>byId[r.id]=r);
+
+    const fmt = (v, unit) => {
+      if(v === "" || v === null || v === undefined) return "-";
+      return `${v}${unit||""}`;
+    };
+
+    if(key==="vitA"){ const r = byId.vitA; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="vitC"){ const r = byId.vitC; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="vitD"){ const r = byId.vitD; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="vitE"){ const r = byId.vitE; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="iron"){ const r = byId.iron; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+    if(key==="fiber"){ const r = byId.fiber; return r ? fmt(capPick(r,ans), r.unit) : "-"; }
+
+    if(key==="vitB"){
+      const b1=byId.b1, b2=byId.b2, b6=byId.b6;
+      if(!b1 || !b2 || !b6) return "-";
+      const u = b1.unit || "mg";
+      return `${capPick(b1,ans)}/${capPick(b2,ans)}/${capPick(b6,ans)}${u}`;
+    }
+    if(key==="ca_mg"){
+      const ca=byId.ca, mg=byId.mg;
+      if(!ca || !mg) return "-";
+      const u = ca.unit || "mg";
+      return `${capPick(ca,ans)}/${capPick(mg,ans)}${u}`;
+    }
+    if(key==="trace"){
+      const io=byId.iodine, se=byId.selen;
+      if(!io || !se) return "-";
+      const u = io.unit || "µg";
+      return `${capPick(io,ans)}/${capPick(se,ans)}${u}`;
+    }
+    return "-";
   }
 
-  let lastPngDataUrl = "";
-
-  async function renderReportImage(){
-    const bgUrl = ($("inBgUrl").value||"").trim();
-    if(!bgUrl) throw new Error("請先填『底板圖片 URL』");
-
-    const ctaSrc = ($("inCtaSource").value||"").trim(); // can be url or dataURL
+  async function renderReportAndAreas(){
+    const bgUrl = (DEFAULT_BG_URL || "").trim();
+    if(!bgUrl || bgUrl.includes("YOUR_PUBLIC_BG_URL_HERE")){
+      throw new Error("請先把 DEFAULT_BG_URL 換成你的『底板圖片公開網址』");
+    }
 
     const W = 900, H = 1600;
-    const cv = $("cvReport");
+    const cv = document.createElement("canvas");
     cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d");
+
+    lastClickAreas = [];
 
     const bg = await loadImg(bgUrl);
     ctx.drawImage(bg, 0, 0, W, H);
 
     const { ans, remain } = getRemainFromSim();
 
-    const lineName = DEFAULT_LINE_NAME;
-    const lineId = DEFAULT_LINE_ID;
-    const avatarUrl = (($("inPreviewAvatarUrl")?.value || DEFAULT_LINE_AVATAR_URL) + "").trim() || DEFAULT_LINE_AVATAR_URL;
-
-    // header (personal)
+    // ===== 上方個人資料區 =====
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#000000";
@@ -1060,876 +774,219 @@
     ctx.fill();
     ctx.restore();
 
-    try{
-      const av = await loadImg(avatarUrl);
-      drawCircleAvatar(ctx, av, 140, 140, 58);
-      ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,.85)";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.arc(140, 140, 60, 0, Math.PI*2);
-      ctx.stroke();
-      ctx.restore();
-    }catch{
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,.20)";
-      ctx.beginPath();
-      ctx.arc(140, 140, 58, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
+    if(DEFAULT_LINE_AVATAR_URL){
+      try{
+        const av = await loadImg(DEFAULT_LINE_AVATAR_URL);
+        drawCircleAvatar(ctx, av, 140, 140, 58);
+        ctx.save();
+        ctx.strokeStyle = "rgba(255,255,255,.85)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(140, 140, 60, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }catch{}
     }
 
     ctx.fillStyle = "rgba(255,255,255,.96)";
     ctx.textAlign = "left";
     ctx.font = "bold 44px Microsoft JhengHei, sans-serif";
-    ctx.fillText(lineName, 230, 128);
+    ctx.fillText(DEFAULT_LINE_NAME, 230, 128);
 
     ctx.fillStyle = "rgba(255,255,255,.90)";
     ctx.font = "bold 26px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\",\"Courier New\", monospace";
-    ctx.fillText(lineId, 230, 172);
+    ctx.fillText(DEFAULT_LINE_ID, 230, 172);
 
     ctx.fillStyle = "rgba(255,255,255,.86)";
     ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-    ctx.fillText(`性別：${ans.q10}   年齡：${ans.q11}`, 230, 208);
+    ctx.fillText(`年齡:${ans.q11} · 性別:${ans.q10}`, 230, 208);
 
-    // nutrients (single row each)
+    // ===== 營養素長條 =====
     const listX = 56;
     const listY = 270;
     const listW = W - listX*2;
-    const rowH = 68;
-    const rowsGap = 10;
+
+    const rowH  = 94;
+    const gapY  = 12;
+
+    const panelH = (rowH+gapY)*PCT_ORDER.length - gapY + 28;
 
     ctx.save();
-    ctx.globalAlpha = 0.14;
+    ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#0b122b";
-    roundRect(ctx, 44, listY-14, W-88, (rowH+rowsGap)*PCT_ORDER.length - rowsGap + 28, 36);
+    roundRect(ctx, 42, listY-14, W-84, panelH, 36);
     ctx.fill();
     ctx.restore();
 
     for(let i=0;i<PCT_ORDER.length;i++){
       const k = PCT_ORDER[i];
-      const y = listY + i*(rowH+rowsGap);
+      const x = listX;
+      const y = listY + i*(rowH + gapY);
       const pct = remain[k];
-      const cap = capNumUnitForKey(k, ans);
+      const capText = capTextForKey(k, ans);
 
       ctx.save();
       ctx.globalAlpha = 0.16;
       ctx.fillStyle = "#ffffff";
-      roundRect(ctx, listX, y, listW, rowH, 20);
+      roundRect(ctx, x, y, listW, rowH, 22);
       ctx.fill();
       ctx.restore();
 
-      ctx.strokeStyle = "rgba(255,255,255,.38)";
+      ctx.strokeStyle = "rgba(255,255,255,.40)";
       ctx.lineWidth = 2;
-      roundRect(ctx, listX, y, listW, rowH, 20);
+      roundRect(ctx, x, y, listW, rowH, 22);
       ctx.stroke();
 
-      // name full
       ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(255,255,255,.95)";
-      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-      ctx.fillText(LABEL[k] || k, listX+16, y+26);
+      ctx.fillStyle = "rgba(255,255,255,.98)";
+      ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
+      ctx.fillText(LABEL[k] || k, x+18, y+38);
 
-      // cap big
-      ctx.textAlign = "right";
-      ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-      ctx.fillText(cap, listX+listW-16, y+28);
+      ctx.fillStyle = "rgba(255,255,255,.94)";
+      ctx.font = "bold 24px Microsoft JhengHei, sans-serif";
+      ctx.fillText(capText, x+18, y+72);
 
-      // bar
-      const barX = listX+16, barY = y+38, barW = listW-32, barH = 18;
+      const barX = x + 330;
+      const barY = y + 34;
+      const barW = listW - 330 - 18;
+      const barH = 30;
 
-      ctx.textAlign = "left";
       ctx.fillStyle = "rgba(255,255,255,.22)";
-      roundRect(ctx, barX, barY, barW, barH, 9);
+      roundRect(ctx, barX, barY, barW, barH, 15);
       ctx.fill();
 
       const fillW = Math.max(0, Math.min(barW, barW*(pct/100)));
       ctx.fillStyle = pctColor(pct);
-      roundRect(ctx, barX, barY, fillW, barH, 9);
+      roundRect(ctx, barX, barY, fillW, barH, 15);
       ctx.fill();
 
-      // pct in center of bar
       ctx.textAlign = "center";
-      ctx.font = "bold 18px Microsoft JhengHei, sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,.96)";
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = "rgba(0,0,0,.35)";
-      ctx.strokeText(`${pct}%`, barX + barW/2, barY + 14);
-      ctx.fillText(`${pct}%`, barX + barW/2, barY + 14);
+      ctx.fillStyle = "rgba(255,255,255,.98)";
+      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
+      ctx.fillText(`${pct}%`, barX + barW/2, barY + 22);
     }
 
-    // CTA at bottom
-    const ctaX = 56;
-    const ctaY = 950;
-    const ctaW = W - ctaX*2;
-    const ctaH = 600;
+    // ===== 點擊了解區：3欄按鈕（只存座標） =====
+    const afterBarsY = (listY - 14) + panelH + 24;
+    const titleX = 56;
+
+    const btnCols = 3;
+    const btnGapX = 16;
+    const btnGapY2 = 16;
+    const btnH = 62;
+    const btnW = Math.floor((W - 84 - btnGapX*(btnCols-1)) / btnCols);
+    const btnStartX = 42;
+    const btnStartY = afterBarsY + 52;
+
+    const btnRows = Math.ceil(BUY_ITEMS.length / btnCols);
+    const boxPadBottom = 28;
+    const boxH = 52 + (btnRows * btnH) + ((btnRows-1) * btnGapY2) + boxPadBottom;
 
     ctx.save();
-    ctx.globalAlpha = 0.14;
-    ctx.fillStyle = "#0b122b";
-    roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 40);
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = "#000";
+    roundRect(ctx, 42, afterBarsY-12, W-84, boxH, 36);
     ctx.fill();
     ctx.restore();
 
-    if(ctaSrc){
-      try{
-        const ctaImg = await loadImg(ctaSrc);
-        ctx.save();
-        roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 40);
-        ctx.clip();
-        drawCover(ctx, ctaImg, ctaX, ctaY, ctaW, ctaH);
-        ctx.restore();
-      }catch{}
-    }
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255,255,255,.98)";
+    ctx.font = "bold 26px Microsoft JhengHei, sans-serif";
+    ctx.fillText("您的每日攝取尚需(點擊了解)：", titleX, afterBarsY+30);
 
-    ctx.strokeStyle = "rgba(255,255,255,.45)";
-    ctx.setLineDash([10,8]);
-    ctx.lineWidth = 3;
-    roundRect(ctx, ctaX+22, ctaY+22, ctaW-44, ctaH-44, 34);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    for(let i=0;i<BUY_ITEMS.length;i++){
+      const item = BUY_ITEMS[i];
+      const col = i % btnCols;
+      const row = Math.floor(i / btnCols);
+      const x = btnStartX + col*(btnW + btnGapX);
+      const y = btnStartY + row*(btnH + btnGapY2);
 
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
-    ctx.fillText("引流圖區（你編輯的圖片會放在這裡）", ctaX + ctaW/2, ctaY + 60);
-
-    lastPngDataUrl = cv.toDataURL("image/png");
-    return lastPngDataUrl;
-  }
-
-  function downloadPng(){
-    if(!lastPngDataUrl) throw new Error("請先按『產生圖片』");
-    const a = document.createElement("a");
-    a.href = lastPngDataUrl;
-    a.download = "nutrition_report.png";
-    a.click();
-  }
-
-  // ====== Preview header ======
-  function initPreviewLine(){
-    $("previewName").textContent = DEFAULT_LINE_NAME;
-    $("previewId").textContent = DEFAULT_LINE_ID;
-    $("previewAvatar").src = ($("inPreviewAvatarUrl").value || DEFAULT_LINE_AVATAR_URL).trim() || DEFAULT_LINE_AVATAR_URL;
-    updatePreviewMeta();
-  }
-
-  // ====== CTA Editor: real image editing on canvas ======
-  const cta = {
-    tool: "move",
-    stroke: { size: 10, color: "#111827", alpha: 1 },
-    canvas: null,
-    ctx: null,
-    baseImg: null, // Image element for base
-    view: { scale: 1, ox: 0, oy: 0 }, // pan/zoom
-    objects: [], // shapes & texts & paths (in image coords)
-    history: [],
-    redo: [],
-    down: null,
-    dragObjId: null,
-    lastExportDataUrl: ""
-  };
-
-  function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-  function pushHistory(){
-    cta.history.push(deepClone({ objects: cta.objects, view: cta.view }));
-    if(cta.history.length > 50) cta.history.shift();
-    cta.redo = [];
-  }
-  function undo(){
-    if(cta.history.length <= 1) return;
-    const cur = cta.history.pop();
-    cta.redo.push(cur);
-    const prev = cta.history[cta.history.length - 1];
-    cta.objects = deepClone(prev.objects);
-    cta.view = deepClone(prev.view);
-    drawEditor();
-  }
-  function redo(){
-    if(cta.redo.length === 0) return;
-    const state = cta.redo.pop();
-    cta.history.push(state);
-    cta.objects = deepClone(state.objects);
-    cta.view = deepClone(state.view);
-    drawEditor();
-  }
-
-  function setTool(t){
-    cta.tool = t;
-    document.querySelectorAll(".toolbtn").forEach(b=>{
-      b.classList.toggle("active", b.getAttribute("data-tool")===t);
-    });
-  }
-  document.querySelectorAll(".toolbtn").forEach(b=>{
-    b.addEventListener("click", ()=>setTool(b.getAttribute("data-tool")));
-  });
-
-  function setStrokeFromUI(){
-    cta.stroke.size = Number($("strokeSize").value)||10;
-    cta.stroke.color = $("strokeColor").value || "#111827";
-    cta.stroke.alpha = Number($("strokeAlpha").value)||1;
-  }
-  $("strokeSize").addEventListener("input", setStrokeFromUI);
-  $("strokeColor").addEventListener("input", setStrokeFromUI);
-  $("strokeAlpha").addEventListener("input", setStrokeFromUI);
-
-  function initEditorCanvas(){
-    cta.canvas = $("ctaEditCanvas");
-    cta.ctx = cta.canvas.getContext("2d");
-
-    // start with a default canvas size (will resize when image loaded)
-    cta.canvas.width = 1200;
-    cta.canvas.height = 760;
-
-    // initial history
-    cta.objects = [];
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-    cta.history = [deepClone({ objects: cta.objects, view: cta.view })];
-    cta.redo = [];
-    drawEditor();
-
-    // pointer events
-    cta.canvas.addEventListener("pointerdown", onEditorDown);
-    cta.canvas.addEventListener("pointermove", onEditorMove);
-    cta.canvas.addEventListener("pointerup", onEditorUp);
-    cta.canvas.addEventListener("pointercancel", ()=>{ cta.down=null; cta.dragObjId=null; });
-
-    // wheel zoom
-    cta.canvas.addEventListener("wheel", (e)=>{
-      e.preventDefault();
-      if(!cta.baseImg) return;
-      const delta = Math.sign(e.deltaY);
-      const factor = delta > 0 ? 0.92 : 1.08;
-      const p = screenToWorld(e.offsetX, e.offsetY);
-      const newScale = Math.max(0.35, Math.min(6, cta.view.scale * factor));
-      // zoom around pointer
-      const before = p;
-      cta.view.scale = newScale;
-      const after = screenToWorld(e.offsetX, e.offsetY);
-      cta.view.ox += (after.x - before.x);
-      cta.view.oy += (after.y - before.y);
-      drawEditor();
-    }, { passive:false });
-  }
-
-  function fitImageToCanvas(){
-    const img = cta.baseImg;
-    if(!img) return;
-    // Keep a comfortable editor resolution
-    const maxW = 1400;
-    const maxH = 900;
-    const s = Math.min(maxW/img.naturalWidth, maxH/img.naturalHeight, 1);
-    cta.canvas.width = Math.round(img.naturalWidth * s);
-    cta.canvas.height = Math.round(img.naturalHeight * s);
-
-    // reset view to fit nicely
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-  }
-
-  function drawEditor(){
-    const ctx = cta.ctx;
-    const cv = cta.canvas;
-    if(!ctx || !cv) return;
-
-    // background
-    ctx.clearRect(0,0,cv.width, cv.height);
-    ctx.save();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,cv.width,cv.height);
-    ctx.restore();
-
-    // if no image
-    if(!cta.baseImg){
       ctx.save();
-      ctx.fillStyle = "rgba(2,6,23,.65)";
-      ctx.font = "bold 20px Microsoft JhengHei, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("先用右側『URL載入』或『選檔』載入引流圖", cv.width/2, cv.height/2);
-      ctx.font = "bold 14px Microsoft JhengHei, sans-serif";
-      ctx.fillStyle = "rgba(2,6,23,.45)";
-      ctx.fillText("載入後可：畫筆 / 文字 / 方塊 / 橢圓 / 移動 / 取消復原", cv.width/2, cv.height/2 + 28);
+      ctx.globalAlpha = 0.20;
+      ctx.fillStyle = "#ffffff";
+      roundRect(ctx, x, y, btnW, btnH, 24);
+      ctx.fill();
       ctx.restore();
-      return;
-    }
 
-    // world transform
-    ctx.save();
-    ctx.translate(cta.view.ox, cta.view.oy);
-    ctx.scale(cta.view.scale, cta.view.scale);
-
-    // draw base image fitted exactly at (0,0) in world coords
-    ctx.drawImage(cta.baseImg, 0,0);
-
-    // draw objects
-    cta.objects.forEach(o=>{
-      if(o.type==="path"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = o.size || 10;
-        ctx.beginPath();
-        const pts = o.points || [];
-        if(pts.length){
-          ctx.moveTo(pts[0].x, pts[0].y);
-          for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
-        }
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="rect"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = o.size || 6;
-        ctx.fillStyle = (o.fillColor || "rgba(0,0,0,0)");
-        if(o.fillColor) ctx.fillRect(o.x, o.y, o.w, o.h);
-        ctx.strokeRect(o.x, o.y, o.w, o.h);
-        ctx.restore();
-      }
-      if(o.type==="ellipse"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = o.size || 6;
-        ctx.fillStyle = (o.fillColor || "rgba(0,0,0,0)");
-        ctx.beginPath();
-        ctx.ellipse(o.cx, o.cy, Math.abs(o.rx), Math.abs(o.ry), 0, 0, Math.PI*2);
-        if(o.fillColor) ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="text"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.fillStyle = o.color || "#111827";
-        ctx.font = `900 ${o.size || 36}px Microsoft JhengHei, sans-serif`;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        // outline for readability
-        ctx.lineWidth = Math.max(2, (o.size||36)/12);
-        ctx.strokeStyle = "rgba(255,255,255,.75)";
-        ctx.strokeText(o.text || "", o.x, o.y);
-        ctx.fillText(o.text || "", o.x, o.y);
-        ctx.restore();
-      }
-    });
-
-    // draw selection if dragging an object
-    if(cta.dragObjId){
-      const o = cta.objects.find(x=>x.id===cta.dragObjId);
-      if(o){
-        ctx.save();
-        ctx.globalAlpha = 0.9;
-        ctx.setLineDash([10,6]);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(99,102,241,.85)";
-        const bb = getObjBounds(o);
-        if(bb) ctx.strokeRect(bb.x, bb.y, bb.w, bb.h);
-        ctx.restore();
-      }
-    }
-
-    // draw current drafting shape
-    if(cta.down && cta.down.draft){
-      const d = cta.down.draft;
-      ctx.save();
-      ctx.globalAlpha = 0.85;
-      ctx.setLineDash([8,6]);
+      ctx.strokeStyle = "rgba(255,255,255,.45)";
       ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(244,63,94,.9)";
-      if(d.type==="rect") ctx.strokeRect(d.x, d.y, d.w, d.h);
-      if(d.type==="ellipse"){
-        ctx.beginPath();
-        ctx.ellipse(d.cx, d.cy, Math.abs(d.rx), Math.abs(d.ry), 0, 0, Math.PI*2);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
+      roundRect(ctx, x, y, btnW, btnH, 24);
+      ctx.stroke();
 
-    ctx.restore();
-  }
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,.98)";
+      ctx.font = "bold 22px Microsoft JhengHei, sans-serif";
+      ctx.fillText(item.label, x + btnW/2, y + 40);
 
-  function screenToWorld(sx, sy){
-    return {
-      x: (sx - cta.view.ox) / cta.view.scale,
-      y: (sy - cta.view.oy) / cta.view.scale,
-    };
-  }
-
-  function getObjBounds(o){
-    if(o.type==="rect") return { x:o.x, y:o.y, w:o.w, h:o.h };
-    if(o.type==="ellipse") return { x:o.cx-o.rx, y:o.cy-o.ry, w:o.rx*2, h:o.ry*2 };
-    if(o.type==="text"){
-      // rough bounds: estimate width
-      const size = o.size || 36;
-      const w = (o.text||"").length * (size*0.62);
-      const h = size*1.15;
-      return { x:o.x, y:o.y, w, h };
-    }
-    if(o.type==="path"){
-      const pts = o.points||[];
-      if(!pts.length) return null;
-      let minx=pts[0].x, maxx=pts[0].x, miny=pts[0].y, maxy=pts[0].y;
-      pts.forEach(p=>{
-        minx=Math.min(minx,p.x); maxx=Math.max(maxx,p.x);
-        miny=Math.min(miny,p.y); maxy=Math.max(maxy,p.y);
+      lastClickAreas.push({
+        key: item.key,
+        label: item.label,
+        x: Math.round(x), y: Math.round(y),
+        w: Math.round(btnW), h: Math.round(btnH),
       });
-      const pad = (o.size||10)/2;
-      return { x:minx-pad, y:miny-pad, w:(maxx-minx)+pad*2, h:(maxy-miny)+pad*2 };
     }
-    return null;
-  }
 
-  function hitTest(worldX, worldY){
-    // topmost first
-    for(let i=cta.objects.length-1;i>=0;i--){
-      const o = cta.objects[i];
-      const bb = getObjBounds(o);
-      if(!bb) continue;
-      if(worldX>=bb.x && worldX<=bb.x+bb.w && worldY>=bb.y && worldY<=bb.y+bb.h){
-        return o;
-      }
-    }
-    return null;
-  }
-
-  function onEditorDown(e){
-    cta.canvas.setPointerCapture(e.pointerId);
-    setStrokeFromUI();
-
-    const p = screenToWorld(e.offsetX, e.offsetY);
-    cta.down = {
-      sx: e.offsetX, sy: e.offsetY,
-      wx: p.x, wy: p.y,
-      startOx: cta.view.ox, startOy: cta.view.oy,
-      start: { x:p.x, y:p.y },
-      draft: null
+    // ✅ 這裡產生「要存進KV的點擊區 payload」
+    return {
+      canvas: { width: W, height: H },
+      areas: structuredClone(lastClickAreas)
     };
-
-    if(!cta.baseImg){
-      cta.down = null;
-      return;
-    }
-
-    if(cta.tool==="move"){
-      // if click object -> drag it; else pan
-      const obj = hitTest(p.x, p.y);
-      if(obj){
-        cta.dragObjId = obj.id;
-        cta.down.dragType = "obj";
-        cta.down.objStart = deepClone(obj);
-      }else{
-        cta.dragObjId = null;
-        cta.down.dragType = "pan";
-      }
-      drawEditor();
-      return;
-    }
-
-    if(cta.tool==="pen"){
-      pushHistory();
-      const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-      const o = { id, type:"path", color: cta.stroke.color, alpha: cta.stroke.alpha, size: cta.stroke.size, points:[{x:p.x,y:p.y}] };
-      cta.objects.push(o);
-      cta.down.dragType = "pen";
-      cta.down.objId = id;
-      drawEditor();
-      return;
-    }
-
-    if(cta.tool==="rect"){
-      cta.down.dragType = "shape";
-      cta.down.shape = "rect";
-      cta.down.draft = { type:"rect", x:p.x, y:p.y, w:0, h:0 };
-      drawEditor();
-      return;
-    }
-
-    if(cta.tool==="ellipse"){
-      cta.down.dragType = "shape";
-      cta.down.shape = "ellipse";
-      cta.down.draft = { type:"ellipse", cx:p.x, cy:p.y, rx:0, ry:0 };
-      drawEditor();
-      return;
-    }
-
-    if(cta.tool==="text"){
-      const t = ($("textValue").value || "").trim();
-      if(!t) return toast("請先輸入文字", "warn");
-      pushHistory();
-      const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-      const size = Math.max(18, Math.min(96, cta.stroke.size*3.2)); // tie to stroke size
-      cta.objects.push({ id, type:"text", text:t, x:p.x, y:p.y, size, color: cta.stroke.color, alpha: cta.stroke.alpha });
-      drawEditor();
-      return;
-    }
   }
 
-  function onEditorMove(e){
-    if(!cta.down || !cta.baseImg) return;
-    const p = screenToWorld(e.offsetX, e.offsetY);
+  // ✅ 一鍵發佈：全自動（不需要你複製 JSON）
+  async function publishAll(){
+    clearErr();
 
-    if(cta.tool==="move"){
-      if(cta.down.dragType==="pan"){
-        cta.view.ox = cta.down.startOx + (e.offsetX - cta.down.sx);
-        cta.view.oy = cta.down.startOy + (e.offsetY - cta.down.sy);
-        drawEditor();
-      }
-      if(cta.down.dragType==="obj" && cta.dragObjId){
-        const o = cta.objects.find(x=>x.id===cta.dragObjId);
-        if(!o) return;
-        const dx = p.x - cta.down.start.x;
-        const dy = p.y - cta.down.start.y;
+    if(!CONNECTED) await connect();
+    await writeKV();
 
-        if(o.type==="rect"){ o.x = cta.down.objStart.x + dx; o.y = cta.down.objStart.y + dy; }
-        if(o.type==="ellipse"){ o.cx = cta.down.objStart.cx + dx; o.cy = cta.down.objStart.cy + dy; }
-        if(o.type==="text"){ o.x = cta.down.objStart.x + dx; o.y = cta.down.objStart.y + dy; }
-        if(o.type==="path"){
-          const bb = getObjBounds(o);
-          if(!bb) return;
-          // move all points
-          const pts = cta.down.objStart.points || [];
-          o.points = pts.map(pt=>({ x: pt.x + dx, y: pt.y + dy }));
-        }
-        drawEditor();
-      }
-      return;
-    }
+    // 產生點擊區並存 KV
+    const areasPayload = await renderReportAndAreas();
+    await kvPutAreas(areasPayload);
 
-    if(cta.tool==="pen" && cta.down.dragType==="pen"){
-      const o = cta.objects.find(x=>x.id===cta.down.objId);
-      if(!o) return;
-      o.points.push({ x:p.x, y:p.y });
-      drawEditor();
-      return;
-    }
-
-    if((cta.tool==="rect" || cta.tool==="ellipse") && cta.down.dragType==="shape" && cta.down.draft){
-      const d = cta.down.draft;
-      if(d.type==="rect"){
-        d.w = p.x - d.x;
-        d.h = p.y - d.y;
-      }else if(d.type==="ellipse"){
-        d.rx = p.x - d.cx;
-        d.ry = p.y - d.cy;
-      }
-      drawEditor();
-      return;
-    }
+    toast("🚀 發佈完成 ✅（已寫入問卷KV + 已存點擊區KV）");
   }
 
-  function onEditorUp(e){
-    if(!cta.down || !cta.baseImg) { cta.down=null; return; }
-
-    // finalize shapes
-    if((cta.tool==="rect" || cta.tool==="ellipse") && cta.down.dragType==="shape" && cta.down.draft){
-      const d = cta.down.draft;
-      const minSize = 10;
-      pushHistory();
-
-      if(d.type==="rect"){
-        let x=d.x, y=d.y, w=d.w, h=d.h;
-        // normalize
-        if(w<0){ x+=w; w=Math.abs(w); }
-        if(h<0){ y+=h; h=Math.abs(h); }
-        if(w>=minSize && h>=minSize){
-          const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-          cta.objects.push({ id, type:"rect", x, y, w, h, size: Math.max(2, cta.stroke.size/2), color: cta.stroke.color, alpha: cta.stroke.alpha });
-        }
-      }
-      if(d.type==="ellipse"){
-        const rx = Math.abs(d.rx), ry = Math.abs(d.ry);
-        if(rx>=minSize/2 && ry>=minSize/2){
-          const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
-          cta.objects.push({ id, type:"ellipse", cx:d.cx, cy:d.cy, rx, ry, size: Math.max(2, cta.stroke.size/2), color: cta.stroke.color, alpha: cta.stroke.alpha });
-        }
-      }
-      cta.down.draft = null;
-      drawEditor();
-    }
-
-    // when moving object, commit history once at release (if moved)
-    if(cta.tool==="move" && cta.down.dragType==="obj" && cta.dragObjId){
-      // push state after move (if changed)
-      const moved = true;
-      if(moved) pushHistory();
-      cta.dragObjId = null;
-      drawEditor();
-    }
-
-    cta.down = null;
-  }
-
-  async function loadCtaFromUrl(url){
-    const u = (url||"").trim();
-    if(!u) throw new Error("請貼圖片 URL");
-    const img = await loadImg(u);
-    cta.baseImg = img;
-    fitImageToCanvas();
-    cta.objects = [];
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-    cta.history = [deepClone({ objects: cta.objects, view: cta.view })];
-    cta.redo = [];
-    drawEditor();
-    toast("已載入引流圖 ✅");
-  }
-  async function loadCtaFromFile(file){
-    if(!file) throw new Error("請先選檔");
-    const url = URL.createObjectURL(file);
-    try{
-      await loadCtaFromUrl(url);
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
-  function clearCtaEditor(){
-    cta.baseImg = null;
-    cta.objects = [];
-    cta.view = { scale: 1, ox: 0, oy: 0 };
-    cta.history = [deepClone({ objects: cta.objects, view: cta.view })];
-    cta.redo = [];
-    cta.lastExportDataUrl = "";
-    $("ctaExportOut").value = "";
-    drawEditor();
-    toast("已清空", "warn");
-  }
-  function exportCtaPng(){
-    if(!cta.baseImg) throw new Error("請先載入引流圖");
-    // export: create an offscreen canvas at original image size, render base + objects
-    const iw = cta.baseImg.naturalWidth || cta.baseImg.width;
-    const ih = cta.baseImg.naturalHeight || cta.baseImg.height;
-    const off = document.createElement("canvas");
-    off.width = iw; off.height = ih;
-    const ctx = off.getContext("2d");
-    ctx.drawImage(cta.baseImg, 0,0);
-
-    // render objects in original image coords:
-    // NOTE: our editor canvas may be scaled from original; we need ratio
-    const ratioX = iw / cta.canvas.width;
-    const ratioY = ih / cta.canvas.height;
-
-    const mapPt = (p)=>({ x: p.x * ratioX, y: p.y * ratioY });
-    cta.objects.forEach(o=>{
-      if(o.type==="path"){
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = (o.size || 10) * ((ratioX+ratioY)/2);
-        ctx.beginPath();
-        const pts = o.points || [];
-        if(pts.length){
-          const p0 = mapPt(pts[0]);
-          ctx.moveTo(p0.x, p0.y);
-          for(let i=1;i<pts.length;i++){
-            const pi = mapPt(pts[i]);
-            ctx.lineTo(pi.x, pi.y);
-          }
-        }
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="rect"){
-        const x=o.x*ratioX, y=o.y*ratioY, w=o.w*ratioX, h=o.h*ratioY;
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = (o.size || 6) * ((ratioX+ratioY)/2);
-        if(o.fillColor){ ctx.fillStyle = o.fillColor; ctx.fillRect(x,y,w,h); }
-        ctx.strokeRect(x,y,w,h);
-        ctx.restore();
-      }
-      if(o.type==="ellipse"){
-        const cx=o.cx*ratioX, cy=o.cy*ratioY, rx=o.rx*ratioX, ry=o.ry*ratioY;
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.strokeStyle = o.color || "#111827";
-        ctx.lineWidth = (o.size || 6) * ((ratioX+ratioY)/2);
-        if(o.fillColor) ctx.fillStyle = o.fillColor;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI*2);
-        if(o.fillColor) ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-      if(o.type==="text"){
-        const x=o.x*ratioX, y=o.y*ratioY;
-        const size=(o.size||36) * ((ratioX+ratioY)/2);
-        ctx.save();
-        ctx.globalAlpha = o.alpha ?? 1;
-        ctx.fillStyle = o.color || "#111827";
-        ctx.font = `900 ${size}px Microsoft JhengHei, sans-serif`;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        ctx.lineWidth = Math.max(2, size/12);
-        ctx.strokeStyle = "rgba(255,255,255,.75)";
-        ctx.strokeText(o.text || "", x, y);
-        ctx.fillText(o.text || "", x, y);
-        ctx.restore();
-      }
-    });
-
-    const dataUrl = off.toDataURL("image/png");
-    cta.lastExportDataUrl = dataUrl;
-    $("ctaExportOut").value = dataUrl;
-    return dataUrl;
-  }
-  async function copyTextToClipboard(text){
-    await navigator.clipboard.writeText(text);
-  }
-
-  // ====== Hook UI events ======
+  // ====== events ======
   $("btnConnect").addEventListener("click", async ()=>{
     try{ await connect(); }
-    catch(e){ setConn(false); showErr(e); toast("連線失敗","err"); }
+    catch(e){ setStatus(false); showErr(e); toast("連線失敗","err"); }
   });
 
-  $("btnWrite").addEventListener("click", async ()=>{
-    try{ clearErr(); await writeKV(); }
-    catch(e){ showErr(e); toast(e.message || "寫入失敗","err"); }
+  $("btnPublish").addEventListener("click", async ()=>{
+    try{ await publishAll(); }
+    catch(e){ showErr(e); toast(e.message || "一鍵發佈失敗","err"); }
   });
 
   $("btnSimAllGood").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
-    simState.q10="男";
-    simState.q11=AGE_ADULT;
+    simState.q10="女";
+    simState.q11=AGE_CHILD;
     renderSim();
-    toast("已填入『都很健康』");
+    toast("已填入『都很健康』測試答案");
   });
-
   $("btnSimAllYes").addEventListener("click", ()=>{
     ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="是");
     simState.q10="男";
     simState.q11=AGE_ADULT;
     renderSim();
-    toast("已填入『全部選是』");
-  });
-
-  $("btnApplyPreviewAvatar").addEventListener("click", ()=>{
-    const u = ($("inPreviewAvatarUrl").value||"").trim() || DEFAULT_LINE_AVATAR_URL;
-    $("previewAvatar").src = u;
-    toast("已套用預覽頭像 ✅");
-  });
-
-  $("btnRandPreviewAvatar").addEventListener("click", ()=>{
-    const n = Math.floor(Math.random()*70)+1;
-    const u = `https://i.pravatar.cc/150?img=${n}`;
-    $("inPreviewAvatarUrl").value = u;
-    $("previewAvatar").src = u;
-    toast("已更換隨機頭像 ✅");
-  });
-
-  $("btnRenderImg").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      await renderReportImage();
-      toast("已產生圖片 ✅");
-    }catch(e){
-      showErr(e);
-      toast(e.message || "產生圖片失敗","err");
-    }
-  });
-
-  $("btnDownloadImg").addEventListener("click", ()=>{
-    try{ downloadPng(); toast("已下載 PNG ✅"); }
-    catch(e){ toast(e.message || "下載失敗","warn"); }
+    toast("已填入『全部都選是』測試答案");
   });
 
   $("btnResetTargets").addEventListener("click", resetTargets);
-
   $("btnCopyTargetsJson").addEventListener("click", async ()=>{
     try{
       const obj = getTargetsObject();
-      await copyTextToClipboard(JSON.stringify(obj, null, 2));
+      await navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
       toast("已複製 Targets JSON ✅");
     }catch{
       toast("複製失敗（瀏覽器限制）", "warn");
     }
   });
 
-  // CTA editor load
-  $("btnLoadCtaUrl").addEventListener("click", async ()=>{
-    try{
-      clearErr();
-      await loadCtaFromUrl($("ctaLoadUrl").value);
-    }catch(e){
-      showErr(e); toast(e.message||"載入失敗","err");
-    }
-  });
-  $("ctaLoadFile").addEventListener("change", async ()=>{
-    const f = $("ctaLoadFile").files?.[0];
-    if(!f) return;
-    try{
-      clearErr();
-      await loadCtaFromFile(f);
-    }catch(e){
-      showErr(e); toast(e.message||"載入失敗","err");
-    }
-  });
-  $("btnClearCta").addEventListener("click", clearCtaEditor);
-
-  $("btnUndo").addEventListener("click", undo);
-  $("btnRedo").addEventListener("click", redo);
-
-  document.addEventListener("keydown", (e)=>{
-    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==="z"){
-      e.preventDefault();
-      if(e.shiftKey) redo(); else undo();
-    }
-  });
-
-  $("btnExportCtaPng").addEventListener("click", ()=>{
-    try{
-      const d = exportCtaPng();
-      // also auto-fill preview tab input for convenience
-      $("inCtaSource").value = d;
-      toast("已匯出引流圖 ✅（已自動填入預覽/產圖）");
-    }catch(e){
-      toast(e.message||"匯出失敗","err");
-    }
-  });
-
-  $("btnCopyCtaDataUrl").addEventListener("click", async ()=>{
-    try{
-      const t = $("ctaExportOut").value || cta.lastExportDataUrl;
-      if(!t) throw new Error("請先『匯出引流圖（PNG）』");
-      await copyTextToClipboard(t);
-      toast("已複製 DataURL ✅");
-    }catch(e){
-      toast(e.message||"複製失敗","warn");
-    }
-  });
-
-  $("btnUseCtaFromEditor").addEventListener("click", ()=>{
-    const t = $("ctaExportOut").value || cta.lastExportDataUrl;
-    if(!t) return toast("編輯器還沒匯出，引流圖不存在", "warn");
-    $("inCtaSource").value = t;
-    toast("已套用編輯器的引流圖 ✅");
-    setTab("tab-preview");
-  });
-
-  $("btnClearCtaSource").addEventListener("click", ()=>{
-    $("inCtaSource").value = "";
-    toast("已清除引流圖", "warn");
-  });
-
-  // ===== init =====
-  function safeDefaultSim(){
-    ["q1","q2","q3","q4","q5","q6","q7","q8","q9"].forEach(id=>simState[id]="不是");
-    simState.q10="男";
-    simState.q11=AGE_ADULT;
-  }
-
-  safeDefaultSim();
-  initPreviewLine();
-  renderSim();
+  // init
   renderTargetsTable();
-  initEditorCanvas();
-  setConn(false);
+  renderSim();
 })();
 </script>
 </body>
